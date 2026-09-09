@@ -1,0 +1,57 @@
+import { expect, test } from '@playwright/test';
+
+/**
+ * The dev gallery is how the M1 primitives are reviewed. These tests keep it
+ * from silently breaking, and cover the one thing unit tests cannot: that
+ * pressing play actually starts the audio clock in a real browser, where the
+ * AudioContext needs a user gesture.
+ */
+test.describe('dev gallery', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/#/dev/gallery');
+  });
+
+  test('renders the derived theory for the fixture key', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'D Dorian' })).toBeVisible();
+    await expect(page.getByText('D · E · F · G · A · B · C')).toBeVisible();
+    // Dorian's major IV is what distinguishes it from aeolian.
+    await expect(page.getByRole('cell', { name: 'G', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Gmaj7' })).toHaveCount(0);
+    await expect(page.getByRole('cell', { name: 'G7' })).toBeVisible();
+  });
+
+  test('renders a fretboard and a tab staff', async ({ page }) => {
+    expect(await page.getByTestId('fretboard').count()).toBeGreaterThan(0);
+    expect(await page.getByTestId('tab-staff').count()).toBeGreaterThan(0);
+  });
+
+  test('switches between the shapes up the neck', async ({ page }) => {
+    // Shapes tile ascending from the nut, so the first starts at fret 1.
+    await expect(page.getByRole('button', { name: 'fret 1', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'fret 7', exact: true }).click();
+
+    const section = page.locator('section').filter({ hasText: 'GENERATED 3NPS SHAPES' });
+    // The rolled position's frets are emphasised in the fret-number row.
+    await expect(section.getByTestId('fret-number-7')).toHaveClass(/text-accent-700/);
+    await expect(section.getByTestId('fret-number-3')).not.toHaveClass(/text-accent-700/);
+  });
+
+  test('starts the clock and moves the playhead when play is pressed', async ({ page }) => {
+    const section = page.locator('section').filter({ hasText: 'TAB + PLAYHEAD' });
+    await expect(section.getByTestId('playhead')).toHaveCount(0);
+
+    // The click is the user gesture the AudioContext needs.
+    await section.getByRole('button', { name: 'Play' }).click();
+
+    const playhead = section.getByTestId('playhead');
+    await expect(playhead).toBeVisible();
+
+    const startColumn = await playhead.getAttribute('data-column');
+    await expect
+      .poll(async () => playhead.getAttribute('data-column'), { timeout: 5000 })
+      .not.toBe(startColumn);
+
+    await section.getByRole('button', { name: 'Stop' }).click();
+    await expect(section.getByTestId('playhead')).toHaveCount(0);
+  });
+});

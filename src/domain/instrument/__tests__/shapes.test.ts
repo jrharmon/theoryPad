@@ -9,7 +9,7 @@ import {
   TEST_INSTRUMENTS,
 } from '../instruments';
 import { midiAt, stringCount } from '../fretboard';
-import { allThreeNotePerStringShapes, scaleShape, shapeSpan } from '../shapes';
+import { scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
 
 const G_MAJOR = { tonic: pitchClass('G'), mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
@@ -165,20 +165,58 @@ describe('scaleShape', () => {
   });
 });
 
-describe('allThreeNotePerStringShapes', () => {
-  it('gives seven shapes, one starting on each degree', () => {
-    const shapes = allThreeNotePerStringShapes(STANDARD_GUITAR, D_DORIAN, 1);
+describe('shapesUpTheNeck', () => {
+  it('gives seven shapes ascending the neck', () => {
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 1 });
     expect(shapes).toHaveLength(7);
-    shapes.forEach((shape, i) => {
-      expect(shape[0]!.degree.number).toBe(i + 1);
-    });
+    for (let i = 1; i < shapes.length; i += 1) {
+      expect(shapes[i]!.startFret).toBeGreaterThan(shapes[i - 1]!.startFret);
+    }
   });
 
-  it('gives shapes that climb the neck in order', () => {
-    const shapes = allThreeNotePerStringShapes(STANDARD_GUITAR, G_MAJOR, 1);
-    const lows = shapes.map((s) => shapeSpan(s)!.low);
+  it('starts from the nut rather than from degree 1', () => {
+    // In D dorian the first D on the low E string is fret 10. Starting from
+    // degree 1 and chaining would leave frets 1-9 unused and run the last
+    // shapes off the neck.
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 1 });
+    expect(shapes.map((s) => s.startFret)).toEqual([1, 3, 5, 7, 8, 10, 12]);
+    // Those frets are F G A B C D E — so the degrees run ♭3 4 5 6 ♭7 1 2.
+    expect(shapes.map((s) => s.startDegree)).toEqual([3, 4, 5, 6, 7, 1, 2]);
+  });
+
+  it('covers every mode of the key exactly once', () => {
+    for (const mode of MODE_NAMES) {
+      const shapes = shapesUpTheNeck(STANDARD_GUITAR, { tonic: pitchClass('A'), mode });
+      expect(new Set(shapes.map((s) => s.startDegree)).size, mode).toBe(7);
+    }
+  });
+
+  it('keeps every shape on the neck', () => {
+    for (const inst of TEST_INSTRUMENTS) {
+      for (const shape of shapesUpTheNeck(inst, D_DORIAN, { minFret: 1 })) {
+        expect(shape.positions.length, inst.name).toBe(3 * stringCount(inst));
+        for (const p of shape.positions) {
+          expect(p.fret).toBeLessThanOrEqual(inst.fretCount);
+        }
+      }
+    }
+  });
+
+  it('honours minFret', () => {
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, G_MAJOR, { minFret: 7 });
+    expect(shapes[0]!.startFret).toBeGreaterThanOrEqual(7);
+  });
+
+  it('returns fewer shapes than asked when the neck runs out', () => {
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 18 });
+    expect(shapes.length).toBeLessThan(7);
+  });
+
+  it('gives shapes whose spans ascend too', () => {
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, G_MAJOR, { minFret: 1 });
+    const lows = shapes.map((s) => shapeSpan(s.positions)!.low);
     for (let i = 1; i < lows.length; i += 1) {
-      expect(lows[i]!, `shape ${i + 1}`).toBeGreaterThan(lows[i - 1]!);
+      expect(lows[i]!, `shape ${i + 1}`).toBeGreaterThanOrEqual(lows[i - 1]!);
     }
   });
 });

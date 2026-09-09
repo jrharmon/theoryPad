@@ -123,33 +123,56 @@ export function scaleShape(
   return out;
 }
 
+export interface NeckShape {
+  /** Which scale degree this shape begins on — which mode it is. */
+  startDegree: DegreeNumber;
+  /** Lowest fretted note in the shape. */
+  startFret: number;
+  positions: ScaleNotePosition[];
+}
+
 /**
- * The seven 3nps shapes of a key, one per mode, each starting on its own degree
- * — the material the "seven modes through a key" exercise walks.
+ * The shapes of a key laid out ASCENDING THE NECK, each starting on whichever
+ * degree falls next on the lowest string.
  *
- * The shapes are chained rather than generated independently: each starts above
- * the one before it, so together they tile the neck ascending. Generated
- * independently they would not, because a degree's first occurrence at or above
- * minFret can sit below the previous shape (in G major from fret 1, degree 7's
- * F# is at fret 2, well under degree 6's E at fret 12).
+ * Not "shape N starts on degree N, chained upward" — that is what a naive
+ * reading suggests and it does not survive contact with a real neck. In D
+ * dorian the first D on the low E string is fret 10, so starting from degree 1
+ * and chaining pushes the set to frets 10-20 and runs the last shapes off the
+ * end, while frets 1-9 sit unused. Ascending from the nut instead gives the
+ * F shape at 1, G at 3, A at 5, B at 7, C at 8, D at 10, E at 12 — which is
+ * what a player means by "the seven shapes up the neck".
+ *
+ * Each shape carries its own `startDegree`, so a caller that wants mode order
+ * (ionian, dorian, …) can sort by it.
  */
-export function allThreeNotePerStringShapes(
+export function shapesUpTheNeck(
   instrument: Instrument,
   keyMode: KeyMode,
-  minFret = 1,
-): ScaleNotePosition[][] {
-  const shapes: ScaleNotePosition[][] = [];
-  let floor = minFret;
+  options: { minFret?: number; count?: number; notesPerString?: number } = {},
+): NeckShape[] {
+  const { minFret = 1, count = 7, notesPerString = 3 } = options;
+  const notes = scaleNotes(keyMode);
+  const lowestString = 0;
+  const shapes: NeckShape[] = [];
 
-  for (let i = 0; i < 7; i += 1) {
-    const shape = scaleShape(instrument, {
+  for (let fret = minFret; fret <= instrument.fretCount && shapes.length < count; fret += 1) {
+    const sounding = pitchClassAt(instrument, { string: lowestString, fret });
+    const index = notes.findIndex((n) => chroma(n) === chroma(sounding));
+    if (index === -1) continue;
+
+    const startDegree = (index + 1) as DegreeNumber;
+    const positions = scaleShape(instrument, {
       keyMode,
-      startDegree: (i + 1) as DegreeNumber,
-      minFret: floor,
+      startDegree,
+      minFret: fret,
+      notesPerString,
     });
-    shapes.push(shape);
-    const first = shape[0];
-    if (first) floor = first.fret + 1;
+
+    // Only take shapes that fit on the neck.
+    if (positions.length < notesPerString * stringCount(instrument)) continue;
+
+    shapes.push({ startDegree, startFret: fret, positions });
   }
 
   return shapes;

@@ -1,6 +1,7 @@
 import { createHashRouter, Navigate } from 'react-router';
 import { AppShell } from '@/app/AppShell';
 import { Placeholder } from '@/routes/Placeholder';
+import { Gallery } from '@/routes/dev/Gallery';
 
 /**
  * Hash routing: GitHub Pages serves from a subpath and has no SPA fallback,
@@ -105,6 +106,8 @@ export const router = createHashRouter([
           />
         ),
       },
+      // Development only: the M1 primitives against fixture data.
+      { path: 'dev/gallery', element: <Gallery /> },
       {
         path: '*',
         element: (
