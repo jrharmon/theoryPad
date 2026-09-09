@@ -1,0 +1,9 @@
+dist
+coverage
+pnpm-lock.yaml
+design_handoff_fretwork
+playwright-report
+test-results
+
+# Hand-formatted planning prose
+docs/plan

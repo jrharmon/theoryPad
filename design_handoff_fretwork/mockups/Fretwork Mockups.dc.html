@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/modernist-678b34fa-8335-4859-ad88-89cc2c7324d6/styles.css">
+<script src="_ds/modernist-678b34fa-8335-4859-ad88-89cc2c7324d6/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#f3f2f2}
+a{color:#ae1800}a:hover{color:#ec3013}
+.dv-turn{padding:40px 44px 32px;border-bottom:2px solid rgba(32,30,29,.4)}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:800 10px "Archivo",monospace;padding:3px 7px;background:#201e1d;color:#f3f2f2;text-decoration:none;letter-spacing:.08em}
+.dv-tname{font:800 13px/1.2 "Archivo",sans-serif;color:#201e1d;letter-spacing:.05em;text-transform:uppercase}
+.dv-intro{max-width:760px;margin:0 0 26px;font:400 13px/1.6 "Archivo",sans-serif;color:rgba(32,30,29,.62)}
+.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:800 10.5px "Archivo",monospace;padding:3px 7px;background:rgba(32,30,29,.1);color:#201e1d;text-decoration:none;letter-spacing:.06em}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "Archivo",sans-serif;color:rgba(32,30,29,.62);letter-spacing:.02em}
+.dv-card{max-width:100%;background:#f3f2f2;border:2px solid rgba(32,30,29,.4);overflow:hidden}
+.dv-opt:target .dv-oid{background:#ec3013;color:#fff}
+.dv-next{margin:26px 0 0;font:12px/1.6 "Archivo",sans-serif;color:rgba(32,30,29,.55)}
+.kick{font:400 11px "Archivo",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55)}
+.ph{background:repeating-linear-gradient(45deg,rgba(32,30,29,.08) 0 8px,transparent 8px 16px);display:flex;align-items:flex-end;padding:12px}
+.str{display:grid;grid-template-columns:28px repeat(16,1fr);height:19px;align-items:center;background:linear-gradient(to bottom,transparent calc(50% - .5px),rgba(32,30,29,.42) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px))}
+.str > b{font:800 12px "Archivo",sans-serif;text-align:center;background:#f3f2f2;padding:0 1px;font-variant-numeric:tabular-nums}
+.str > i{font:400 11px "Archivo",sans-serif;font-style:normal;color:rgba(32,30,29,.5);background:#f3f2f2;text-align:left}
+.fb{display:grid;grid-template-columns:26px repeat(12,1fr);grid-template-rows:repeat(6,26px)}
+.fb > span{border-left:1px solid rgba(32,30,29,.3);display:grid;place-items:center}
+.dot{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font:800 10px "Archivo",sans-serif}
+</style></helmet>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Theory exercises — answered, not played</span></div>
+<p class="dv-intro">These sit in the same routine chain as the playing exercises and inherit the session key and mode, but they are answered by picking from options instead of a clean tempo. Reps are timed rather than tempo-driven, so the routine still runs start to finish. <a href="#3a">3a</a> is single-answer picking, <a href="#3b">3b</a> is a multi-cell table you fill in, <a href="#3c">3c</a> is what a wrong answer looks like.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Pick the answer — one question at a time, big enough to read across the room</div>
+<div class="dv-card" style="width:820px">
+  <div style="display:flex;align-items:center;gap:16px;padding:12px 24px;background:#201e1d;color:#f3f2f2">
+    <span style="font:800 16px 'Archivo'">05 / 06</span>
+    <span style="font:400 13px 'Archivo';opacity:.75">Key signatures</span>
+    <div style="flex:1;display:flex;gap:3px;margin:0 8px">
+      <span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:1;height:6px;background:var(--color-accent-400)"></span><span style="flex:1;height:6px;background:rgba(243,242,242,.25)"></span>
+    </div>
+    <span style="font:800 15px 'Archivo';font-variant-numeric:tabular-nums">Q 3 / 8</span>
+    <button class="btn" style="color:#f3f2f2;border-color:rgba(243,242,242,.4);border-width:1px;font-size:13px">&#10073;&#10073;&nbsp; Pause</button>
+  </div>
+
+  <div style="padding:14px 28px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--color-divider)">
+    <span class="tag tag-accent">Theory · no guitar needed</span>
+    <span class="tag tag-neutral">Pick one</span>
+    <span style="margin-left:auto;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">2 of 8 correct so far · 6 s each</span>
+  </div>
+
+  <div style="padding:34px 28px 26px;border-bottom:2px solid var(--color-divider)">
+    <div class="kick" style="color:var(--color-accent-700);margin-bottom:14px">Question</div>
+    <h2 style="margin:0;font-size:40px;line-height:1.06;max-width:620px">Which accidentals are in the key of E major?</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--color-divider)">
+    <button class="btn btn-secondary" style="border:0;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">F&#9839; C&#9839;</button>
+    <button class="btn btn-secondary" style="border:0;border-bottom:1px solid var(--color-divider);border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">F&#9839; C&#9839; G&#9839;</button>
+    <button class="btn btn-secondary" style="border:0;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">F&#9839; C&#9839; G&#9839; D&#9839;</button>
+    <button class="btn btn-secondary" style="border:0;border-bottom:1px solid var(--color-divider);border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">F&#9839; C&#9839; G&#9839; D&#9839; A&#9839;</button>
+    <button class="btn btn-secondary" style="border:0;border-right:1px solid var(--color-divider);border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">B&#9837; E&#9837; A&#9837;</button>
+    <button class="btn btn-secondary" style="border:0;border-radius:0;padding:20px 24px;justify-content:flex-start;font-size:20px">None</button>
+  </div>
+
+  <div style="padding:14px 28px;display:flex;align-items:center;gap:14px">
+    <span style="font:400 12px 'Archivo';color:rgba(32,30,29,.6)">Press <strong>1</strong>&ndash;<strong>6</strong> to answer &middot; <strong>Space</strong> pauses &middot; <strong>Enter</strong> skips</span>
+    <button class="btn btn-ghost" style="margin-left:auto">Skip question</button>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Fill the table — several answers per question, picked per cell</div>
+<div class="dv-card" style="width:820px">
+  <div style="display:flex;align-items:center;gap:16px;padding:12px 24px;background:#201e1d;color:#f3f2f2">
+    <span style="font:800 16px 'Archivo'">02 / 06</span>
+    <span style="font:400 13px 'Archivo';opacity:.75">Spell the diatonic chords</span>
+    <div style="flex:1"></div>
+    <span style="font:800 15px 'Archivo';font-variant-numeric:tabular-nums">Q 1 / 4</span>
+    <button class="btn" style="color:#f3f2f2;border-color:rgba(243,242,242,.4);border-width:1px;font-size:13px">&#10073;&#10073;&nbsp; Pause</button>
+  </div>
+
+  <div style="padding:24px 28px 18px;border-bottom:2px solid var(--color-divider)">
+    <div class="kick" style="color:var(--color-accent-700);margin-bottom:10px">Question · session key</div>
+    <h2 style="margin:0 0 8px;font-size:32px;max-width:620px">Name the seventh chord on every degree of D&nbsp;Dorian.</h2>
+    <p style="margin:0;font-size:13px;color:rgba(32,30,29,.7)">Pick the quality for each degree. The root is given.</p>
+  </div>
+
+  <div style="padding:0 0 0 0">
+    <table class="table">
+      <thead><tr><th style="width:70px">Degree</th><th style="width:74px">Root</th><th>Quality</th><th style="width:120px">Your answer</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600">i</td><td style="font-weight:600">D</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="tag" style="background:var(--color-accent);color:var(--color-bg)">m7</span><span class="tag tag-neutral">maj7</span><span class="tag tag-neutral">7</span><span class="tag tag-neutral">m7&#9837;5</span></div></td>
+          <td style="font-weight:600">Dm7</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">ii</td><td style="font-weight:600">E</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="tag" style="background:var(--color-accent);color:var(--color-bg)">m7</span><span class="tag tag-neutral">maj7</span><span class="tag tag-neutral">7</span><span class="tag tag-neutral">m7&#9837;5</span></div></td>
+          <td style="font-weight:600">Em7</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">III</td><td style="font-weight:600">F</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="tag tag-neutral">m7</span><span class="tag" style="background:var(--color-accent);color:var(--color-bg)">maj7</span><span class="tag tag-neutral">7</span><span class="tag tag-neutral">m7&#9837;5</span></div></td>
+          <td style="font-weight:600">Fmaj7</td>
+        </tr>
+        <tr style="background:color-mix(in srgb,var(--color-accent) 8%,transparent)">
+          <td style="font-weight:600">IV</td><td style="font-weight:600">G</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="tag tag-outline">m7</span><span class="tag tag-outline">maj7</span><span class="tag tag-outline">7</span><span class="tag tag-outline">m7&#9837;5</span></div></td>
+          <td class="text-muted" style="font-style:italic">answering&hellip;</td>
+        </tr>
+        <tr><td style="font-weight:600">v</td><td style="font-weight:600">A</td><td class="text-muted" style="font-size:13px">Waiting</td><td class="text-muted">&mdash;</td></tr>
+        <tr><td style="font-weight:600">vi</td><td style="font-weight:600">B</td><td class="text-muted" style="font-size:13px">Waiting</td><td class="text-muted">&mdash;</td></tr>
+        <tr><td style="font-weight:600">VII</td><td style="font-weight:600">C</td><td class="text-muted" style="font-size:13px">Waiting</td><td class="text-muted">&mdash;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="padding:16px 28px;border-top:2px solid var(--color-divider);display:flex;align-items:center;gap:12px">
+    <button class="btn btn-primary">Check answers</button>
+    <button class="btn btn-secondary">Clear row</button>
+    <span style="margin-left:auto;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">3 of 7 filled &middot; no time limit on table questions</span>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3c">
+<div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Wrong answer — the correction, then straight on</div>
+<div class="dv-card" style="width:820px">
+  <div style="display:flex;align-items:center;gap:16px;padding:12px 24px;background:#201e1d;color:#f3f2f2">
+    <span style="font:800 16px 'Archivo'">05 / 06</span>
+    <span style="font:400 13px 'Archivo';opacity:.75">Key signatures</span>
+    <div style="flex:1"></div>
+    <span style="font:800 15px 'Archivo';font-variant-numeric:tabular-nums">Q 3 / 8</span>
+    <button class="btn" style="color:#f3f2f2;border-color:rgba(243,242,242,.4);border-width:1px;font-size:13px">&#10073;&#10073;&nbsp; Pause</button>
+  </div>
+
+  <div style="background:var(--color-accent);color:#fff;padding:24px 28px">
+    <div style="font:400 11px 'Archivo';letter-spacing:.16em;text-transform:uppercase;opacity:.85;margin-bottom:10px">Not that one</div>
+    <div style="font:800 30px/1.1 'Archivo'">E major has four sharps: F&#9839; C&#9839; G&#9839; D&#9839;.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--color-divider)">
+    <div style="padding:18px 24px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="font-size:10px;margin-bottom:6px">You picked</div>
+      <div style="font:800 22px 'Archivo';text-decoration:line-through;text-decoration-thickness:2px;color:rgba(32,30,29,.55)">F&#9839; C&#9839; G&#9839;</div>
+      <div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:6px">That is A major — three sharps.</div>
+    </div>
+    <div style="padding:18px 24px;background:var(--color-surface)">
+      <div class="kick" style="font-size:10px;margin-bottom:6px">The rule</div>
+      <div style="font:400 13px/1.5 'Archivo';color:rgba(32,30,29,.8)">Sharps arrive in the order F C G D A E B. The key is a semitone above the last sharp, so four sharps ending on D&#9839; gives E.</div>
+    </div>
+  </div>
+
+  <div style="padding:18px 28px 8px"><div class="kick">Where this sits in the circle</div></div>
+  <div style="padding:0 28px 22px">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--color-divider);border-right:0">
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 18px/1 'Archivo'">C</div><div class="kick" style="font-size:10px;margin-top:5px">&mdash;</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 18px/1 'Archivo'">G</div><div class="kick" style="font-size:10px;margin-top:5px">1&#9839;</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 18px/1 'Archivo'">D</div><div class="kick" style="font-size:10px;margin-top:5px">2&#9839;</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px;background:var(--color-neutral-200)"><div style="font:800 18px/1 'Archivo'">A</div><div class="kick" style="font-size:10px;margin-top:5px">3&#9839; · you said</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px;background:var(--color-accent);color:#fff"><div style="font:800 18px/1 'Archivo'">E</div><div style="font:400 10px 'Archivo';letter-spacing:.1em;text-transform:uppercase;margin-top:5px;opacity:.9">4&#9839; · answer</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 18px/1 'Archivo'">B</div><div class="kick" style="font-size:10px;margin-top:5px">5&#9839;</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 18px/1 'Archivo'">F&#9839;</div><div class="kick" style="font-size:10px;margin-top:5px">6&#9839;</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 260px;border-top:2px solid var(--color-divider)">
+    <div style="padding:14px 22px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Score</div><div style="font:800 20px 'Archivo';margin-top:2px">2 / 3</div></div>
+    <div style="padding:14px 22px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Next question in</div><div style="font:800 20px 'Archivo';margin-top:2px;font-variant-numeric:tabular-nums">3 s</div></div>
+    <div style="padding:11px 18px;display:flex;align-items:center;gap:8px"><button class="btn btn-primary" style="flex:1;justify-content:flex-start">Next</button><button class="btn btn-secondary">Ask again later</button></div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: &ldquo;add an ear-training question type — hear an interval, name it&rdquo; · &ldquo;show how theory exercises appear in the routine table in <a class="dv-oid" href="#1a">1a</a>&rdquo; · &ldquo;add theory accuracy to the weekly report <a class="dv-oid" href="#1e">1e</a>&rdquo;</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Key &amp; mode quick-view</span></div>
+<p class="dv-intro">Opens off any key/mode control &mdash; the session dice in <a href="#1a">1a</a>, the key cell in <a href="#1b">1b</a>, the header in <a href="#1d">1d</a>. <a href="#2a">2a</a> is the full reference sheet as a right-side drawer; <a href="#2b">2b</a> is the small version that pops from the control itself, for when you only need the notes and the signature. Content shown for D Dorian.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Full drawer &mdash; everything you need to write over the mode</div>
+<div class="dv-card" style="width:880px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:24px 30px 18px;border-bottom:2px solid var(--color-divider)">
+    <div>
+      <div class="kick" style="color:var(--color-accent-700);margin-bottom:8px">Quick view · 2nd mode of C major</div>
+      <h2 style="margin:0;font-size:36px">D Dorian</h2>
+      <p style="margin:8px 0 0;font-size:13px;color:rgba(32,30,29,.7)">Minor scale with a natural 6th. Same seven notes as C major, centred on D.</p>
+    </div>
+    <div style="flex:none;display:flex;gap:8px;align-items:center">
+      <div class="seg">
+        <label class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)">Dorian</label>
+        <label class="seg-opt"><input type="radio" name="qv">Aeolian</label>
+        <label class="seg-opt"><input type="radio" name="qv">Mixo</label>
+      </div>
+      <button class="btn btn-secondary btn-icon">&times;</button>
+    </div>
+  </div>
+
+  <div style="padding:20px 30px 8px"><div class="kick">The notes</div></div>
+  <div style="padding:0 30px 20px">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--color-divider);border-right:0">
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">D</div><div class="kick" style="font-size:10px;margin-top:6px">1 · root</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">E</div><div class="kick" style="font-size:10px;margin-top:6px">2 · maj 2nd</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">F</div><div class="kick" style="font-size:10px;margin-top:6px">&#9837;3 · min 3rd</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">G</div><div class="kick" style="font-size:10px;margin-top:6px">4 · perf 4th</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">A</div><div class="kick" style="font-size:10px;margin-top:6px">5 · perf 5th</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px;background:var(--color-accent);color:#fff"><div style="font:800 24px/1 'Archivo'">B</div><div style="font:400 10px 'Archivo';letter-spacing:.12em;text-transform:uppercase;margin-top:6px;opacity:.9">6 · the signature</div></div>
+      <div style="border-right:1px solid var(--color-divider);padding:10px 12px"><div style="font:800 24px/1 'Archivo'">C</div><div class="kick" style="font-size:10px;margin-top:6px">&#9837;7 · min 7th</div></div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:8px;font:400 11px 'Archivo';color:rgba(32,30,29,.55)">
+      <span>Steps: W H W W W H W</span><span>·</span><span>No sharps or flats</span><span>·</span><span>Relative major: C</span>
+    </div>
+  </div>
+  <hr class="hr" style="margin:0">
+
+  <div style="padding:20px 30px 8px;display:flex;align-items:baseline;justify-content:space-between">
+    <div class="kick">Diatonic chords</div>
+    <div class="kick" style="font-size:10px">Tap any row for its voicings on the neck</div>
+  </div>
+  <div style="padding:0 30px 22px">
+    <table class="table">
+      <thead><tr><th style="width:56px">Deg</th><th style="width:88px">Triad</th><th style="width:104px">7th</th><th style="width:126px">9th</th><th>Function &amp; use</th></tr></thead>
+      <tbody>
+        <tr style="background:color-mix(in srgb,var(--color-accent) 8%,transparent)"><td style="font-weight:600">i</td><td style="font-weight:600">Dm</td><td>Dm7</td><td>Dm9</td><td class="text-muted">Tonic. Home. Dm9 is the fullest resting sound.</td></tr>
+        <tr><td style="font-weight:600">ii</td><td style="font-weight:600">Em</td><td>Em7</td><td>Em11</td><td class="text-muted">The bright second minor — pairs with i for a two-chord vamp.</td></tr>
+        <tr><td style="font-weight:600">III</td><td style="font-weight:600">F</td><td>Fmaj7</td><td>Fmaj9</td><td class="text-muted">Relative-major colour. Lifts a phrase without leaving the mode.</td></tr>
+        <tr style="background:color-mix(in srgb,var(--color-accent) 8%,transparent)"><td style="font-weight:600">IV</td><td style="font-weight:600">G</td><td>G7</td><td>G9</td><td class="text-muted">Subdominant, and <strong>major</strong> — this is what makes it Dorian.</td></tr>
+        <tr style="background:color-mix(in srgb,var(--color-accent) 8%,transparent)"><td style="font-weight:600">v</td><td style="font-weight:600">Am</td><td>Am7</td><td>Am9</td><td class="text-muted">Dominant, but minor: pulls home gently, no tritone.</td></tr>
+        <tr><td style="font-weight:600">vi&deg;</td><td style="font-weight:600">Bdim</td><td>Bm7&#9837;5</td><td class="text-muted">&mdash;</td><td class="text-muted">Unstable. Use as a passing chord between Am7 and Cmaj7.</td></tr>
+        <tr><td style="font-weight:600">VII</td><td style="font-weight:600">C</td><td>Cmaj7</td><td>Cmaj9</td><td class="text-muted">Step-down from the tonic. Backbone of the i&ndash;VII&ndash;IV loop.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--color-divider);border-bottom:2px solid var(--color-divider)">
+    <div style="padding:16px 22px;border-right:1px solid var(--color-divider);background:var(--color-surface)"><div class="kick" style="font-size:10px">Tonic</div><div style="font:800 22px 'Archivo';margin-top:4px">Dm7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:4px">i</div></div>
+    <div style="padding:16px 22px;border-right:1px solid var(--color-divider);background:var(--color-surface)"><div class="kick" style="font-size:10px">Subdominant</div><div style="font:800 22px 'Archivo';margin-top:4px">G7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:4px">IV — major, not minor</div></div>
+    <div style="padding:16px 22px;background:var(--color-surface)"><div class="kick" style="font-size:10px">Dominant</div><div style="font:800 22px 'Archivo';margin-top:4px">Am7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:4px">v — minor, soft resolution</div></div>
+  </div>
+
+  <div style="padding:20px 30px 8px"><div class="kick">Progressions that stay in the mode</div></div>
+  <div style="padding:0 30px 22px;display:grid;grid-template-columns:1fr 1fr;gap:0 0;border:1px solid var(--color-divider);margin:0 30px 22px">
+    <div style="padding:12px 16px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)"><div style="font:800 17px 'Archivo'">Dm7 &rarr; G7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">i&ndash;IV. The modal vamp. Two bars each, loop forever.</div></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--color-divider)"><div style="font:800 17px 'Archivo'">Dm7 &rarr; Cmaj7 &rarr; G7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">i&ndash;VII&ndash;IV. Steps down then lifts. Rock and funk.</div></div>
+    <div style="padding:12px 16px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)"><div style="font:800 17px 'Archivo'">Dm7 &rarr; Em7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">i&ndash;ii. Parallel minors a tone apart — very Dorian.</div></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--color-divider)"><div style="font:800 17px 'Archivo'">Dm9 &rarr; Fmaj9 &rarr; Am7 &rarr; G7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">i&ndash;III&ndash;v&ndash;IV. Longer form, keeps the 6th audible.</div></div>
+    <div style="padding:12px 16px;border-right:1px solid var(--color-divider)"><div style="font:800 17px 'Archivo'">Dm7 &rarr; E&#9837;maj7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">Out-of-mode: the &ldquo;So What&rdquo; shift. Whole step up, same shape.</div></div>
+    <div style="padding:12px 16px"><div style="font:800 17px 'Archivo'">Bm7&#9837;5 &rarr; Am7</div><div style="font:400 12px 'Archivo';color:rgba(32,30,29,.62);margin-top:3px">Passing turn back to the dominant. Use sparingly.</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--color-divider)">
+    <div style="padding:20px 30px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:10px">What it sounds like</div>
+      <p style="margin:0 0 10px;font-size:13px;color:rgba(32,30,29,.78)">Minor, but not sad. The natural 6th removes the darkness of Aeolian and leaves something level and open — cool rather than mournful.</p>
+      <p style="margin:0;font-size:13px;color:rgba(32,30,29,.78)">Works for modal jazz, funk, Latin rock, folk in minor keys, and any groove that wants to sit on one chord for a long time.</p>
+    </div>
+    <div style="padding:20px 30px">
+      <div class="kick" style="margin-bottom:10px">Writing notes</div>
+      <div style="display:grid;gap:9px;font-size:13px">
+        <div style="border-bottom:1px solid var(--color-divider);padding-bottom:8px"><strong>Signature note</strong> · B, the natural 6th. Land on it or hold it and the mode announces itself.</div>
+        <div style="border-bottom:1px solid var(--color-divider);padding-bottom:8px"><strong>Avoid</strong> · B&#9837;. One flat 6th and you are in D minor.</div>
+        <div style="border-bottom:1px solid var(--color-divider);padding-bottom:8px"><strong>Weak spot</strong> · The v is minor, so cadences are soft. If you need a hard resolution you have to borrow A7 from outside.</div>
+        <div><strong>Compare</strong> · Against D Aeolian, only the 6th changes. Play Dm7&ndash;G7, then Dm7&ndash;Gm7, to hear it.</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;padding:16px 30px;border-top:2px solid var(--color-divider)">
+    <button class="btn btn-primary">Set session to D Dorian</button>
+    <button class="btn btn-secondary">Show on fretboard</button>
+    <button class="btn btn-ghost">Hear the vamp</button>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Popover off the control — mid-session glance, no drawer</div>
+<div class="dv-card" style="width:440px;border:0;background:transparent">
+  <div style="border:2px solid rgba(32,30,29,.4);background:#f3f2f2">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--color-divider)">
+      <div>
+        <div class="kick" style="font-size:10px">Key &amp; mode</div>
+        <div style="font:800 22px/1 'Archivo';margin-top:4px">D Dorian</div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:12px">Full view &rarr;</button>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--color-divider)">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+        <span style="text-align:center;padding:7px 0;background:var(--color-neutral-800);color:#fff;font:800 14px 'Archivo'">D</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-surface);font:800 14px 'Archivo'">E</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-surface);font:800 14px 'Archivo'">F</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-surface);font:800 14px 'Archivo'">G</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-surface);font:800 14px 'Archivo'">A</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-accent);color:#fff;font:800 14px 'Archivo'">B</span>
+        <span style="text-align:center;padding:7px 0;background:var(--color-surface);font:800 14px 'Archivo'">C</span>
+      </div>
+      <div style="font:400 11px 'Archivo';color:var(--color-accent-700);margin-top:8px">B is the signature — the natural 6th.</div>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--color-divider)">
+      <div class="kick" style="font-size:10px;margin-bottom:8px">7th chords</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span class="tag tag-accent">i Dm7</span><span class="tag tag-neutral">ii Em7</span><span class="tag tag-neutral">III Fmaj7</span><span class="tag tag-accent">IV G7</span><span class="tag tag-accent">v Am7</span><span class="tag tag-neutral">vi Bm7&#9837;5</span><span class="tag tag-neutral">VII Cmaj7</span>
+      </div>
+      <div style="font:400 11px 'Archivo';color:rgba(32,30,29,.55);margin-top:8px">Red = tonic, subdominant, dominant.</div>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--color-divider)">
+      <div class="kick" style="font-size:10px;margin-bottom:8px">Go-to progressions</div>
+      <div style="display:grid;gap:5px;font:800 14px 'Archivo'">
+        <span>Dm7 &rarr; G7</span><span>Dm7 &rarr; Cmaj7 &rarr; G7</span><span>Dm9 &rarr; Fmaj9 &rarr; Am7 &rarr; G7</span>
+      </div>
+    </div>
+    <div style="padding:14px 18px">
+      <div class="kick" style="font-size:10px;margin-bottom:6px">Sounds like</div>
+      <p style="margin:0;font-size:12px;color:rgba(32,30,29,.75)">Minor without the sadness. Modal jazz, funk, Latin rock — anything that sits on one chord and grooves.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: &ldquo;add a 6th-string voicing diagram per chord row in <a class="dv-oid" href="#2a">2a</a>&rdquo; · &ldquo;show <a class="dv-oid" href="#2b">2b</a> anchored open over <a class="dv-oid" href="#1a">1a</a>&rdquo; · &ldquo;add a mode comparison view — Dorian against Aeolian side by side&rdquo;</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Fretwork — variation-driven practice, desktop web</span></div>
+<p class="dv-intro">Assumptions I built on: intermediate player, no mic listening, tab only. Every exercise reads session-level variations (key, mode, wildness) so a chained routine stays coherent; tempo is per exercise, stored as your clean tempo with your best ever kept alongside it. Each exercise adds its own rolled axes — voicing, neck position, rhythm, backing progression, target scale degree. Variations are shown in full before you play. <a href="#1b">1b</a> and <a href="#1c">1c</a> are two different takes on how the running exercise feels; the rest are the supporting screens. Video frames and album art are placeholders.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Routine builder — set the session dice once, chain the exercises</div>
+<div class="dv-card" style="width:1200px">
+  <div class="nav"><span class="nav-brand">FRETWORK</span><a href="#1a" aria-current="page">Routines</a><a href="#1b">Practice</a><a href="#1d">Fretboard</a><a href="#1e">Report</a><span style="width:28px;height:28px;background:#201e1d;color:#f3f2f2;font:800 11px 'Archivo';display:grid;place-items:center">JM</span></div>
+
+  <div style="padding:30px 32px 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:32px">
+    <div>
+      <div class="kick" style="color:var(--color-accent-700);margin-bottom:10px">Routine · Wednesday evening</div>
+      <h1 style="margin:0;font-size:46px">Modal shapes,<br>rolled fresh.</h1>
+    </div>
+    <div style="display:flex;gap:36px;flex:none">
+      <div><div style="font:800 40px/1 'Archivo'">6</div><div class="kick">Exercises</div></div>
+      <div><div style="font:800 40px/1 'Archivo'">31<span style="font-size:18px">&thinsp;min</span></div><div class="kick">Hands-off run</div></div>
+    </div>
+  </div>
+  <hr class="hr" style="margin:0">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:2px solid var(--color-divider)">
+    <div style="padding:18px 22px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:8px">Key &amp; mode</div>
+      <div style="font:800 26px/1 'Archivo'">D Dorian</div>
+      <button class="btn btn-ghost" style="margin-top:8px;padding-left:0">Change</button>
+    </div>
+    <div style="padding:18px 22px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:8px">Tempo</div>
+      <div style="font:800 26px/1 'Archivo'">Per exercise</div>
+      <div style="font:400 11px 'Archivo';color:rgba(32,30,29,.55);margin-top:14px">Each exercise runs at its own clean tempo. Nudge them all: <span style="color:var(--color-accent-700);font-weight:600">&minus;5</span> &nbsp;<span style="color:var(--color-accent-700);font-weight:600">+0</span>&nbsp; <span style="color:var(--color-accent-700);font-weight:600">+5</span></div>
+    </div>
+    <div style="padding:18px 22px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:8px">Wildness</div>
+      <div style="font:800 26px/1 'Archivo'">Moderate</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:14px">
+        <span style="height:8px;background:var(--color-accent)"></span><span style="height:8px;background:var(--color-accent)"></span><span style="height:8px;background:var(--color-accent)"></span><span style="height:8px;background:var(--color-neutral-300)"></span><span style="height:8px;background:var(--color-neutral-300)"></span>
+      </div>
+      <div style="font:400 11px 'Archivo';color:rgba(32,30,29,.55);margin-top:8px">Varies position and rhythm. Key stays put.</div>
+    </div>
+    <div style="padding:18px 22px">
+      <div class="kick" style="margin-bottom:8px">Between exercises</div>
+      <div style="font:800 26px/1 'Archivo'">8 s</div>
+      <div style="font:400 11px 'Archivo';color:rgba(32,30,29,.55);margin-top:14px">Countdown reads the next variation aloud. No clicking mid-routine.</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 360px">
+    <div style="border-right:2px solid var(--color-divider)">
+      <div style="padding:16px 22px 10px;display:flex;align-items:center;justify-content:space-between">
+        <div class="kick">In this routine</div>
+        <button class="btn btn-secondary" style="font-size:12px">Re-roll all variations</button>
+      </div>
+      <table class="table" style="font-size:14px">
+        <thead><tr><th style="width:34px"></th><th>Exercise</th><th>Rolled this session</th><th style="width:80px">Clean</th><th style="width:74px">Best</th><th style="width:56px">Reps</th><th style="width:64px">Time</th></tr></thead>
+        <tbody>
+          <tr><td style="font:800 12px 'Archivo';color:rgba(32,30,29,.45)">01</td><td><span style="font-weight:600">Chromatic warm-up</span></td><td class="text-muted">Strings 4&ndash;6 · 5th position</td><td style="font-weight:600">112</td><td class="text-muted">124</td><td>1</td><td>3:00</td></tr>
+          <tr><td style="font:800 12px 'Archivo';color:rgba(32,30,29,.45)">02</td><td><span style="font-weight:600">Mode shapes, one string set</span></td><td class="text-muted">7th position · land on the 6th</td><td style="font-weight:600">96</td><td class="text-muted">108</td><td>2</td><td>6:00</td></tr>
+          <tr style="background:color-mix(in srgb,var(--color-accent) 8%,transparent)"><td style="font:800 12px 'Archivo';color:var(--color-accent-700)">03</td><td><span style="font-weight:600">Interval leaps</span> <span class="tag tag-accent" style="margin-left:6px">Next up</span></td><td class="text-muted">4ths ascending · target 3rd</td><td style="font-weight:600">92</td><td class="text-muted">104</td><td>2</td><td>5:00</td></tr>
+          <tr><td style="font:800 12px 'Archivo';color:rgba(32,30,29,.45)">04</td><td><span style="font-weight:600">Voicing swap</span></td><td class="text-muted">Drop 3 · ii&ndash;V&ndash;i backing</td><td style="font-weight:600">84</td><td class="text-muted">88</td><td>3</td><td>6:00</td></tr>
+          <tr><td style="font:800 12px 'Archivo';color:rgba(32,30,29,.45)">05</td><td><span style="font-weight:600">Rhythm displacement</span></td><td class="text-muted">Syncopated 16ths · 12th position</td><td style="font-weight:600">76</td><td class="text-muted">80</td><td>2</td><td>5:00</td></tr>
+          <tr><td style="font:800 12px 'Archivo';color:rgba(32,30,29,.45)">06</td><td><span style="font-weight:600">Free improv over changes</span></td><td class="text-muted">Modal vamp · 8 bars</td><td class="text-muted">&mdash;</td><td class="text-muted">&mdash;</td><td>1</td><td>6:00</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:18px 22px;display:flex;gap:10px;align-items:center;border-top:2px solid var(--color-divider)">
+        <button class="btn btn-primary" style="padding:13px 22px;font-size:15px">Start routine</button>
+        <button class="btn btn-secondary">Add exercise</button>
+        <span style="font:400 12px 'Archivo';color:rgba(32,30,29,.55);margin-left:auto">Each exercise at its own clean tempo. Space bar pauses.</span>
+      </div>
+    </div>
+
+    <div>
+      <div style="padding:20px 24px;border-bottom:2px solid var(--color-divider)">
+        <div class="kick" style="margin-bottom:12px">Practised · last 28 days</div>
+        <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px">
+          <span style="aspect-ratio:1;background:var(--color-neutral-300)"></span><span style="aspect-ratio:1;background:var(--color-accent-300)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-neutral-300)"></span><span style="aspect-ratio:1;background:var(--color-accent-400)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-neutral-300)"></span><span style="aspect-ratio:1;background:var(--color-neutral-300)"></span><span style="aspect-ratio:1;background:var(--color-accent-300)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent-400)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-neutral-300)"></span>
+          <span style="aspect-ratio:1;background:var(--color-accent-400)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-neutral-300)"></span><span style="aspect-ratio:1;background:var(--color-accent-300)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent-400)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent)"></span><span style="aspect-ratio:1;background:var(--color-accent-600)"></span><span style="aspect-ratio:1;border:1px solid var(--color-divider)"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font:400 11px 'Archivo';color:rgba(32,30,29,.5);margin-top:8px"><span>Aug 11</span><span>Today</span></div>
+      </div>
+      <div style="padding:20px 24px;border-bottom:2px solid var(--color-divider)">
+        <div class="kick" style="margin-bottom:12px">Personal bests</div>
+        <div style="display:grid;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--color-divider);padding-bottom:8px"><span style="font-size:13px">Clean tempos raised this month</span><span style="font:800 17px 'Archivo'">4 of 6</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--color-divider);padding-bottom:8px"><span style="font-size:13px">Modes at all 12 keys</span><span style="font:800 17px 'Archivo'">3 / 7</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px">Longest streak</span><span style="font:800 17px 'Archivo'">11 days</span></div>
+        </div>
+      </div>
+      <div style="padding:20px 24px">
+        <div class="kick" style="margin-bottom:10px">Other routines</div>
+        <div style="display:grid;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-surface)"><span style="font-weight:600;font-size:14px">Fast 12 minutes</span><span class="text-muted" style="font-size:12px">4 exercises</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-surface)"><span style="font-weight:600;font-size:14px">Ear &amp; intervals</span><span class="text-muted" style="font-size:12px">5 exercises</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--color-surface)"><span style="font-weight:600;font-size:14px">Sunday long form</span><span class="text-muted" style="font-size:12px">9 exercises</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Exercise, take one — variation brief up front, video beside the tab</div>
+<div class="dv-card" style="width:1200px">
+  <div style="display:flex;align-items:center;gap:16px;padding:12px 24px;background:#201e1d;color:#f3f2f2">
+    <span style="font:800 16px 'Archivo'">03 / 06</span>
+    <span style="font:400 13px 'Archivo';opacity:.75">Interval leaps</span>
+    <div style="flex:1;display:flex;gap:3px;margin:0 8px">
+      <span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:1;height:6px;background:var(--color-accent)"></span><span style="flex:2;height:6px;background:var(--color-accent-400)"></span><span style="flex:1.4;height:6px;background:rgba(243,242,242,.25)"></span><span style="flex:1.2;height:6px;background:rgba(243,242,242,.25)"></span><span style="flex:1.4;height:6px;background:rgba(243,242,242,.25)"></span>
+    </div>
+    <span style="font:800 15px 'Archivo';font-variant-numeric:tabular-nums">14:38 left</span>
+    <button class="btn" style="color:#f3f2f2;border-color:rgba(243,242,242,.4);border-width:1px;font-size:13px">&#10073;&#10073;&nbsp; Pause</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px">
+    <div style="border-right:2px solid var(--color-divider)">
+      <div style="padding:22px 26px 16px;border-bottom:1px solid var(--color-divider)">
+        <div class="kick" style="color:var(--color-accent-700);margin-bottom:8px">This time you are playing</div>
+        <h2 style="margin:0 0 10px;font-size:34px">Ascending 4ths in D Dorian, 7th position.</h2>
+        <p style="margin:0;max-width:640px;font-size:14px;color:rgba(32,30,29,.72)">Start on the root, leap up a 4th, step back down a 3rd, repeat up the mode. End every four-bar phrase on the 6th. Two passes at this exercise&rsquo;s clean tempo, 92 bpm.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--color-divider)">
+        <div style="padding:12px 14px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Key</div><div style="font:800 15px 'Archivo';margin-top:3px">D Dorian</div></div>
+        <div style="padding:12px 14px;border-right:1px solid var(--color-divider);background:var(--color-accent-100)"><div class="kick" style="font-size:10px;color:var(--color-accent-800)">Position</div><div style="font:800 15px 'Archivo';margin-top:3px;color:var(--color-accent-800)">7th fret</div></div>
+        <div style="padding:12px 14px;border-right:1px solid var(--color-divider);background:var(--color-accent-100)"><div class="kick" style="font-size:10px;color:var(--color-accent-800)">Interval</div><div style="font:800 15px 'Archivo';margin-top:3px;color:var(--color-accent-800)">4ths up</div></div>
+        <div style="padding:12px 14px;border-right:1px solid var(--color-divider);background:var(--color-accent-100)"><div class="kick" style="font-size:10px;color:var(--color-accent-800)">Land on</div><div style="font:800 15px 'Archivo';margin-top:3px;color:var(--color-accent-800)">the 6th (B)</div></div>
+        <div style="padding:12px 14px"><div class="kick" style="font-size:10px">Your clean tempo</div><div style="font:800 15px 'Archivo';margin-top:3px">92 <span style="font-weight:400;font-size:12px;color:rgba(32,30,29,.55)">best 104</span></div></div>
+      </div>
+
+      <div style="padding:20px 26px 8px;display:flex;align-items:baseline;justify-content:space-between">
+        <div class="kick">Tab · bars 1&ndash;4 · generated for this variation</div>
+        <div class="kick" style="font-size:10px">Red boxes are the fresh axes</div>
+      </div>
+      <div style="padding:0 26px 22px">
+        <div style="position:relative">
+          <span style="position:absolute;left:112px;top:-4px;bottom:-4px;width:26px;background:color-mix(in srgb,var(--color-accent) 16%,transparent)"></span>
+          <div class="str"><i>e</i><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b>10</b><b></b><b></b></div>
+          <div class="str"><i>B</i><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b>10</b><b></b><b>8</b><b></b><b>10</b><b></b><b></b><b>8</b></div>
+          <div class="str"><i>G</i><b></b><b></b><b></b><b>9</b><b></b><b>7</b><b></b><b>9</b><b></b><b>7</b><b></b><b>9</b><b></b><b></b><b></b><b></b></div>
+          <div class="str"><i>D</i><b>7</b><b></b><b>10</b><b></b><b>8</b><b></b><b>10</b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+          <div class="str"><i>A</i><b></b><b>8</b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+          <div class="str"><i>E</i><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+          <div style="display:grid;grid-template-columns:28px repeat(16,1fr);margin-top:6px">
+            <span></span><span class="kick" style="font-size:10px;grid-column:span 4">Bar 1</span><span class="kick" style="font-size:10px;grid-column:span 4">Bar 2</span><span class="kick" style="font-size:10px;grid-column:span 4">Bar 3</span><span class="kick" style="font-size:10px;grid-column:span 4">Bar 4 &middot; land on B</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 26px;border-top:2px solid var(--color-divider);display:flex;align-items:center;gap:14px">
+        <button class="btn btn-primary btn-icon" style="width:42px;height:42px;font-size:15px">&#9654;</button>
+        <span style="font:800 13px 'Archivo';font-variant-numeric:tabular-nums">Bar 2 · beat 3</span>
+        <span class="tag tag-outline">Hear it</span>
+        <span class="tag tag-neutral">Count-in on</span>
+        <span class="tag tag-neutral">Backing: modal vamp</span>
+        <span style="margin-left:auto;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">Pass 1 of 2</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="ph grayscale" style="height:200px;border-bottom:1px solid var(--color-divider)"><span style="font:400 10px 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);background:#f3f2f2;padding:4px 7px">Placeholder — hand demo, muted loop</span></div>
+      <div style="padding:16px 22px;border-bottom:2px solid var(--color-divider)">
+        <div class="kick" style="margin-bottom:10px">Shape on the neck</div>
+        <div class="fb" style="border-top:1px solid rgba(32,30,29,.3);border-bottom:1px solid rgba(32,30,29,.3)">
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">e</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">3</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">5</span></span><span></span><span></span>
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">B</span><span></span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">7</span></span><span></span><span><span class="dot" style="background:var(--color-accent);color:#fff">6</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">1</span></span><span></span><span></span>
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">G</span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">4</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="background:var(--color-accent);color:#fff">6</span></span><span></span><span></span><span></span>
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">D</span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-800);color:#fff">1</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">3</span></span><span></span><span></span><span></span>
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">A</span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="background:var(--color-accent);color:#fff">6</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">7</span></span><span></span><span></span><span></span>
+          <span style="border-left:0;font:400 10px 'Archivo';color:rgba(32,30,29,.5)">E</span><span></span><span></span><span></span><span></span><span><span class="dot" style="background:var(--color-neutral-800);color:#fff">1</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="background:var(--color-neutral-300)">3</span></span><span></span><span></span><span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:26px repeat(12,1fr);margin-top:5px">
+          <span></span><span class="kick" style="font-size:9px;text-align:center">1</span><span class="kick" style="font-size:9px;text-align:center">2</span><span class="kick" style="font-size:9px;text-align:center">3</span><span class="kick" style="font-size:9px;text-align:center">4</span><span class="kick" style="font-size:9px;text-align:center;color:var(--color-accent-700)">5</span><span class="kick" style="font-size:9px;text-align:center">6</span><span class="kick" style="font-size:9px;text-align:center;color:var(--color-accent-700)">7</span><span class="kick" style="font-size:9px;text-align:center">8</span><span class="kick" style="font-size:9px;text-align:center;color:var(--color-accent-700)">9</span><span class="kick" style="font-size:9px;text-align:center">10</span><span class="kick" style="font-size:9px;text-align:center">11</span><span class="kick" style="font-size:9px;text-align:center">12</span>
+        </div>
+      </div>
+      <div style="padding:16px 22px;border-bottom:2px solid var(--color-divider)">
+        <div class="kick" style="margin-bottom:8px">Up next in 8 s</div>
+        <div style="font:800 18px/1.2 'Archivo'">Voicing swap</div>
+        <p class="text-muted" style="margin:4px 0 0;font-size:12px">Drop 3 voicings over a ii&ndash;V&ndash;i backing. Three passes at its own clean tempo, 84 bpm.</p>
+      </div>
+      <div style="padding:16px 22px">
+        <div class="kick" style="margin-bottom:8px">Last time you played this</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding-bottom:6px;border-bottom:1px solid var(--color-divider)"><span class="text-muted">Aug 30</span><span>A Mixolydian · 5th pos · 84 bpm</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:6px"><span class="text-muted">Aug 24</span><span>G Ionian · 3rd pos · 80 bpm</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Exercise, take two — one full-bleed brief, hands-off from two metres away</div>
+<div class="dv-card" style="width:1200px;background:#201e1d;border-color:#201e1d">
+  <div style="display:flex;align-items:center;gap:20px;padding:16px 30px;border-bottom:2px solid rgba(243,242,242,.25);color:#f3f2f2">
+    <span style="font:800 13px 'Archivo';letter-spacing:.14em">FRETWORK</span>
+    <span style="font:400 13px 'Archivo';opacity:.6">Modal shapes, rolled fresh · exercise 3 of 6</span>
+    <span style="margin-left:auto;font:800 13px 'Archivo';opacity:.6">Space = pause</span>
+  </div>
+
+  <div style="padding:44px 56px 34px;color:#f3f2f2">
+    <div style="font:400 12px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent-400);margin-bottom:20px">Play this now</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:48px">
+      <h1 style="margin:0;font-size:76px;line-height:.98;max-width:740px">Ascending 4ths.<br>D&nbsp;Dorian, 7th&nbsp;position.<br><span style="color:var(--color-accent-500)">Land on the 6th.</span></h1>
+      <div style="flex:none;text-align:left">
+        <div style="font:800 108px/1 'Archivo';font-variant-numeric:tabular-nums">92</div>
+        <div style="font:400 12px 'Archivo';letter-spacing:.16em;text-transform:uppercase;opacity:.6">your clean tempo · two passes</div>
+        <div style="font:400 12px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent-400);margin-top:4px">Best ever 104</div>
+        <div style="display:flex;gap:6px;margin-top:22px">
+          <span style="width:22px;height:22px;background:var(--color-accent)"></span><span style="width:22px;height:22px;background:rgba(243,242,242,.25)"></span><span style="width:22px;height:22px;background:rgba(243,242,242,.25)"></span><span style="width:22px;height:22px;background:rgba(243,242,242,.25)"></span>
+        </div>
+        <div style="font:400 11px 'Archivo';letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-top:8px">Beat 1 of 4</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#f3f2f2;border-top:2px solid rgba(243,242,242,.25);padding:26px 56px 20px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+      <div class="kick">Tab, oversized for reading at a distance</div>
+      <div class="kick" style="font-size:10px">Shaded column = where the metronome is</div>
+    </div>
+    <div style="position:relative">
+      <span style="position:absolute;left:190px;top:-8px;bottom:-8px;width:40px;background:color-mix(in srgb,var(--color-accent) 18%,transparent)"></span>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">e</i><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px">10</b><b style="font-size:19px"></b><b style="font-size:19px"></b></div>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">B</i><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px">10</b><b style="font-size:19px"></b><b style="font-size:19px">8</b><b style="font-size:19px"></b><b style="font-size:19px">10</b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px">8</b></div>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">G</i><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px">9</b><b style="font-size:19px"></b><b style="font-size:19px">7</b><b style="font-size:19px"></b><b style="font-size:19px">9</b><b style="font-size:19px"></b><b style="font-size:19px">7</b><b style="font-size:19px"></b><b style="font-size:19px">9</b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b></div>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">D</i><b style="font-size:19px">7</b><b style="font-size:19px"></b><b style="font-size:19px">10</b><b style="font-size:19px"></b><b style="font-size:19px">8</b><b style="font-size:19px"></b><b style="font-size:19px">10</b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b></div>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">A</i><b style="font-size:19px"></b><b style="font-size:19px">8</b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b></div>
+      <div class="str" style="height:30px;grid-template-columns:34px repeat(16,1fr)"><i style="font-size:13px">E</i><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b><b style="font-size:19px"></b></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 260px;background:#f3f2f2;border-top:2px solid var(--color-divider)">
+    <div style="padding:16px 22px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Elapsed</div><div style="font:800 22px 'Archivo';margin-top:2px;font-variant-numeric:tabular-nums">16:22</div></div>
+    <div style="padding:16px 22px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Left in routine</div><div style="font:800 22px 'Archivo';margin-top:2px;font-variant-numeric:tabular-nums">14:38</div></div>
+    <div style="padding:16px 22px;border-right:1px solid var(--color-divider)"><div class="kick" style="font-size:10px">Next</div><div style="font:800 18px 'Archivo';margin-top:4px">Voicing swap · drop 3</div><div style="font:400 11px 'Archivo';color:rgba(32,30,29,.6);margin-top:2px">Its clean tempo: 84 bpm</div></div>
+    <div style="padding:12px 18px;display:flex;align-items:center;gap:8px"><button class="btn btn-secondary" style="flex:1;justify-content:flex-start">&#10073;&#10073;&nbsp; Pause</button><button class="btn btn-secondary btn-icon">&#8677;</button></div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Fretboard explorer — where a variation could send you</div>
+<div class="dv-card" style="width:1200px">
+  <div class="nav"><span class="nav-brand">FRETWORK</span><a href="#1a">Routines</a><a href="#1b">Practice</a><a href="#1d" aria-current="page">Fretboard</a><a href="#1e">Report</a></div>
+  <div style="padding:26px 30px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;border-bottom:2px solid var(--color-divider)">
+    <div>
+      <div class="kick" style="color:var(--color-accent-700);margin-bottom:8px">Fretboard</div>
+      <h2 style="margin:0;font-size:34px">D Dorian, every position you have played it in.</h2>
+    </div>
+    <div style="display:flex;gap:8px;flex:none">
+      <div class="seg">
+        <label class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)">All</label>
+        <label class="seg-opt"><input type="radio" name="pos">3rd</label>
+        <label class="seg-opt"><input type="radio" name="pos">5th</label>
+        <label class="seg-opt"><input type="radio" name="pos">7th</label>
+        <label class="seg-opt"><input type="radio" name="pos">10th</label>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:30px 30px 18px">
+    <div class="fb" style="grid-template-rows:repeat(6,38px);grid-template-columns:34px repeat(12,1fr);border-top:2px solid rgba(32,30,29,.42);border-bottom:2px solid rgba(32,30,29,.42);border-right:1px solid rgba(32,30,29,.3)">
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">e</span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">3</span></span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">4</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-accent);color:#fff">6</span></span>
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">B</span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-accent);color:#fff">6</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">7</span></span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-800);color:#fff">1</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">2</span></span>
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">G</span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">3</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">4</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-accent);color:#fff">6</span></span><span></span><span></span>
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">D</span><span></span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">7</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-800);color:#fff">1</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">3</span></span><span></span><span></span>
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">A</span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">4</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">5</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-accent);color:#fff">6</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">7</span></span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-800);color:#fff">1</span></span>
+      <span style="border-left:0;font:400 12px 'Archivo';color:rgba(32,30,29,.55)">E</span><span></span><span></span><span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-800);color:#fff">1</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">2</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">3</span></span><span></span><span><span class="dot" style="width:26px;height:26px;font-size:11px;background:var(--color-neutral-300)">4</span></span><span></span>
+    </div>
+    <div style="display:grid;grid-template-columns:34px repeat(12,1fr);margin-top:8px">
+      <span></span><span class="kick" style="font-size:10px;text-align:center">1</span><span class="kick" style="font-size:10px;text-align:center">2</span><span class="kick" style="font-size:10px;text-align:center">3</span><span class="kick" style="font-size:10px;text-align:center">4</span><span class="kick" style="font-size:10px;text-align:center">5</span><span class="kick" style="font-size:10px;text-align:center">6</span><span class="kick" style="font-size:10px;text-align:center">7</span><span class="kick" style="font-size:10px;text-align:center">8</span><span class="kick" style="font-size:10px;text-align:center">9</span><span class="kick" style="font-size:10px;text-align:center">10</span><span class="kick" style="font-size:10px;text-align:center">11</span><span class="kick" style="font-size:10px;text-align:center">12</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid var(--color-divider)">
+    <div style="padding:18px 24px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:10px">Legend</div>
+      <div style="display:grid;gap:7px;font-size:13px">
+        <span style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--color-neutral-800);color:#fff">1</span>Root · D</span>
+        <span style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--color-accent);color:#fff">6</span>Target degree this session</span>
+        <span style="display:flex;align-items:center;gap:9px"><span class="dot" style="background:var(--color-neutral-300)">4</span>Other mode degrees</span>
+      </div>
+    </div>
+    <div style="padding:18px 24px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:10px">Coverage</div>
+      <div style="display:grid;gap:9px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--color-divider);padding-bottom:7px"><span>Positions practised</span><span style="font-weight:600">3rd, 5th, 7th</span></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--color-divider);padding-bottom:7px"><span>Never rolled yet</span><span style="font-weight:600;color:var(--color-accent-700)">10th, 12th</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Keys covered in Dorian</span><span style="font-weight:600">D, G, A</span></div>
+      </div>
+    </div>
+    <div style="padding:18px 24px;display:flex;flex-direction:column;gap:10px;background:var(--color-surface)">
+      <div class="kick">Turn this into practice</div>
+      <p style="margin:0;font-size:13px;color:rgba(32,30,29,.72)">Build a routine that only rolls the positions and keys you have not covered.</p>
+      <button class="btn btn-primary btn-block">Roll a routine from the gaps</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Weekly report — the page you send your teacher</div>
+<div class="dv-card" style="width:820px">
+  <div style="padding:34px 40px 22px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px">
+      <div>
+        <div class="kick" style="color:var(--color-accent-700);margin-bottom:8px">Practice report · 31 Aug &ndash; 6 Sep 2026</div>
+        <h1 style="margin:0;font-size:40px">Jordan M.</h1>
+      </div>
+      <div style="flex:none;display:flex;gap:8px">
+        <button class="btn btn-secondary" style="font-size:12px">Export PDF</button>
+        <button class="btn btn-primary" style="font-size:12px">Send to teacher</button>
+      </div>
+    </div>
+  </div>
+  <hr class="hr" style="margin:0">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:2px solid var(--color-divider)">
+    <div style="padding:16px 20px;border-right:1px solid var(--color-divider)"><div style="font:800 30px/1 'Archivo'">5</div><div class="kick" style="font-size:10px;margin-top:4px">Sessions</div></div>
+    <div style="padding:16px 20px;border-right:1px solid var(--color-divider)"><div style="font:800 30px/1 'Archivo'">2 h 41</div><div class="kick" style="font-size:10px;margin-top:4px">Total time</div></div>
+    <div style="padding:16px 20px;border-right:1px solid var(--color-divider)"><div style="font:800 30px/1 'Archivo'">28</div><div class="kick" style="font-size:10px;margin-top:4px">Variations played</div></div>
+    <div style="padding:16px 20px"><div style="font:800 30px/1 'Archivo';color:var(--color-accent)">3</div><div class="kick" style="font-size:10px;margin-top:4px">Clean tempos raised</div></div>
+  </div>
+
+  <div style="padding:22px 40px 8px"><div class="kick">Time by day</div></div>
+  <div style="padding:0 40px 20px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:120px">
+    <span style="background:var(--color-accent);height:62%"></span><span style="background:var(--color-neutral-300);height:6%"></span><span style="background:var(--color-accent);height:88%"></span><span style="background:var(--color-accent-400);height:41%"></span><span style="background:var(--color-neutral-300);height:6%"></span><span style="background:var(--color-accent);height:74%"></span><span style="background:var(--color-accent-400);height:33%"></span>
+  </div>
+  <div style="padding:0 40px 22px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px">
+    <span class="kick" style="font-size:10px">Mon</span><span class="kick" style="font-size:10px">Tue</span><span class="kick" style="font-size:10px">Wed</span><span class="kick" style="font-size:10px">Thu</span><span class="kick" style="font-size:10px">Fri</span><span class="kick" style="font-size:10px">Sat</span><span class="kick" style="font-size:10px">Sun</span>
+  </div>
+  <hr class="hr" style="margin:0">
+
+  <div style="padding:22px 40px 10px"><div class="kick">Every exercise, with the variation it was rolled at</div></div>
+  <div style="padding:0 40px 24px">
+    <table class="table">
+      <thead><tr><th>Exercise</th><th>Variations seen</th><th style="width:56px">Reps</th><th style="width:126px">Clean tempo</th><th style="width:64px">Best</th></tr></thead>
+      <tbody>
+        <tr><td>Mode shapes, one string set</td><td class="text-muted">D Dorian · 3rd, 5th, 7th pos</td><td>9</td><td>96&nbsp; <span class="text-muted" style="font-size:12px">&uarr; from 92</span></td><td class="text-muted">108</td></tr>
+        <tr><td>Interval leaps</td><td class="text-muted">4ths, 5ths, 6ths · target 3rd &amp; 6th</td><td>7</td><td>92&nbsp; <span class="text-muted" style="font-size:12px">&uarr; from 84</span></td><td class="text-muted">104</td></tr>
+        <tr><td>Voicing swap</td><td class="text-muted">Drop 2, drop 3 · ii&ndash;V&ndash;i</td><td>6</td><td>84&nbsp; <span class="text-muted" style="font-size:12px">held</span></td><td class="text-muted">88</td></tr>
+        <tr><td>Rhythm displacement</td><td class="text-muted">Syncopated 8ths, 16ths</td><td>4</td><td>76&nbsp; <span class="text-muted" style="font-size:12px">&darr; from 80</span></td><td class="text-muted">80</td></tr>
+        <tr><td>Free improv over changes</td><td class="text-muted">Modal vamp, 8 and 16 bars</td><td>2</td><td class="text-muted">n/a</td><td class="text-muted">&mdash;</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="border-top:2px solid var(--color-divider);display:grid;grid-template-columns:1fr 1fr">
+    <div style="padding:18px 40px 22px;border-right:1px solid var(--color-divider)">
+      <div class="kick" style="margin-bottom:8px">Held up well</div>
+      <p style="margin:0;font-size:13px;color:rgba(32,30,29,.75)">Mode shapes stayed clean when the position changed, at every tempo up to 96.</p>
+    </div>
+    <div style="padding:18px 40px 22px">
+      <div class="kick" style="margin-bottom:8px">Fell apart</div>
+      <p style="margin:0;font-size:13px;color:rgba(32,30,29,.75)">Rhythm displacement above 76 bpm, and drop 3 voicings on the top string set.</p>
+    </div>
+  </div>
+  <div style="background:var(--color-accent);color:#fff;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+    <span style="font:800 19px/1.25 'Archivo';max-width:520px">Nothing here was played from memory. Every rep was a variation you saw for the first time.</span>
+    <span style="font:400 11px 'Archivo';letter-spacing:.12em;text-transform:uppercase;opacity:.85;flex:none">Fretwork</span>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: &ldquo;take the big brief from <a class="dv-oid" href="#1c">1c</a> into <a class="dv-oid" href="#1b">1b</a>&rdquo; · &ldquo;show the 8-second countdown screen between exercises&rdquo; · &ldquo;design the exercise editor where I define what varies&rdquo;</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}"></script>
+</body>
+</html>

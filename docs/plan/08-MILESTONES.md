@@ -1,0 +1,265 @@
+# 08 — Milestones
+
+Eleven milestones. Each ends in something you can **look at and judge**, and each is a review
+gate — we stop, you try it, we adjust the plan before the next one starts. That is the
+alignment mechanism you asked for, and it is also what keeps token spend down: course
+corrections happen at milestone boundaries, not after 3,000 lines have been written on a wrong
+assumption.
+
+Each milestone lists its tasks as the units an agent gets handed. One task ≈ one agent
+session. **Definition of done for every task: `pnpm check` is green and the milestone's
+verification steps pass.**
+
+Effort labels: **S** ≈ one focused agent session · **M** ≈ a substantial one · **L** ≈ should
+probably be split if it grows.
+
+---
+
+## M0 — Foundations & rails
+
+_Nothing musical. Get the machine running so every later task is cheap._
+
+| #   | Task                                                                                              | Size |
+| --- | ------------------------------------------------------------------------------------------------- | ---- |
+| 0.1 | Scaffold: Vite + React 19 + TS strict, pnpm, path alias `@/`, `.gitignore`, initial commit        | S    |
+| 0.2 | Tailwind v4 + shadcn/ui init; `styles/theme.css` with the Modernist tokens; radius 0; Archivo     | S    |
+| 0.3 | ESLint 9 flat config + Prettier + the import-boundary rules from doc 01                           | S    |
+| 0.4 | Vitest + RTL + jsdom setup; Playwright setup; `pnpm check` script                                 | S    |
+| 0.5 | GitHub Actions: CI (`check` + `build`) and Pages deploy                                           | S    |
+| 0.6 | App shell: hash router, `AppShell` with nav header, placeholder routes for every screen in doc 05 | S    |
+| 0.7 | `CLAUDE.md` at repo root (see doc 09)                                                             | S    |
+
+**Deliverable:** an empty but correctly-wired app with navigation, deployed to GitHub Pages.
+
+**Verify:** `pnpm dev` runs; nav works; `pnpm check` green; CI green; the Pages URL loads.
+
+---
+
+## M1 — Music domain & rendering primitives
+
+_The hardest, most bug-prone layer, built first and tested hard. Also the most motivating —
+it ends with sound and a moving playhead._
+
+| #   | Task                                                                                                                                                                                                                                                            | Size |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 1.1 | `domain/music/`: the tonal wrapper — scales, degrees, diatonic chords, key signatures, transposition, signature degree. **Table-driven tests over all 12 tonics × 7 modes.**                                                                                    | M    |
+| 1.2 | `domain/instrument/`: Instrument model, `noteAt`, `positionsOf`, `scaleOnNeck`, position windows, string sets. **3-note-per-string shape table only** — CAGED/positional deferred. Fixtures for standard, drop D and 7-string; all tests run against all three. | M    |
+| 1.3 | `domain/phrase/`: tick model, `Phrase`/`TabNote`, the phrase builder, bar/beat conversion, rhythm application. Tests.                                                                                                                                           | M    |
+| 1.4 | `<Fretboard />` — both sizes, all label modes, role colouring. RTL tests.                                                                                                                                                                                       | M    |
+| 1.5 | `<TabStaff />` — grid derivation from a phrase, articulation glyphs, bar labels, playhead overlay. RTL tests.                                                                                                                                                   | M    |
+| 1.6 | `audio/`: `Clock` interface, `ToneClock`, `FakeClock`, `AudioEngine` skeleton, `Metronome`, `SynthVoice`, `PhrasePlayer`. Unit tests against `FakeClock`.                                                                                                       | M    |
+| 1.7 | A dev-only `/dev/gallery` route: renders fixture phrases and overlays, with play/pause. **This is the thing you look at.**                                                                                                                                      | S    |
+
+**Deliverable:** a gallery page showing a real fretboard and real tab for a hand-authored
+phrase, where pressing play gives you a metronome and a playhead moving in time.
+
+**Verify:** the D Dorian scale spells `D E F G A B C`; the fretboard dots land on the right
+frets; the metronome is steady at 60 and at 180; the playhead tracks the click. **You should
+eyeball the fretboard and tab against a real guitar here** — errors in this layer poison
+everything downstream.
+
+**Risk retired:** enharmonic spelling, string indexing, tick math, audio scheduling, and any
+hard-coded assumption of six strings. These are the things most likely to be quietly wrong.
+
+---
+
+## M2 — The vertical slice: one exercise, end to end
+
+_Proves the whole architecture with the smallest possible amount of content._
+
+| #    | Task                                                                                                                                                            | Size |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 2.1  | `domain/variation/`: seeded RNG, axis registry, `AxisPolicy` resolution, the roller, coverage bias. Tests for all four policy modes and for an empty axis list. | M    |
+| 2.2  | `exercises/types.ts` + `registry.ts` + the first `shared/` generators (`scaleRun`, `applyRhythm`, `markRoles`, `overlayFromPhrase`, `briefFor`)                 | M    |
+| 2.3  | `data/`: Dexie schema, repositories, in-memory fake, `fake-indexeddb` tests                                                                                     | M    |
+| 2.4  | `store/`: Zustand session slice + settings slice; the runner state machine from doc 03, driven by `Clock`. **Unit tested with `FakeClock` — no UI.**            | M    |
+| 2.5  | The `modes-through-key` exercise (variant `plain` only). Golden-file test.                                                                                      | M    |
+| 2.6  | `/exercises` library + `/exercises/:id` detail with config form (target tempo, max tempo, reps, params)                                                         | M    |
+| 2.7  | `/practice/exercise/:id` — the running view from doc 05: chrome, brief, axis strip, tab, transport, neck rail                                                   | L    |
+| 2.8  | Free-time mode: transport toggle, clock-stopped run path, manual rep completion                                                                                 | S    |
+| 2.9  | Wire rep logging + `ExerciseStats` maintenance (same transaction) + `rebuildStats()` and its equivalence test                                                   | M    |
+| 2.10 | Keyboard map; E2E test of one full standalone practice run                                                                                                      | S    |
+
+**Deliverable:** you can open the app, pick "Seven modes through a key", press practice, get a
+rolled key, read the brief, play along to the metronome with the tab scrolling, finish, and
+see the rep in IndexedDB.
+
+**Verify:** run it with a guitar. Is the generated material actually playable? Is the brief
+clear? Does the tempo behave (adjust `currentTempo`, confirm `targetTempo` is untouched)? Does
+free time feel right, or does it need more than "press Enter when done"?
+
+**This is the most important review gate in the project.** Everything after it is repetition
+of patterns established here.
+
+---
+
+## M3 — The scale & mode family
+
+_First test of the "adding an exercise is cheap" claim._
+
+| #   | Task                                                                          | Size |
+| --- | ----------------------------------------------------------------------------- | ---- |
+| 3.1 | Shared generators: `intervalRun`, `oneNotePerString`, `horizontalRun` + tests | M    |
+| 3.2 | `interval-sequences`                                                          | S    |
+| 3.3 | `one-note-per-string`                                                         | S    |
+| 3.4 | `position-shifting`                                                           | S    |
+| 3.5 | `modes-through-key` variants: `arpeggio-then-scale`, `pause-on-root`          | S    |
+| 3.6 | `TabStaff` auto-scroll for long phrases                                       | S    |
+| 3.7 | `<AxisPolicyEditor />` + axis policies wired into the exercise config page    | M    |
+| 3.8 | Tag vocabulary + tag filtering in the exercise library                        | S    |
+
+**Deliverable:** four scale/mode exercises, all practisable standalone.
+
+**Verify:** is a new exercise really ~50 lines? If not, the shared layer is wrong and we fix
+it now rather than repeating the mistake nine more times. Also: pin every axis on one exercise
+and confirm it behaves as a sane static exercise.
+
+---
+
+## M4 — Theory exercises
+
+| #   | Task                                                                                            | Size |
+| --- | ----------------------------------------------------------------------------------------------- | ---- |
+| 4.1 | `domain/theory/`: question models, the `distractors` generator, feedback model                  | M    |
+| 4.2 | `TheorySinglePick`, `TheoryTableFill`, `TheoryFeedback` components + `<CircleOfFifths />` strip | M    |
+| 4.3 | Theory support in the runner: custom renderer path, scoring, no tempo                           | M    |
+| 4.4 | `diatonic-drill` (all four question types)                                                      | M    |
+| 4.5 | `circle-of-fifths`                                                                              | S    |
+
+**Deliverable:** two theory exercises, playable standalone, with the wrong-answer teaching
+screen.
+
+**Verify:** are the distractors actually hard? A theory drill with obvious wrong answers is
+worthless — this is the thing to judge here.
+
+---
+
+## M5 — Routines, the session runner & settings
+
+_Where the "hands-off run" premise finally works._
+
+| #   | Task                                                                                                                                                                       | Size |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 5.1 | Routine model + repository; routine chaining in the runner state machine (inter-exercise gap, next-up announcement, session-scoped axis rolling) — tested with `FakeClock` | M    |
+| 5.2 | `/routines/:id` builder: add/reorder/remove exercises, rep counts, session axis policies, gap, duration estimate                                                           | M    |
+| 5.3 | `/practice/routine/:id`: running chrome with segmented progress, `CountdownGap`, global pause                                                                              | M    |
+| 5.4 | `/home`: today's routine, routine list, session variation bar, re-roll all                                                                                                 | M    |
+| 5.5 | `/settings`: instrument, audio, practice defaults, export/import UI                                                                                                        | M    |
+| 5.6 | Export/import implementation + round-trip E2E test                                                                                                                         | M    |
+| 5.7 | E2E: a full 3-exercise routine (2 played + 1 theory) on `FakeClock`                                                                                                        | S    |
+
+**Deliverable:** you can build a routine and run it hands-off from start to finish.
+
+**Verify:** actually practise with it for a few days. This is the first point the app is
+genuinely usable, and the first point real usage will tell us things planning can't.
+
+---
+
+## M6 — Practice log, report & fretboard explorer
+
+| #   | Task                                                                                                                                                                                                                  | Size |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 6.1 | `domain/progress/`: coverage, heatmap, time-by-day, exercise log, streak, tempo history. Fixture-based tests.                                                                                                         | M    |
+| 6.2 | `<HeatmapGrid />`, `<DayBarChart />`; home page's practice heatmap and personal bests                                                                                                                                 | S    |
+| 6.3 | `/report`: date range picker, stat row, time-by-day, and the exercise table (played / tempos used / target / time). No prose fields.                                                                                  | M    |
+| 6.4 | `/fretboard`: full-neck explorer, position filter, legend, coverage panel                                                                                                                                             | M    |
+| 6.5 | `<KeyModeView />` full + compact, wired to the drawer and popover from every key/mode control                                                                                                                         | M    |
+| 6.6 | Mode character prose — 7 modes × (sounds like / signature note / avoid / compare), **practical voice**: what to play, not what genre it belongs to. Drafted for your edit, stored as `domain/music/modeCharacter.ts`. | S    |
+| 6.7 | Report export: self-contained single-file HTML (styles inlined) plus CSV of the raw log                                                                                                                               | S    |
+
+**Deliverable:** you can see what you've practised and what you've never touched, and export a
+week's summary as one file.
+
+**Verify:** does the coverage data match reality? Does the report tell you something you
+didn't know?
+
+---
+
+## M7 — Audio richness: backing, ear training, improv
+
+| #   | Task                                                                                                                                                                                                                    | Size |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 7.1 | `BackingTrack` model with shared/exercise scopes, seed pool, Dexie table + derived index columns, `findBackingTrack` resolution order (pinned → own → shared), `BackingPolicy`. Unit tests for every step of the order. | M    |
+| 7.2 | `<VideoEmbed />` facade + reference-video config on the exercise detail page                                                                                                                                            | S    |
+| 7.3 | `BackingSource` interface + `YouTubeBackingSource`, including `availableRates`/`setRate`, effective-tempo derivation, and default-rate selection against `targetTempo`                                                  | M    |
+| 7.4 | `<BackingControl />` + track management UI (add/edit tracks, shared or scoped to an exercise) + the 12×7 shared-pool coverage grid                                                                                      | M    |
+| 7.5 | `free-improv-target` (proves the runner handles a played exercise with no phrase)                                                                                                                                       | M    |
+| 7.6 | `ear-training` (all five drills) + its custom renderer                                                                                                                                                                  | L    |
+| 7.7 | `PreviewPlayer` — "hear it" for a phrase, a chord, a scale                                                                                                                                                              | S    |
+
+**Deliverable:** exercises you can improvise over, and ear training.
+
+**Verify:** does the shared pool cover enough key/mode combinations to be useful, and does
+slowing a track down actually work for practice — is 0.75× musically usable, or does it sound
+wrong enough that you'd rather have a click? That
+answer decides whether generated backing (deferred, specced in doc 06) is worth building, and
+the same checkpoint tells us whether sampled instruments are needed for ear training.
+
+---
+
+## M8 — The rest of the catalog
+
+| #   | Task                                                                                  | Size |
+| --- | ------------------------------------------------------------------------------------- | ---- |
+| 8.1 | Ladder tempo plans + pick-stroke rendering + articulation audio (velocity, palm mute) | M    |
+| 8.2 | `speed-picking`                                                                       | S    |
+| 8.3 | `legato`                                                                              | S    |
+| 8.4 | `remapToStringSet` + `string-skipping`                                                | M    |
+| 8.5 | Triad shape tables + chord-relative overlay labels + `triads-arpeggios`               | M    |
+| 8.6 | Interactive `FretboardInput` + `fretboard-note-finding`                               | M    |
+| 8.7 | CAGED/positional shape tables + `shapeSystem` axis offering both                      | M    |
+
+**Deliverable:** all thirteen exercises.
+
+---
+
+## M9 — Polish & the things that make it stick
+
+| #   | Task                                                                                                                                                                           | Size |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| 9.1 | PWA: `vite-plugin-pwa`, offline shell, icons, install prompt, graceful YouTube degradation                                                                                     | M    |
+| 9.2 | Post-session summary: every exercise run, target vs. settled tempo, one-click "adopt as target"                                                                                | M    |
+| 9.3 | "Roll a routine from my gaps" generator, wired to the fretboard explorer CTA                                                                                                   | M    |
+| 9.4 | Responsive pass: tablet landscape for the runner; type scaling for distance reading                                                                                            | M    |
+| 9.5 | Empty states, first-run seeding (a starter routine + a few configured exercises), error boundaries                                                                             | M    |
+| 9.6 | Accessibility pass; full keyboard audit                                                                                                                                        | S    |
+| 9.7 | Alternate tunings in the UI: tuning presets (drop D, DADGAD, 7-string), capo, left-handed. The model already supports all of it — this is the settings screen and the presets. | M    |
+
+**Deliverable:** an app you'd install and use daily without wishing for anything obvious.
+
+---
+
+## M10 — Optional: sync
+
+Only if you want it after living with export/import. Scoped in doc 07. Firebase is the
+recommended target. Roughly: auth UI, a `SyncedRepository` wrapper, security rules, conflict
+handling for the three mutable tables, and a sync-status indicator. Estimate: one M-sized
+milestone, not a rewrite — which is the whole point of the schema decisions in doc 07.
+
+---
+
+## Sequencing rationale
+
+- **The domain layer comes before any UI** because a spelling or indexing bug there is
+  invisible until it has propagated into ten exercises.
+- **One exercise end-to-end (M2) before four more (M3)** because M2 is where we discover the
+  `ExerciseDefinition` contract is wrong, and fixing it once is far cheaper than fixing it
+  five times.
+- **Standalone practice before routines** because it is the smaller runner, it's how you'd
+  test any single exercise, and routines are then "the same runner with a playlist".
+- **Theory (M4) before routines (M5)** so the routine runner is built against both exercise
+  kinds from the start and never bakes in "every exercise has tab".
+- **`free-improv-target` (M7) deliberately breaks the "played exercises have notes"
+  assumption** — scheduled early enough that the assumption never hardens.
+- **The report (M6) comes after routines (M5)** because it needs real logged data to be worth
+  looking at.
+- **Backing tracks (M7) are late** because nothing before them is blocked on them — and they
+  got substantially smaller once the pool replaced generation as the default. Generated
+  backing is now deferred past M9 entirely.
+
+## Rough shape
+
+M0–M2 is the bulk of the architectural risk and roughly a third of the total effort. M3, M4
+and M8 are largely repetition of established patterns and should go quickly. M5 and M7 are the
+two other substantial chunks. Wall-clock depends entirely on your review cadence, which is
+fine — the gates are the point.
