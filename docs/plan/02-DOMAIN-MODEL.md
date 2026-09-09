@@ -188,10 +188,19 @@ export interface ScaleShape {
 }
 ```
 
-v1 ships two shape systems: **three-note-per-string** (7 shapes, one per mode — the natural
-fit for the "7 modes through a key" exercise) and **positional/CAGED** (5 shapes). Both are
-data tables in `domain/instrument/shapes/`, not algorithms, because the canonical fingerings
-are conventional rather than derivable.
+v1 ships **three-note-per-string** shapes, and they are **generated from the tuning, not stored
+as fret tables** — a table bakes in standard tuning, since every offset moves when a string
+does and the major-third gap between G and B needs its own exception. The generator reproduces
+the canonical G major fingering with that shift falling out of "take the next scale note
+nearest the hand", and drop D, DADGAD, seven strings and bass all work unchanged.
+
+`shapesUpTheNeck(instrument, keyMode, { minFret })` returns the shapes **ascending the neck**,
+each starting on whichever degree falls next on the lowest string, carrying its own
+`startDegree`. Not "shape N starts on degree N": in D dorian the first D on the low E string
+is fret 10, so that ordering leaves frets 1–9 unused and runs the last shapes off the end.
+
+Positional/CAGED shapes are genuinely conventional fingerings rather than derivable, and are
+inherently six-string, so they arrive later as tables (milestone 8).
 
 ### String sets
 

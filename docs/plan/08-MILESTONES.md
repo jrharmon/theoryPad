@@ -45,7 +45,7 @@ Two things worth carrying forward:
 
 ---
 
-## M1 — Music domain & rendering primitives
+## M1 — Music domain & rendering primitives ✅ *complete (2026-09-09)*
 
 _The hardest, most bug-prone layer, built first and tested hard. Also the most motivating —
 it ends with sound and a moving playhead._
@@ -70,6 +70,23 @@ everything downstream.
 
 **Risk retired:** enharmonic spelling, string indexing, tick math, audio scheduling, and any
 hard-coded assumption of six strings. These are the things most likely to be quietly wrong.
+
+**Outcome.** 312 unit tests, 6 E2E, all gates green. Four things worth carrying into M2:
+
+- **Spelling needed a decision tonal does not make.** It spells scales correctly but produces
+  double accidentals in remote tonic/mode pairs (`Db phrygian` → `Db Ebb Fb Gb Ab Bbb Cb`).
+  The wrapper now rejects those, prefers the fewest accidentals, and breaks exact ties from an
+  explicit table — F# over Gb, Eb over D#, Ab over G#, Bb over A#. A blanket "prefer flats"
+  rule gives `Gb major`, which was the first attempt and wrong for guitar.
+- **Scale shapes are generated, not tabulated.** A 3nps fret table bakes in standard tuning;
+  the generator reproduces the canonical G major fingering with the B-string shift falling out
+  on its own, and drop D / seven-string / bass work unchanged.
+- **`shapesUpTheNeck` ascends from the nut**, each shape starting on whichever degree falls
+  next, rather than starting on degree 1 and chaining. The chained version left frets 1–9
+  unused in D dorian and ran the last shapes off the neck. M2's `modes-through-key` should
+  build on this and sort by `startDegree` if it wants mode order.
+- **The instrument test matrix earns its keep.** Two bugs were invisible on standard tuning
+  and caught only by the drop-D and seven-string fixtures.
 
 ---
 
