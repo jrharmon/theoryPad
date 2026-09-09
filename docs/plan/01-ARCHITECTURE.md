@@ -4,24 +4,31 @@
 
 | Concern              | Choice                                 | Notes                                                                                    |
 | -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Language             | TypeScript 5.x, `strict: true`         | `noUncheckedIndexedAccess` on too — we index arrays constantly (strings, frets, degrees) |
+| Language             | TypeScript 6.0.3 (pinned), `strict`         | `noUncheckedIndexedAccess` on too — we index arrays constantly (strings, frets, degrees) |
 | UI                   | React 19                               |                                                                                          |
-| Bundler / dev server | Vite 7                                 | Static output, no SSR, no server runtime                                                 |
+| Bundler / dev server | Vite 8                                 | Static output, no SSR, no server runtime                                                 |
 | Package manager      | pnpm                                   | Lockfile committed                                                                       |
 | Styling              | Tailwind CSS v4                        | CSS-first config via `@theme`; Modernist tokens live there                               |
 | Components           | shadcn/ui                              | Copied into `src/components/ui/`, owned by us, built on Radix                            |
 | Icons                | `lucide-react`                         | The design system already calls for Lucide                                               |
-| Routing              | React Router v7, declarative mode      | Hash or browser router — see "Deployment"                                                |
+| Routing              | React Router v8, declarative mode      | Hash router (see "Deployment")                                                |
 | App state            | Zustand                                | Slice-per-concern, no Redux ceremony                                                     |
 | Music theory         | `tonal`                                | Wrapped, never imported outside `src/domain/music/`                                      |
 | Audio                | `tone`                                 | Wrapped, never imported outside `src/audio/`                                             |
 | Persistence          | `dexie` + `dexie-react-hooks`          | IndexedDB                                                                                |
 | Validation           | `zod`                                  | Exercise params, imported JSON, settings                                                 |
 | Charts               | Hand-rolled SVG/CSS                    | The report's bar chart and heatmap are trivial; a charting lib is not worth 100KB        |
-| Unit/component tests | Vitest + React Testing Library + jsdom |                                                                                          |
+| Unit/component tests | Vitest 5 + React Testing Library + jsdom |                                                                                          |
 | E2E                  | Playwright                             | Chromium only                                                                            |
 | PWA                  | `vite-plugin-pwa`                      | Workbox under the hood                                                                   |
-| Lint/format          | ESLint 9 (flat config) + Prettier      |                                                                                          |
+| Lint/format          | ESLint 10 (flat config) + Prettier      |                                                                                          |
+
+**Versions as built (2026-09-08).** TypeScript is **pinned to 6.0.3**. TS 7 — the Go-native
+compiler — is released and tagged `latest`, but `typescript-eslint` does not support it yet
+(their issue #10940 tracks it), and losing type-aware linting costs more than the compiler
+speed gains at this size. Revisit when support lands; the tsconfigs already avoid `baseUrl`,
+which TS 7 removes. Node 25 has dropped `corepack`, so pnpm is installed globally rather than
+pinned through `packageManager`.
 
 **Dependency discipline:** every third-party library with a wide API surface (`tonal`, `tone`,
 `dexie`) is accessed through a single wrapper module. Nothing else in the codebase imports
@@ -95,6 +102,19 @@ theoryPad/
    ├─ fixtures/               # hand-authored phrases, instruments, sessions
    └─ golden/                 # snapshot outputs of exercise generators
 ```
+
+### TypeScript project layout
+
+Three referenced projects rather than one, because they need genuinely different `types`:
+
+| Project | Covers | `types` |
+| --- | --- | --- |
+| `tsconfig.app.json` | `src` | `vite/client` — **no Node types**, so app code cannot reach for `fs` or `process` |
+| `tsconfig.test.json` | `test`, `e2e` | `node`, `vitest/globals` |
+| `tsconfig.node.json` | the config files | `node` |
+
+jest-dom's matchers are registered through `src/vitest.d.ts` and `test/vitest.d.ts`, which
+import `@testing-library/jest-dom/vitest` — the `types` array can't reach that subpath.
 
 ### The rule that keeps this clean
 

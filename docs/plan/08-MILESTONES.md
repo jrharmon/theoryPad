@@ -15,7 +15,7 @@ probably be split if it grows.
 
 ---
 
-## M0 — Foundations & rails
+## M0 — Foundations & rails ✅ *complete (2026-09-08)*
 
 _Nothing musical. Get the machine running so every later task is cheap._
 
@@ -32,6 +32,16 @@ _Nothing musical. Get the machine running so every later task is cheap._
 **Deliverable:** an empty but correctly-wired app with navigation, deployed to GitHub Pages.
 
 **Verify:** `pnpm dev` runs; nav works; `pnpm check` green; CI green; the Pages URL loads.
+
+**Outcome.** `pnpm check`, `pnpm build` and `pnpm test:e2e` all green; 15 unit tests, 2 E2E.
+Two things worth carrying forward:
+
+- **TypeScript pinned to 6.0.3** — typescript-eslint has no TS 7 support yet. See doc 01.
+- **The ESLint layer boundaries silently did not fire on the first attempt.** In flat config,
+  the last matching block wins a rule outright rather than merging, so four overlapping
+  `no-restricted-imports` blocks left only the last one in effect. Task 0.8 was added: a test
+  that lints on-disk fixtures and asserts every boundary still fires. Worth remembering the
+  general lesson — a guard rail nobody tests is not a guard rail.
 
 ---
 
