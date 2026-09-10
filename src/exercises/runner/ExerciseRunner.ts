@@ -4,7 +4,13 @@ import type { Phrase } from '@/domain/phrase';
 import { ticksPerBar } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
 import type { CoverageCounts, RolledVariation } from '@/domain/variation';
-import { hashSeed, mulberry32, rollVariation, variationKeys } from '@/domain/variation';
+import {
+  hashSeed,
+  mulberry32,
+  rollVariation,
+  variationKeyMode,
+  variationKeys,
+} from '@/domain/variation';
 import type { TempoConfig, TempoPlan } from '@/domain/tempo';
 import { clampTempo, resolveStartTempo } from '@/domain/tempo';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
@@ -28,8 +34,25 @@ export interface RunnerConfig {
   heldAxisValues?: Record<string, string>;
   axisPolicies?: Parameters<typeof rollVariation>[0]['policies'];
   coverage?: CoverageCounts;
-  /** Injected so the runner stays pure — no Date.now() in src/domain. */
+  /** Injected so the runner stays pure — nothing here reads a real clock. */
   now: () => number;
+
+  /**
+   * Called immediately before the clock starts for a rep, so the caller can
+   * arrange sound against the same timeline. The runner owns count-in timing,
+   * so the phrase must be scheduled at `countInTicks`, not at zero.
+   */
+  onRepStart?: (info: RepStartInfo) => void;
+  /** Called as each rep ends, so the caller can persist it. */
+  onRepEnd?: (rep: RepRecord) => void;
+}
+
+export interface RepStartInfo {
+  phrase: Phrase | null;
+  countInTicks: number;
+  tempo: number | null;
+  freeTime: boolean;
+  repIndex: number;
 }
 
 export type RunnerListener = (snapshot: RunnerSnapshot) => void;
@@ -60,6 +83,7 @@ export class ExerciseRunner {
   private instance: ExerciseInstance | null = null;
   private currentTempo: number | null = null;
   private repStartedAt = 0;
+  private currentKeyMode: KeyMode | null = null;
   private countInTicks = 0;
   private completed: RepRecord[] = [];
 
@@ -81,7 +105,7 @@ export class ExerciseRunner {
       currentTempo: this.currentTempo,
       targetTempo: this.config.tempo.targetTempo,
       freeTime: this.isFreeTime,
-      keyMode: this.config.sessionKeyMode,
+      keyMode: this.currentKeyMode ?? this.config.sessionKeyMode,
       instrument: this.config.instrument,
     };
   }
@@ -227,9 +251,14 @@ export class ExerciseRunner {
       sessionKeyMode,
     });
 
+    // An exercise that rolls its own key must be generated in that key, not in
+    // the session's. The session key is only the fallback for exercises that
+    // do not declare one — a routine sharing a key across its exercises.
+    this.currentKeyMode = variationKeyMode(this.variation, sessionKeyMode) ?? sessionKeyMode;
+
     this.instance = definition.generate({
       variation: this.variation,
-      keyMode: sessionKeyMode,
+      keyMode: this.currentKeyMode,
       instrument,
       params: this.config.params,
       rng: mulberry32(seed),
@@ -254,6 +283,13 @@ export class ExerciseRunner {
     if (this.isFreeTime) {
       // No clock, no count-in, no playhead. The rep ends when the player says.
       this.countInTicks = 0;
+      this.config.onRepStart?.({
+        phrase: this.currentPhrase,
+        countInTicks: 0,
+        tempo: null,
+        freeTime: true,
+        repIndex: this.repIndex,
+      });
       this.setState('playing');
       return;
     }
@@ -278,6 +314,14 @@ export class ExerciseRunner {
       );
     }
 
+    this.config.onRepStart?.({
+      phrase,
+      countInTicks: this.countInTicks,
+      tempo: this.currentTempo,
+      freeTime: false,
+      repIndex: this.repIndex,
+    });
+
     clock.start();
   }
 
@@ -286,7 +330,7 @@ export class ExerciseRunner {
     this.config.clock.stop();
 
     if (this.variation) {
-      this.completed.push({
+      const record: RepRecord = {
         exerciseId: this.config.exerciseId,
         definitionId: this.config.definition.id,
         index: this.repIndex,
@@ -297,7 +341,9 @@ export class ExerciseRunner {
         axes: variationKeys(this.variation),
         seed: this.variation.seed,
         status: outcome,
-      });
+      };
+      this.completed.push(record);
+      this.config.onRepEnd?.(record);
       // What this rep rolled becomes what the next one holds.
       this.config.heldAxisValues = variationKeys(this.variation);
     }

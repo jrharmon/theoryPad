@@ -290,6 +290,16 @@ describe('TabStaff', () => {
     expect(screen.getAllByTestId(/^bar-label-/)).toHaveLength(8);
   });
 
+  it('fits more bars on a line at coarser subdivisions', () => {
+    const eighths = phraseBuilder()
+      .rhythm(EIGHTH)
+      .sequence(Array.from({ length: 48 }, (_, i) => p(0, i % 12)))
+      .build();
+    render(<TabStaff phrase={eighths} instrument={STANDARD_GUITAR} />);
+    // 8 columns a bar, so three bars a line: six bars over two lines.
+    expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '2');
+  });
+
   it('keeps a short phrase on one line', () => {
     render(<TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} />);
     expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '1');
@@ -301,8 +311,9 @@ describe('TabStaff', () => {
       .sequence(Array.from({ length: 64 }, (_, i) => p(0, i % 12)))
       .build();
     render(<TabStaff phrase={sixteenths} instrument={STANDARD_GUITAR} />);
-    // 16 columns per bar, so four bars a line would be 64 columns; auto halves it.
-    expect(Number(screen.getByTestId('tab-staff').getAttribute('data-systems'))).toBeGreaterThan(1);
+    // 16 columns a bar, so a sixteenth-note phrase gets one bar a line —
+    // any more and two-digit frets run into each other.
+    expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '4');
   });
 
   it('gives notes the same identity wherever they wrap to', () => {

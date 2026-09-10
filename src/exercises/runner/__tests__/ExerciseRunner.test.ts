@@ -403,6 +403,74 @@ describe('re-roll and hold', () => {
   });
 });
 
+describe('key and mode', () => {
+  it('generates in the key the exercise rolled, not the session fallback', () => {
+    // The exercise declares key and mode axes, so what it rolls wins. Passing
+    // the session key here produced a brief that named one key while the axis
+    // strip showed another.
+    const { runner } = makeRunner();
+    runner.start();
+    const rolled = runner.snapshot.variation!;
+    expect(runner.snapshot.keyMode.tonic).toBe(rolled.axes.key!.key);
+    expect(runner.snapshot.keyMode.mode).toBe(rolled.axes.mode!.key);
+    expect(runner.currentInstance!.brief.headline).toContain(rolled.axes.key!.display);
+  });
+
+  it('falls back to the session key when the exercise rolls none', () => {
+    const noKey = { ...tinyExercise, axes: ['direction'] as never };
+    const { runner } = makeRunner({ definition: noKey });
+    runner.start();
+    expect(runner.snapshot.keyMode).toEqual(D_DORIAN);
+  });
+});
+
+describe('lifecycle hooks', () => {
+  it('announces a rep before the clock starts, so sound can be arranged', () => {
+    const onRepStart = vi.fn();
+    const { runner } = makeRunner({ countInBars: 1, onRepStart });
+    runner.start();
+    runner.begin();
+
+    expect(onRepStart).toHaveBeenCalledTimes(1);
+    const info = onRepStart.mock.calls[0]![0] as { countInTicks: number; tempo: number | null };
+    // The phrase has to be scheduled after the count-in, not at zero.
+    expect(info.countInTicks).toBe(ticksPerBar({ beats: 4, unit: 4 }));
+    expect(info.tempo).toBe(76);
+  });
+
+  it('reports free time so the caller knows not to start a metronome', () => {
+    const onRepStart = vi.fn();
+    const { runner } = makeRunner({ freeTime: true, onRepStart });
+    runner.start();
+    runner.begin();
+    expect(onRepStart.mock.calls[0]![0]).toMatchObject({ freeTime: true, tempo: null });
+  });
+
+  it('hands each rep over as it ends, so it can be persisted', () => {
+    const onRepEnd = vi.fn();
+    const { runner, clock } = makeRunner({ reps: 2, onRepEnd });
+    runner.start();
+    runner.begin();
+    playThrough(runner, clock);
+    expect(onRepEnd).toHaveBeenCalledTimes(1);
+    expect(onRepEnd.mock.calls[0]![0]).toMatchObject({ index: 0, status: 'completed' });
+
+    runner.begin();
+    playThrough(runner, clock);
+    expect(onRepEnd).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports an abandoned rep too', () => {
+    const onRepEnd = vi.fn();
+    const { runner, clock } = makeRunner({ reps: 3, onRepEnd });
+    runner.start();
+    runner.begin();
+    clock.advanceTicks(QUARTER);
+    runner.end();
+    expect(onRepEnd.mock.calls[0]![0]).toMatchObject({ status: 'abandoned' });
+  });
+});
+
 describe('subscription', () => {
   it('notifies on every state change, and unsubscribes cleanly', () => {
     const { runner, clock } = makeRunner({ reps: 1 });

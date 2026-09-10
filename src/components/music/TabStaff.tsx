@@ -26,6 +26,9 @@ const ROW_HEIGHT = { compact: 19, large: 30 } as const;
 const FRET_SIZE = { compact: 12, large: 19 } as const;
 const LABEL_COL = { compact: 28, large: 34 } as const;
 
+/** Widest a line gets before adjacent fret numbers stop reading as separate. */
+const MAX_COLUMNS_PER_SYSTEM = 24;
+
 /**
  * Written articulation marks.
  *
@@ -59,15 +62,17 @@ interface Placed {
  * Real tab breaks into systems rather than running one long line off the page,
  * and generated exercise phrases get long — seven modes across the neck is
  * dozens of bars. Four bars is the conventional line, but at fine subdivisions
- * that is far too many columns to read, so the default adapts to keep a line
- * near 32 columns.
+ * that is far too many columns to read: two bars of sixteenths is 32 columns,
+ * and two-digit frets at that width run into each other, so 14 16 17 reads as
+ * 141617. The default targets 24 columns a line, which keeps adjacent numbers
+ * apart at every subdivision.
  */
 function resolveBarsPerSystem(
   barsPerSystem: number | 'auto',
   columnsPerBar: number,
 ): number {
   if (barsPerSystem !== 'auto') return Math.max(1, barsPerSystem);
-  return Math.min(4, Math.max(1, Math.floor(32 / Math.max(1, columnsPerBar))));
+  return Math.min(4, Math.max(1, Math.floor(MAX_COLUMNS_PER_SYSTEM / Math.max(1, columnsPerBar))));
 }
 
 function chunk<T>(items: T[], size: number): T[][] {

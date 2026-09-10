@@ -2,6 +2,9 @@ import { createHashRouter, Navigate } from 'react-router';
 import { AppShell } from '@/app/AppShell';
 import { Placeholder } from '@/routes/Placeholder';
 import { Gallery } from '@/routes/dev/Gallery';
+import { ExerciseLibrary } from '@/routes/exercises/ExerciseLibrary';
+import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
+import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 
 /**
  * Hash routing: GitHub Pages serves from a subpath and has no SPA fallback,
@@ -36,36 +39,9 @@ export const router = createHashRouter([
           />
         ),
       },
-      {
-        path: 'exercises',
-        element: (
-          <Placeholder
-            title="Exercises"
-            milestone="Milestone 2"
-            summary="Every exercise in the registry plus your configured instances, filtered by tag."
-          />
-        ),
-      },
-      {
-        path: 'exercises/:exerciseId',
-        element: (
-          <Placeholder
-            title="Exercise detail"
-            milestone="Milestone 2"
-            summary="Configure the target tempo, max tempo, reps, params, axis policies and reference video. Start a standalone practice run."
-          />
-        ),
-      },
-      {
-        path: 'practice/exercise/:exerciseId',
-        element: (
-          <Placeholder
-            title="Practice"
-            milestone="Milestone 2"
-            summary="The running view: variation brief, axis strip, tab, transport and the neck diagram."
-          />
-        ),
-      },
+      { path: 'exercises', element: <ExerciseLibrary /> },
+      { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
+      { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
       {
         path: 'practice/routine/:routineId',
         element: (
