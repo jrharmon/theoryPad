@@ -1,0 +1,123 @@
+import type { ComponentType } from 'react';
+import type { z } from 'zod';
+import type { KeyMode } from '@/domain/music';
+import type { Instrument } from '@/domain/instrument';
+import type { NeckOverlay } from '@/domain/neck';
+import type { Phrase } from '@/domain/phrase';
+import type { TempoPlan } from '@/domain/tempo';
+import type { AxisId, AxisPolicies, Rng, RolledVariation } from '@/domain/variation';
+
+export const KNOWN_TAGS = [
+  // Musical content
+  'scales', 'modes', 'arpeggios', 'triads', 'chords', 'intervals',
+  // Technique
+  'picking', 'legato', 'speed', 'string-skipping', 'sweeping', 'stretching',
+  // Knowledge
+  'theory', 'fretboard-knowledge', 'ear-training', 'key-signatures',
+  // Shape of the work
+  'no-guitar', 'improv', 'whole-neck', 'positional', 'horizontal', 'warm-up', 'timing',
+] as const;
+
+export type ExerciseTag = (typeof KNOWN_TAGS)[number];
+
+/** Whether a metronome makes sense for this exercise at all. */
+export type ExerciseTiming = 'metronome' | 'free' | 'either';
+
+/** Fresh variation per rep, or one variation for the whole exercise. */
+export type RerollPolicy = 'per-rep' | 'per-exercise';
+
+export interface Brief {
+  /** One sentence stating the whole rolled variation. The headline. */
+  headline: string;
+  /** What to actually do, including reps and tempo. */
+  instruction: string;
+  /** Which axes to surface in the strip above the tab, in order. */
+  highlightAxes: AxisId[];
+}
+
+export interface PlayedInstance {
+  kind: 'played';
+  brief: Brief;
+  /**
+   * The notes to play. May legitimately be empty — a free-improv exercise has
+   * bars and a backing track but nothing written.
+   */
+  phrase: Phrase;
+  neck: NeckOverlay;
+}
+
+export interface TheoryInstance {
+  kind: 'theory';
+  brief: Brief;
+  /** Filled in when the theory question model lands in milestone 4. */
+  questions: unknown[];
+}
+
+export type ExerciseInstance = PlayedInstance | TheoryInstance;
+
+export interface GenerationContext<P = void> {
+  /** Resolved axis values. `axes` is empty for a static exercise. */
+  variation: RolledVariation;
+  /** The session key and mode. */
+  keyMode: KeyMode;
+  instrument: Instrument;
+  params: P;
+  /** Seeded. Use this, never Math.random(). */
+  rng: Rng;
+  repIndex: number;
+}
+
+export interface ExerciseRendererProps {
+  instance: ExerciseInstance;
+  instrument: Instrument;
+}
+
+export interface ExerciseDefaults<P> {
+  /** Null for theory exercises and anything with no pulse. */
+  targetTempo: number | null;
+  reps: number;
+  tempoPlan?: TempoPlan;
+  params?: P;
+  /** Per-axis overrides. Anything omitted rolls freely. */
+  axisPolicies?: AxisPolicies;
+}
+
+export interface ExerciseDefinition<P = void> {
+  /** Stable slug. Persisted in the rep log forever — never change it. */
+  id: string;
+  name: string;
+  /** Controlled vocabulary. An exercise usually carries two to four. */
+  tags: ExerciseTag[];
+  kind: 'played' | 'theory';
+  /** One sentence, for the exercise library. */
+  summary: string;
+  /** What this trains and why. Markdown. */
+  description?: string;
+
+  /**
+   * Which axes this exercise varies. An empty array is entirely valid — that
+   * is a static exercise, and every other part of the system treats it the same.
+   */
+  axes: AxisId[];
+
+  /** Per-instance configuration. A Zod schema gives typed params and a form. */
+  params?: z.ZodType<P>;
+
+  defaults: ExerciseDefaults<P>;
+
+  timing?: ExerciseTiming;
+  rerollPolicy?: RerollPolicy;
+
+  /** The function. Pure: same context in, same instance out. */
+  generate(context: GenerationContext<P>): ExerciseInstance;
+
+  /** How long one rep takes, for routine duration estimates. */
+  estimateRepSeconds(instance: ExerciseInstance, tempo: number | null): number;
+
+  /** Replace the default runner body entirely. The escape hatch. */
+  Renderer?: ComponentType<ExerciseRendererProps>;
+}
+
+/** An ExerciseDefinition with its params type erased, for storing in the registry. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyExerciseDefinition = ExerciseDefinition<any>;
