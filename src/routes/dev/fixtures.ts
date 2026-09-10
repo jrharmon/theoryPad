@@ -81,6 +81,40 @@ export function articulationPhrase() {
     .build();
 }
 
+/**
+ * The same pattern picked, then slurred, alternating bar by bar — so the
+ * velocity difference can be heard back to back rather than inferred from one
+ * pass. Repetition is what makes it audible.
+ */
+export function legatoComparisonPhrase() {
+  const pattern = [7, 9, 10, 9, 7, 9, 10, 9];
+  const string = 3; // the G string, comfortably in the middle of the neck
+  const builder = phraseBuilder({ repeat: 2 }).rhythm(EIGHTH);
+
+  builder.labelBar('Picked');
+  pattern.forEach((fret, i) => {
+    builder.note(
+      { string, fret },
+      { pickStroke: i % 2 === 0 ? 'down' : 'up', velocity: 0.85 },
+    );
+  });
+
+  builder.labelBar('Legato — only the first note is picked');
+  pattern.forEach((fret, i) => {
+    if (i === 0) {
+      builder.note({ string, fret }, { pickStroke: 'down', velocity: 0.85 });
+      return;
+    }
+    const previous = pattern[i - 1]!;
+    builder.note(
+      { string, fret },
+      { articulation: fret > previous ? 'hammer-on' : 'pull-off', velocity: 0.85 },
+    );
+  });
+
+  return builder.build();
+}
+
 /** A sixteenth-note run — the resolution the tab grid has to handle. */
 export function sixteenthRunPhrase() {
   const positions = scaleShape(STANDARD_GUITAR, { keyMode: D_DORIAN, minFret: 5 }).slice(0, 16);

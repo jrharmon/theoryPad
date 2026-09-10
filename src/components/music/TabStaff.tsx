@@ -24,17 +24,25 @@ const ROW_HEIGHT = { compact: 19, large: 30 } as const;
 const FRET_SIZE = { compact: 12, large: 19 } as const;
 const LABEL_COL = { compact: 28, large: 34 } as const;
 
-/** Glyphs shown between notes; only articulations with a written mark appear. */
-const ARTICULATION_GLYPH: Partial<Record<Articulation, string>> = {
-  'hammer-on': 'h',
-  'pull-off': 'p',
-  'slide-up': '/',
-  'slide-down': '\\',
-  'slide-into': '/',
-  bend: 'b',
-  'bend-release': 'r',
-  vibrato: '~',
-  'palm-mute': 'PM',
+/**
+ * Written articulation marks.
+ *
+ * `leading` marks connect this note to the one before it, so they are written
+ * in front of the fret number — tab writes 5h7, not 5 7h. `trailing` marks
+ * describe the note itself and follow it.
+ */
+const ARTICULATION_MARK: Partial<Record<Articulation, { glyph: string; leading: boolean }>> = {
+  'hammer-on': { glyph: 'h', leading: true },
+  'pull-off': { glyph: 'p', leading: true },
+  'slide-up': { glyph: '/', leading: true },
+  'slide-down': { glyph: '\\', leading: true },
+  'slide-into': { glyph: '/', leading: true },
+  bend: { glyph: 'b', leading: false },
+  'bend-release': { glyph: 'r', leading: false },
+  vibrato: { glyph: '~', leading: false },
+  'palm-mute': { glyph: 'PM', leading: false },
+  ghost: { glyph: '( )', leading: false },
+  staccato: { glyph: '.', leading: false },
 };
 
 interface Placed {
@@ -140,6 +148,60 @@ export function TabStaff({
   );
 }
 
+function NoteChip({
+  stringIndex,
+  column,
+  note,
+  fretSize,
+  showPickStrokes,
+}: {
+  stringIndex: number;
+  column: number;
+  note: TabNote;
+  fretSize: number;
+  showPickStrokes: boolean;
+}) {
+  const mark = note.articulation ? ARTICULATION_MARK[note.articulation] : undefined;
+  const glyph = mark && (
+    <span
+      data-testid={`articulation-${stringIndex}-${column}`}
+      className={[
+        mark.leading ? 'mr-[1px]' : 'ml-[1px]',
+        'font-semibold text-accent-700',
+      ].join(' ')}
+      style={{ fontSize: fretSize * 0.72 }}
+    >
+      {mark.glyph}
+    </span>
+  );
+
+  return (
+    <span
+      data-testid={`tab-note-${stringIndex}-${column}`}
+      data-fret={note.fret}
+      data-role={note.role ?? 'none'}
+      data-articulation={note.articulation ?? ''}
+      className={[
+        'flex items-baseline whitespace-nowrap bg-bg px-[1px] font-extrabold tabular-nums leading-none',
+        note.role === 'target' ? 'text-accent-700' : 'text-ink',
+      ].join(' ')}
+      style={{ fontSize: fretSize }}
+    >
+      {showPickStrokes && note.pickStroke && (
+        <span
+          data-testid={`pick-stroke-${stringIndex}-${column}`}
+          className="mr-[1px] self-start text-[0.62em] font-normal text-ink/55"
+        >
+          {note.pickStroke === 'down' ? '⊓' : 'V'}
+        </span>
+      )}
+      {mark?.leading && glyph}
+      {note.fret}
+      {mark && !mark.leading && glyph}
+    </span>
+  );
+}
+
 interface TabRowProps {
   instrument: Instrument;
   stringIndex: number;
@@ -190,31 +252,13 @@ function TabRow({
             style={{ height: rowHeight, ...lineBackground }}
           >
             {note && (
-              <span
-                data-testid={`tab-note-${stringIndex}-${column}`}
-                data-fret={note.fret}
-                data-role={note.role ?? 'none'}
-                className={[
-                  'bg-bg px-[1px] font-extrabold tabular-nums leading-none',
-                  note.role === 'target' ? 'text-accent-700' : 'text-ink',
-                ].join(' ')}
-                style={{ fontSize: fretSize }}
-              >
-                {showPickStrokes && note.pickStroke && (
-                  <span className="mr-[1px] align-super text-[0.6em] font-normal text-ink/50">
-                    {note.pickStroke === 'down' ? '⊓' : 'V'}
-                  </span>
-                )}
-                {note.fret}
-                {note.articulation && ARTICULATION_GLYPH[note.articulation] && (
-                  <span
-                    data-testid={`articulation-${stringIndex}-${column}`}
-                    className="ml-[1px] text-[0.7em] font-normal text-ink/60"
-                  >
-                    {ARTICULATION_GLYPH[note.articulation]}
-                  </span>
-                )}
-              </span>
+              <NoteChip
+                stringIndex={stringIndex}
+                column={column}
+                note={note}
+                fretSize={fretSize}
+                showPickStrokes={showPickStrokes}
+              />
             )}
           </div>
         );

@@ -8,6 +8,7 @@ import {
   articulationPhrase,
   chordPhrase,
   fullNeckOverlay,
+  legatoComparisonPhrase,
   scaleRunPhrase,
   shapeOverlay,
   sixteenthRunPhrase,
@@ -47,13 +48,28 @@ export function Gallery() {
       </Section>
 
       <Section
-        title="Tab · articulations and pick strokes"
-        note="Slurred notes are played more quietly than picked ones — audible with Notes on, Metronome off."
+        title="Tab · picked vs legato"
+        note="The same eight notes twice: picked, then slurred. Turn the metronome off and listen for the drop in attack on the h and p notes. Repeats twice."
+      >
+        <TabExample
+          id="legato"
+          phrase={legatoComparisonPhrase()}
+          transport={transport}
+          size="large"
+          showPickStrokes
+        />
+        <ArticulationLegend />
+      </Section>
+
+      <Section
+        title="Tab · articulation marks"
+        note="Every written mark the renderer supports"
       >
         <TabExample
           id="articulations"
           phrase={articulationPhrase()}
           transport={transport}
+          size="large"
           showPickStrokes
         />
       </Section>
@@ -137,6 +153,27 @@ function Header() {
         major {sig.relativeMajor}, {sig.sharps} sharps and {sig.flats} flats.
       </p>
     </div>
+  );
+}
+
+function ArticulationLegend() {
+  const marks: [string, string][] = [
+    ['⊓ V', 'pick stroke: down, up'],
+    ['h', 'hammer-on'],
+    ['p', 'pull-off'],
+    ['/ \\', 'slide up, slide down'],
+    ['~', 'vibrato'],
+    ['b r', 'bend, release'],
+  ];
+  return (
+    <dl className="mt-4 flex flex-wrap gap-x-7 gap-y-2 border-t border-divider pt-3">
+      {marks.map(([glyph, meaning]) => (
+        <div key={meaning} className="flex items-baseline gap-2">
+          <dt className="font-extrabold text-accent-700">{glyph}</dt>
+          <dd className="text-[12px] text-ink/60">{meaning}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

@@ -56,7 +56,7 @@ test.describe('dev gallery', () => {
   });
 
   test('every tab example is independently playable', async ({ page }) => {
-    for (const heading of ['SCALE RUN', 'ARTICULATIONS', 'SIXTEENTH-NOTE RUN', 'CHORDS']) {
+    for (const heading of ['SCALE RUN', 'PICKED VS LEGATO', 'ARTICULATION MARKS', 'SIXTEENTH-NOTE RUN', 'CHORDS']) {
       const section = page.locator('section').filter({ hasText: heading });
       await section.getByRole('button', { name: 'Play' }).click();
       await expect(section.getByTestId('playhead')).toBeVisible();
@@ -76,6 +76,41 @@ test.describe('dev gallery', () => {
     await second.getByRole('button', { name: 'Play' }).click();
     await expect(second.getByTestId('playhead')).toBeVisible();
     await expect(first.getByTestId('playhead')).toHaveCount(0);
+  });
+
+  test('returns to Play when a phrase reaches its end', async ({ page }) => {
+    // Chords is the shortest example, so this does not need long to finish.
+    const section = page.locator('section').filter({ hasText: 'CHORDS' });
+    await section.getByRole('button', { name: 'Play' }).click();
+
+    // Ending used to pause the transport past every scheduled event, leaving a
+    // "Resume" button that toggled forever and played nothing.
+    await expect(section.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 15000 });
+    await expect(section.getByTestId('playhead')).toHaveCount(0);
+
+    // And it is genuinely replayable.
+    await section.getByRole('button', { name: 'Play' }).click();
+    await expect(section.getByTestId('playhead')).toBeVisible();
+  });
+
+  test('a short example does not cut a longer one short afterwards', async ({ page }) => {
+    // The end-of-phrase callback is scheduled straight onto the clock, so it
+    // has to be cleared explicitly. Left registered, the one-bar example's
+    // callback fired at bar 1 of the two-bar one and paused it half way.
+    const short = page.locator('section').filter({ hasText: 'CHORDS' });
+    const long = page.locator('section').filter({ hasText: 'SCALE RUN' });
+
+    await short.getByRole('button', { name: 'Play' }).click();
+    await short.getByRole('button', { name: 'Stop' }).click();
+
+    await long.getByRole('button', { name: 'Play' }).click();
+    const playhead = long.getByTestId('playhead');
+
+    // Run past where the short example would have ended and confirm it is
+    // still going, well past the halfway column.
+    await expect
+      .poll(async () => Number(await playhead.getAttribute('data-column')), { timeout: 10000 })
+      .toBeGreaterThan(9);
   });
 
   test('pauses and resumes the active example', async ({ page }) => {

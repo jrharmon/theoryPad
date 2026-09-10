@@ -23,16 +23,34 @@ export function useTransport() {
   const [withMetronome, setWithMetronome] = useState(true);
   const [withNotes, setWithNotes] = useState(true);
   const frame = useRef<number | null>(null);
+  /**
+   * The end-of-phrase callback's handle. It must be cleared explicitly: it is
+   * scheduled straight onto the clock, so unlike the metronome's and the
+   * phrase player's handles nothing else owns it. Leaving it registered means a
+   * short example's end callback fires part-way through a longer one and pauses
+   * it — which is exactly what happened.
+   */
+  const endHandle = useRef<number | null>(null);
+
+  const teardown = useCallback((e: AudioEngine) => {
+    if (endHandle.current !== null) {
+      e.clock.clear(endHandle.current);
+      endHandle.current = null;
+    }
+    e.metronome.stop();
+    e.phrase.clear();
+    e.clock.stop();
+    // Belt and braces: nothing should be left, and an orphaned callback is
+    // silent until it derails a later phrase.
+    e.clock.clearAll();
+  }, []);
 
   const stop = useCallback(() => {
     setPlaying(false);
     setActiveId(null);
     setPlayheadTick(null);
-    if (!engine) return;
-    engine.metronome.stop();
-    engine.phrase.clear();
-    engine.clock.stop();
-  }, [engine]);
+    if (engine) teardown(engine);
+  }, [engine, teardown]);
 
   const play = useCallback(
     async (id: string, phrase: Phrase) => {
@@ -44,26 +62,27 @@ export function useTransport() {
       setEngine(e);
 
       // Whatever was playing stops; one clock, one phrase.
-      e.metronome.stop();
-      e.phrase.clear();
-      e.clock.stop();
+      teardown(e);
       e.clock.setBpm(bpm);
 
       if (withMetronome) e.metronome.start();
       if (withNotes) e.phrase.load(phrase, STANDARD_GUITAR);
 
-      // End at the phrase's end rather than running on silently.
-      e.clock.schedule(() => {
-        e.metronome.stop();
-        e.clock.pause();
+      // At the end, reset fully rather than pausing. Pausing left the transport
+      // parked past every scheduled event, so "Resume" had nothing left to play
+      // and toggled forever.
+      endHandle.current = e.clock.schedule(() => {
+        teardown(e);
         setPlaying(false);
+        setActiveId(null);
+        setPlayheadTick(null);
       }, phrase.totalTicks * (phrase.repeat ?? 1));
 
       e.clock.start();
       setActiveId(id);
       setPlaying(true);
     },
-    [bpm, withMetronome, withNotes],
+    [bpm, withMetronome, withNotes, teardown],
   );
 
   const pause = useCallback(() => {

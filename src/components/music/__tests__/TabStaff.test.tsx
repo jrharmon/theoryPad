@@ -176,12 +176,45 @@ describe('TabStaff', () => {
       .note(p(0, 5), { articulation: 'hammer-on' })
       .note(p(0, 7), { articulation: 'pull-off' })
       .note(p(0, 9), { articulation: 'slide-up' })
+      .note(p(0, 9), { articulation: 'vibrato' })
       .build();
     render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
     expect(screen.getByTestId('articulation-0-1')).toHaveTextContent('h');
     expect(screen.getByTestId('articulation-0-2')).toHaveTextContent('p');
     expect(screen.getByTestId('articulation-0-3')).toHaveTextContent('/');
+    expect(screen.getByTestId('articulation-0-4')).toHaveTextContent('~');
     expect(screen.queryByTestId('articulation-0-0')).not.toBeInTheDocument();
+  });
+
+  it('writes connecting marks before the note, the way tab reads', () => {
+    // Tab writes 5h7, not 5 7h: the h belongs to the move into the note.
+    const phrase = phraseBuilder()
+      .rhythm(EIGHTH)
+      .note(p(0, 5))
+      .note(p(0, 7), { articulation: 'hammer-on' })
+      .build();
+    render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
+    expect(screen.getByTestId('tab-note-0-1')).toHaveTextContent('h7');
+  });
+
+  it('writes marks that describe the note itself after it', () => {
+    const phrase = phraseBuilder()
+      .rhythm(EIGHTH)
+      .note(p(0, 7), { articulation: 'vibrato' })
+      .build();
+    render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
+    expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent('7~');
+  });
+
+  it('exposes the articulation for styling and testing', () => {
+    const phrase = phraseBuilder()
+      .rhythm(EIGHTH)
+      .note(p(0, 5))
+      .note(p(0, 7), { articulation: 'hammer-on' })
+      .build();
+    render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
+    expect(screen.getByTestId('tab-note-0-0')).toHaveAttribute('data-articulation', '');
+    expect(screen.getByTestId('tab-note-0-1')).toHaveAttribute('data-articulation', 'hammer-on');
   });
 
   it('shows pick strokes only when asked', () => {
