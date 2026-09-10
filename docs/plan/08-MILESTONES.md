@@ -90,7 +90,7 @@ hard-coded assumption of six strings. These are the things most likely to be qui
 
 ---
 
-## M2 — The vertical slice: one exercise, end to end
+## M2 — The vertical slice: one exercise, end to end ✅ *complete (2026-09-10)*
 
 _Proves the whole architecture with the smallest possible amount of content._
 
@@ -114,6 +114,19 @@ see the rep in IndexedDB.
 **Verify:** run it with a guitar. Is the generated material actually playable? Is the brief
 clear? Does the tempo behave (adjust `currentTempo`, confirm `targetTempo` is untouched)? Does
 free time feel right, or does it need more than "press Enter when done"?
+
+**Outcome.** 504 unit tests, 20 E2E. Four things to carry forward:
+
+- **The runner lives in `src/exercises/runner/`, not `store/`.** It depends on
+  `ExerciseDefinition`, so `domain → exercises` would be a cycle; and it has no React state, so
+  `store/` would have misdescribed it. `Clock`/`FakeClock` moved to `src/domain/time/` for the
+  same reason — the interface is a domain concept, only the Tone-backed one is audio.
+- **An exercise is generated in the key it rolled**, not the session's. The session key is the
+  fallback for exercises that declare no key axis — which is how a routine shares one.
+- **`src/components/ui` is hand-written, not shadcn.** shadcn still earns its place for dialog,
+  popover and combobox, which arrive with the key/mode drawer in M6.
+- **Tab lines target 24 columns.** Two bars of sixteenths is 32, and two-digit frets at that
+  width run together.
 
 **This is the most important review gate in the project.** Everything after it is repetition
 of patterns established here.
