@@ -92,9 +92,16 @@ detail is what makes it read as tab rather than a table of numbers.
 Articulations render as small glyphs between notes (h, p, /, \, ~, b). Bar labels sit beneath
 in a matching grid.
 
+**Line breaking:** long phrases wrap into systems, as real tab does — one unbounded line runs
+off the page with no way to see the rest, and generated phrases get long (modes-through-key is
+21 bars). Four bars a line is conventional but far too many columns at fine subdivisions, so
+`'auto'` keeps a line near 32 columns. Column indices stay absolute across systems so a note
+keeps its identity wherever it wraps to.
+
 **Playhead:** an absolutely-positioned overlay column inside a `position: relative` wrapper,
 translated by a CSS custom property set from `requestAnimationFrame`. **No React state
-updates while playing.**
+updates while playing.** The tick is wrapped by the phrase length, so a repeating phrase keeps
+its playhead over the notes on every pass instead of running off the end after the first.
 
 #### `<KeyModeView />`
 
