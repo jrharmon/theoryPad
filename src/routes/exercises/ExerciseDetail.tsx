@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
@@ -22,7 +22,8 @@ import { Separator } from '@/components/ui/separator';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
-  const { exercises, loaded, load, update, setAxisPolicy } = useExercises();
+  const { exercises, loaded, load, update, setAxisPolicy, duplicate, remove } = useExercises();
+  const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
 
   useEffect(() => {
@@ -49,9 +50,18 @@ export function ExerciseDetail() {
   return (
     <section>
       <div className="flex items-end justify-between border-b-2 border-divider px-8 py-7">
-        <div>
+        <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          <h1 className="text-[42px]">{exercise.name}</h1>
+          {/* Editable, because two instances of one definition otherwise look
+              identical everywhere they are listed. */}
+          <input
+            aria-label="Exercise name"
+            value={exercise.name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              void update(exercise.id, { name: e.target.value })
+            }
+            className="-ml-1 w-full max-w-[720px] border border-transparent bg-transparent px-1 text-[42px] font-extrabold tracking-tight hover:border-divider focus:border-divider focus:outline-none"
+          />
           <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (
@@ -61,9 +71,29 @@ export function ExerciseDetail() {
             ))}
           </div>
         </div>
-        <Button asChild>
-          <Link to={`/practice/exercise/${exercise.id}`}>Practice this</Link>
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void duplicate(exercise.id).then((copy) => {
+                if (copy) void navigate(`/exercises/${copy.id}`);
+              })
+            }
+          >
+            Duplicate
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void remove(exercise.id).then(() => void navigate('/exercises'))
+            }
+          >
+            Delete
+          </Button>
+          <Button asChild>
+            <Link to={`/practice/exercise/${exercise.id}`}>Practice this</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-8 px-8 py-7 lg:grid-cols-[320px_1fr]">

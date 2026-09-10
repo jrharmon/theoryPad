@@ -44,7 +44,7 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
   params,
 
   defaults: {
-    targetTempo: 76,
+    targetTempo: 70,
     reps: 2,
     params: { variant: 'plain', shapesPerRep: 7, minFret: 1 },
   },
@@ -111,6 +111,6 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
 
   estimateRepSeconds(instance, tempo) {
     if (instance.kind !== 'played') return 0;
-    return phraseSeconds(instance.phrase, tempo ?? 76);
+    return phraseSeconds(instance.phrase, tempo ?? 70);
   },
 };

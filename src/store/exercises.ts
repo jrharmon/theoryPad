@@ -18,6 +18,8 @@ interface ExercisesState {
    * their own view of the map and the second silently drops the first.
    */
   setAxisPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
+  /** Copy an exercise's configuration — the usual way to get a second one. */
+  duplicate: (id: string) => Promise<Exercise | undefined>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -120,6 +122,22 @@ export const useExercises = create<ExercisesState>((set, get) => ({
       });
       set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
     });
+  },
+
+  async duplicate(id) {
+    const repos = createRepositories(db());
+    const source = await repos.exercises.byId(id);
+    if (!source) return undefined;
+
+    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = source;
+    const created = await repos.exercises.add({
+      ...rest,
+      name: `${source.name} (copy)`,
+      // A copy starts its own history: held values belong to the original's.
+      heldAxisValues: {},
+    });
+    set({ exercises: [...get().exercises, created] });
+    return created;
   },
 
   async remove(id) {

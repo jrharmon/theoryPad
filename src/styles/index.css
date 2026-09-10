@@ -64,16 +64,6 @@
     background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
 
-  /*
-   * Nothing in this app has a rounded corner. The --radius tokens are 0, but
-   * `rounded-full` does not read them — shadcn's Badge uses it — so squareness
-   * is enforced here against every shadcn component instead. Keying off
-   * data-slot means a future `shadcn add` cannot quietly reintroduce one, and
-   * leaves the fretboard's note dots (the one deliberate exception) alone.
-   */
-  [data-slot] {
-    border-radius: 0;
-  }
 }
 
 /*
@@ -93,4 +83,20 @@
 
 @utility kicker-accent {
   color: var(--color-accent-700);
+}
+
+/*
+ * Nothing in this app has a rounded corner.
+ *
+ * The --radius tokens are 0, but `rounded-full` does not read them, and
+ * shadcn's Badge uses it. Keying off data-slot — the attribute shadcn puts on
+ * every component — means a future `shadcn add` cannot quietly reintroduce a
+ * radius, and leaves the fretboard's note dots (the one deliberate exception)
+ * alone.
+ *
+ * Deliberately unlayered: a rule in @layer base loses to a utility, which is
+ * exactly how `rounded-full` won the first time this was attempted.
+ */
+[data-slot] {
+  border-radius: 0;
 }

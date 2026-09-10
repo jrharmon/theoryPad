@@ -136,7 +136,7 @@ describe('modes-through-key', () => {
 
   it('estimates a sensible duration', () => {
     const instance = generate();
-    const seconds = modesThroughKey.estimateRepSeconds(instance, 76);
+    const seconds = modesThroughKey.estimateRepSeconds(instance, 70);
     expect(seconds).toBeGreaterThan(30);
     expect(seconds).toBeLessThan(400);
   });

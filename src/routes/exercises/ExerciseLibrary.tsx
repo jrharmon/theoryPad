@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Kicker } from '@/components/ui/kicker';
+import { describePolicies } from '@/exercises/describe';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
@@ -11,6 +12,7 @@ import { useSettings } from '@/store/settings';
 export function ExerciseLibrary() {
   const { exercises, loaded, load } = useExercises();
   const loadSettings = useSettings((s) => s.load);
+  const instrument = useSettings((s) => s.settings.instrument);
   const [tag, setTag] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,6 +90,16 @@ export function ExerciseLibrary() {
                   {exercise.name}
                 </Link>
                 <p className="text-[13px] text-ink/65">{definition.summary}</p>
+
+                {/* Two instances of one definition share a name and summary,
+                    so what differs has to be on the row. */}
+                <p className="mt-1 text-[12px] text-ink/50">
+                  {[
+                    `${exercise.defaultReps} rep${exercise.defaultReps === 1 ? '' : 's'}`,
+                    ...describePolicies(exercise.axisPolicies, definition.axes, instrument),
+                  ].join(' · ')}
+                </p>
+
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {definition.tags.map((t) => (
                     <Badge key={t} variant="secondary">

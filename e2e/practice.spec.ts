@@ -36,6 +36,48 @@ test('seeds the library exactly once, however many screens ask for it', async ({
   await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toHaveCount(1);
 });
 
+test('two exercises from one definition are distinguishable', async ({ page }) => {
+  // They share a name and a summary, so what differs has to be visible.
+  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
+  await page.getByLabel('Exercise name').fill('Modes — slow, in D');
+  await page.getByRole('combobox', { name: 'Key policy' }).click();
+  await page.getByRole('option', { name: 'Fixed' }).click();
+
+  await page.getByRole('link', { name: 'Exercises' }).click();
+  await expect(page.getByRole('link', { name: 'Modes — slow, in D' })).toBeVisible();
+  await expect(page.getByText('2 reps · Key: C')).toBeVisible();
+});
+
+test('duplicating gives a second, independently configured exercise', async ({ page }) => {
+  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
+  await page.getByRole('button', { name: 'Duplicate' }).click();
+
+  await expect(page.getByLabel('Exercise name')).toHaveValue(
+    'Seven modes through a key (copy)',
+  );
+  await page.getByLabel('Target tempo').fill('60');
+  await expect(page.getByLabel('Target tempo')).toHaveValue('60');
+
+  await page.getByRole('link', { name: 'Exercises' }).click();
+  await expect(page.getByRole('link', { name: 'Seven modes through a key', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Seven modes through a key (copy)' })).toBeVisible();
+
+  // The copy is configured independently of its source.
+  await expect(page.getByText('70', { exact: true })).toBeVisible();
+  await expect(page.getByText('60', { exact: true })).toBeVisible();
+});
+
+test('deleting removes an exercise from the library', async ({ page }) => {
+  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
+  await page.getByRole('button', { name: 'Duplicate' }).click();
+  await expect(page.getByLabel('Exercise name')).toHaveValue('Seven modes through a key (copy)');
+
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Seven modes through a key (copy)' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Seven modes through a key', exact: true })).toBeVisible();
+});
+
 test('the library lists exercises and filters by tag', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Practice', exact: true })).toBeVisible();
 
@@ -55,7 +97,7 @@ test('the detail page configures tempo and what varies', async ({ page }) => {
   await page.getByRole('link', { name: 'Seven modes through a key' }).click();
 
   const target = page.getByLabel('Target tempo');
-  await expect(target).toHaveValue('76');
+  await expect(target).toHaveValue('70');
   await target.fill('84');
   await target.blur();
 
@@ -65,6 +107,10 @@ test('the detail page configures tempo and what varies', async ({ page }) => {
   await page.getByRole('option', { name: 'Fixed' }).click();
   await page.getByRole('combobox', { name: 'Key value' }).click();
   await page.getByRole('option', { name: 'D', exact: true }).click();
+
+  // The store only updates after the write resolves, so the control showing D
+  // is proof it committed — and reloading before that would race it.
+  await expect(page.getByRole('combobox', { name: 'Key value' })).toHaveText('D');
 
   // Settings survive a reload, which is the point of persisting them.
   await page.reload();
@@ -143,18 +189,18 @@ test('moving the tempo while practising never changes the target', async ({ page
   await page.getByTestId('play').click();
 
   const tempo = page.getByTestId('tempo');
-  await expect(tempo).toHaveText('76');
+  await expect(tempo).toHaveText('70');
 
   await page.getByRole('button', { name: 'Faster' }).click();
   await page.getByRole('button', { name: 'Faster' }).click();
-  await expect(tempo).toHaveText('80');
+  await expect(tempo).toHaveText('74');
   // The configured tempo is shown alongside, unchanged.
-  await expect(page.getByText('target 76')).toBeVisible();
+  await expect(page.getByText('target 70')).toBeVisible();
 
   await page.getByRole('button', { name: 'End' }).click();
   await page.getByRole('link', { name: 'Exercises' }).click();
   await page.getByRole('link', { name: 'Seven modes through a key' }).click();
-  await expect(page.getByLabel('Target tempo')).toHaveValue('76');
+  await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
 
 test('space pauses and resumes, with a guitar in your hands', async ({ page }) => {
@@ -173,7 +219,7 @@ test('space pauses and resumes, with a guitar in your hands', async ({ page }) =
 
   // Bracket keys move the tempo.
   await page.keyboard.press(']');
-  await expect(page.getByTestId('tempo')).toHaveText('77');
+  await expect(page.getByTestId('tempo')).toHaveText('71');
 });
 
 test('re-rolling gives a fresh variation from the brief', async ({ page }) => {
