@@ -22,6 +22,7 @@ export function useTransport() {
   const [playheadTick, setPlayheadTick] = useState<number | null>(null);
   const [withMetronome, setWithMetronome] = useState(true);
   const [withNotes, setWithNotes] = useState(true);
+  const [isLooping, setLooping] = useState(false);
   const frame = useRef<number | null>(null);
   /**
    * The end-of-phrase callback's handle. It must be cleared explicitly: it is
@@ -31,6 +32,8 @@ export function useTransport() {
    * it — which is exactly what happened.
    */
   const endHandle = useRef<number | null>(null);
+  /** Scheduled length of whatever is loaded, so loop can be toggled live. */
+  const activeLength = useRef(0);
 
   const teardown = useCallback((e: AudioEngine) => {
     if (endHandle.current !== null) {
@@ -39,11 +42,22 @@ export function useTransport() {
     }
     e.metronome.stop();
     e.phrase.clear();
+    e.clock.clearLoop();
     e.clock.stop();
     // Belt and braces: nothing should be left, and an orphaned callback is
     // silent until it derails a later phrase.
     e.clock.clearAll();
   }, []);
+
+  const finish = useCallback(
+    (e: AudioEngine) => {
+      teardown(e);
+      setPlaying(false);
+      setActiveId(null);
+      setPlayheadTick(null);
+    },
+    [teardown],
+  );
 
   const stop = useCallback(() => {
     setPlaying(false);
@@ -68,21 +82,27 @@ export function useTransport() {
       if (withMetronome) e.metronome.start();
       if (withNotes) e.phrase.load(phrase, STANDARD_GUITAR);
 
-      // At the end, reset fully rather than pausing. Pausing left the transport
-      // parked past every scheduled event, so "Resume" had nothing left to play
-      // and toggled forever.
-      endHandle.current = e.clock.schedule(() => {
-        teardown(e);
-        setPlaying(false);
-        setActiveId(null);
-        setPlayheadTick(null);
-      }, phrase.totalTicks * (phrase.repeat ?? 1));
+      const length = phrase.totalTicks * (phrase.repeat ?? 1);
+
+      if (isLooping) {
+        // Looping on the clock means everything driven by it loops together —
+        // metronome, notes and playhead stay in step, and the scheduled events
+        // re-fire because the transport position rewinds.
+        e.clock.setLoop(0, length);
+      } else {
+        // At the end, reset fully rather than pausing. Pausing left the
+        // transport parked past every scheduled event, so "Resume" had nothing
+        // left to play and toggled forever.
+        endHandle.current = e.clock.schedule(() => finish(e), length);
+      }
+
+      activeLength.current = length;
 
       e.clock.start();
       setActiveId(id);
       setPlaying(true);
     },
-    [bpm, withMetronome, withNotes, teardown],
+    [bpm, withMetronome, withNotes, isLooping, teardown, finish],
   );
 
   const pause = useCallback(() => {
@@ -113,9 +133,29 @@ export function useTransport() {
     engine?.clock.setBpm(bpm);
   }, [engine, bpm]);
 
+  // Toggling loop applies to whatever is playing now, rather than waiting for
+  // the next Play. While looping the transport stays inside [0, length), so
+  // switching it off can still schedule the stop at the phrase's end.
+  useEffect(() => {
+    if (!engine || activeId === null || activeLength.current <= 0) return;
+
+    if (isLooping) {
+      if (endHandle.current !== null) {
+        engine.clock.clear(endHandle.current);
+        endHandle.current = null;
+      }
+      engine.clock.setLoop(0, activeLength.current);
+    } else {
+      engine.clock.clearLoop();
+      endHandle.current ??= engine.clock.schedule(() => finish(engine), activeLength.current);
+    }
+  }, [engine, activeId, isLooping, finish]);
+
   return {
     activeId,
     isPlaying,
+    isLooping,
+    setLooping,
     bpm,
     setBpm,
     playheadTick,

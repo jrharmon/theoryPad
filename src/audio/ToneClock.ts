@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { Clock, ClockState, ScheduledCallback } from './Clock';
+import type { Clock, ClockState, LoopRange, ScheduledCallback } from './Clock';
 
 /**
  * Clock backed by Tone.Transport.
@@ -88,5 +88,26 @@ export class ToneClock implements Clock {
 
   seek(tick: number): void {
     this.transport.ticks = tick;
+  }
+
+  setLoop(startTick: number, endTick: number): void {
+    if (endTick <= startTick) {
+      throw new Error(`Loop end must be after its start, got ${startTick}..${endTick}`);
+    }
+    this.transport.loopStart = `${startTick}i`;
+    this.transport.loopEnd = `${endTick}i`;
+    this.transport.loop = true;
+  }
+
+  clearLoop(): void {
+    this.transport.loop = false;
+  }
+
+  get loop(): LoopRange | null {
+    if (!this.transport.loop) return null;
+    return {
+      start: this.transport.toTicks(this.transport.loopStart),
+      end: this.transport.toTicks(this.transport.loopEnd),
+    };
   }
 }

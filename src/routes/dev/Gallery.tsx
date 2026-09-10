@@ -210,6 +210,7 @@ function TransportBar({ transport }: { transport: Transport }) {
         onChange={transport.setWithMetronome}
       />
       <Toggle label="Notes" checked={transport.withNotes} onChange={transport.setWithNotes} />
+      <Toggle label="Loop" checked={transport.isLooping} onChange={transport.setLooping} />
 
       <span className="ml-auto text-[12px] text-ink/50">
         {transport.activeId

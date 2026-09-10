@@ -12,13 +12,13 @@ function soundingVelocity(note: TabNote): number {
     // Slurred notes are not picked, so they speak more quietly. Without this,
     // legato playback sounds identical to alternate picking.
     //
-    // 0.55 is roughly -5dB, further than a real guitar under compression but
-    // clearly audible. On a real instrument the cue is mostly the softer
-    // attack, which a synth cannot give us — a sampled voice would carry it
-    // properly and this factor could then move back toward life.
+    // 0.62 is roughly -4dB: clearly audible without caricaturing it. Tuned by
+    // ear — 0.7 was too subtle to pick out and 0.55 overdid it. On a real
+    // instrument the cue is mostly the softer attack, which a synth cannot
+    // give us, so a little of it has to live in the level instead.
     case 'hammer-on':
     case 'pull-off':
-      return base * 0.55;
+      return base * 0.62;
     case 'ghost':
       return base * 0.45;
     case 'palm-mute':

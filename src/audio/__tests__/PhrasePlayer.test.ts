@@ -89,9 +89,11 @@ describe('PhrasePlayer', () => {
     clock.start();
     clock.advanceTicks(QUARTER * 2);
 
-    // Without this, legato playback sounds identical to alternate picking, and
-    // the gap has to be wide enough to actually hear.
-    expect(played[1]!.velocity).toBeLessThan(played[0]!.velocity * 0.7);
+    // Without this, legato playback sounds identical to alternate picking. The
+    // gap has to be wide enough to hear and narrow enough not to caricature it.
+    const ratio = played[1]!.velocity / played[0]!.velocity;
+    expect(ratio).toBeGreaterThan(0.55);
+    expect(ratio).toBeLessThan(0.7);
     expect(played[1]!.velocity).toBe(played[2]!.velocity);
   });
 

@@ -199,3 +199,116 @@ describe('FakeClock', () => {
     expect(bars).toBeGreaterThan(900);
   });
 });
+
+describe('looping', () => {
+  it('has no loop by default', () => {
+    expect(new FakeClock().loop).toBeNull();
+  });
+
+  it('rewinds to the loop start rather than running on', () => {
+    const clock = new FakeClock();
+    clock.setLoop(0, QUARTER * 4);
+    clock.start();
+
+    clock.advanceTicks(QUARTER * 6);
+    // Six beats into a four-beat loop is two beats past its start.
+    expect(clock.ticks).toBe(QUARTER * 2);
+  });
+
+  it('fires one-shots again on every pass', () => {
+    // In Tone the transport position rewinds, so positional events become due
+    // again — a one-shot is not consumed by firing. FakeClock must match.
+    const clock = new FakeClock();
+    const fired: number[] = [];
+    clock.schedule(() => fired.push(fired.length), QUARTER * 2);
+    clock.setLoop(0, QUARTER * 4);
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 12);
+    expect(fired).toHaveLength(3);
+  });
+
+  it('keeps a repeat aligned across the loop point', () => {
+    const clock = new FakeClock();
+    const beats: number[] = [];
+    clock.scheduleRepeat((_t, tick) => beats.push(tick), QUARTER);
+    clock.setLoop(0, QUARTER * 4);
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 8);
+
+    // Two passes of a four-beat loop, with no doubled or missing beat.
+    expect(beats).toEqual([
+      0, QUARTER, QUARTER * 2, QUARTER * 3,
+      0, QUARTER, QUARTER * 2, QUARTER * 3,
+      0,
+    ]);
+  });
+
+  it('loops a span that does not start at zero', () => {
+    const clock = new FakeClock();
+    const fired: number[] = [];
+    clock.schedule((_t, tick) => fired.push(tick), QUARTER * 5);
+    // A one-shot outside the loop never comes back round.
+    clock.schedule((_t, tick) => fired.push(tick), QUARTER);
+    clock.setLoop(QUARTER * 4, QUARTER * 8);
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 20);
+
+    expect(fired.filter((t) => t === QUARTER)).toHaveLength(1);
+    expect(fired.filter((t) => t === QUARTER * 5).length).toBeGreaterThan(2);
+  });
+
+  it('stops looping when the loop is cleared', () => {
+    const clock = new FakeClock();
+    clock.setLoop(0, QUARTER * 4);
+    clock.start();
+    clock.advanceTicks(QUARTER * 6);
+    expect(clock.ticks).toBe(QUARTER * 2);
+
+    clock.clearLoop();
+    expect(clock.loop).toBeNull();
+    clock.advanceTicks(QUARTER * 6);
+    expect(clock.ticks).toBe(QUARTER * 8);
+  });
+
+  it('still freezes when paused mid-loop', () => {
+    const clock = new FakeClock();
+    const beats: number[] = [];
+    clock.scheduleRepeat((_t, tick) => {
+      beats.push(tick);
+      if (beats.length === 6) clock.pause();
+    }, QUARTER);
+    clock.setLoop(0, QUARTER * 4);
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 100);
+    expect(beats).toHaveLength(6);
+    expect(clock.state).toBe('paused');
+  });
+
+  it('rejects a loop that does not move forward', () => {
+    const clock = new FakeClock();
+    expect(() => clock.setLoop(QUARTER, QUARTER)).toThrow();
+    expect(() => clock.setLoop(QUARTER * 2, QUARTER)).toThrow();
+  });
+
+  it('loops a phrase for a long time without drifting', () => {
+    const clock = new FakeClock(120);
+    const downbeats: number[] = [];
+    clock.scheduleRepeat((_t, tick) => {
+      if (tick === 0) downbeats.push(clock.seconds);
+    }, QUARTER);
+    clock.setLoop(0, QUARTER * 4);
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 400);
+
+    // Every pass starts at the loop's start tick, so seconds are identical —
+    // a hundred passes with no accumulated drift, plus the downbeat at the
+    // tick we landed on.
+    expect(new Set(downbeats).size).toBe(1);
+    expect(downbeats.length).toBe(101);
+  });
+});

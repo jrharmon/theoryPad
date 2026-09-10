@@ -124,6 +124,35 @@ test.describe('dev gallery', () => {
     await expect(section.getByTestId('playhead')).toBeVisible();
   });
 
+  test('keeps playing past the end when loop is on', async ({ page }) => {
+    const section = page.locator('section').filter({ hasText: 'CHORDS' });
+    await page.getByRole('checkbox', { name: 'Loop' }).check();
+    await section.getByRole('button', { name: 'Play' }).click();
+
+    const playhead = section.getByTestId('playhead');
+    await expect(playhead).toBeVisible();
+
+    // Without looping this example finishes and resets to Play well inside the
+    // window; with it on, it should still be going.
+    await expect
+      .poll(async () => Number(await playhead.getAttribute('data-column')), { timeout: 6000 })
+      .toBeLessThan(2);
+    await expect(section.getByRole('button', { name: 'Pause' })).toBeVisible();
+
+    await section.getByRole('button', { name: 'Stop' }).click();
+    await expect(section.getByTestId('playhead')).toHaveCount(0);
+  });
+
+  test('turning loop off mid-play lets the phrase finish', async ({ page }) => {
+    const section = page.locator('section').filter({ hasText: 'CHORDS' });
+    await page.getByRole('checkbox', { name: 'Loop' }).check();
+    await section.getByRole('button', { name: 'Play' }).click();
+    await expect(section.getByTestId('playhead')).toBeVisible();
+
+    await page.getByRole('checkbox', { name: 'Loop' }).uncheck();
+    await expect(section.getByRole('button', { name: 'Play' })).toBeVisible({ timeout: 15000 });
+  });
+
   test('pauses and resumes the active example', async ({ page }) => {
     const section = page.locator('section').filter({ hasText: 'SCALE RUN' });
     await section.getByRole('button', { name: 'Play' }).click();

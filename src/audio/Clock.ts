@@ -28,6 +28,24 @@ export interface Clock {
   pause(): void;
   stop(): void;
   seek(tick: number): void;
+
+  /**
+   * Repeat a span of time indefinitely. Scheduled callbacks inside the span
+   * fire again on every pass, because the transport position rewinds rather
+   * than the events being re-registered.
+   *
+   * Looping lives on the clock rather than above it so that everything driven
+   * by the clock loops together — metronome, notes, playhead — and so it can
+   * be tested with FakeClock.
+   */
+  setLoop(startTick: number, endTick: number): void;
+  clearLoop(): void;
+  readonly loop: LoopRange | null;
+}
+
+export interface LoopRange {
+  start: number;
+  end: number;
 }
 
 export type ClockState = 'stopped' | 'started' | 'paused';
