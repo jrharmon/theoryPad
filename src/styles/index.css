@@ -63,19 +63,34 @@
   ::selection {
     background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
+
+  /*
+   * Nothing in this app has a rounded corner. The --radius tokens are 0, but
+   * `rounded-full` does not read them — shadcn's Badge uses it — so squareness
+   * is enforced here against every shadcn component instead. Keying off
+   * data-slot means a future `shadcn add` cannot quietly reintroduce one, and
+   * leaves the fretboard's note dots (the one deliberate exception) alone.
+   */
+  [data-slot] {
+    border-radius: 0;
+  }
 }
 
-@layer components {
-  /* The repeated small-caps label above almost every block. */
-  .kicker {
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-ink) 55%, transparent);
-  }
+/*
+ * The repeated small-caps label above almost every block.
+ *
+ * Declared with @utility rather than in @layer components so it lands in the
+ * utilities layer: shadcn components carry their own `text-sm`, and a
+ * components-layer class loses to a utility regardless of which is applied.
+ */
+@utility kicker {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
 
-  .kicker-accent {
-    color: var(--color-accent-700);
-  }
+@utility kicker-accent {
+  color: var(--color-accent-700);
 }

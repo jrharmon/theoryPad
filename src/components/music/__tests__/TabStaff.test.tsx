@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   BASS_4_STRING,
@@ -16,6 +16,12 @@ import {
 import { TabStaff } from '../TabStaff';
 
 const p = (string: number, fret: number) => ({ string, fret });
+
+/** jsdom has no scrollIntoView; test/setup.ts installs a spy in its place. */
+const scrollSpy = () =>
+  // Reaching for the prototype is the point here — that is where the spy is.
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  vi.mocked<() => void>(Element.prototype.scrollIntoView);
 
 const FOUR_QUARTERS = phraseBuilder()
   .rhythm(QUARTER)
@@ -367,6 +373,59 @@ describe('TabStaff', () => {
     // A grey mark on a grey note is unreadable; every functional mark is accent.
     expect(screen.getByTestId('pick-stroke-0-0').className).toContain('text-accent-700');
     expect(screen.getByTestId('articulation-0-1').className).toContain('text-accent-700');
+  });
+
+  it('scrolls the line being played into view, once per line', () => {
+    // You cannot scroll with a guitar in your hands. Scrolling on every frame
+    // would fight the player, so it only moves when the line changes.
+    const scroll = scrollSpy();
+    scroll.mockClear();
+
+    const eight = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence(Array.from({ length: 32 }, (_, i) => p(0, i % 12)))
+      .build();
+
+    const { rerender } = render(
+      <TabStaff phrase={eight} instrument={STANDARD_GUITAR} barsPerSystem={4} playheadTick={0} />,
+    );
+    expect(scroll).toHaveBeenCalledTimes(1);
+
+    // Still on line one: no further scrolling.
+    rerender(
+      <TabStaff
+        phrase={eight}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={4}
+        playheadTick={QUARTER * 5}
+      />,
+    );
+    expect(scroll).toHaveBeenCalledTimes(1);
+
+    // Onto line two.
+    rerender(
+      <TabStaff
+        phrase={eight}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={4}
+        playheadTick={QUARTER * 18}
+      />,
+    );
+    expect(scroll).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not scroll when asked not to', () => {
+    const scroll = scrollSpy();
+    scroll.mockClear();
+    render(
+      <TabStaff
+        phrase={FOUR_QUARTERS}
+        instrument={STANDARD_GUITAR}
+        playheadTick={0}
+        autoScroll={false}
+      />,
+    );
+    expect(scroll).not.toHaveBeenCalled();
   });
 
   it('renders bigger at the large size', () => {

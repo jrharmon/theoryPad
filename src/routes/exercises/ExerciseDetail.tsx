@@ -5,11 +5,24 @@ import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { axisDefinition } from '@/domain/variation';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
-import { Button, EmptyState, Field, Kicker, NumberInput, Rule, Tag } from '@/components/ui';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Field } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Kicker } from '@/components/ui/kicker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
-  const { exercises, loaded, load, update } = useExercises();
+  const { exercises, loaded, load, update, setAxisPolicy } = useExercises();
   const loadSettings = useSettings((s) => s.load);
 
   useEffect(() => {
@@ -42,13 +55,15 @@ export function ExerciseDetail() {
           <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (
-              <Tag key={t}>{t}</Tag>
+              <Badge key={t} variant="secondary">
+                {t}
+              </Badge>
             ))}
           </div>
         </div>
-        <Link to={`/practice/exercise/${exercise.id}`}>
-          <Button variant="primary">Practise this</Button>
-        </Link>
+        <Button asChild>
+          <Link to={`/practice/exercise/${exercise.id}`}>Practice this</Link>
+        </Button>
       </div>
 
       <div className="grid gap-8 px-8 py-7 lg:grid-cols-[320px_1fr]">
@@ -57,13 +72,17 @@ export function ExerciseDetail() {
           <div className="mt-3 space-y-4">
             <Field
               label="Target tempo"
-              hint="The tempo you mean to play this at. Moving the tempo while practising never changes it."
+              htmlFor="target-tempo"
+              hint="The tempo you mean to play this at. Moving the tempo while practicing never changes it."
             >
-              <NumberInput
+              <Input
+                id="target-tempo"
+                type="number"
                 min={30}
                 max={300}
+                className="tabular-nums"
                 value={exercise.tempo.targetTempo ?? ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   void update(exercise.id, {
                     tempo: {
                       ...exercise.tempo,
@@ -74,12 +93,19 @@ export function ExerciseDetail() {
               />
             </Field>
 
-            <Field label="Best ever" hint="Record keeping only. Nothing reads this.">
-              <NumberInput
+            <Field
+              label="Best ever"
+              htmlFor="best-tempo"
+              hint="Record keeping only. Nothing reads this."
+            >
+              <Input
+                id="best-tempo"
+                type="number"
                 min={30}
                 max={300}
+                className="tabular-nums"
                 value={exercise.tempo.maxTempo ?? ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   void update(exercise.id, {
                     tempo: {
                       ...exercise.tempo,
@@ -90,12 +116,17 @@ export function ExerciseDetail() {
               />
             </Field>
 
-            <Field label="Reps">
-              <NumberInput
+            <Field label="Reps" htmlFor="reps">
+              <Input
+                id="reps"
+                type="number"
                 min={1}
                 max={9}
+                className="tabular-nums"
                 value={exercise.defaultReps}
-                onChange={(e) => void update(exercise.id, { defaultReps: Number(e.target.value) })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  void update(exercise.id, { defaultReps: Number(e.target.value) })
+                }
               />
             </Field>
           </div>
@@ -109,7 +140,7 @@ export function ExerciseDetail() {
           <AxisPolicyEditor
             axes={definition.axes}
             policies={exercise.axisPolicies}
-            onChange={(axisPolicies) => void update(exercise.id, { axisPolicies })}
+            onChange={(axis, policy) => void setAxisPolicy(exercise.id, axis, policy)}
           />
 
           {definition.axes.length === 0 && (
@@ -120,7 +151,7 @@ export function ExerciseDetail() {
         </div>
       </div>
 
-      <Rule strong />
+      <Separator className="border-t-2 border-divider" />
     </section>
   );
 }
@@ -133,7 +164,7 @@ function AxisPolicyEditor({
 }: {
   axes: AxisId[];
   policies: Partial<Record<AxisId, AxisPolicy>>;
-  onChange: (next: Partial<Record<AxisId, AxisPolicy>>) => void;
+  onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
   return (
     <div className="border border-divider">
@@ -143,7 +174,7 @@ function AxisPolicyEditor({
           id={id}
           first={index === 0}
           policy={policies[id] ?? { mode: 'roll' }}
-          onChange={(policy) => onChange({ ...policies, [id]: policy })}
+          onChange={(policy) => onChange(id, policy)}
         />
       ))}
     </div>
@@ -179,12 +210,9 @@ function AxisRow({
     >
       <span className="text-[13px] font-semibold">{definition.label}</span>
 
-      <select
+      <Select
         value={policy.mode}
-        aria-label={`${definition.label} policy`}
-        className="border border-divider bg-bg px-2 py-1 text-[13px]"
-        onChange={(e) => {
-          const mode = e.target.value as AxisPolicy['mode'];
+        onValueChange={(mode) => {
           if (mode === 'fixed') {
             const first = candidates[0];
             onChange({ mode: 'fixed', value: first ? definition.key(first) : '' });
@@ -195,24 +223,32 @@ function AxisRow({
           }
         }}
       >
-        <option value="roll">Roll</option>
-        <option value="fixed">Fixed</option>
-        <option value="hold">Hold</option>
-      </select>
+        <SelectTrigger size="sm" aria-label={`${definition.label} policy`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="roll">Roll</SelectItem>
+          <SelectItem value="fixed">Fixed</SelectItem>
+          <SelectItem value="hold">Hold</SelectItem>
+        </SelectContent>
+      </Select>
 
       {policy.mode === 'fixed' && candidates.length > 0 && (
-        <select
+        <Select
           value={policy.value}
-          aria-label={`${definition.label} value`}
-          className="border border-divider bg-bg px-2 py-1 text-[13px]"
-          onChange={(e) => onChange({ mode: 'fixed', value: e.target.value })}
+          onValueChange={(value) => onChange({ mode: 'fixed', value })}
         >
-          {candidates.map((candidate) => (
-            <option key={definition.key(candidate)} value={definition.key(candidate)}>
-              {definition.format(candidate)}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger size="sm" aria-label={`${definition.label} value`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {candidates.map((candidate) => (
+              <SelectItem key={definition.key(candidate)} value={definition.key(candidate)}>
+                {definition.format(candidate)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {policy.mode === 'roll' && (

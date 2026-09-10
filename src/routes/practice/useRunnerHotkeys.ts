@@ -25,7 +25,7 @@ export function useRunnerHotkeys(): void {
           break;
         case 'Enter':
           event.preventDefault();
-          if (state === 'brief') void practice.begin();
+          if (state === 'brief' || state === 'rep-complete') void practice.play();
           else if (practice.snapshot?.freeTime) practice.completeRep();
           break;
         case '[':

@@ -3,7 +3,7 @@
  *
  * `targetTempo` is the exercise's configured, intended tempo. It is persisted,
  * and changing it is always an explicit user action — never automatic, and
- * never a side effect of practising.
+ * never a side effect of practicing.
  *
  * `currentTempo` is transient session state: what the metronome is actually
  * running at now. The player moves it freely, up to test themselves or down to

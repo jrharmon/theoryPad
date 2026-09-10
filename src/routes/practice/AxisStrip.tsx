@@ -19,36 +19,22 @@ export function AxisStrip() {
     .map((id) => snapshot.variation!.axes[id])
     .filter((axis): axis is NonNullable<typeof axis> => axis !== undefined);
 
-  if (shown.length === 0 && snapshot.currentTempo === null) return null;
+  // Tempo is deliberately absent: the transport is frozen to the bottom of the
+  // screen and always shows it, so a second copy here is noise.
+  if (shown.length === 0) return null;
 
   // The key cell reads "Bb Ionian": the mode is rolled too, but showing it in
   // its own cell separates two halves of one idea.
   const mode = variation.axes.mode;
 
-  const cells = [
-    ...shown.map((axis) => ({
+  const cells = shown.map((axis) => ({
       key: axis.id,
       label: axis.id === 'key' ? 'Key & mode' : axisDefinition(axis.id).label,
       value:
         axis.id === 'key' && mode ? `${axis.display} ${mode.display}` : axis.display,
       fresh: axis.fresh || (axis.id === 'key' && (mode?.fresh ?? false)),
       note: null as string | null,
-    })),
-    ...(snapshot.currentTempo !== null
-      ? [
-          {
-            key: 'tempo',
-            label: 'Tempo',
-            value: String(snapshot.currentTempo),
-            fresh: false,
-            note:
-              snapshot.targetTempo !== null && snapshot.targetTempo !== snapshot.currentTempo
-                ? `target ${snapshot.targetTempo}`
-                : null,
-          },
-        ]
-      : []),
-  ];
+  }));
 
   return (
     <div

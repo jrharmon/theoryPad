@@ -247,6 +247,26 @@ describe('coverage bias', () => {
     const others = [...counts.entries()].filter(([k]) => k !== '6').map(([, v]) => v);
     expect(sixth).toBeGreaterThan(Math.max(...others));
   });
+
+  it('rarely asks you to land on the root', () => {
+    // "Land each shape on the 1st" asks for nothing — you would end there
+    // anyway. It stays possible, just uncommon.
+    const counts = new Map<string, number>();
+    for (let seed = 0; seed < 600; seed += 1) {
+      const rolled = rollVariation({
+        ...base,
+        seed,
+        axes: ['mode', 'key', 'targetScaleDegree'],
+        policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+      });
+      const key = rolled.axes.targetScaleDegree!.key;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const root = counts.get('1') ?? 0;
+    const typical = counts.get('4') ?? 0;
+    expect(root).toBeGreaterThan(0);
+    expect(root).toBeLessThan(typical);
+  });
 });
 
 describe('session axes', () => {

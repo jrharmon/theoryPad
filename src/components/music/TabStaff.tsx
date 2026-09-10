@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
 import type { Articulation, Bar, Phrase, TabNote } from '@/domain/phrase';
@@ -19,6 +19,11 @@ export interface TabStaffProps {
   showPickStrokes?: boolean;
   /** Bars per line. 'auto' keeps a line readable at any subdivision. */
   barsPerSystem?: number | 'auto';
+  /**
+   * Keep the line being played in view. On by default while a playhead is
+   * shown: you cannot scroll with a guitar in your hands.
+   */
+  autoScroll?: boolean;
   className?: string;
 }
 
@@ -90,6 +95,7 @@ export function TabStaff({
   showBarLabels = true,
   showPickStrokes = false,
   barsPerSystem = 'auto',
+  autoScroll = true,
   className,
 }: TabStaffProps) {
   const resolution = subdivision ?? requiredSubdivision(phrase);
@@ -119,12 +125,32 @@ export function TabStaff({
 
   const systems = chunk(phrase.bars, perSystem);
 
+  const columnsPerSystem = perSystem * columnsPerBar;
+  const activeSystem =
+    playheadColumn === null ? null : Math.floor(playheadColumn / columnsPerSystem);
+
+  const container = useRef<HTMLDivElement>(null);
+  const lastScrolled = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!autoScroll || activeSystem === null) return;
+    // Only on a line change: scrolling every frame would fight the player.
+    if (lastScrolled.current === activeSystem) return;
+    lastScrolled.current = activeSystem;
+
+    container.current
+      ?.querySelector(`[data-testid="tab-system-${activeSystem}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [autoScroll, activeSystem]);
+
   return (
     <div
+      ref={container}
       className={className}
       data-testid="tab-staff"
       data-columns={Math.max(1, Math.ceil(phrase.totalTicks / ticksPerColumn))}
       data-systems={systems.length}
+      data-active-system={activeSystem ?? ''}
     >
       {systems.map((bars, systemIndex) => (
         <TabSystem

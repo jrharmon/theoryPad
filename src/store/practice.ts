@@ -18,8 +18,17 @@ interface PracticeState {
   audioReady: boolean;
   error: string | null;
 
-  startExercise: (exercise: Exercise, options?: { freeTime?: boolean }) => Promise<void>;
-  begin: () => Promise<void>;
+  /**
+   * Roll a variation and generate the material, without touching audio.
+   *
+   * Split from `play` because the AudioContext can only start from a user
+   * gesture, and opening an exercise is not one. This lets the screen show the
+   * brief, the tab and the neck the moment you arrive, with nothing to click
+   * through first.
+   */
+  prepare: (exercise: Exercise) => Promise<void>;
+  /** Start the clock. Must be called from a click or keypress. */
+  play: () => Promise<void>;
   pause: () => void;
   resume: () => void;
   setTempo: (bpm: number) => void;
@@ -58,17 +67,16 @@ export const usePractice = create<PracticeState>((set, get) => ({
   audioReady: false,
   error: null,
 
-  async startExercise(exercise, options = {}) {
+  async prepare(exercise) {
     await get().end();
 
     const definition = exerciseDefinition(exercise.definitionId);
     const repos = createRepositories(db());
 
-    // Lazily imported so Tone is not on the first-paint path, and called from
-    // the click that got us here — the AudioContext needs a user gesture.
+    // Constructing the engine is safe without a gesture; only starting it is
+    // not, and that happens in `play`.
     const { getAudioEngine } = await import('@/audio');
     const engine = getAudioEngine();
-    await engine.init();
 
     const { useSettings } = await import('./settings');
     const settings = useSettings.getState().settings;
@@ -93,7 +101,6 @@ export const usePractice = create<PracticeState>((set, get) => ({
       tempo: exercise.tempo,
       ...(definition.defaults.tempoPlan ? { tempoPlan: definition.defaults.tempoPlan } : {}),
       reps: exercise.defaultReps,
-      freeTime: options.freeTime ?? false,
       countInBars: settings.audio.countInBars,
       heldAxisValues: exercise.heldAxisValues,
       axisPolicies: exercise.axisPolicies,
@@ -128,16 +135,25 @@ export const usePractice = create<PracticeState>((set, get) => ({
     set({
       runner,
       sessionId: session.id,
-      audioReady: true,
+      audioReady: false,
       error: null,
       snapshot: runner.snapshot,
       instance: runner.currentInstance,
     });
   },
 
-  async begin() {
-    get().runner?.begin();
-    return Promise.resolve();
+  async play() {
+    const runner = get().runner;
+    if (!runner) return;
+
+    // This call is inside the click handler's task, which is what lets the
+    // AudioContext start. Getting that wrong is the classic silent-app bug.
+    const { getAudioEngine } = await import('@/audio');
+    const engine = getAudioEngine();
+    await engine.init();
+    set({ audioReady: true });
+
+    runner.begin();
   },
 
   pause: () => get().runner?.pause(),

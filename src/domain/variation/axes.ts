@@ -189,24 +189,26 @@ export function isSessionAxis(id: AxisId): boolean {
 }
 
 /**
- * A musical preference applied on top of the coverage bias.
+ * Musical preferences applied on top of the coverage bias.
  *
- * The only one so far: the mode's signature degree is the note that makes the
- * mode audible, so it is the most useful thing to be told to land on, and gets
- * asked for three times as often as any other degree.
+ * The mode's signature degree is the note that makes the mode audible, so it
+ * is the most useful thing to be told to land on. The root is the least: you
+ * would land there anyway, and "land each shape on the 1st" is an instruction
+ * that asks for nothing. It stays possible, just uncommon.
  */
 export const SIGNATURE_DEGREE_WEIGHT = 3;
+export const ROOT_DEGREE_WEIGHT = 0.4;
 
 export function axisPreferenceWeight(
   id: AxisId,
   valueKey: string,
   context: AxisContext,
 ): number {
-  if (id === 'targetScaleDegree' && context.keyMode) {
-    return Number(valueKey) === signatureDegree(context.keyMode).number
-      ? SIGNATURE_DEGREE_WEIGHT
-      : 1;
-  }
+  if (id !== 'targetScaleDegree' || !context.keyMode) return 1;
+
+  const degree = Number(valueKey);
+  if (degree === signatureDegree(context.keyMode).number) return SIGNATURE_DEGREE_WEIGHT;
+  if (degree === 1) return ROOT_DEGREE_WEIGHT;
   return 1;
 }
 

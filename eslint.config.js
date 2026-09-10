@@ -178,6 +178,13 @@ export default tseslint.config(
     },
   },
 
+  // shadcn components export their cva variants alongside the component, which
+  // is its convention and not worth restructuring generated files over.
+  {
+    files: ['src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+
   // Plain JS (this config file) gets no type-aware rules.
   {
     files: ['**/*.js'],

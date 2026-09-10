@@ -4,5 +4,11 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.test.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  // Duplicated from tsconfig.app.json so tooling that reads the root tsconfig
+  // resolves the alias — the shadcn CLI does, and without it writes generated
+  // components into a literal "@/" directory.
+  "compilerOptions": {
+    "paths": { "@/*": ["./src/*"] }
+  }
 }

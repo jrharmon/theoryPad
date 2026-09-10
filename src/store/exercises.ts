@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createRepositories, db, type Exercise, type NewExercise } from '@/data';
+import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 
@@ -9,6 +10,14 @@ interface ExercisesState {
   load: () => Promise<void>;
   addFromDefinition: (definitionId: string) => Promise<Exercise>;
   update: (id: string, changes: Partial<Exercise>) => Promise<void>;
+  /**
+   * Change one axis's policy.
+   *
+   * A dedicated action rather than the caller building the whole map, because
+   * the caller's copy can be a render behind: two quick edits then each write
+   * their own view of the map and the second silently drops the first.
+   */
+  setAxisPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -33,23 +42,56 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
   };
 }
 
+/**
+ * Guards against concurrent loads.
+ *
+ * Several screens call load() on mount, and StrictMode invokes each effect
+ * twice — so without this, two loads race, both find an empty library, and both
+ * seed it. That is what put two identical exercises in the list.
+ */
+let inFlight: Promise<void> | null = null;
+
+/**
+ * Writes to one exercise run in order.
+ *
+ * Every update is a read-modify-write of the whole row, so two overlapping
+ * ones let the slower reply win and lose the earlier change.
+ */
+const writeQueues = new Map<string, Promise<unknown>>();
+
+function queued<T>(id: string, work: () => Promise<T>): Promise<T> {
+  const next = (writeQueues.get(id) ?? Promise.resolve()).then(work, work);
+  writeQueues.set(
+    id,
+    next.catch(() => undefined),
+  );
+  return next;
+}
+
 export const useExercises = create<ExercisesState>((set, get) => ({
   exercises: [],
   loaded: false,
 
   async load() {
-    const repos = createRepositories(db());
-    let exercises = await repos.exercises.all();
+    if (get().loaded) return;
+    inFlight ??= (async () => {
+      const repos = createRepositories(db());
+      const existing = await repos.exercises.all();
 
-    // First run: give the library something in it rather than an empty screen.
-    if (exercises.length === 0) {
+      // Seed by definition rather than by count, so this is idempotent even if
+      // it does somehow run twice.
+      const have = new Set(existing.map((e) => e.definitionId));
       for (const definition of EXERCISE_DEFINITIONS) {
+        if (have.has(definition.id)) continue;
         await repos.exercises.add(newExerciseFrom(definition));
       }
-      exercises = await repos.exercises.all();
-    }
 
-    set({ exercises, loaded: true });
+      set({ exercises: await repos.exercises.all(), loaded: true });
+    })().finally(() => {
+      inFlight = null;
+    });
+
+    return inFlight;
   },
 
   async addFromDefinition(definitionId) {
@@ -60,9 +102,24 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   },
 
   async update(id, changes) {
-    const repos = createRepositories(db());
-    const updated = await repos.exercises.update(id, changes);
-    set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
+    await queued(id, async () => {
+      const repos = createRepositories(db());
+      const updated = await repos.exercises.update(id, changes);
+      set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
+    });
+  },
+
+  async setAxisPolicy(id, axis, policy) {
+    await queued(id, async () => {
+      const repos = createRepositories(db());
+      // Read the row back rather than trusting a caller's copy of the map.
+      const current = await repos.exercises.byId(id);
+      if (!current) return;
+      const updated = await repos.exercises.update(id, {
+        axisPolicies: { ...current.axisPolicies, [axis]: policy },
+      });
+      set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
+    });
   },
 
   async remove(id) {

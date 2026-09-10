@@ -45,7 +45,7 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
 
   defaults: {
     targetTempo: 76,
-    reps: 1,
+    reps: 2,
     params: { variant: 'plain', shapesPerRep: 7, minFret: 1 },
   },
 

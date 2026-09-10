@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Kicker } from '@/components/ui/kicker';
+import { findExerciseDefinition } from '@/exercises/registry';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
-import { findExerciseDefinition } from '@/exercises/registry';
-import { Button, EmptyState, Kicker, Tag } from '@/components/ui';
 
 export function ExerciseLibrary() {
   const { exercises, loaded, load } = useExercises();
@@ -15,11 +18,12 @@ export function ExerciseLibrary() {
     void loadSettings();
   }, [load, loadSettings]);
 
-  const withDefinitions = useMemo(
+  const rows = useMemo(
     () =>
-      exercises
-        .map((exercise) => ({ exercise, definition: findExerciseDefinition(exercise.definitionId) }))
-        .filter((row) => row.definition !== undefined),
+      exercises.flatMap((exercise) => {
+        const definition = findExerciseDefinition(exercise.definitionId);
+        return definition ? [{ exercise, definition }] : [];
+      }),
     [exercises],
   );
 
@@ -27,19 +31,19 @@ export function ExerciseLibrary() {
   // genuinely all three, and would be missing from two searches otherwise.
   const tags = useMemo(() => {
     const all = new Set<string>();
-    for (const { exercise, definition } of withDefinitions) {
-      for (const t of definition!.tags) all.add(t);
+    for (const { exercise, definition } of rows) {
+      for (const t of definition.tags) all.add(t);
       for (const t of exercise.userTags) all.add(t);
     }
     return [...all].sort();
-  }, [withDefinitions]);
+  }, [rows]);
 
   const visible = tag
-    ? withDefinitions.filter(
+    ? rows.filter(
         ({ exercise, definition }) =>
-          definition!.tags.includes(tag as never) || exercise.userTags.includes(tag),
+          (definition.tags as string[]).includes(tag) || exercise.userTags.includes(tag),
       )
-    : withDefinitions;
+    : rows;
 
   return (
     <section>
@@ -47,33 +51,21 @@ export function ExerciseLibrary() {
         <Kicker accent>Exercises</Kicker>
         <h1 className="text-[42px]">Your library</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
-          Everything you can practise. Open one to set its target tempo and how much it varies.
+          Everything you can practice. Open one to set its target tempo and how much it varies.
         </p>
       </div>
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 border-b border-divider px-8 py-3">
           <span className="kicker mr-1">Filter</span>
-          <button
-            type="button"
-            onClick={() => setTag(null)}
-            className={`px-2 py-0.5 text-[11px] font-semibold ${
-              tag === null ? 'bg-accent text-bg' : 'bg-surface text-ink/70 hover:bg-ink/10'
-            }`}
-          >
-            All
-          </button>
+          <TagFilter label="All" active={tag === null} onClick={() => setTag(null)} />
           {tags.map((t) => (
-            <button
+            <TagFilter
               key={t}
-              type="button"
+              label={t}
+              active={t === tag}
               onClick={() => setTag(t === tag ? null : t)}
-              className={`px-2 py-0.5 text-[11px] font-semibold ${
-                t === tag ? 'bg-accent text-bg' : 'bg-surface text-ink/70 hover:bg-ink/10'
-              }`}
-            >
-              {t}
-            </button>
+            />
           ))}
         </div>
       )}
@@ -82,17 +74,12 @@ export function ExerciseLibrary() {
         {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
 
         {loaded && visible.length === 0 && (
-          <EmptyState title="Nothing here yet">
-            No exercises match that tag.
-          </EmptyState>
+          <EmptyState title="Nothing here yet">No exercises match that tag.</EmptyState>
         )}
 
         <ul>
           {visible.map(({ exercise, definition }) => (
-            <li
-              key={exercise.id}
-              className="flex items-baseline gap-4 border-b border-divider py-4"
-            >
+            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-divider py-4">
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/exercises/${exercise.id}`}
@@ -100,15 +87,17 @@ export function ExerciseLibrary() {
                 >
                   {exercise.name}
                 </Link>
-                <p className="text-[13px] text-ink/65">{definition!.summary}</p>
+                <p className="text-[13px] text-ink/65">{definition.summary}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {definition!.tags.map((t) => (
-                    <Tag key={t}>{t}</Tag>
+                  {definition.tags.map((t) => (
+                    <Badge key={t} variant="secondary">
+                      {t}
+                    </Badge>
                   ))}
                   {exercise.userTags.map((t) => (
-                    <Tag key={t} variant="outline">
+                    <Badge key={t} variant="outline">
                       {t}
-                    </Tag>
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -120,13 +109,29 @@ export function ExerciseLibrary() {
                 <p className="kicker">target bpm</p>
               </div>
 
-              <Link to={`/practice/exercise/${exercise.id}`} className="shrink-0">
-                <Button variant="primary">Practise</Button>
-              </Link>
+              <Button asChild className="shrink-0">
+                <Link to={`/practice/exercise/${exercise.id}`}>Practice</Link>
+              </Button>
             </li>
           ))}
         </ul>
       </div>
     </section>
+  );
+}
+
+function TagFilter({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Button variant={active ? 'default' : 'secondary'} size="xs" onClick={onClick}>
+      {label}
+    </Button>
   );
 }
