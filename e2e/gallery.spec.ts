@@ -37,7 +37,7 @@ test.describe('dev gallery', () => {
   });
 
   test('starts the clock and moves the playhead when play is pressed', async ({ page }) => {
-    const section = page.locator('section').filter({ hasText: 'TAB + PLAYHEAD' });
+    const section = page.locator('section').filter({ hasText: 'SCALE RUN' });
     await expect(section.getByTestId('playhead')).toHaveCount(0);
 
     // The click is the user gesture the AudioContext needs.
@@ -53,5 +53,45 @@ test.describe('dev gallery', () => {
 
     await section.getByRole('button', { name: 'Stop' }).click();
     await expect(section.getByTestId('playhead')).toHaveCount(0);
+  });
+
+  test('every tab example is independently playable', async ({ page }) => {
+    for (const heading of ['SCALE RUN', 'ARTICULATIONS', 'SIXTEENTH-NOTE RUN', 'CHORDS']) {
+      const section = page.locator('section').filter({ hasText: heading });
+      await section.getByRole('button', { name: 'Play' }).click();
+      await expect(section.getByTestId('playhead')).toBeVisible();
+      await section.getByRole('button', { name: 'Stop' }).click();
+    }
+  });
+
+  test('starting one example stops the one already playing', async ({ page }) => {
+    // There is a single engine and a single clock, so two phrases must never
+    // sound at once.
+    const first = page.locator('section').filter({ hasText: 'SCALE RUN' });
+    const second = page.locator('section').filter({ hasText: 'CHORDS' });
+
+    await first.getByRole('button', { name: 'Play' }).click();
+    await expect(first.getByTestId('playhead')).toBeVisible();
+
+    await second.getByRole('button', { name: 'Play' }).click();
+    await expect(second.getByTestId('playhead')).toBeVisible();
+    await expect(first.getByTestId('playhead')).toHaveCount(0);
+  });
+
+  test('pauses and resumes the active example', async ({ page }) => {
+    const section = page.locator('section').filter({ hasText: 'SCALE RUN' });
+    await section.getByRole('button', { name: 'Play' }).click();
+    await section.getByRole('button', { name: 'Pause' }).click();
+
+    const playhead = section.getByTestId('playhead');
+    const paused = await playhead.getAttribute('data-column');
+    await page.waitForTimeout(400);
+    // A paused clock is frozen, so the playhead does not move.
+    expect(await playhead.getAttribute('data-column')).toBe(paused);
+
+    await section.getByRole('button', { name: 'Resume' }).click();
+    await expect
+      .poll(async () => playhead.getAttribute('data-column'), { timeout: 5000 })
+      .not.toBe(paused);
   });
 });

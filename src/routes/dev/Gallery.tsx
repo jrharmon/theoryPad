@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, DROP_D_GUITAR } from '@/domain/instrument';
 import { diatonicChords, keySignature, scaleNotes, signatureNote } from '@/domain/music';
-import { Fretboard, TabStaff } from '@/components/music';
+import { Fretboard } from '@/components/music';
 import {
   ALL_SHAPES,
   D_DORIAN,
@@ -12,7 +12,8 @@ import {
   shapeOverlay,
   sixteenthRunPhrase,
 } from './fixtures';
-import { useTransport } from './useTransport';
+import { useTransport, type Transport } from './useTransport';
+import { TabExample } from './TabExample';
 
 /**
  * A development-only view of the M1 primitives against fixture data. Not part
@@ -20,14 +21,14 @@ import { useTransport } from './useTransport';
  * can be judged by eye before any real screen exists.
  */
 export function Gallery() {
-  const runPhrase = scaleRunPhrase();
-  const transport = useTransport(runPhrase);
+  const transport = useTransport();
   const [shapeIndex, setShapeIndex] = useState(0);
   const shapes = ALL_SHAPES();
 
   return (
     <div className="pb-16">
       <Header />
+      <TransportBar transport={transport} />
 
       <Section title="Fretboard · D Dorian across the neck" note="Root · target 6th · other degrees">
         <Fretboard
@@ -39,67 +40,33 @@ export function Gallery() {
       </Section>
 
       <Section
-        title="Tab + playhead"
-        note="Press play. Metronome and playhead share one clock."
+        title="Tab + playhead · scale run"
+        note="Ascending through one shape, landing on the 6th. Metronome and playhead share one clock."
       >
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={transport.isPlaying ? transport.pause : () => void transport.play()}
-            className="bg-accent px-5 py-2 text-[15px] font-semibold text-bg hover:bg-accent-600 active:bg-accent-700"
-          >
-            {transport.isPlaying ? 'Pause' : 'Play'}
-          </button>
-          <button
-            type="button"
-            onClick={transport.stop}
-            className="border border-divider px-4 py-2 text-[13px] hover:bg-ink/5"
-          >
-            Stop
-          </button>
-
-          <label className="flex items-center gap-2 text-[13px]">
-            <span className="kicker">Tempo</span>
-            <input
-              type="range"
-              min={40}
-              max={200}
-              value={transport.bpm}
-              onChange={(e) => transport.setBpm(Number(e.target.value))}
-            />
-            <span className="w-10 font-extrabold tabular-nums">{transport.bpm}</span>
-          </label>
-
-          <Toggle
-            label="Metronome"
-            checked={transport.withMetronome}
-            onChange={transport.setWithMetronome}
-          />
-          <Toggle label="Notes" checked={transport.withNotes} onChange={transport.setWithNotes} />
-        </div>
-
-        <TabStaff
-          phrase={runPhrase}
-          instrument={STANDARD_GUITAR}
-          playheadTick={transport.playheadTick}
-          size="large"
-        />
+        <TabExample id="run" phrase={scaleRunPhrase()} transport={transport} size="large" />
       </Section>
 
-      <Section title="Tab · articulations and pick strokes">
-        <TabStaff
+      <Section
+        title="Tab · articulations and pick strokes"
+        note="Slurred notes are played more quietly than picked ones — audible with Notes on, Metronome off."
+      >
+        <TabExample
+          id="articulations"
           phrase={articulationPhrase()}
-          instrument={STANDARD_GUITAR}
+          transport={transport}
           showPickStrokes
         />
       </Section>
 
-      <Section title="Tab · sixteenth-note run" note="Grid resolution comes from the phrase">
-        <TabStaff phrase={sixteenthRunPhrase()} instrument={STANDARD_GUITAR} />
+      <Section
+        title="Tab · sixteenth-note run"
+        note="Grid resolution comes from the phrase, not a fixed column count"
+      >
+        <TabExample id="sixteenths" phrase={sixteenthRunPhrase()} transport={transport} />
       </Section>
 
       <Section title="Tab · chords" note="Simultaneous notes stack in one column">
-        <TabStaff phrase={chordPhrase()} instrument={STANDARD_GUITAR} />
+        <TabExample id="chords" phrase={chordPhrase()} transport={transport} />
       </Section>
 
       <Section
@@ -169,6 +136,41 @@ function Header() {
         {scaleNotes(D_DORIAN).join(' · ')} — signature note {signatureNote(D_DORIAN)}, relative
         major {sig.relativeMajor}, {sig.sharps} sharps and {sig.flats} flats.
       </p>
+    </div>
+  );
+}
+
+/** Settings shared by every example: they all use one engine and one clock. */
+function TransportBar({ transport }: { transport: Transport }) {
+  return (
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-5 border-b-2 border-divider bg-bg px-8 py-3">
+      <span className="kicker kicker-accent">Playback</span>
+
+      <label className="flex items-center gap-2 text-[13px]">
+        <span className="kicker">Tempo</span>
+        <input
+          type="range"
+          min={40}
+          max={200}
+          value={transport.bpm}
+          onChange={(e) => transport.setBpm(Number(e.target.value))}
+          aria-label="Tempo"
+        />
+        <span className="w-10 font-extrabold tabular-nums">{transport.bpm}</span>
+      </label>
+
+      <Toggle
+        label="Metronome"
+        checked={transport.withMetronome}
+        onChange={transport.setWithMetronome}
+      />
+      <Toggle label="Notes" checked={transport.withNotes} onChange={transport.setWithNotes} />
+
+      <span className="ml-auto text-[12px] text-ink/50">
+        {transport.activeId
+          ? `Playing: ${transport.activeId}`
+          : 'One clock — starting an example stops any other'}
+      </span>
     </div>
   );
 }
