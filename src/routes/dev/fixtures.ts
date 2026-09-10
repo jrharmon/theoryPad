@@ -126,6 +126,32 @@ export function sixteenthRunPhrase() {
     .build();
 }
 
+/**
+ * All seven shapes ascending the neck, back to back — a preview of what the
+ * modes-through-key exercise will generate, and the phrase length the tab has
+ * to stay readable at.
+ */
+export function sevenShapesPhrase() {
+  const builder = phraseBuilder().rhythm(EIGHTH);
+
+  for (const shape of shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 1 })) {
+    builder.labelBar(`Fret ${shape.startFret}`);
+    builder.withRhythm(
+      shape.positions.map((p) => ({ string: p.string, fret: p.fret })),
+      STRAIGHT_EIGHTHS,
+      (_pos, i) => {
+        const note = shape.positions[i]!;
+        return {
+          role: note.isRoot ? 'root' : note.degree.number === 6 ? 'target' : 'none',
+        };
+      },
+    );
+    builder.fillBar();
+  }
+
+  return builder.build();
+}
+
 /** Chords, to prove simultaneous notes stack in one column. */
 export function chordPhrase() {
   return phraseBuilder()

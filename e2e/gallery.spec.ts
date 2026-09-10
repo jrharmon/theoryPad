@@ -113,6 +113,17 @@ test.describe('dev gallery', () => {
       .toBeGreaterThan(9);
   });
 
+  test('keeps the playhead visible through every pass of a repeat', async ({ page }) => {
+    // The playhead used to run off the end of the drawn phrase on the second
+    // pass, so playback continued with nothing to look at.
+    const section = page.locator('section').filter({ hasText: 'PICKED VS LEGATO' });
+    await section.getByRole('button', { name: 'Play' }).click();
+
+    await expect(section.getByText('Pass 1 of 2')).toBeVisible();
+    await expect(section.getByText('Pass 2 of 2')).toBeVisible({ timeout: 15000 });
+    await expect(section.getByTestId('playhead')).toBeVisible();
+  });
+
   test('pauses and resumes the active example', async ({ page }) => {
     const section = page.locator('section').filter({ hasText: 'SCALE RUN' });
     await section.getByRole('button', { name: 'Play' }).click();

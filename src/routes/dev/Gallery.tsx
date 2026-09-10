@@ -10,6 +10,7 @@ import {
   fullNeckOverlay,
   legatoComparisonPhrase,
   scaleRunPhrase,
+  sevenShapesPhrase,
   shapeOverlay,
   sixteenthRunPhrase,
 } from './fixtures';
@@ -79,6 +80,13 @@ export function Gallery() {
         note="Grid resolution comes from the phrase, not a fixed column count"
       >
         <TabExample id="sixteenths" phrase={sixteenthRunPhrase()} transport={transport} />
+      </Section>
+
+      <Section
+        title="Tab · all seven shapes"
+        note="What modes-through-key will generate. Long phrases wrap onto lines rather than running off the page."
+      >
+        <TabExample id="seven-shapes" phrase={sevenShapesPhrase()} transport={transport} />
       </Section>
 
       <Section title="Tab · chords" note="Simultaneous notes stack in one column">
@@ -222,7 +230,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-divider px-8 py-7">
+    // scroll-mt keeps the sticky toolbar from covering a section's controls
+    // when it is scrolled to.
+    <section className="scroll-mt-14 border-b border-divider px-8 py-7">
       <div className="mb-4">
         <p className="kicker">{title}</p>
         {note && <p className="text-[12px] text-ink/55">{note}</p>}

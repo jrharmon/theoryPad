@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type { Articulation, Phrase, TabNote } from '@/domain/phrase';
+import type { Articulation, Bar, Phrase, TabNote } from '@/domain/phrase';
 import { PPQ, requiredSubdivision, ticksPerBar } from '@/domain/phrase';
 
 export interface TabStaffProps {
@@ -17,6 +17,8 @@ export interface TabStaffProps {
   playheadTick?: number | null;
   showBarLabels?: boolean;
   showPickStrokes?: boolean;
+  /** Bars per line. 'auto' keeps a line readable at any subdivision. */
+  barsPerSystem?: number | 'auto';
   className?: string;
 }
 
@@ -47,7 +49,31 @@ const ARTICULATION_MARK: Partial<Record<Articulation, { glyph: string; leading: 
 
 interface Placed {
   note: TabNote;
+  /** Absolute column index across the whole phrase. */
   column: number;
+}
+
+/**
+ * How many bars go on one line.
+ *
+ * Real tab breaks into systems rather than running one long line off the page,
+ * and generated exercise phrases get long — seven modes across the neck is
+ * dozens of bars. Four bars is the conventional line, but at fine subdivisions
+ * that is far too many columns to read, so the default adapts to keep a line
+ * near 32 columns.
+ */
+function resolveBarsPerSystem(
+  barsPerSystem: number | 'auto',
+  columnsPerBar: number,
+): number {
+  if (barsPerSystem !== 'auto') return Math.max(1, barsPerSystem);
+  return Math.min(4, Math.max(1, Math.floor(32 / Math.max(1, columnsPerBar))));
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
 }
 
 export function TabStaff({
@@ -58,19 +84,13 @@ export function TabStaff({
   playheadTick = null,
   showBarLabels = true,
   showPickStrokes = false,
+  barsPerSystem = 'auto',
   className,
 }: TabStaffProps) {
-  const strings = stringCount(instrument);
   const resolution = subdivision ?? requiredSubdivision(phrase);
   const ticksPerColumn = PPQ / resolution;
-  const columnCount = Math.max(1, Math.ceil(phrase.totalTicks / ticksPerColumn));
   const columnsPerBar = ticksPerBar(phrase.timeSignature) / ticksPerColumn;
-
-  // Screen rows run highest string first; the model runs lowest first.
-  const rows = useMemo(
-    () => Array.from({ length: strings }, (_, i) => strings - 1 - i),
-    [strings],
-  );
+  const perSystem = resolveBarsPerSystem(barsPerSystem, columnsPerBar);
 
   const placed = useMemo(() => {
     const map = new Map<number, Placed[]>();
@@ -81,30 +101,107 @@ export function TabStaff({
     return map;
   }, [phrase.notes, ticksPerColumn]);
 
-  const rowHeight = ROW_HEIGHT[size];
-  const fretSize = FRET_SIZE[size];
-  const gridColumns = `${LABEL_COL[size]}px repeat(${columnCount}, minmax(0, 1fr))`;
+  /**
+   * A repeating phrase plays past its own length, so the raw transport tick
+   * runs off the end of what is drawn. Wrapping it back keeps the playhead on
+   * the notes during every pass instead of vanishing after the first.
+   */
+  const wrappedTick =
+    playheadTick === null || phrase.totalTicks <= 0
+      ? null
+      : ((playheadTick % phrase.totalTicks) + phrase.totalTicks) % phrase.totalTicks;
+  const playheadColumn = wrappedTick === null ? null : Math.floor(wrappedTick / ticksPerColumn);
 
-  const playheadColumn =
-    playheadTick === null ? null : Math.floor(playheadTick / ticksPerColumn);
+  const systems = chunk(phrase.bars, perSystem);
 
   return (
-    <div className={className} data-testid="tab-staff" data-columns={columnCount}>
+    <div
+      className={className}
+      data-testid="tab-staff"
+      data-columns={Math.max(1, Math.ceil(phrase.totalTicks / ticksPerColumn))}
+      data-systems={systems.length}
+    >
+      {systems.map((bars, systemIndex) => (
+        <TabSystem
+          key={bars[0]?.index ?? systemIndex}
+          systemIndex={systemIndex}
+          bars={bars}
+          instrument={instrument}
+          placed={placed}
+          size={size}
+          ticksPerColumn={ticksPerColumn}
+          columnsPerBar={columnsPerBar}
+          playheadColumn={playheadColumn}
+          showBarLabels={showBarLabels}
+          showPickStrokes={showPickStrokes}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface TabSystemProps {
+  systemIndex: number;
+  bars: Bar[];
+  instrument: Instrument;
+  placed: Map<number, Placed[]>;
+  size: 'compact' | 'large';
+  ticksPerColumn: number;
+  columnsPerBar: number;
+  playheadColumn: number | null;
+  showBarLabels: boolean;
+  showPickStrokes: boolean;
+}
+
+function TabSystem({
+  systemIndex,
+  bars,
+  instrument,
+  placed,
+  size,
+  ticksPerColumn,
+  columnsPerBar,
+  playheadColumn,
+  showBarLabels,
+  showPickStrokes,
+}: TabSystemProps) {
+  const strings = stringCount(instrument);
+  const firstColumn = Math.floor((bars[0]?.startTick ?? 0) / ticksPerColumn);
+  const columnCount = bars.length * columnsPerBar;
+
+  // Screen rows run highest string first; the model runs lowest first.
+  const rows = useMemo(
+    () => Array.from({ length: strings }, (_, i) => strings - 1 - i),
+    [strings],
+  );
+
+  const rowHeight = ROW_HEIGHT[size];
+  const fretSize = FRET_SIZE[size];
+  const labelCol = LABEL_COL[size];
+  const gridColumns = `${labelCol}px repeat(${columnCount}, minmax(0, 1fr))`;
+
+  const localPlayhead =
+    playheadColumn !== null &&
+    playheadColumn >= firstColumn &&
+    playheadColumn < firstColumn + columnCount
+      ? playheadColumn - firstColumn
+      : null;
+
+  return (
+    <div className={systemIndex > 0 ? 'mt-6' : undefined} data-testid={`tab-system-${systemIndex}`}>
       <div className="relative">
-        {playheadColumn !== null && playheadColumn >= 0 && playheadColumn < columnCount && (
+        {localPlayhead !== null && (
           <div
             data-testid="playhead"
             data-column={playheadColumn}
+            data-system={systemIndex}
             aria-hidden
             className="pointer-events-none absolute -top-1 -bottom-1 bg-accent/20"
             style={{
-              // Positioned as a fraction of the note area, so it tracks the grid
-              // at any width. Driven by a CSS value rather than React state, so
-              // playback does not re-render the tree.
-              left: `calc(${LABEL_COL[size]}px + (100% - ${LABEL_COL[size]}px) * ${
-                playheadColumn / columnCount
-              })`,
-              width: `calc((100% - ${LABEL_COL[size]}px) / ${columnCount})`,
+              // Positioned by CSS against the column count so it tracks the grid
+              // at any width, and so playback need not re-render the tree.
+              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${localPlayhead / columnCount})`,
+              width: `calc((100% - ${labelCol}px) / ${columnCount})`,
             }}
           />
         )}
@@ -115,6 +212,7 @@ export function TabStaff({
               key={stringIndex}
               instrument={instrument}
               stringIndex={stringIndex}
+              firstColumn={firstColumn}
               columnCount={columnCount}
               placed={placed.get(stringIndex) ?? []}
               rowHeight={rowHeight}
@@ -125,14 +223,14 @@ export function TabStaff({
         </div>
       </div>
 
-      {showBarLabels && phrase.bars.length > 0 && (
+      {showBarLabels && bars.length > 0 && (
         <div
           style={{ display: 'grid', gridTemplateColumns: gridColumns }}
           className="pt-1"
-          data-testid="bar-labels"
+          data-testid={`bar-labels-${systemIndex}`}
         >
           <span />
-          {phrase.bars.map((bar) => (
+          {bars.map((bar) => (
             <span
               key={bar.index}
               data-testid={`bar-label-${bar.index}`}
@@ -190,7 +288,7 @@ function NoteChip({
       {showPickStrokes && note.pickStroke && (
         <span
           data-testid={`pick-stroke-${stringIndex}-${column}`}
-          className="mr-[1px] self-start text-[0.62em] font-normal text-ink/55"
+          className="mr-[1px] self-start text-[0.62em] font-semibold text-accent-700"
         >
           {note.pickStroke === 'down' ? '⊓' : 'V'}
         </span>
@@ -205,6 +303,8 @@ function NoteChip({
 interface TabRowProps {
   instrument: Instrument;
   stringIndex: number;
+  /** Absolute column index this system starts at. */
+  firstColumn: number;
   columnCount: number;
   placed: Placed[];
   rowHeight: number;
@@ -215,6 +315,7 @@ interface TabRowProps {
 function TabRow({
   instrument,
   stringIndex,
+  firstColumn,
   columnCount,
   placed,
   rowHeight,
@@ -243,7 +344,10 @@ function TabRow({
         <span className="bg-bg px-1">{stringLabel(instrument, stringIndex)}</span>
       </div>
 
-      {Array.from({ length: columnCount }, (_, column) => {
+      {Array.from({ length: columnCount }, (_, offset) => {
+        // Test ids and the playhead use absolute columns, so a note keeps the
+        // same identity wherever it lands once the phrase wraps onto systems.
+        const column = firstColumn + offset;
         const note = byColumn.get(column);
         return (
           <div

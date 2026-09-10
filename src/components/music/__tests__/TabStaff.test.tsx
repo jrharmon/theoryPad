@@ -116,7 +116,7 @@ describe('TabStaff', () => {
     render(
       <TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} showBarLabels={false} />,
     );
-    expect(screen.queryByTestId('bar-labels')).not.toBeInTheDocument();
+    expect(screen.queryByTestId(/^bar-labels/)).not.toBeInTheDocument();
   });
 
   it('hides the playhead by default', () => {
@@ -146,13 +146,38 @@ describe('TabStaff', () => {
     expect(screen.getByTestId('playhead')).toHaveAttribute('data-column', '2');
   });
 
-  it('hides the playhead once the transport runs past the phrase', () => {
+  it('wraps the playhead back over the notes on a repeat', () => {
+    // A repeating phrase plays past its own length. Without wrapping, the
+    // playhead vanished after the first pass while the audio kept going.
+    const phrase = phraseBuilder({ repeat: 2 })
+      .rhythm(QUARTER)
+      .sequence([p(0, 3), p(0, 5), p(1, 3), p(1, 5)])
+      .build();
+
+    const { rerender } = render(
+      <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={1} playheadTick={QUARTER} />,
+    );
+    expect(screen.getByTestId('playhead')).toHaveAttribute('data-column', '1');
+
+    // One bar later is the second pass, back at the same place on screen.
+    rerender(
+      <TabStaff
+        phrase={phrase}
+        instrument={STANDARD_GUITAR}
+        subdivision={1}
+        playheadTick={QUARTER * 5}
+      />,
+    );
+    expect(screen.getByTestId('playhead')).toHaveAttribute('data-column', '1');
+  });
+
+  it('hides the playhead only when the caller passes null', () => {
     render(
       <TabStaff
         phrase={FOUR_QUARTERS}
         instrument={STANDARD_GUITAR}
         subdivision={1}
-        playheadTick={QUARTER * 99}
+        playheadTick={null}
       />,
     );
     expect(screen.queryByTestId('playhead')).not.toBeInTheDocument();
@@ -247,6 +272,90 @@ describe('TabStaff', () => {
     render(<TabStaff phrase={empty} instrument={BASS_4_STRING} />);
     expect(screen.getByTestId('tab-staff')).toBeInTheDocument();
     expect(screen.queryAllByTestId(/^tab-note-/)).toHaveLength(0);
+  });
+
+  it('breaks long phrases onto multiple lines', () => {
+    // Real tab wraps into systems; generated exercise phrases get long enough
+    // that one line would run off the page with no way to see the rest.
+    const eight = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence(Array.from({ length: 32 }, (_, i) => p(0, i % 12)))
+      .build();
+    render(<TabStaff phrase={eight} instrument={STANDARD_GUITAR} barsPerSystem={4} />);
+
+    expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '2');
+    expect(screen.getByTestId('tab-system-0')).toBeInTheDocument();
+    expect(screen.getByTestId('tab-system-1')).toBeInTheDocument();
+    // Every bar is still labelled, across both lines.
+    expect(screen.getAllByTestId(/^bar-label-/)).toHaveLength(8);
+  });
+
+  it('keeps a short phrase on one line', () => {
+    render(<TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} />);
+    expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '1');
+  });
+
+  it('narrows lines when the subdivision is fine, to keep them readable', () => {
+    const sixteenths = phraseBuilder()
+      .rhythm(SIXTEENTH)
+      .sequence(Array.from({ length: 64 }, (_, i) => p(0, i % 12)))
+      .build();
+    render(<TabStaff phrase={sixteenths} instrument={STANDARD_GUITAR} />);
+    // 16 columns per bar, so four bars a line would be 64 columns; auto halves it.
+    expect(Number(screen.getByTestId('tab-staff').getAttribute('data-systems'))).toBeGreaterThan(1);
+  });
+
+  it('gives notes the same identity wherever they wrap to', () => {
+    const eight = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence(Array.from({ length: 32 }, (_, i) => p(0, i % 12)))
+      .build();
+    render(<TabStaff phrase={eight} instrument={STANDARD_GUITAR} barsPerSystem={4} />);
+    // Column indices stay absolute across systems, so bar 5 beat 1 is column 16.
+    expect(screen.getByTestId('tab-note-0-16')).toBeInTheDocument();
+    expect(screen.getByTestId('tab-note-0-31')).toBeInTheDocument();
+  });
+
+  it('puts the playhead on the line containing it', () => {
+    const eight = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence(Array.from({ length: 32 }, (_, i) => p(0, i % 12)))
+      .build();
+    const { rerender } = render(
+      <TabStaff
+        phrase={eight}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={4}
+        playheadTick={QUARTER * 2}
+      />,
+    );
+    expect(screen.getByTestId('playhead')).toHaveAttribute('data-system', '0');
+
+    rerender(
+      <TabStaff
+        phrase={eight}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={4}
+        playheadTick={QUARTER * 18}
+      />,
+    );
+    const playhead = screen.getByTestId('playhead');
+    expect(playhead).toHaveAttribute('data-system', '1');
+    expect(playhead).toHaveAttribute('data-column', '18');
+  });
+
+  it('renders every articulation mark in the accent, including pick strokes', () => {
+    const phrase = phraseBuilder()
+      .rhythm(EIGHTH)
+      .note(p(0, 5), { pickStroke: 'down' })
+      .note(p(0, 7), { articulation: 'hammer-on' })
+      .build();
+    render(
+      <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} showPickStrokes />,
+    );
+    // A grey mark on a grey note is unreadable; every functional mark is accent.
+    expect(screen.getByTestId('pick-stroke-0-0').className).toContain('text-accent-700');
+    expect(screen.getByTestId('articulation-0-1').className).toContain('text-accent-700');
   });
 
   it('renders bigger at the large size', () => {

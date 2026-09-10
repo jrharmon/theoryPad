@@ -30,6 +30,14 @@ export function TabExample({
   const isActive = transport.activeId === id;
   const isPlaying = isActive && transport.isPlaying;
   const seconds = phraseSeconds(phrase, transport.bpm);
+  const passes = phrase.repeat ?? 1;
+
+  // The playhead wraps on a repeat, so without this the second pass looks
+  // identical to the first.
+  const pass =
+    isActive && transport.playheadTick !== null && phrase.totalTicks > 0
+      ? Math.min(passes, Math.floor(transport.playheadTick / phrase.totalTicks) + 1)
+      : null;
 
   const onPrimary = () => {
     if (isPlaying) transport.pause();
@@ -63,8 +71,15 @@ export function TabExample({
         </button>
 
         <span className="text-[12px] text-ink/55 tabular-nums">
-          {phrase.bars.length} bars · {seconds.toFixed(1)}s at {transport.bpm} bpm
+          {phrase.bars.length} bars
+          {passes > 1 ? ` × ${passes}` : ''} · {seconds.toFixed(1)}s at {transport.bpm} bpm
         </span>
+
+        {pass !== null && passes > 1 && (
+          <span className="text-[12px] font-semibold text-accent-700 tabular-nums">
+            Pass {pass} of {passes}
+          </span>
+        )}
       </div>
 
       <TabStaff
