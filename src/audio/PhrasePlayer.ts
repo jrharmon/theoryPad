@@ -2,7 +2,7 @@ import type { Instrument } from '@/domain/instrument';
 import { noteAt } from '@/domain/instrument';
 import type { Phrase, TabNote } from '@/domain/phrase';
 import { ticksToSeconds } from '@/domain/phrase';
-import type { Clock } from './Clock';
+import type { Clock } from '@/domain/time';
 import type { InstrumentVoice } from './voices';
 
 /** Articulations that change how a note sounds, rather than only how it looks. */

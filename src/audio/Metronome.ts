@@ -1,6 +1,6 @@
 import type { TimeSignature } from '@/domain/phrase';
 import { FOUR_FOUR, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
-import type { Clock } from './Clock';
+import type { Clock } from '@/domain/time';
 
 export interface MetronomeOptions {
   timeSignature?: TimeSignature;

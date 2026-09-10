@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { Clock, ClockState, LoopRange, ScheduledCallback } from './Clock';
+import type { Clock, ClockState, LoopRange, ScheduledCallback } from '@/domain/time';
 
 /**
  * Clock backed by Tone.Transport.

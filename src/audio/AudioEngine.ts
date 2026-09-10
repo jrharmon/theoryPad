@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { Clock } from './Clock';
+import type { Clock } from '@/domain/time';
 import { ToneClock } from './ToneClock';
 import { Metronome, type ClickSink, type MetronomeOptions } from './Metronome';
 import { PhrasePlayer } from './PhrasePlayer';

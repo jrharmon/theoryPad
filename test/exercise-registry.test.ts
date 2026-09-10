@@ -12,12 +12,16 @@ import { KNOWN_TAGS } from '@/exercises/types';
 
 const EXERCISES_DIR = join(process.cwd(), 'src/exercises');
 const MANIFEST = join(process.cwd(), 'src/exercises/exercise-ids.json');
-const NOT_AN_EXERCISE = new Set(['shared', '__tests__']);
-
+/**
+ * A directory is an exercise if it holds a definition.ts — structural rather
+ * than a denylist of infrastructure folders, so adding shared machinery under
+ * src/exercises does not require maintaining an exclusion list.
+ */
 function exerciseDirectories(): string[] {
   return readdirSync(EXERCISES_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && !NOT_AN_EXERCISE.has(entry.name))
-    .map((entry) => entry.name);
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => existsSync(join(EXERCISES_DIR, name, 'definition.ts')));
 }
 
 describe('the registry', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { NoteName } from '@/domain/music';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import { EIGHTH, QUARTER, phraseBuilder } from '@/domain/phrase';
-import { FakeClock } from '../FakeClock';
+import { FakeClock } from '@/domain/time';
 import { PhrasePlayer } from '../PhrasePlayer';
 import type { InstrumentVoice } from '../voices';
 

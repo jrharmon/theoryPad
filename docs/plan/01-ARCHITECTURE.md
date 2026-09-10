@@ -68,15 +68,17 @@ theoryPad/
 │  │  ├─ variation/           # axis registry, axis policies, the roller, seeded RNG
 │  │  ├─ tempo/               # tempo plans and resolution
 │  │  ├─ theory/              # theory-question models and generators
+│  │  ├─ time/                # Clock interface + FakeClock (ToneClock lives in audio/)
 │  │  └─ progress/            # coverage + report aggregations over the rep log
 │  ├─ exercises/
 │  │  ├─ registry.ts          # the explicit list of every definition
 │  │  ├─ types.ts             # ExerciseDefinition and friends
 │  │  ├─ shared/              # reusable generators, briefs, renderers
+│  │  ├─ runner/              # the rep state machine, driven by an injected Clock
 │  │  └─ <exercise-id>/       # one folder per exercise: definition.ts, generate.ts, tests
 │  ├─ audio/                  # the ONLY place `tone` is imported
 │  │  ├─ AudioEngine.ts       # facade + lifecycle
-│  │  ├─ Clock.ts             # Clock interface + ToneClock + FakeClock
+│  │  ├─ ToneClock.ts         # Clock implementation over Tone.Transport
 │  │  ├─ Metronome.ts
 │  │  ├─ voices/              # InstrumentVoice interface, SynthVoice, (later) SampledVoice
 │  │  ├─ PhrasePlayer.ts
@@ -126,10 +128,16 @@ direction:
 ```
 routes → components → domain
 routes → store → domain
-store  → data, audio
+store  → data, audio, exercises
 exercises → domain
 domain → (nothing but lib)
 ```
+
+Note where the **exercise runner** sits: `src/exercises/runner/`, not `src/domain/`. It depends
+on `ExerciseDefinition`, and `domain → exercises` would be a cycle. It is pure in the same
+sense regardless — no React, no DOM, no persistence, every clock reading injected — so it is
+unit-tested exactly like domain code. The boundary lint caught this; the plan had originally
+put it under `store/`, which would have implied React state it does not have.
 
 `domain` never imports `components`, `store`, `data`, `audio`, or `exercises`.
 

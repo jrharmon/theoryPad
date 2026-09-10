@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { EIGHTH, QUARTER, SIX_EIGHT, THREE_FOUR, ticksPerBar } from '@/domain/phrase';
-import { FakeClock } from '../FakeClock';
+import { FakeClock } from '@/domain/time';
 import { Metronome, type BeatEvent, type ClickSink } from '../Metronome';
 
 function sink() {
