@@ -133,7 +133,7 @@ of patterns established here.
 
 ---
 
-## M3 — The scale & mode family
+## M3 — The scale & mode family ✅ *complete (2026-09-10), awaiting review*
 
 _First test of the "adding an exercise is cheap" claim._
 
@@ -153,6 +153,33 @@ _First test of the "adding an exercise is cheap" claim._
 **Verify:** is a new exercise really ~50 lines? If not, the shared layer is wrong and we fix
 it now rather than repeating the mistake nine more times. Also: pin every axis on one exercise
 and confirm it behaves as a sane static exercise.
+
+**Outcome.** 599 unit tests, 31 E2E, `pnpm check` green. 3.6 and 3.8 had already landed in the
+M2 review round. The measurement:
+
+| Exercise | `generate` | Whole file |
+| --- | --- | --- |
+| `interval-sequences` | 35 lines | 83 |
+| `one-note-per-string` | 32 lines | 83 |
+| `position-shifting` | 37 lines | 94 |
+| `modes-through-key` (three variants) | 75 lines | 139 |
+
+**The claim holds.** The biggest remaining chunk of each `generate` is the brief's prose, not
+logic. Things to carry forward:
+
+- **Two catalog entries were wrong, not just open.** `one-note-per-string` specified a
+  nearest-fret walk that fails within four notes; it is a note-finding exercise and now shows
+  note names instead of frets. `position-shifting` had no concrete model; it is now 3nps with
+  a four-note string at each shift. Doc 04 has both.
+- **"7th position" means the shape starting on the first scale note at that fret**, not the
+  root. `shapeFrom` does this; using the root put a 3rd-position C major shape at the 8th fret.
+- **Task 2.6's params form had never been built**, so no variant could be chosen. The config
+  page now generates one from each exercise's Zod schema, and stored params are parsed before
+  `generate` rather than trusted.
+- **One test file checks every registered exercise** on every test tuning — real positions,
+  in key, deterministic, static once every axis is pinned. A new exercise gets it for free.
+- **A new axis is cheap**, and the player is happy to have many: each exercise declares only
+  the ones that suit it. Only `key` and `mode` are ever shared across a routine (doc 02).
 
 ---
 

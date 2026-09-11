@@ -169,7 +169,7 @@ gets the corrected version instead of the original plus a conversational patch.
 
 ## Git
 
-- Branch per milestone: `m2-vertical-slice`. Commit per task.
-- The repo currently has `main` with **no commits**. M0 task 0.1 creates the first.
+- Branch per milestone (`m3-scale-family`), merged to `main` at the review gate. Commit per task.
+- `main` holds every reviewed milestone. A push to `main` deploys to GitHub Pages.
 - CI runs `pnpm check` and `pnpm build` on every push, so a broken commit is caught without
   you reading it.

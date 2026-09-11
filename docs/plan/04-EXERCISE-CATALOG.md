@@ -57,8 +57,9 @@ The three variants are the ones you described:
 - **arpeggio-then-scale** — for each mode, play its diatonic 7th chord arpeggio _ascending_,
   then the full mode scale _descending_. This is the strongest of the three pedagogically: it
   welds the chord to the scale.
-- **pause-on-root** — every time the run passes the root, hold it for a full beat before
-  continuing. Generated as a longer `durationTicks` on notes with `role: 'root'`.
+- **pause-on-root** — every root is a quarter note and every other note an eighth; after
+  each shape, wait for the next bar. Deliberately not musical, so it ignores the rolled
+  rhythm. _(Settled at the M3 start: the player does not care how it lines up with bars.)_
 
 **Generation:** for each mode _m_ of the rolled key, find its 3-note-per-string (or positional)
 shape, place it at the appropriate neck position, and emit a `scaleRun` — or, for the arpeggio
@@ -78,18 +79,27 @@ horizontally with the playhead — _(new shared behaviour: `TabStaff` auto-scrol
 
 ---
 
-### A2. `one-note-per-string` — Cycling across strings
+### A2. `one-note-per-string` — Finding notes across the strings
 
-**Tags:** `scales` `modes` `horizontal` `whole-neck` `fretboard-knowledge`
+**Tags:** `scales` `modes` `fretboard-knowledge` `whole-neck`
 
-**Player does:** a key is rolled. Play one note of the scale per string, moving from the
-lowest string to the highest and back down, continuing until you land on the root on the
-string you started from — or for a fixed number of cycles.
+**Player does:** a key is rolled. Play the next note of the scale on the next string, sweeping
+low string to high and back, until you land on the root on the string you started from — or
+for a fixed number of sweeps.
 
-Forces horizontal, whole-neck thinking instead of box shapes. Deceptively hard.
+**This is a note-finding exercise, not a fingering.** _(Corrected at the M3 start — the first
+version of this entry specified "the fret nearest the previous note, within `maxFretJump`",
+which fails within four notes: a step per string moves the hand 3–4 frets every string.)_ It is
+not meant to flow like a scale. The whole point is jumping from string to string and finding
+the note on the fly; you are always limited by how fast you find it, never by getting your
+hand there. So:
 
-**Axes:** `key`, `mode` (session), `direction`, `rhythmPattern`, `stringSet`, `neckPosition`
-(where on the neck to start).
+- **The tab shows note names in place of frets**, and **the neck diagram is empty** — either
+  would give the answer away. (`TabNote.display`; the practice view drops an empty neck.)
+- The stored fret is simply where the note first falls from the nut. It exists for playback.
+- Quarter notes, and a slow default tempo.
+
+**Axes:** `key`, `mode`, `stringSet`.
 
 **Params:**
 
@@ -98,26 +108,18 @@ Forces horizontal, whole-neck thinking instead of box shapes. Deceptively hard.
   stopCondition: 'return-to-root' | 'fixed-cycles',   // default 'return-to-root'
   cycles: number,                                     // default 4, used when 'fixed-cycles'
   step: 'next-scale-degree' | 'skip-one',             // default 'next-scale-degree'
-  maxFretJump: number,                                // default 5 — keeps it playable
 }
 ```
 
-**Generation:** _(new shared generator: `oneNotePerString`)_. Walk the scale one degree at a
-time; for each successive degree, choose the position on the _next_ string in the cycle whose
-fret is nearest the previous note (bounded by `maxFretJump`). Reverse direction at the string
-set's edges. For `return-to-root`, keep walking until the note is the tonic **and** the string
-index equals the starting string; cap at some sane iteration limit and fall back to
-`fixed-cycles` if no return occurs (this happens for some scale lengths — the generator must
-handle it, and there is a test for it).
+**Generation:** `oneNotePerString` (shared). `return-to-root` always terminates — the string
+repeats every sweep and the degree every seven notes, so they meet at the least common
+multiple: 70 notes on six strings, 28 on three, plus the closing root.
 
-**Renders:** tab + neck overlay. The neck overlay is more useful than the tab here, so it gets
-the larger slot.
+**Renders:** tab only.
 
-**Audio:** metronome.
+**Defaults:** `targetTempo: 50`, `reps: 2`, `timing: 'either'`.
 
-**Defaults:** `targetTempo: 66`, `reps: 2`, `timing: 'either'`.
-
-**Milestone:** M3.
+**Milestone:** M3 ✅
 
 ---
 
@@ -130,13 +132,16 @@ The mockup's "Ascending 4ths in D Dorian, 7th position."
 **Player does:** run the scale in the rolled interval through the rolled position, ascending
 then descending, landing on the rolled target degree.
 
-**Axes:** `neckPosition`, `intervalPattern`, `direction`, `rhythmPattern`, `targetScaleDegree`.
+**Axes:** `key`, `mode`, `neckPosition`, `intervalPattern` (3rds–7ths, groups of 3 and 4),
+`intervalPairing` (same direction: 1-3, 2-4…; alternating: 1-3, 4-2, 3-5…), `direction`,
+`rhythmPattern`, `targetScaleDegree`.
 
-**Params:** `{ shapeSystem: '3nps' | 'positional' }` — `'positional'` throws until M8.
+**Params:** none. Positional shapes arrive through the `shapeSystem` axis in M8.
 
-**Generation:** _(new shared generator: `intervalRun`)_. Take the scale degrees in the
-position window as an ordered array; emit pairs `(i, i+n)` for 3rds → n=2, 4ths → n=3, etc.,
-wrapping within the window. Direction controls ascending/descending/up-down.
+**Generation:** `shapeFrom` + `intervalRun` (shared). The shape is the 3nps one starting on
+the first scale note at or above the rolled position — not the root. Figures stop where the
+top note would leave the shape rather than wrapping. A descent is built from the top, so it
+always opens on a descending figure.
 
 **Renders:** tab + neck overlay. A small extra panel showing the interval shape as a two-note
 neck fragment would help — good candidate for the `panels` extension point, but not required
@@ -146,7 +151,7 @@ in v1.
 
 **Defaults:** `targetTempo: 80`, `reps: 2`, `timing: 'either'`.
 
-**Milestone:** M3.
+**Milestone:** M3 ✅
 
 ---
 
@@ -154,36 +159,31 @@ in v1.
 
 **Tags:** `scales` `horizontal` `whole-neck`
 
-**Player does:** play the scale across the whole neck rather than inside one box — start at a
-rolled position, ascend while shifting position at rolled points, descend via a different
-route.
+**Player does:** play the scale across the neck rather than inside one box — up through the
+3nps shapes, shifting as you go, then back down by a different route.
 
-**Axes:** `neckPosition` (start), `stringSet`, `direction`, `rhythmPattern`, `shapeSystem`.
+**The model** _(agreed at the M3 start)_: a string with four notes where the 3nps shape has
+three is a shift. Slide into the fourth note and you are in the next shape up, one degree
+higher. Four on every string is the classic 4nps diagonal. Coming down, the shifts fall on
+other strings — the up counts rotated by one string, which covers exactly the same notes and
+lands back where the run started. Shift points are set by the param, never rolled, so pinning
+every axis still gives a static exercise.
 
-**Params:**
+**Axes:** `key`, `mode`, `neckPosition`, `direction`, `rhythmPattern`. Defaults roll only
+`up-down` / `down-up` (a one-way run shows one route) and positions open–7th (the run climbs
+ten frets or more).
 
-```ts
-{
-  shiftStyle: 'slide' | 'stretch' | 'shape-change',   // default 'slide'
-  fretRange: { low: number; high: number },            // default { low: 0, high: 15 }
-  differentRouteDown: boolean,                         // default true
-}
-```
+**Params:** `{ shiftOn: 'every-other-string' | 'every-string' }`, default every other. With
+every string there is only one route, so the way down matches the way up.
 
-**Generation:** _(new shared generator: `horizontalRun`)_. Walk the scale ascending; when the
-next degree would exceed the current position window, either slide on the same string
-(`slide`, marked `articulation: 'slide-up'`), stretch (`stretch`), or jump to the next shape
-(`shape-change`). Descending re-runs the walk with a different rolled seed offset so the route
-differs.
+**Generation:** `horizontalRun` (shared), on `scaleShape` with a note count per string. Shift
+notes carry `slide-up` / `slide-down`.
 
-**Renders:** tab + full-neck overlay (this exercise is about the whole neck, so the overlay
-should show all 15 frets, not a position window).
-
-**Audio:** metronome.
+**Renders:** tab + neck overlay of both routes; the neck widens past 15 frets when the run does.
 
 **Defaults:** `targetTempo: 72`, `reps: 2`, `timing: 'either'`.
 
-**Milestone:** M3.
+**Milestone:** M3 ✅
 
 ---
 

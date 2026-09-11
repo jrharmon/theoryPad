@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-10, end of M2.
+**Last updated:** 2026-09-10, end of M3 (awaiting review).
 
 ## Where the project is
 
@@ -9,44 +9,46 @@
 | M0 — Foundations & rails | ✅ complete |
 | M1 — Music domain & rendering primitives | ✅ complete |
 | M2 — The vertical slice: one exercise, end to end | ✅ complete, reviewed |
-| **M3 — The scale & mode family** | **next** |
+| **M3 — The scale & mode family** | **✅ complete, awaiting review** |
 | M4–M10 | not started |
 
-518 unit tests, 29 E2E, `pnpm check` green. Branch `m2-vertical-slice`, unmerged.
+599 unit tests, 31 E2E, `pnpm check` green. M0–M2 are merged to `main` (fast-forward, in
+order); M3 is on `m3-scale-family`, to be merged at the gate. **Nothing has been pushed** —
+the GitHub remote is empty, and a push to `main` triggers the Pages deploy.
 
 ## What works today
 
 `pnpm dev`, then **Exercises**:
 
-- One exercise, `modes-through-key` ("Modes up the neck"), generating 21 bars of tab
-  across all seven three-note-per-string shapes of a rolled key.
-- Opening it rolls a variation and generates the material immediately; the transport is
-  frozen to the bottom of the screen; the tab scrolls itself as it plays.
-- Metronome, playhead, tempo control, pause, re-roll, skip, end. Keyboard-operable.
-- Every rep is logged to IndexedDB with what it rolled and the tempo actually used.
-- `/#/dev/gallery` — the M1 primitives against fixture data, with playback.
+- **Modes up the neck** — all seven 3nps shapes of a rolled key; variants `plain`,
+  `arpeggio-then-scale` (each shape's 7th chord up, scale down) and `pause-on-root`
+  (roots a beat, everything else an eighth).
+- **Interval sequences** — 3rds to 7ths, groups of 3 and 4, same-direction or alternating,
+  through the shape at a rolled position.
+- **One note per string** — a note-finding sweep. The tab shows note names, not frets, and
+  the neck is left empty.
+- **Position shifting** — up through the shapes with a slide on each four-note string, back
+  down by another route.
+- The config page: tempo and reps, a **Settings** form generated from each exercise's params,
+  and **What varies** — Roll / Fixed / Hold per axis, with chips to leave values out of a roll.
+- Running an exercise, logging reps, `/#/dev/gallery` — as in M2.
 
-## Next: M3
+## Next: the M3 review, then M4
 
-Doc 08 has the task list. In short: three shared generators (`intervalRun`,
-`oneNotePerString`, `horizontalRun`), three exercises built on them, and the two
-`modes-through-key` variants that currently throw.
-
-**The point of M3 is a measurement**, not just content: the plan claims a typical exercise
-is a short composition of shared pieces. `modes-through-key` came out at ~40 lines of
-`generate`. If the next three do not, the shared layer is wrong and it is much cheaper to
-fix at three exercises than at thirteen.
+Doc 08 has the M3 outcome and the line-count measurement (the claim held: 32–37 lines of
+`generate` per new exercise). M4 is the theory exercises.
 
 ## Open questions for the player
 
-Carried from the M2 review, all needing a guitar rather than a test:
+Only a guitar can answer these:
 
-- **Is the generated material playable?** Seven shapes ascending frets 1→12 is a lot of
-  neck. Does it flow, or jump awkwardly between shapes?
-- **Free time.** Removed from the UI at the player's request (just don't press play). The
-  runner keeps the capability for `free-improv-target` in M7; revisit then whether a rep
-  needs a manual end at all.
-- Doc 10 §A has the rest.
+- **Is 50 bpm right for one-note-per-string?** One note per beat is ~1.2 s to find each.
+- **Does position-shifting's route feel natural?** The slide is marked on the fourth note of
+  a string going up and the lowest going down. Does that match where you actually shift?
+- **Are the interval figures playable in 3nps?** 3rds on one string stretch across the shape.
+- **Does the arpeggio sit well inside each shape**, or does it want its own fingering?
+- **Still open from M2:** is seven shapes, frets 1→12, a playable amount of neck? Does it
+  flow between shapes? Doc 10 §A has the rest.
 
 ## Decisions made during M2's review round
 
@@ -67,6 +69,16 @@ These came from playing with the app and are not obvious from the code alone:
 - **Identical unplayed copies of one exercise are cleaned up on load** — damage from a
   seeding race that has since been fixed.
 
+## Decisions made at the start of M3
+
+- **One-note-per-string is a note-finding exercise.** Jumping between strings is the point;
+  the player is limited by finding the note, never by moving the hand.
+- **Position-shifting is 3nps with four-note strings** at the shifts; the descent rotates them.
+- **Both interval pairings, as an axis.** Many axes are fine — each exercise declares its own.
+- **Only key and mode are shared across a routine.** Every other axis rolls per exercise.
+- **Pause-on-root is not musical on purpose**: root a quarter, others eighths, wait for the bar.
+- **Milestone branches merge to `main` at each gate**, so `main` stays the clean history.
+
 ## Things that bit, and would bite again
 
 - **ESLint flat config: the last matching block wins a rule outright.** Four overlapping
@@ -79,5 +91,9 @@ These came from playing with the app and are not obvious from the code alone:
   `paths` duplicated there it writes components into a literal `@/` directory.
 - **TypeScript is pinned to 6.0.3.** TS 7 is `latest`, but typescript-eslint does not
   support it, and losing type-aware linting costs more than the compiler speed.
+- **A fresh Playwright browser has an empty IndexedDB**, so exercise ids differ from the
+  dev pane's. Drive screenshots by exercise name through the library, not by URL.
+- **The E2E suite assumed one exercise.** Locators in `e2e/practice.spec.ts` are now scoped
+  to one library row; keep new ones scoped too.
 - **Look at the output.** M1's shape tiling, M2's key mismatch, the unreadable sixteenth-note
   tab and the rounded badges were all found by rendering a screenshot, not by a test.
