@@ -6,3 +6,4 @@ export * from './intervalRun';
 export * from './arpeggioRun';
 export * from './oneNotePerString';
 export * from './horizontalRun';
+export * from './axes';

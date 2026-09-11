@@ -1,5 +1,8 @@
 import type { AnyExerciseDefinition } from './types';
 import { modesThroughKey } from './modes-through-key/definition';
+import { intervalSequences } from './interval-sequences/definition';
+import { oneNotePerString } from './one-note-per-string/definition';
+import { positionShifting } from './position-shifting/definition';
 
 /**
  * Every exercise the app knows about.
@@ -8,7 +11,12 @@ import { modesThroughKey } from './modes-through-key/definition';
  * a glob hides the list, breaks tree-shaking, and makes it harder to see what
  * exists. A test asserts nothing under src/exercises is left unregistered.
  */
-export const EXERCISE_DEFINITIONS: readonly AnyExerciseDefinition[] = [modesThroughKey];
+export const EXERCISE_DEFINITIONS: readonly AnyExerciseDefinition[] = [
+  modesThroughKey,
+  intervalSequences,
+  oneNotePerString,
+  positionShifting,
+];
 
 const BY_ID = new Map(EXERCISE_DEFINITIONS.map((d) => [d.id, d]));
 

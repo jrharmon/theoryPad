@@ -4,6 +4,7 @@ import { Fretboard, TabStaff } from '@/components/music';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Kicker } from '@/components/ui/kicker';
+import type { NeckOverlay } from '@/domain/neck';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { useExercises } from '@/store/exercises';
 import { usePractice } from '@/store/practice';
@@ -129,7 +130,9 @@ function PlayedBody({
   }, [playing]);
 
   return (
-    <div className="grid gap-6 px-8 py-6 lg:grid-cols-[1fr_320px]">
+    <div
+      className={`grid gap-6 px-8 py-6 ${instance.neck.notes.length > 0 ? 'lg:grid-cols-[1fr_320px]' : ''}`}
+    >
       <div>
         <Kicker>Tab · generated for this variation</Kicker>
         <div className="mt-2">
@@ -143,14 +146,27 @@ function PlayedBody({
         </div>
       </div>
 
-      <div className="lg:sticky lg:top-4 lg:self-start">
-        <Kicker>Shape on the neck</Kicker>
-        <div className="mt-2">
-          <Fretboard instrument={instrument} overlay={instance.neck} fretRange={{ low: 0, high: 15 }} />
+      {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
+      {instance.neck.notes.length > 0 && (
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <Kicker>Shape on the neck</Kicker>
+          <div className="mt-2">
+            <Fretboard
+              instrument={instrument}
+              overlay={instance.neck}
+              fretRange={neckRange(instance.neck, instrument.fretCount)}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
+}
+
+/** Fifteen frets, or as far as the exercise actually goes — a run up the neck can pass 15. */
+function neckRange(neck: NeckOverlay, fretCount: number): { low: number; high: number } {
+  const highest = Math.max(0, ...neck.notes.map((n) => n.position.fret));
+  return { low: 0, high: Math.min(fretCount, Math.max(15, highest)) };
 }
 
 function Done({ exerciseId }: { exerciseId: string }) {
