@@ -33,18 +33,12 @@ export function ExerciseLibrary() {
   // genuinely all three, and would be missing from two searches otherwise.
   const tags = useMemo(() => {
     const all = new Set<string>();
-    for (const { exercise, definition } of rows) {
-      for (const t of definition.tags) all.add(t);
-      for (const t of exercise.userTags) all.add(t);
-    }
+    for (const { definition } of rows) for (const t of definition.tags) all.add(t);
     return [...all].sort();
   }, [rows]);
 
   const visible = tag
-    ? rows.filter(
-        ({ exercise, definition }) =>
-          (definition.tags as string[]).includes(tag) || exercise.userTags.includes(tag),
-      )
+    ? rows.filter(({ definition }) => (definition.tags as string[]).includes(tag))
     : rows;
 
   return (
@@ -87,7 +81,7 @@ export function ExerciseLibrary() {
                   to={`/exercises/${exercise.id}`}
                   className="text-[20px] font-extrabold hover:text-accent-700"
                 >
-                  {exercise.name}
+                  {definition.name}
                 </Link>
                 <p className="text-[13px] text-ink/65">{definition.summary}</p>
 
@@ -103,11 +97,6 @@ export function ExerciseLibrary() {
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {definition.tags.map((t) => (
                     <Badge key={t} variant="secondary">
-                      {t}
-                    </Badge>
-                  ))}
-                  {exercise.userTags.map((t) => (
-                    <Badge key={t} variant="outline">
                       {t}
                     </Badge>
                   ))}

@@ -54,7 +54,7 @@ export function ExerciseDetail() {
       <div className="flex items-end justify-between border-b-2 border-divider px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          <h1 className="text-[42px]">{exercise.name}</h1>
+          <h1 className="text-[42px]">{definition.name}</h1>
           <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (

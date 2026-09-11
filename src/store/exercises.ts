@@ -46,8 +46,6 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
 
   return {
     definitionId: definition.id,
-    name: definition.name,
-    userTags: [],
     params,
     axisPolicies: definition.defaults.axisPolicies ?? {},
     heldAxisValues: {},
@@ -153,7 +151,6 @@ export const useExercises = create<ExercisesState>((set, get) => ({
 
       const defaults = newExerciseFrom(exerciseDefinition(current.definitionId));
       const updated = await repos.exercises.update(id, {
-        name: defaults.name,
         params: defaults.params,
         axisPolicies: defaults.axisPolicies,
         heldAxisValues: {},

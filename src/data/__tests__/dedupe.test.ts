@@ -9,8 +9,6 @@ function exercise(id: string, definitionId = 'modes-through-key', createdAt = 1_
     createdAt,
     updatedAt: createdAt,
     definitionId,
-    name: 'Modes up the neck',
-    userTags: [],
     params: {},
     axisPolicies: {},
     heldAxisValues: {},

@@ -487,36 +487,35 @@ post-session summary can offer "you settled at 96, your target says 88 — adopt
 See doc 03 for the full `ExerciseDefinition` contract. The persisted entities:
 
 ```ts
-/** A configured instance of a definition. This is what appears in routines. */
+/**
+ * A configured instance of a definition. This is what appears in routines.
+ *
+ * It holds only what is *yours* — how the exercise is set up. What the exercise
+ * *is* (name, tags, summary, which axes it varies) lives in code on the
+ * definition this points at, and is read through rather than copied.
+ *
+ * The split is by lifetime: a definition ships with the app, a configuration is
+ * the player's and has to survive updates. Copying anything across the line
+ * makes it drift — `name` was duplicated here originally, and renaming a
+ * definition left every stored row on the old name.
+ */
 export interface Exercise {
   id: Uuid;
-  definitionId: string; // e.g. "modes-through-key"
-  name: string; // user-overridable display name
-  /** Your own free-form tags, on top of the definition's controlled ones. */
-  userTags: string[];
-  params: unknown; // validated by the definition's Zod schema
+  definitionId: string;          // the join into code; never rename one
+  params: unknown;               // validated by the definition's Zod schema
   /** Per-axis control. Anything omitted defaults to { mode: 'roll' }. */
   axisPolicies: Partial<Record<AxisId, AxisPolicy>>;
   /** Remembered values for axes with { mode: 'hold' }. */
   heldAxisValues: Partial<Record<AxisId, unknown>>;
   tempo: TempoConfig;
-  defaultReps: number; // 1-3
-  video?: VideoRef; // reference material, not backing
-
-  /** How far down the backing resolution order this exercise is willing to go. */
-  backingPolicy: 'prefer-own' | 'own-only' | 'shared-only' | 'none'; // default 'prefer-own'
-  /** Always this exact track, whatever key gets rolled. For "play along with this solo". */
+  defaultReps: number;           // 1-3
+  video?: VideoRef;              // reference material, not backing
+  /** Pin a specific backing track instead of looking one up by key+mode. Rare. */
   pinnedBackingTrackId?: Uuid;
-  /**
-   * This exercise's own tracks are BackingTrack rows scoped to it — not stored inline here.
-   * See doc 06.
-   */
-  notes?: string; // user's own notes
-  createdAt: number;
-  updatedAt: number;
+  notes?: string;                // the player's own notes
+  createdAt: number; updatedAt: number; deletedAt?: number;
 }
 
-/** A reference/demo video attached to an exercise. Backing tracks are a separate pool. */
 export interface VideoRef {
   provider: 'youtube';
   videoId: string;

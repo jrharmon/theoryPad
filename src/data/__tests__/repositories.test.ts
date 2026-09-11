@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_GUITAR } from '@/domain/instrument';
+import Dexie from 'dexie';
 import { TheoryPadDB } from '../db';
 import { createRepositories } from '../repositories/dexie';
 import { createMemoryRepositories } from '../repositories/memory';
@@ -9,8 +10,6 @@ import type { NewExercise, NewRep, NewSession } from '../repositories/types';
 
 const exerciseFixture: NewExercise = {
   definitionId: 'modes-through-key',
-  name: 'Seven modes through a key',
-  userTags: [],
   params: { variant: 'plain', shapesPerRep: 7, minFret: 1 },
   axisPolicies: {},
   heldAxisValues: {},
@@ -101,7 +100,7 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
       });
 
       it('refuses to update something that is not there', async () => {
-        await expect(repos.exercises.update('nope', { name: 'x' })).rejects.toThrow();
+        await expect(repos.exercises.update('nope', { defaultReps: 3 })).rejects.toThrow();
       });
     });
 
@@ -215,6 +214,45 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
     });
   });
 }
+
+describe('the v2 migration', () => {
+  it('strips the name and tags that now live on the definition', async () => {
+    // A copy drifts: when the definition was renamed, every row kept the old
+    // name. The stored copies are removed rather than left to go stale.
+    const name = `theorypad-migration-${Date.now()}`;
+
+    const before = new Dexie(name);
+    before.version(1).stores({
+      exercises: 'id, definitionId, updatedAt, deletedAt',
+      sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
+      reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
+      exerciseStats: 'exerciseId, definitionId, updatedAt',
+      settings: 'key',
+    });
+    await before.open();
+    await before.table('exercises').add({
+      ...exerciseFixture,
+      id: 'legacy-row',
+      createdAt: 1,
+      updatedAt: 1,
+      name: 'Seven modes through a key',
+      userTags: ['mine'],
+    });
+    before.close();
+
+    const after = new TheoryPadDB(name);
+    const row = await after.exercises.get('legacy-row');
+
+    expect(row).toBeDefined();
+    expect(row).not.toHaveProperty('name');
+    expect(row).not.toHaveProperty('userTags');
+    // Everything that is genuinely the user's survives.
+    expect(row!.tempo.targetTempo).toBe(76);
+    expect(row!.definitionId).toBe('modes-through-key');
+
+    await after.delete();
+  });
+});
 
 let dbCounter = 0;
 let currentDb: TheoryPadDB | null = null;

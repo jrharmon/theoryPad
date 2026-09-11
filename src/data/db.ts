@@ -22,6 +22,20 @@ export class TheoryPadDB extends Dexie {
       exerciseStats: 'exerciseId, definitionId, updatedAt',
       settings: 'key',
     });
+
+    // Name and tags moved onto the definition, where they belong. The stored
+    // copies are dead weight, and a stale one is worse than none.
+    this.version(2)
+      .stores({})
+      .upgrade((transaction) =>
+        transaction
+          .table<Record<string, unknown>>('exercises')
+          .toCollection()
+          .modify((row) => {
+            delete row.name;
+            delete row.userTags;
+          }),
+      );
   }
 }
 

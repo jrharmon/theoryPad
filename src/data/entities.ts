@@ -27,13 +27,17 @@ export interface VideoRef {
   title?: string;
 }
 
-/** A configured instance of a definition. This is what appears in routines. */
+/**
+ * A configured instance of a definition. This is what appears in routines.
+ *
+ * It holds only what is *yours* — how the exercise is set up. What the exercise
+ * *is* (name, tags, summary, which axes it varies) lives in code, on the
+ * definition this points at, and is read through rather than copied. A copy
+ * drifts: when the definition was renamed, every row kept the old name until it
+ * was reset.
+ */
 export interface Exercise extends Row {
   definitionId: string;
-  /** User-overridable display name. */
-  name: string;
-  /** Free-form tags on top of the definition's controlled ones. */
-  userTags: string[];
   params: unknown;
   axisPolicies: AxisPolicies;
   /** Remembered values for axes set to `hold`. */

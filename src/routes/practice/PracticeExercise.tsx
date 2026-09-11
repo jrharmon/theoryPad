@@ -62,7 +62,7 @@ export function PracticeExercise() {
 
   return (
     <section className="pb-24">
-      <RunningChrome name={exercise.name} />
+      <RunningChrome name={definition.name} />
 
       {snapshot?.state === 'done' ? (
         <Done exerciseId={exercise.id} />
