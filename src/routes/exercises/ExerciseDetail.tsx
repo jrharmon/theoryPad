@@ -1,25 +1,17 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
-import { axisDefinition } from '@/domain/variation';
-import type { AxisDefinition, AxisId, AxisPolicy } from '@/domain/variation';
-import type { Instrument } from '@/domain/instrument';
+import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ParamsEditor } from './ParamsEditor';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
@@ -27,6 +19,7 @@ export function ExerciseDetail() {
     useExercises();
   const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
+  const instrument = useSettings((s) => s.settings.instrument);
 
   useEffect(() => {
     void load();
@@ -147,16 +140,31 @@ export function ExerciseDetail() {
         </div>
 
         <div>
+          {definition.params && (
+            <div className="mb-8">
+              <Kicker>Settings</Kicker>
+              <div className="mt-3 max-w-[320px]">
+                <ParamsEditor
+                  definition={definition}
+                  stored={exercise.params}
+                  onChange={(params) => void update(exercise.id, { params })}
+                />
+              </div>
+            </div>
+          )}
+
           <Kicker>What varies</Kicker>
           <p className="mb-3 max-w-[560px] text-[13px] text-ink/60">
             <strong>Roll</strong> picks a new value each rep. <strong>Fixed</strong> pins one.{' '}
             <strong>Hold</strong> keeps whatever came up last and stays there until you press
-            re-roll — for working one key for a while without pinning it forever.
+            re-roll — for working one key for a while without pinning it forever. When rolling,
+            click values to leave them out.
           </p>
           <AxisPolicyEditor
             axes={definition.axes}
             policies={exercise.axisPolicies}
             held={exercise.heldAxisValues}
+            instrument={instrument}
             onChange={(axis, policy) => void setAxisPolicy(exercise.id, axis, policy)}
           />
 
@@ -170,129 +178,5 @@ export function ExerciseDetail() {
 
       <Separator className="border-t-2 border-divider" />
     </section>
-  );
-}
-
-/** How a held value reads, falling back to its raw key if it no longer exists. */
-function heldLabel(
-  definition: AxisDefinition,
-  key: string,
-  instrument: Instrument,
-): string {
-  const value = definition.parse(key, { instrument, resolved: {} });
-  return value === null ? key : definition.format(value);
-}
-
-/** One row per axis: the control that replaced the wildness dial. */
-function AxisPolicyEditor({
-  axes,
-  policies,
-  held,
-  onChange,
-}: {
-  axes: AxisId[];
-  policies: Partial<Record<AxisId, AxisPolicy>>;
-  held: Record<string, string>;
-  onChange: (axis: AxisId, policy: AxisPolicy) => void;
-}) {
-  return (
-    <div className="border border-divider">
-      {axes.map((id, index) => (
-        <AxisRow
-          key={id}
-          id={id}
-          first={index === 0}
-          policy={policies[id] ?? { mode: 'roll' }}
-          heldValue={held[id]}
-          onChange={(policy) => onChange(id, policy)}
-        />
-      ))}
-    </div>
-  );
-}
-
-function AxisRow({
-  id,
-  first,
-  policy,
-  heldValue,
-  onChange,
-}: {
-  id: AxisId;
-  first: boolean;
-  policy: AxisPolicy;
-  heldValue: string | undefined;
-  onChange: (policy: AxisPolicy) => void;
-}) {
-  const definition = axisDefinition(id);
-  // The real instrument matters: positions are filtered by fret count and
-  // string sets are generated from the tuning.
-  const instrument = useSettings((s) => s.settings.instrument);
-
-  const candidates = useMemo(
-    () => definition.candidates({ instrument, resolved: {} }),
-    [definition, instrument],
-  );
-
-  return (
-    <div
-      className={`grid grid-cols-[140px_120px_1fr] items-center gap-3 px-3 py-2 ${
-        first ? '' : 'border-t border-divider'
-      }`}
-    >
-      <span className="text-[13px] font-semibold">{definition.label}</span>
-
-      <Select
-        value={policy.mode}
-        onValueChange={(mode) => {
-          if (mode === 'fixed') {
-            const first = candidates[0];
-            onChange({ mode: 'fixed', value: first ? definition.key(first) : '' });
-          } else if (mode === 'hold') {
-            onChange({ mode: 'hold' });
-          } else {
-            onChange({ mode: 'roll' });
-          }
-        }}
-      >
-        <SelectTrigger size="sm" aria-label={`${definition.label} policy`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="roll">Roll</SelectItem>
-          <SelectItem value="fixed">Fixed</SelectItem>
-          <SelectItem value="hold">Hold</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {policy.mode === 'fixed' && candidates.length > 0 && (
-        <Select
-          value={policy.value}
-          onValueChange={(value) => onChange({ mode: 'fixed', value })}
-        >
-          <SelectTrigger size="sm" aria-label={`${definition.label} value`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {candidates.map((candidate) => (
-              <SelectItem key={definition.key(candidate)} value={definition.key(candidate)}>
-                {definition.format(candidate)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {policy.mode === 'roll' && (
-        <span className="text-[12px] text-ink/50">Any of {candidates.length}</span>
-      )}
-      {policy.mode === 'hold' && (
-        <span className="text-[12px] text-ink/50" data-testid={`held-${id}`}>
-          {heldValue === undefined
-            ? 'Nothing held yet — rolls once, then stays'
-            : `Holding ${heldLabel(definition, heldValue, instrument)}`}
-        </span>
-      )}
-    </div>
   );
 }

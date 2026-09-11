@@ -4,6 +4,7 @@ import { SEVEN_STRING_GUITAR, STANDARD_GUITAR } from '@/domain/instrument';
 import type { AxisId } from '../types';
 import { freshAxes, rollVariation, variationKeyMode, variationKeys } from '../roll';
 import { allAxisDefinitions } from '../axes';
+import { toggleSubset } from '../policies';
 
 const base = { seed: 1234, instrument: STANDARD_GUITAR };
 const ALL: AxisId[] = [
@@ -381,5 +382,26 @@ describe('every axis', () => {
         expect(axis.key(parsed), `${axis.id} ${key}`).toBe(key);
       }
     }
+  });
+});
+
+describe('toggleSubset', () => {
+  const all = ['a', 'b', 'c'];
+
+  it('leaves a value out of a free roll', () => {
+    expect(toggleSubset(all, undefined, 'b')).toEqual({ mode: 'roll', from: ['a', 'c'] });
+  });
+
+  it('goes back to a free roll once everything is selected again', () => {
+    // Stored as no subset rather than a full one, so a candidate added later is included.
+    expect(toggleSubset(all, ['a', 'c'], 'b')).toEqual({ mode: 'roll' });
+  });
+
+  it('keeps candidate order whatever order they were clicked in', () => {
+    expect(toggleSubset(all, ['c'], 'a')).toEqual({ mode: 'roll', from: ['a', 'c'] });
+  });
+
+  it('will not remove the last value', () => {
+    expect(toggleSubset(all, ['b'], 'b')).toEqual({ mode: 'roll', from: ['b'] });
   });
 });

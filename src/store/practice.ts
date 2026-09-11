@@ -6,6 +6,7 @@ import type { CoverageCounts } from '@/domain/variation';
 import { AXIS_IDS } from '@/domain/variation';
 import type { ExerciseInstance } from '@/exercises/types';
 import { exerciseDefinition } from '@/exercises/registry';
+import { resolveParams } from '@/exercises/params';
 import { ExerciseRunner, type RepRecord, type RunnerSnapshot } from '@/exercises/runner';
 import { newId } from '@/data';
 
@@ -98,7 +99,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
       instrument: settings.instrument,
       sessionId: session.id,
       sessionKeyMode: rollSessionKeyMode(),
-      params: exercise.params,
+      params: resolveParams(definition, exercise.params),
       tempo: exercise.tempo,
       ...(definition.defaults.tempoPlan ? { tempoPlan: definition.defaults.tempoPlan } : {}),
       reps: exercise.defaultReps,

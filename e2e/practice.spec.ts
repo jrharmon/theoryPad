@@ -1,7 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** The one exercise the registry seeds, by its display name. */
+/** The exercise these tests drive, by its display name. The library seeds others too. */
 const EXERCISE = 'Modes up the neck';
+
+/** That exercise's row in the library. */
+const row = (page: Page) => page.locator('li', { hasText: EXERCISE });
 
 /**
  * The vertical slice, end to end: pick an exercise, configure it, practise it,
@@ -72,7 +75,7 @@ test('seeds the library exactly once, however many screens ask for it', async ({
 test('the library row shows how an exercise is configured', async ({ page }) => {
   // Names come from definitions, so configuration is what tells two instances
   // of one definition apart.
-  await expect(page.getByText('2 reps', { exact: false })).toBeVisible();
+  await expect(row(page).getByText('2 reps', { exact: false })).toBeVisible();
 
   await page.getByRole('link', { name: EXERCISE }).click();
   await page.getByRole('combobox', { name: 'Key policy' }).click();
@@ -80,7 +83,7 @@ test('the library row shows how an exercise is configured', async ({ page }) => 
   await expect(page.getByRole('combobox', { name: 'Key value' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Exercises' }).click();
-  await expect(page.getByText('2 reps · Key: C')).toBeVisible();
+  await expect(row(page).getByText('2 reps · Key: C')).toBeVisible();
 });
 
 test('deleting removes an exercise from the library', async ({ page }) => {
@@ -119,7 +122,7 @@ test('reset puts an exercise back to its definition\u2019s defaults', async ({ p
 });
 
 test('the library lists exercises and filters by tag', async ({ page }) => {
-  await expect(page.getByRole('link', { name: 'Practice', exact: true })).toBeVisible();
+  await expect(row(page).getByRole('link', { name: 'Practice', exact: true })).toBeVisible();
 
   // Tags, not one family: this exercise is scales and modes and whole-neck.
   for (const tag of ['scales', 'modes', 'whole-neck']) {
@@ -165,7 +168,7 @@ test('the detail page configures tempo and what varies', async ({ page }) => {
 });
 
 test('opening an exercise goes straight into it', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
 
   // No interstitial: the variation is rolled and the material generated on
   // arrival, and the transport is already there.
@@ -175,7 +178,7 @@ test('opening an exercise goes straight into it', async ({ page }) => {
 });
 
 test('the transport stays put while the tab scrolls', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await expect(page.getByTestId('play')).toBeInViewport();
 
   // A generated exercise runs to twenty-one bars; the controls must not go
@@ -185,7 +188,7 @@ test('the transport stays put while the tab scrolls', async ({ page }) => {
 });
 
 test('a practice run rolls, briefs, plays and logs the rep', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
 
   // The brief reveals the whole rolled variation, and waits.
   await expect(page.getByText('This time you are playing')).toBeVisible();
@@ -212,7 +215,7 @@ test('a practice run rolls, briefs, plays and logs the rep', async ({ page }) =>
 });
 
 test('finishes after the configured reps', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await expect(page.getByTestId('play')).toBeVisible();
 
   // Two reps by default.
@@ -225,7 +228,7 @@ test('finishes after the configured reps', async ({ page }) => {
 });
 
 test('moving the tempo while practising never changes the target', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await page.getByTestId('play').click();
 
   const tempo = page.getByTestId('tempo');
@@ -244,7 +247,7 @@ test('moving the tempo while practising never changes the target', async ({ page
 });
 
 test('space pauses and resumes, with a guitar in your hands', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await expect(page.getByTestId('play')).toBeVisible();
 
   // Enter starts it.
@@ -263,7 +266,7 @@ test('space pauses and resumes, with a guitar in your hands', async ({ page }) =
 });
 
 test('re-rolling gives a fresh variation from the brief', async ({ page }) => {
-  await page.getByRole('link', { name: 'Practice', exact: true }).click();
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await page.getByTestId('play').click();
 
   await page.getByRole('button', { name: 'Re-roll' }).click();
@@ -272,4 +275,30 @@ test('re-rolling gives a fresh variation from the brief', async ({ page }) => {
 
   // Nothing was logged: a re-roll is not a rep.
   expect(await storedReps(page)).toHaveLength(0);
+});
+
+test('a roll can leave values out, and the run honours it', async ({ page }) => {
+  await page.getByRole('link', { name: EXERCISE }).click();
+  const keys = page.getByRole('group', { name: 'Key rolls from' });
+
+  // Leave out every key but A; the next roll has nothing else to pick.
+  for (const key of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'Bb', 'B']) {
+    await keys.getByRole('button', { name: key, exact: true }).click();
+  }
+  await expect(keys.getByRole('button', { name: 'A', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(keys.getByRole('button', { name: 'C', exact: true })).toHaveAttribute('aria-pressed', 'false');
+
+  await page.getByRole('link', { name: 'Practice this' }).click();
+  // "A Dorian", not "Ab Dorian".
+  await expect(page.getByTestId('axis-key')).toContainText(/A [A-Z]/);
+});
+
+test('a variant chosen on the config page is what gets played', async ({ page }) => {
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByRole('combobox', { name: 'Variant' }).click();
+  await page.getByRole('option', { name: 'Pause on root' }).click();
+  await expect(page.getByRole('combobox', { name: 'Variant' })).toHaveText('Pause on root');
+
+  await page.getByRole('link', { name: 'Practice this' }).click();
+  await expect(page.getByText('holding every root')).toBeVisible();
 });
