@@ -110,6 +110,9 @@ function PlayedBody({
   const [tick, setTick] = useState(0);
   const frame = useRef<number | null>(null);
   const playing = state === 'playing';
+  // Paused keeps the playhead where it stopped — losing your place is exactly
+  // what you did not want when you paused.
+  const showPlayhead = playing || state === 'paused' || state === 'count-in';
 
   // Polled rather than pushed: the runner's clock is the source of truth, and
   // reading it on rAF keeps the tab in step without the clock driving React.
@@ -133,8 +136,9 @@ function PlayedBody({
           <TabStaff
             phrase={instance.phrase}
             instrument={instrument}
-            playheadTick={playing ? tick : null}
+            playheadTick={showPlayhead ? tick : null}
             size="large"
+            autoScroll={playing}
           />
         </div>
       </div>

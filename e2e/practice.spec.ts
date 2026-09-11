@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
+/** The one exercise the registry seeds, by its display name. */
+const EXERCISE = 'Modes up the neck';
+
 /**
  * The vertical slice, end to end: pick an exercise, configure it, practise it,
  * and confirm the rep was logged with what it rolled.
@@ -25,57 +28,64 @@ async function storedReps(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.goto('/#/exercises');
   // First run seeds the library from the registry.
-  await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toBeVisible();
+  await expect(page.getByRole('link', { name: EXERCISE })).toBeVisible();
 });
 
 test('seeds the library exactly once, however many screens ask for it', async ({ page }) => {
   // Several screens load on mount and StrictMode runs each effect twice, which
   // used to race and seed the library twice over.
-  await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);
   await page.reload();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);
 });
 
-test('two exercises from one definition are distinguishable', async ({ page }) => {
-  // They share a name and a summary, so what differs has to be visible.
-  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
-  await page.getByLabel('Exercise name').fill('Modes — slow, in D');
+test('the library row shows how an exercise is configured', async ({ page }) => {
+  // Names come from definitions, so configuration is what tells two instances
+  // of one definition apart.
+  await expect(page.getByText('2 reps', { exact: false })).toBeVisible();
+
+  await page.getByRole('link', { name: EXERCISE }).click();
   await page.getByRole('combobox', { name: 'Key policy' }).click();
   await page.getByRole('option', { name: 'Fixed' }).click();
+  await expect(page.getByRole('combobox', { name: 'Key value' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Exercises' }).click();
-  await expect(page.getByRole('link', { name: 'Modes — slow, in D' })).toBeVisible();
   await expect(page.getByText('2 reps · Key: C')).toBeVisible();
 });
 
-test('duplicating gives a second, independently configured exercise', async ({ page }) => {
-  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
-  await page.getByRole('button', { name: 'Duplicate' }).click();
+test('deleting removes an exercise from the library', async ({ page }) => {
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByRole('button', { name: 'Delete' }).click();
 
-  await expect(page.getByLabel('Exercise name')).toHaveValue(
-    'Seven modes through a key (copy)',
-  );
-  await page.getByLabel('Target tempo').fill('60');
-  await expect(page.getByLabel('Target tempo')).toHaveValue('60');
-
-  await page.getByRole('link', { name: 'Exercises' }).click();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key (copy)' })).toBeVisible();
-
-  // The copy is configured independently of its source.
-  await expect(page.getByText('70', { exact: true })).toBeVisible();
-  await expect(page.getByText('60', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
+  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(0);
 });
 
-test('deleting removes an exercise from the library', async ({ page }) => {
-  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
-  await page.getByRole('button', { name: 'Duplicate' }).click();
-  await expect(page.getByLabel('Exercise name')).toHaveValue('Seven modes through a key (copy)');
+test('hold says what it is holding', async ({ page }) => {
+  // "Keeps last session's value" said nothing about which value, and a hold
+  // that can never be released is a trap — re-roll breaks it.
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByRole('combobox', { name: 'Direction policy' }).click();
+  await page.getByRole('option', { name: 'Hold' }).click();
+  await expect(page.getByTestId('held-direction')).toContainText('Nothing held yet');
 
-  await page.getByRole('button', { name: 'Delete' }).click();
-  await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key (copy)' })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Seven modes through a key', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Practice this' }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'End' }).click();
+
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await expect(page.getByTestId('held-direction')).toContainText('Holding');
+});
+
+test('reset puts an exercise back to its definition\u2019s defaults', async ({ page }) => {
+  // A configured exercise keeps what it was given, so a changed default does
+  // not move one you have already tuned. This is how you take it deliberately.
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByLabel('Target tempo').fill('120');
+  await expect(page.getByLabel('Target tempo')).toHaveValue('120');
+
+  await page.getByRole('button', { name: 'Reset to defaults' }).click();
+  await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
 
 test('the library lists exercises and filters by tag', async ({ page }) => {
@@ -87,14 +97,14 @@ test('the library lists exercises and filters by tag', async ({ page }) => {
   }
 
   await page.getByRole('button', { name: 'modes', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toBeVisible();
+  await expect(page.getByRole('link', { name: EXERCISE })).toBeVisible();
 
   await page.getByRole('button', { name: 'All', exact: true }).click();
-  await expect(page.getByRole('link', { name: 'Seven modes through a key' })).toBeVisible();
+  await expect(page.getByRole('link', { name: EXERCISE })).toBeVisible();
 });
 
 test('the detail page configures tempo and what varies', async ({ page }) => {
-  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
+  await page.getByRole('link', { name: EXERCISE }).click();
 
   const target = page.getByLabel('Target tempo');
   await expect(target).toHaveValue('70');
@@ -199,7 +209,7 @@ test('moving the tempo while practising never changes the target', async ({ page
 
   await page.getByRole('button', { name: 'End' }).click();
   await page.getByRole('link', { name: 'Exercises' }).click();
-  await page.getByRole('link', { name: 'Seven modes through a key' }).click();
+  await page.getByRole('link', { name: EXERCISE }).click();
   await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
 

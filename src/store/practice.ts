@@ -80,6 +80,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
 
     const { useSettings } = await import('./settings');
     const settings = useSettings.getState().settings;
+    const { useExercises } = await import('./exercises');
 
     const session = await repos.sessions.add({
       routineId: null,
@@ -119,7 +120,10 @@ export const usePractice = create<PracticeState>((set, get) => ({
       onRepEnd: (rep: RepRecord) => {
         void repos.reps.add({ ...rep, sessionId: session.id });
         // Remember what was rolled, so `hold` policies have something to hold.
-        void repos.exercises.update(exercise.id, { heldAxisValues: rep.axes });
+        // Through the store rather than the repository: writing straight to the
+        // database left the library holding a stale copy, so a held value never
+        // appeared until a reload.
+        void useExercises.getState().update(exercise.id, { heldAxisValues: rep.axes });
       },
     });
 

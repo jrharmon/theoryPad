@@ -6,38 +6,48 @@ import { PhrasePlayer } from './PhrasePlayer';
 import { SynthVoice } from './voices';
 import type { InstrumentVoice } from './voices';
 
-/** Two short percussive clicks. Accent on the downbeat, a lower tick elsewhere. */
+/**
+ * The metronome click.
+ *
+ * High and short, not a drum. A low percussive thud sits in the same register
+ * as the guitar's low strings and disappears under them; a click near 2kHz cuts
+ * through anything being played over it, which is the entire job.
+ */
+const ACCENT_HZ = 2000;
+const BEAT_HZ = 1400;
+const SUBDIVISION_HZ = 1400;
+
 class ToneClickSink implements ClickSink {
-  private accent: Tone.MembraneSynth | null = null;
-  private beat: Tone.MembraneSynth | null = null;
+  private voice: Tone.Synth | null = null;
 
   init(): void {
-    if (this.accent) return;
-    this.accent = new Tone.MembraneSynth({
-      pitchDecay: 0.008,
-      octaves: 2,
-      envelope: { attack: 0.001, decay: 0.14, sustain: 0 },
+    if (this.voice) return;
+    this.voice = new Tone.Synth({
+      oscillator: { type: 'square' },
+      // Near-instant attack and a very fast decay: a click, not a tone.
+      envelope: { attack: 0.0005, decay: 0.028, sustain: 0, release: 0.01 },
     }).toDestination();
-    this.beat = new Tone.MembraneSynth({
-      pitchDecay: 0.008,
-      octaves: 2,
-      envelope: { attack: 0.001, decay: 0.09, sustain: 0 },
-    }).toDestination();
-    this.accent.volume.value = -6;
-    this.beat.volume.value = -14;
+    this.voice.volume.value = -16;
   }
 
   click(audioTime: number, kind: 'accent' | 'beat' | 'subdivision'): void {
-    if (kind === 'accent') this.accent?.triggerAttackRelease('C4', 0.04, audioTime);
-    else if (kind === 'beat') this.beat?.triggerAttackRelease('G3', 0.03, audioTime);
-    else this.beat?.triggerAttackRelease('G3', 0.02, audioTime, 0.3);
+    if (!this.voice) return;
+    switch (kind) {
+      case 'accent':
+        this.voice.triggerAttackRelease(ACCENT_HZ, 0.02, audioTime, 1);
+        break;
+      case 'beat':
+        this.voice.triggerAttackRelease(BEAT_HZ, 0.018, audioTime, 0.6);
+        break;
+      case 'subdivision':
+        this.voice.triggerAttackRelease(SUBDIVISION_HZ, 0.012, audioTime, 0.25);
+        break;
+    }
   }
 
   dispose(): void {
-    this.accent?.dispose();
-    this.beat?.dispose();
-    this.accent = null;
-    this.beat = null;
+    this.voice?.dispose();
+    this.voice = null;
   }
 }
 

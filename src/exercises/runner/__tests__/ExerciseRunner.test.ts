@@ -387,6 +387,56 @@ describe('re-roll and hold', () => {
     expect(runner.completedReps).toHaveLength(0);
   });
 
+  it('actually produces a different variation', () => {
+    // The seed is (session, exercise, rep), so without counting attempts a
+    // re-roll regenerated exactly what was there and the button did nothing.
+    const { runner } = makeRunner();
+    runner.start();
+    const seeds = [runner.snapshot.variation!.seed];
+    for (let i = 0; i < 5; i += 1) {
+      runner.reroll();
+      seeds.push(runner.snapshot.variation!.seed);
+    }
+    expect(new Set(seeds).size).toBe(6);
+  });
+
+  it('releases a held axis, because a re-roll is asking for something new', () => {
+    const { runner } = makeRunner({
+      definition: { ...tinyExercise, axes: ['direction'] },
+      axisPolicies: { direction: { mode: 'hold' } },
+      heldAxisValues: { direction: 'descending' },
+    });
+
+    runner.start();
+    expect(runner.snapshot.variation!.axes.direction!.key).toBe('descending');
+    expect(runner.snapshot.variation!.axes.direction!.source).toBe('hold');
+
+    // A hold that can never be released is a trap, so re-rolling breaks it.
+    const seen = new Set<string>();
+    for (let i = 0; i < 20; i += 1) {
+      runner.reroll();
+      seen.add(runner.snapshot.variation!.axes.direction!.key);
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it('holds again on the next rep, from what was just played', () => {
+    const { runner, clock } = makeRunner({
+      definition: { ...tinyExercise, axes: ['direction'] },
+      axisPolicies: { direction: { mode: 'hold' } },
+      reps: 3,
+    });
+
+    runner.start();
+    const first = runner.snapshot.variation!.axes.direction!.key;
+    runner.begin();
+    playThrough(runner, clock);
+
+    // Rep two keeps rep one's value: that is what hold is for.
+    expect(runner.snapshot.variation!.axes.direction!.key).toBe(first);
+    expect(runner.snapshot.variation!.axes.direction!.source).toBe('hold');
+  });
+
   it('carries a rep’s values forward, so the next roll knows what changed', () => {
     const { runner, clock } = makeRunner({ reps: 2 });
     runner.start();

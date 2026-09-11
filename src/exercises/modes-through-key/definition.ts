@@ -30,14 +30,17 @@ const AXES = ['mode', 'key', 'direction', 'rhythmPattern', 'targetScaleDegree'] 
 
 export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
   id: 'modes-through-key',
-  name: 'Seven modes through a key',
+  name: 'Modes up the neck',
   tags: ['scales', 'modes', 'whole-neck', 'positional'],
   kind: 'played',
-  summary: 'Play every shape of a rolled key, ascending the neck.',
+  summary:
+    'All seven three-note-per-string shapes of one key, climbing from the nut to the 12th fret.',
   description: [
-    'A key is rolled. Play its shapes in order up the neck, each starting on',
-    'whichever degree falls next — so the whole neck gets covered rather than',
-    'one comfortable box. Land each shape on the rolled target degree.',
+    'A key is rolled. Play its seven shapes in order up the neck, each starting',
+    'on whichever scale degree falls next on the lowest string — so you cover',
+    'the whole neck instead of the one box you are comfortable in. Each shape',
+    'lands on the rolled target degree, which is usually the note that makes',
+    'the mode sound like itself.',
   ].join(' '),
 
   axes: [...AXES],

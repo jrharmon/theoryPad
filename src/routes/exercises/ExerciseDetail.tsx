@@ -4,7 +4,8 @@ import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { axisDefinition } from '@/domain/variation';
-import type { AxisId, AxisPolicy } from '@/domain/variation';
+import type { AxisDefinition, AxisId, AxisPolicy } from '@/domain/variation';
+import type { Instrument } from '@/domain/instrument';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -22,7 +23,8 @@ import { Separator } from '@/components/ui/separator';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
-  const { exercises, loaded, load, update, setAxisPolicy, duplicate, remove } = useExercises();
+  const { exercises, loaded, load, update, setAxisPolicy, resetToDefaults, remove } =
+    useExercises();
   const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
 
@@ -52,16 +54,7 @@ export function ExerciseDetail() {
       <div className="flex items-end justify-between border-b-2 border-divider px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          {/* Editable, because two instances of one definition otherwise look
-              identical everywhere they are listed. */}
-          <input
-            aria-label="Exercise name"
-            value={exercise.name}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              void update(exercise.id, { name: e.target.value })
-            }
-            className="-ml-1 w-full max-w-[720px] border border-transparent bg-transparent px-1 text-[42px] font-extrabold tracking-tight hover:border-divider focus:border-divider focus:outline-none"
-          />
+          <h1 className="text-[42px]">{exercise.name}</h1>
           <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (
@@ -72,21 +65,12 @@ export function ExerciseDetail() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              void duplicate(exercise.id).then((copy) => {
-                if (copy) void navigate(`/exercises/${copy.id}`);
-              })
-            }
-          >
-            Duplicate
+          <Button variant="secondary" onClick={() => void resetToDefaults(exercise.id)}>
+            Reset to defaults
           </Button>
           <Button
             variant="secondary"
-            onClick={() =>
-              void remove(exercise.id).then(() => void navigate('/exercises'))
-            }
+            onClick={() => void remove(exercise.id).then(() => void navigate('/exercises'))}
           >
             Delete
           </Button>
@@ -164,12 +148,15 @@ export function ExerciseDetail() {
 
         <div>
           <Kicker>What varies</Kicker>
-          <p className="mb-3 text-[13px] text-ink/60">
-            Each axis can roll freely, be pinned to one value, or hold whatever it was last time.
+          <p className="mb-3 max-w-[560px] text-[13px] text-ink/60">
+            <strong>Roll</strong> picks a new value each rep. <strong>Fixed</strong> pins one.{' '}
+            <strong>Hold</strong> keeps whatever came up last and stays there until you press
+            re-roll — for working one key for a while without pinning it forever.
           </p>
           <AxisPolicyEditor
             axes={definition.axes}
             policies={exercise.axisPolicies}
+            held={exercise.heldAxisValues}
             onChange={(axis, policy) => void setAxisPolicy(exercise.id, axis, policy)}
           />
 
@@ -186,14 +173,26 @@ export function ExerciseDetail() {
   );
 }
 
+/** How a held value reads, falling back to its raw key if it no longer exists. */
+function heldLabel(
+  definition: AxisDefinition,
+  key: string,
+  instrument: Instrument,
+): string {
+  const value = definition.parse(key, { instrument, resolved: {} });
+  return value === null ? key : definition.format(value);
+}
+
 /** One row per axis: the control that replaced the wildness dial. */
 function AxisPolicyEditor({
   axes,
   policies,
+  held,
   onChange,
 }: {
   axes: AxisId[];
   policies: Partial<Record<AxisId, AxisPolicy>>;
+  held: Record<string, string>;
   onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
   return (
@@ -204,6 +203,7 @@ function AxisPolicyEditor({
           id={id}
           first={index === 0}
           policy={policies[id] ?? { mode: 'roll' }}
+          heldValue={held[id]}
           onChange={(policy) => onChange(id, policy)}
         />
       ))}
@@ -215,11 +215,13 @@ function AxisRow({
   id,
   first,
   policy,
+  heldValue,
   onChange,
 }: {
   id: AxisId;
   first: boolean;
   policy: AxisPolicy;
+  heldValue: string | undefined;
   onChange: (policy: AxisPolicy) => void;
 }) {
   const definition = axisDefinition(id);
@@ -285,7 +287,11 @@ function AxisRow({
         <span className="text-[12px] text-ink/50">Any of {candidates.length}</span>
       )}
       {policy.mode === 'hold' && (
-        <span className="text-[12px] text-ink/50">Keeps last session’s value</span>
+        <span className="text-[12px] text-ink/50" data-testid={`held-${id}`}>
+          {heldValue === undefined
+            ? 'Nothing held yet — rolls once, then stays'
+            : `Holding ${heldLabel(definition, heldValue, instrument)}`}
+        </span>
       )}
     </div>
   );

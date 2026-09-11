@@ -18,8 +18,14 @@ interface ExercisesState {
    * their own view of the map and the second silently drops the first.
    */
   setAxisPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
-  /** Copy an exercise's configuration — the usual way to get a second one. */
-  duplicate: (id: string) => Promise<Exercise | undefined>;
+  /**
+   * Put an exercise back to its definition's defaults.
+   *
+   * A configured exercise keeps what it was given, so changing a definition's
+   * default tempo does not — and should not — move one you have already tuned.
+   * This is how you pick the new value up deliberately.
+   */
+  resetToDefaults: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -124,20 +130,23 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     });
   },
 
-  async duplicate(id) {
-    const repos = createRepositories(db());
-    const source = await repos.exercises.byId(id);
-    if (!source) return undefined;
+  async resetToDefaults(id) {
+    await queued(id, async () => {
+      const repos = createRepositories(db());
+      const current = await repos.exercises.byId(id);
+      if (!current) return;
 
-    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = source;
-    const created = await repos.exercises.add({
-      ...rest,
-      name: `${source.name} (copy)`,
-      // A copy starts its own history: held values belong to the original's.
-      heldAxisValues: {},
+      const defaults = newExerciseFrom(exerciseDefinition(current.definitionId));
+      const updated = await repos.exercises.update(id, {
+        name: defaults.name,
+        params: defaults.params,
+        axisPolicies: defaults.axisPolicies,
+        heldAxisValues: {},
+        tempo: defaults.tempo,
+        defaultReps: defaults.defaultReps,
+      });
+      set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
     });
-    set({ exercises: [...get().exercises, created] });
-    return created;
   },
 
   async remove(id) {

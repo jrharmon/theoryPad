@@ -84,6 +84,13 @@ export class ExerciseRunner {
   private currentTempo: number | null = null;
   private repStartedAt = 0;
   private currentKeyMode: KeyMode | null = null;
+  /**
+   * Bumped on every re-roll and folded into the seed.
+   *
+   * Without it the seed is (session, exercise, rep), so re-rolling regenerates
+   * exactly what was there — the button appeared to do nothing.
+   */
+  private rollAttempt = 0;
   private countInTicks = 0;
   private completed: RepRecord[] = [];
 
@@ -151,6 +158,7 @@ export class ExerciseRunner {
     if (this.state !== 'idle') return;
     this.repIndex = 0;
     this.completed = [];
+    this.rollAttempt = 0;
     this.prepareRep();
   }
 
@@ -189,12 +197,18 @@ export class ExerciseRunner {
     this.completeRep('skipped');
   }
 
-  /** Re-roll this rep's variation and show the brief again. */
+  /**
+   * Re-roll this rep's variation and show the brief again.
+   *
+   * Asking for something new also releases any `hold`: an axis set to hold is
+   * meant to stay put until you say otherwise, and this is you saying so.
+   */
   reroll(): void {
     if (this.state === 'done') return;
     this.clearScheduled();
     this.config.clock.stop();
-    this.prepareRep();
+    this.rollAttempt += 1;
+    this.prepareRep({ releaseHolds: true });
   }
 
   /** Abandon the exercise. Any rep in progress is logged as abandoned. */
@@ -236,17 +250,18 @@ export class ExerciseRunner {
 
   // ------------------------------------------------------------- internals
 
-  private prepareRep(): void {
+  private prepareRep(options: { releaseHolds?: boolean } = {}): void {
     const { definition, instrument, sessionKeyMode, sessionId, exerciseId } = this.config;
+    const held = options.releaseHolds ? {} : (this.config.heldAxisValues ?? {});
 
-    const seed = hashSeed(sessionId, exerciseId, this.repIndex);
+    const seed = hashSeed(sessionId, exerciseId, this.repIndex, this.rollAttempt);
 
     this.variation = rollVariation({
       axes: definition.axes,
       seed,
       instrument,
       ...(this.config.axisPolicies ? { policies: this.config.axisPolicies } : {}),
-      ...(this.config.heldAxisValues ? { held: this.config.heldAxisValues } : {}),
+      held,
       ...(this.config.coverage ? { coverage: this.config.coverage } : {}),
       sessionKeyMode,
     });

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { tickToBarBeat } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
@@ -12,6 +13,7 @@ export function TransportBar() {
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
   const practice = usePractice();
+  const navigate = useNavigate();
 
   if (!snapshot) return null;
 
@@ -93,7 +95,13 @@ export function TransportBar() {
             <Button variant="secondary" size="sm" onClick={() => practice.skipRep()}>
               Skip
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => void practice.end()}>
+            {/* End leaves practice. Tearing the runner down in place left an
+                empty screen with nothing to do on it. */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void practice.end().then(() => void navigate('/exercises'))}
+            >
               End
             </Button>
           </div>

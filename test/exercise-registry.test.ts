@@ -94,7 +94,7 @@ describe('the registry', () => {
   });
 
   it('looks up by id and refuses an unknown one', () => {
-    expect(exerciseDefinition('modes-through-key').name).toBe('Seven modes through a key');
+    expect(exerciseDefinition('modes-through-key').name).toBe('Modes up the neck');
     expect(() => exerciseDefinition('nope')).toThrow(/Unknown exercise/);
   });
 
