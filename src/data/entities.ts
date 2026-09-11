@@ -43,6 +43,7 @@ export interface Exercise extends Row {
   /** Remembered values for axes set to `hold`. */
   heldAxisValues: Record<string, string>;
   tempo: TempoConfig;
+  /** Passes it starts with when added to a routine. Standalone practice has no reps. */
   defaultReps: number;
   video?: VideoRef;
   notes?: string;
@@ -109,6 +110,8 @@ export interface Settings {
   audio: {
     metronomeEnabled: boolean;
     countInBars: 0 | 1 | 2;
+    /** Keep playing the same material pass after pass. */
+    loop: boolean;
     voice: 'synth' | 'sampled';
     masterVolumeDb: number;
   };
@@ -120,6 +123,10 @@ export interface Settings {
   ui: {
     showFingerings: boolean;
     showDegreesOnFretboard: boolean;
+    /** The neck diagram beside a running exercise. Hiding it gives the tab the room. */
+    showNeck: boolean;
+    /** Tab size, in steps from the default: positive is bigger. Bars per line follow. */
+    tabZoom: number;
   };
   updatedAt: number;
 }

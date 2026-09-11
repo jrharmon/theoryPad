@@ -40,6 +40,7 @@ export class Metronome {
   private handles: number[] = [];
   private listeners = new Set<BeatListener>();
   private running = false;
+  private muted = false;
 
   constructor(clock: Clock, sink: ClickSink | null = null, options: MetronomeOptions = {}) {
     this.clock = clock;
@@ -87,10 +88,14 @@ export class Metronome {
         const beat = Math.floor(((musicalTick % perBar) + perBar) % perBar / perBeat);
         const isDownbeat = beat === 0;
 
-        this.sink?.click(
-          audioTime,
-          isDownbeat && this.options.accentFirstBeat ? 'accent' : 'beat',
-        );
+        // Muting silences the click but never the count-in: with the click
+        // off, the count-in is still how you know when to start.
+        if (!this.muted || isCountIn) {
+          this.sink?.click(
+            audioTime,
+            isDownbeat && this.options.accentFirstBeat ? 'accent' : 'beat',
+          );
+        }
         for (const listener of this.listeners) {
           listener({ bar, beat, tick, isDownbeat, isCountIn, audioTime });
         }
@@ -103,6 +108,7 @@ export class Metronome {
         this.clock.scheduleRepeat((audioTime, tick) => {
           // The beat itself is already clicked above.
           if (tick % perBeat === 0) return;
+          if (this.muted && tick >= countIn) return;
           this.sink?.click(audioTime, 'subdivision');
         }, step),
       );
@@ -113,6 +119,18 @@ export class Metronome {
     for (const handle of this.handles) this.clock.clear(handle);
     this.handles = [];
     this.running = false;
+  }
+
+  /**
+   * Silence the click without stopping the beat. Beat listeners keep firing,
+   * and the timeline is untouched, so it can be switched mid-bar.
+   */
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+  }
+
+  get isMuted(): boolean {
+    return this.muted;
   }
 
   get isRunning(): boolean {

@@ -149,7 +149,7 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
     settings: {
       async get(): Promise<Settings> {
         const existing = await database.settings.get('settings');
-        if (existing) return existing;
+        if (existing) return withDefaults(existing);
         const defaults = defaultSettings(stamp());
         await database.settings.put(defaults);
         return defaults;
@@ -171,6 +171,7 @@ export function defaultSettings(at: number): Settings {
     audio: {
       metronomeEnabled: true,
       countInBars: 1,
+      loop: false,
       voice: 'synth',
       masterVolumeDb: 0,
     },
@@ -182,7 +183,27 @@ export function defaultSettings(at: number): Settings {
     ui: {
       showFingerings: false,
       showDegreesOnFretboard: true,
+      showNeck: true,
+      tabZoom: 0,
     },
     updatedAt: at,
+  };
+}
+
+/**
+ * Stored settings laid over the defaults, one section deep.
+ *
+ * Settings saved before a field existed do not have it, and a missing boolean
+ * reads as false — which would hide the neck for everyone who had saved
+ * settings before `showNeck` was added.
+ */
+export function withDefaults(stored: Settings): Settings {
+  const defaults = defaultSettings(stored.updatedAt);
+  return {
+    ...defaults,
+    ...stored,
+    audio: { ...defaults.audio, ...stored.audio },
+    practice: { ...defaults.practice, ...stored.practice },
+    ui: { ...defaults.ui, ...stored.ui },
   };
 }

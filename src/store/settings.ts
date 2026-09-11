@@ -27,9 +27,13 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
 
   async save(changes) {
+    // In memory first, then to disk. Waiting for the write before updating
+    // meant two quick toggles each merged into the same stale settings, and
+    // the second write undid the first.
+    const merged = { ...get().settings, ...changes };
+    set({ settings: merged });
     const repos = createRepositories(db());
-    const next = await repos.settings.save({ ...get().settings, ...changes });
-    set({ settings: next });
+    await repos.settings.save(merged);
   },
 
   instrument() {

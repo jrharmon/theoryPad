@@ -10,6 +10,26 @@ function sink() {
 }
 
 describe('Metronome', () => {
+  it('goes silent when muted, but still counts in and still reports beats', () => {
+    const clock = new FakeClock();
+    const { s, clicks } = sink();
+    const metronome = new Metronome(clock, s, { countInBars: 1 });
+    const beats: BeatEvent[] = [];
+    metronome.onBeat((b) => beats.push(b));
+    metronome.setMuted(true);
+    metronome.start();
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 7);
+    // Four count-in clicks, then nothing — though the beat carries on.
+    expect(clicks).toHaveLength(4);
+    expect(beats).toHaveLength(8);
+
+    metronome.setMuted(false);
+    clock.advanceTicks(QUARTER);
+    expect(clicks).toHaveLength(5);
+  });
+
   it('clicks once per beat', () => {
     const clock = new FakeClock();
     const { s, clicks } = sink();

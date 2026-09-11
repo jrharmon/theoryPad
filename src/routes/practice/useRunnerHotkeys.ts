@@ -1,17 +1,29 @@
 import { useEffect } from 'react';
 import { usePractice } from '@/store/practice';
+import { useSettings } from '@/store/settings';
 
 /**
  * The app has to be operable with a guitar in your hands, so the running view
  * is fully keyboard-driven. Registered in one place so they are torn down
  * together and cannot leak between screens.
  */
-export function useRunnerHotkeys(): void {
+export function useRunnerHotkeys({
+  onLeave,
+  enabled = true,
+}: {
+  /** Escape leaves the exercise. */
+  onLeave: () => void;
+  /** Off while a dialog is open, so its keys stay its own. */
+  enabled?: boolean;
+}): void {
   useEffect(() => {
+    if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       // Never steal keys from a field the player is typing in.
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      // Browser and OS shortcuts — Cmd+[ is back — are not ours.
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
 
       const practice = usePractice.getState();
       const state = practice.snapshot?.state;
@@ -25,7 +37,7 @@ export function useRunnerHotkeys(): void {
           break;
         case 'Enter':
           event.preventDefault();
-          if (state === 'brief' || state === 'rep-complete') void practice.play();
+          if (state === 'brief') void practice.play();
           else if (practice.snapshot?.freeTime) practice.completeRep();
           break;
         case '[':
@@ -38,8 +50,16 @@ export function useRunnerHotkeys(): void {
         case 'R':
           practice.reroll();
           break;
+        case 'm':
+        case 'M':
+          void practice.setMetronome(!useSettings.getState().settings.audio.metronomeEnabled);
+          break;
+        case 'l':
+        case 'L':
+          void practice.setLoop(!useSettings.getState().settings.audio.loop);
+          break;
         case 'Escape':
-          void practice.end();
+          onLeave();
           break;
         default:
           break;
@@ -48,5 +68,5 @@ export function useRunnerHotkeys(): void {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [onLeave, enabled]);
 }

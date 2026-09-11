@@ -54,7 +54,6 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
   },
 
   timing: 'either',
-  rerollPolicy: 'per-rep',
 
   generate(context: GenerationContext<ModesThroughKeyParams>): PlayedInstance {
     const { keyMode, instrument, params: config, variation } = context;

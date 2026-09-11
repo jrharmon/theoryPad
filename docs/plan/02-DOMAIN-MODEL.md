@@ -526,10 +526,31 @@ export interface VideoRef {
   title?: string;
 }
 
+/**
+ * One exercise in a routine, with its own copy of the settings.
+ *
+ * Copied from the exercise when added and independent afterwards, so the same exercise can
+ * appear several times — different params, different axes pinned or held — without any of
+ * it touching the exercise in the library. (Agreed after M3; the first version pointed at
+ * the exercise itself, so editing a routine would have changed the library copy.)
+ */
+export interface RoutineItem {
+  id: Uuid;
+  /** The exercise it was copied from. Its passes count toward that exercise's history. */
+  exerciseId: Uuid;
+  definitionId: string;
+  /** Passes played back to back before moving on. Starts from the exercise's defaultReps. */
+  reps: number;
+  params: unknown;
+  tempo: TempoConfig;
+  axisPolicies: Partial<Record<AxisId, AxisPolicy>>;
+  heldAxisValues: Record<string, string>;
+}
+
 export interface Routine {
   id: Uuid;
   name: string;
-  items: { exerciseId: Uuid; reps: number }[];
+  items: RoutineItem[];
   interExerciseGapSec: number; // 8
   /** Policies for the session-scoped axes (key, mode), shared by every exercise in the run. */
   sessionAxisPolicies: Partial<Record<AxisId, AxisPolicy>>;
@@ -547,12 +568,20 @@ export interface Session {
   sessionMode: ModeName;
 }
 
+/**
+ * One pass through an exercise's material. Standalone or in a routine, a pass is logged as it
+ * ends; one cut short (leaving, re-rolling, changing settings) is `abandoned`. Passes in a
+ * routine are logged against the exercise the item was copied from — they are its history —
+ * and never touch `maxTempo`, which is only ever entered by hand.
+ */
 export interface Rep {
   id: Uuid;
   sessionId: Uuid;
   exerciseId: Uuid;
+  /** Set when played as part of a routine. */
+  routineItemId?: Uuid;
   definitionId: string;
-  index: number; // rep number within this exercise in this session
+  index: number; // pass number within this exercise in this session
   startedAt: number;
   endedAt: number | null;
   /** The tempo actually used. May differ from targetTempo. null in free-time runs. */

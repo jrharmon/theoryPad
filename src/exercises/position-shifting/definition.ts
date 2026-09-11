@@ -50,7 +50,6 @@ export const positionShifting: ExerciseDefinition<PositionShiftingParams> = {
     },
   },
   timing: 'either',
-  rerollPolicy: 'per-rep',
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
     const position = axisValue<NeckPosition>(variation, 'neckPosition', { fret: 3, span: 4 });

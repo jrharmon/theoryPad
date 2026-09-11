@@ -183,7 +183,32 @@ logic. Things to carry forward:
 
 ---
 
+## M3 follow-up — The practice view, after using it ✅ *(2026-09-11)*
+
+Notes from the M3 review, built before M5:
+
+- **No reps in standalone practice, and no automatic re-roll anywhere.** Play runs the
+  material once; Loop repeats it; Re-roll is the only way to new material. Skip, End and the
+  "That's the set" screen are gone — every pass is logged as it ends, and leaving logs a pass
+  in progress as abandoned. The runner's passes continue on a running clock, so a loop never
+  slips a beat. `rerollPolicy` is removed from the contract. Doc 03 has the full rules.
+- **Transport toggles**: Metronome (mutes the click, never the count-in), Count-in, Loop —
+  remembered app-wide. `M` and `L` toggle two of them; `Esc` leaves.
+- **A settings dialog in the practice view**: tempo, params and what varies, applied on
+  close; only an axis whose policy changed rolls again. Saved to the exercise.
+- **Tab**: a rule at the start and end of every bar; zoom scales the tab, and bars per line
+  follow the width actually available, so a wide screen or a hidden neck gets more.
+- **Neck**: shows only the frets in use, one either side; can be hidden.
+- **one-note-per-string**: all six strings and 35 bpm by default.
+- Found on the way: two quick settings changes raced and the second undid the first; the
+  store now updates in memory before writing.
+
+---
+
 ## M4 — Theory exercises
+
+_Now after M5: routines matter more to daily practice than theory drills, and the M3 review's
+notes were mostly about routines._
 
 | #   | Task                                                                                            | Size |
 | --- | ----------------------------------------------------------------------------------------------- | ---- |
@@ -207,13 +232,18 @@ _Where the "hands-off run" premise finally works._
 
 | #   | Task                                                                                                                                                                       | Size |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 5.1 | Routine model + repository; routine chaining in the runner state machine (inter-exercise gap, next-up announcement, session-scoped axis rolling) — tested with `FakeClock` | M    |
-| 5.2 | `/routines/:id` builder: add/reorder/remove exercises, rep counts, session axis policies, gap, duration estimate                                                           | M    |
+| 5.1 | Routine model + repository, with `RoutineItem` holding its own copy of an exercise's settings (doc 02); routine chaining around the runner (item passes back to back, inter-exercise gap, next-up announcement, key and mode rolled once per run, skip to the next item) — tested with `FakeClock` | M    |
+| 5.2 | `/routines/:id` builder: add an exercise (copies its settings), add the same one again, edit an item's settings with the same editors as the config page, reorder/remove, passes per item, session key/mode policies, gap, duration estimate | M    |
 | 5.3 | `/practice/routine/:id`: running chrome with segmented progress, `CountdownGap`, global pause                                                                              | M    |
 | 5.4 | `/home`: today's routine, routine list, session variation bar, re-roll all                                                                                                 | M    |
 | 5.5 | `/settings`: instrument, audio, practice defaults, export/import UI                                                                                                        | M    |
 | 5.6 | Export/import implementation + round-trip E2E test                                                                                                                         | M    |
-| 5.7 | E2E: a full 3-exercise routine (2 played + 1 theory) on `FakeClock`                                                                                                        | S    |
+| 5.7 | E2E: a full 3-exercise routine, hands-off, on `FakeClock` (theory items join in M4)                                                                                           | S    |
+
+**Rules agreed after M3:** a routine rolls its variations when it starts and they stay put
+until an explicit re-roll; any item's settings can be changed by hand; an item's passes play
+the same material back to back and count toward the exercise it was copied from; nothing
+ever writes `maxTempo`; moving to the next item needs no click.
 
 **Deliverable:** you can build a routine and run it hands-off from start to finish.
 

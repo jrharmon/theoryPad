@@ -28,7 +28,6 @@ function makeRunner(overrides: Partial<RunnerConfig> = {}) {
     sessionKeyMode: D_DORIAN,
     params: { variant: 'plain', shapesPerRep: 1, minFret: 1 },
     tempo: { targetTempo: 76, maxTempo: null },
-    reps: 2,
     countInBars: 0,
     now: () => (time += 1_000),
     ...overrides,
@@ -36,10 +35,16 @@ function makeRunner(overrides: Partial<RunnerConfig> = {}) {
   return { runner, clock };
 }
 
-/** Run the current rep to its end. */
+/** Run the current pass to its end, and a little past it. */
 function playThrough(runner: ExerciseRunner, clock: FakeClock) {
   const phrase = runner.currentPhrase!;
   clock.advanceTicks(phrase.totalTicks * (phrase.repeat ?? 1) + QUARTER * 8);
+}
+
+/** Exactly one pass, count-in included — for loops, where overshooting plays into the next. */
+function playPass(runner: ExerciseRunner, clock: FakeClock) {
+  const phrase = runner.currentPhrase!;
+  clock.advanceTicks(runner.snapshot.countInRemaining + phrase.totalTicks * (phrase.repeat ?? 1));
 }
 
 describe('ExerciseRunner', () => {
@@ -68,66 +73,77 @@ describe('ExerciseRunner', () => {
     expect(runner.snapshot.state).toBe('brief');
   });
 
-  it('plays when told to, and ends the rep at the end of the phrase', () => {
+  it('plays when told to, and comes back ready at the end of the pass', () => {
     const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
     expect(runner.snapshot.state).toBe('playing');
 
     playThrough(runner, clock);
-    // Two reps, so it moves to the next rather than finishing.
     expect(runner.completedReps).toHaveLength(1);
-    expect(runner.snapshot.repIndex).toBe(1);
+    expect(runner.snapshot.passesPlayed).toBe(1);
+    // Standalone practice has no end: it is ready to play the same thing again.
     expect(runner.snapshot.state).toBe('brief');
   });
 
-  it('finishes after the configured number of reps', () => {
-    const { runner, clock } = makeRunner({ reps: 3 });
+  it('never re-rolls on its own, however often it is played', () => {
+    const { runner, clock } = makeRunner();
     runner.start();
+    const seed = runner.snapshot.variation!.seed;
     for (let i = 0; i < 3; i += 1) {
       runner.begin();
       playThrough(runner, clock);
     }
+    expect(runner.completedReps.map((r) => r.seed)).toEqual([seed, seed, seed]);
+    expect(runner.completedReps.map((r) => r.index)).toEqual([0, 1, 2]);
+  });
+
+  it('loops the same material until told to stop, then finishes the pass', () => {
+    const { runner, clock } = makeRunner({ loop: true });
+    runner.start();
+    runner.begin();
+    for (let i = 0; i < 3; i += 1) playPass(runner, clock);
+    expect(runner.snapshot.state).toBe('playing');
+    expect(runner.completedReps).toHaveLength(3);
+
+    runner.setLoop(false);
+    playPass(runner, clock);
+    expect(runner.snapshot.state).toBe('brief');
+    expect(runner.completedReps).toHaveLength(4);
+    expect(new Set(runner.completedReps.map((r) => r.seed)).size).toBe(1);
+  });
+
+  it('keeps the clock running between looped passes, so the beat never slips', () => {
+    const { runner, clock } = makeRunner({ loop: true });
+    runner.start();
+    runner.begin();
+    const length = runner.currentPhrase!.totalTicks;
+    playPass(runner, clock);
+    clock.advanceTicks(QUARTER);
+    expect(clock.ticks).toBe(length + QUARTER);
+    expect(runner.snapshot.phraseTick).toBe(QUARTER);
+  });
+
+  it('plays a routine item’s passes back to back, then finishes', () => {
+    const { runner, clock } = makeRunner({ passes: 3, endWhenFinished: true });
+    runner.start();
+    runner.begin();
+    for (let i = 0; i < 3; i += 1) playPass(runner, clock);
     expect(runner.snapshot.state).toBe('done');
     expect(runner.completedReps).toHaveLength(3);
-    expect(runner.completedReps.map((r) => r.index)).toEqual([0, 1, 2]);
   });
 
   it('runs a whole exercise in no time at all', () => {
     // The point of driving everything from an injected clock.
-    const { runner, clock } = makeRunner({ reps: 3, definition: modesThroughKey });
+    const { runner, clock } = makeRunner({
+      passes: 3,
+      endWhenFinished: true,
+      definition: modesThroughKey,
+    });
     runner.start();
-    for (let i = 0; i < 3; i += 1) {
-      runner.begin();
-      playThrough(runner, clock);
-    }
+    runner.begin();
+    for (let i = 0; i < 3; i += 1) playPass(runner, clock);
     expect(runner.snapshot.state).toBe('done');
-  });
-
-  it('rolls a fresh variation for each rep by default', () => {
-    const { runner, clock } = makeRunner({ reps: 3 });
-    const seeds: number[] = [];
-    runner.start();
-    for (let i = 0; i < 3; i += 1) {
-      seeds.push(runner.snapshot.variation!.seed);
-      runner.begin();
-      playThrough(runner, clock);
-    }
-    expect(new Set(seeds).size).toBe(3);
-  });
-
-  it('keeps one variation for every rep when the exercise says so', () => {
-    // Speed drills want repetition, not novelty.
-    const perExercise = { ...tinyExercise, rerollPolicy: 'per-exercise' as const };
-    const { runner, clock } = makeRunner({ definition: perExercise, reps: 3 });
-    const seeds: number[] = [];
-    runner.start();
-    for (let i = 0; i < 3; i += 1) {
-      seeds.push(runner.snapshot.variation!.seed);
-      runner.begin();
-      playThrough(runner, clock);
-    }
-    expect(new Set(seeds).size).toBe(1);
   });
 
   it('is deterministic in the session and exercise ids', () => {
@@ -169,7 +185,7 @@ describe('count-in', () => {
   });
 
   it('gives the phrase its full length after the count-in', () => {
-    const { runner, clock } = makeRunner({ countInBars: 2, reps: 1 });
+    const { runner, clock } = makeRunner({ countInBars: 2 });
     runner.start();
     runner.begin();
     const phrase = runner.currentPhrase!;
@@ -179,7 +195,7 @@ describe('count-in', () => {
     expect(runner.snapshot.state).toBe('playing');
 
     clock.advanceTicks(QUARTER);
-    expect(runner.snapshot.state).toBe('done');
+    expect(runner.snapshot.state).toBe('brief');
   });
 });
 
@@ -224,7 +240,7 @@ describe('pause', () => {
 
 describe('free time', () => {
   it('never starts the clock, and waits for the player', () => {
-    const { runner, clock } = makeRunner({ freeTime: true, reps: 1 });
+    const { runner, clock } = makeRunner({ freeTime: true });
     runner.start();
     runner.begin();
 
@@ -236,7 +252,7 @@ describe('free time', () => {
     expect(runner.snapshot.state).toBe('playing');
 
     runner.completeRep();
-    expect(runner.snapshot.state).toBe('done');
+    expect(runner.snapshot.state).toBe('brief');
     expect(runner.completedReps[0]!.freeTime).toBe(true);
     expect(runner.completedReps[0]!.tempo).toBeNull();
   });
@@ -282,7 +298,7 @@ describe('tempo', () => {
   });
 
   it('logs the tempo actually used, not the target', () => {
-    const { runner, clock } = makeRunner({ reps: 1 });
+    const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
     runner.setTempo(92);
@@ -299,34 +315,23 @@ describe('tempo', () => {
     expect(runner.snapshot.currentTempo).toBe(300);
   });
 
-  it('resets to the target on the next rep', () => {
-    const { runner, clock } = makeRunner({ reps: 2 });
+  it('keeps the working tempo from pass to pass, and through a re-roll', () => {
+    // You are working at a tempo; playing again or asking for new material
+    // should not throw it away.
+    const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
     runner.setTempo(120);
     playThrough(runner, clock);
-    expect(runner.snapshot.currentTempo).toBe(76);
-  });
-
-  it('follows a ladder plan when one is set', () => {
-    const { runner, clock } = makeRunner({
-      reps: 3,
-      tempoPlan: { kind: 'ladder', startPct: 0.85, stepBpm: 4, everyReps: 1 },
-    });
-    const tempos: (number | null)[] = [];
-    runner.start();
-    for (let i = 0; i < 3; i += 1) {
-      tempos.push(runner.snapshot.currentTempo);
-      runner.begin();
-      playThrough(runner, clock);
-    }
-    expect(tempos).toEqual([65, 69, 73]);
+    expect(runner.snapshot.currentTempo).toBe(120);
+    runner.reroll();
+    expect(runner.snapshot.currentTempo).toBe(120);
   });
 });
 
 describe('rep records', () => {
   it('captures what was rolled and how it went', () => {
-    const { runner, clock } = makeRunner({ reps: 1 });
+    const { runner, clock } = makeRunner();
     runner.start();
     const variation = runner.snapshot.variation!;
     runner.begin();
@@ -344,17 +349,8 @@ describe('rep records', () => {
     expect(rep.endedAt).toBeGreaterThan(rep.startedAt);
   });
 
-  it('records a skip as skipped, and moves on', () => {
-    const { runner } = makeRunner({ reps: 2 });
-    runner.start();
-    runner.begin();
-    runner.skipRep();
-    expect(runner.completedReps[0]!.status).toBe('skipped');
-    expect(runner.snapshot.repIndex).toBe(1);
-  });
-
-  it('records an abandoned rep when the exercise is ended mid-play', () => {
-    const { runner, clock } = makeRunner({ reps: 3 });
+  it('records an abandoned pass when the exercise is left mid-play', () => {
+    const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
     clock.advanceTicks(QUARTER);
@@ -375,7 +371,7 @@ describe('rep records', () => {
 });
 
 describe('re-roll and hold', () => {
-  it('re-rolls the current rep back to a brief', () => {
+  it('re-rolls back to ready, logging the pass it cut short', () => {
     const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
@@ -383,8 +379,7 @@ describe('re-roll and hold', () => {
 
     runner.reroll();
     expect(runner.snapshot.state).toBe('brief');
-    expect(runner.snapshot.phraseTick).toBe(0);
-    expect(runner.completedReps).toHaveLength(0);
+    expect(runner.completedReps.map((r) => r.status)).toEqual(['abandoned']);
   });
 
   it('actually produces a different variation', () => {
@@ -420,36 +415,61 @@ describe('re-roll and hold', () => {
     expect(seen.size).toBeGreaterThan(1);
   });
 
-  it('holds again on the next rep, from what was just played', () => {
-    const { runner, clock } = makeRunner({
-      definition: { ...tinyExercise, axes: ['direction'] },
-      axisPolicies: { direction: { mode: 'hold' } },
-      reps: 3,
-    });
-
+  it('highlights what a re-roll changed', () => {
+    const { runner } = makeRunner();
     runner.start();
-    const first = runner.snapshot.variation!.axes.direction!.key;
-    runner.begin();
-    playThrough(runner, clock);
+    const before = runner.snapshot.variation!;
+    runner.reroll();
+    const after = runner.snapshot.variation!;
+    for (const axis of Object.values(after.axes)) {
+      if (axis.source !== 'roll') continue;
+      expect(axis.fresh, axis.id).toBe(axis.key !== before.axes[axis.id]!.key);
+    }
+  });
+});
 
-    // Rep two keeps rep one's value: that is what hold is for.
-    expect(runner.snapshot.variation!.axes.direction!.key).toBe(first);
-    expect(runner.snapshot.variation!.axes.direction!.source).toBe('hold');
+describe('reconfigure', () => {
+  it('rolls again only the axis whose policy changed', () => {
+    const { runner } = makeRunner();
+    runner.start();
+    const before = runner.snapshot.variation!;
+
+    runner.reconfigure({ axisPolicies: { key: { mode: 'fixed', value: 'G' } } });
+    const after = runner.snapshot.variation!;
+    expect(after.axes.key!.key).toBe('G');
+    for (const id of ['mode', 'direction', 'rhythmPattern', 'targetScaleDegree'] as const) {
+      expect(after.axes[id]!.key, id).toBe(before.axes[id]!.key);
+      // Kept, and shown as it was — not suddenly "fixed".
+      expect(after.axes[id]!.source, id).toBe(before.axes[id]!.source);
+    }
+    expect(runner.currentInstance!.brief.headline).toContain('G ');
   });
 
-  it('carries a rep’s values forward, so the next roll knows what changed', () => {
-    const { runner, clock } = makeRunner({ reps: 2 });
+  it('regenerates with new params and keeps the variation', () => {
+    const { runner } = makeRunner();
     runner.start();
-    const firstKeys = runner.snapshot.variation!.axes;
-    runner.begin();
-    playThrough(runner, clock);
+    const seed = runner.snapshot.variation!.seed;
+    const notesBefore = (runner.currentPhrase?.notes ?? []).length;
+    runner.reconfigure({ params: { variant: 'plain', shapesPerRep: 2, minFret: 1 } });
+    expect(runner.snapshot.variation!.seed).toBe(seed);
+    expect(runner.currentPhrase!.notes.length).toBeGreaterThan(notesBefore);
+  });
 
-    const second = runner.snapshot.variation!;
-    for (const axis of Object.values(second.axes)) {
-      const before = firstKeys[axis.id];
-      if (axis.source !== 'roll' || !before) continue;
-      expect(axis.fresh).toBe(axis.key !== before.key);
-    }
+  it('moves the working tempo when the target changes', () => {
+    const { runner } = makeRunner();
+    runner.start();
+    runner.reconfigure({ tempo: { targetTempo: 100, maxTempo: null } });
+    expect(runner.snapshot.currentTempo).toBe(100);
+  });
+
+  it('stops anything playing, logging the unfinished pass, and waits', () => {
+    const { runner, clock } = makeRunner();
+    runner.start();
+    runner.begin();
+    clock.advanceTicks(QUARTER);
+    runner.reconfigure({ tempo: { targetTempo: 90, maxTempo: null } });
+    expect(runner.snapshot.state).toBe('brief');
+    expect(runner.completedReps[0]!.status).toBe('abandoned');
   });
 });
 
@@ -496,9 +516,9 @@ describe('lifecycle hooks', () => {
     expect(onRepStart.mock.calls[0]![0]).toMatchObject({ freeTime: true, tempo: null });
   });
 
-  it('hands each rep over as it ends, so it can be persisted', () => {
+  it('hands each pass over as it ends, so it can be persisted', () => {
     const onRepEnd = vi.fn();
-    const { runner, clock } = makeRunner({ reps: 2, onRepEnd });
+    const { runner, clock } = makeRunner({ onRepEnd });
     runner.start();
     runner.begin();
     playThrough(runner, clock);
@@ -510,20 +530,34 @@ describe('lifecycle hooks', () => {
     expect(onRepEnd).toHaveBeenCalledTimes(2);
   });
 
-  it('reports an abandoned rep too', () => {
+  it('reports an abandoned pass too', () => {
     const onRepEnd = vi.fn();
-    const { runner, clock } = makeRunner({ reps: 3, onRepEnd });
+    const { runner, clock } = makeRunner({ onRepEnd });
     runner.start();
     runner.begin();
     clock.advanceTicks(QUARTER);
     runner.end();
     expect(onRepEnd.mock.calls[0]![0]).toMatchObject({ status: 'abandoned' });
   });
+
+  it('counts in before the first pass of a loop only, and says the next is a continuation', () => {
+    const onRepStart = vi.fn();
+    const { runner, clock } = makeRunner({ loop: true, countInBars: 1, onRepStart });
+    runner.start();
+    runner.begin();
+    playPass(runner, clock);
+
+    const [first, second] = onRepStart.mock.calls.map((c) => c[0] as { continuation: boolean; countInTicks: number });
+    const bar = ticksPerBar({ beats: 4, unit: 4 });
+    expect(first).toMatchObject({ continuation: false, countInTicks: bar });
+    // Straight on from where the first pass ended.
+    expect(second).toMatchObject({ continuation: true, countInTicks: bar + runner.currentPhrase!.totalTicks });
+  });
 });
 
 describe('subscription', () => {
   it('notifies on every state change, and unsubscribes cleanly', () => {
-    const { runner, clock } = makeRunner({ reps: 1 });
+    const { runner, clock } = makeRunner();
     const listener = vi.fn();
     const off = runner.subscribe(listener);
 
@@ -537,8 +571,8 @@ describe('subscription', () => {
     expect(listener.mock.calls.length).toBe(before);
   });
 
-  it('leaves nothing scheduled once it is done', () => {
-    const { runner, clock } = makeRunner({ reps: 1 });
+  it('leaves nothing scheduled once a pass is over', () => {
+    const { runner, clock } = makeRunner();
     runner.start();
     runner.begin();
     playThrough(runner, clock);

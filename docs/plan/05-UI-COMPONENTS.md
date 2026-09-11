@@ -164,7 +164,9 @@ Small, pure, presentational. The heatmap (practice intensity over 28 days) and d
 `RunningChrome` (the persistent dark bar: position in routine, segmented progress, time
 remaining, pause), `VariationBrief` (kicker + headline + instruction), `AxisStrip` (the
 equal-column grid of resolved axes, fresh ones accent-tinted; renders nothing when an exercise
-declares no axes), `TransportBar` (play/pause, bar·beat readout, tempo control, free-time
+declares no axes), `TransportBar` (play/pause, tempo, Metronome / Count-in / Loop toggles
+remembered app-wide, Settings dialog, Re-roll — no Skip, no End; tab zoom and a neck show/hide
+sit above the tab, and the neck shows only the frets in use; bar·beat readout, free-time
 toggle, tags for backing/count-in), `CountdownGap` (the inter-exercise announcement),
 `TheorySinglePick`, `TheoryTableFill`, `TheoryFeedback`.
 
@@ -263,7 +265,7 @@ Hash router. `/` redirects to `/home`.
 | `/home`                  | Today's routine, routine list, practice heatmap, personal bests                                                  | 1a           | M5        |
 | `/routines/:id`          | Routine builder — add/reorder exercises, reps, gap, session axis policies                                        | 1a           | M5        |
 | `/exercises`             | Exercise library — everything in the registry, plus your configured instances; filtered by tag                   | —            | M2        |
-| `/exercises/:id`         | Exercise detail — description, config (target tempo, max tempo, reps, params, video), history, **Practice this** | —            | M2        |
+| `/exercises/:id`         | Exercise detail — description, config (target tempo, max tempo, params, video), history, **Practice this** | —            | M2        |
 | `/practice/exercise/:id` | Standalone runner for one exercise                                                                               | 1b/1c merged | M2        |
 | `/practice/routine/:id`  | Chained routine runner                                                                                           | 1b/1c/3a-3c  | M5        |
 | `/fretboard`             | Fretboard explorer with coverage                                                                                 | 1d           | M6        |
@@ -283,11 +285,14 @@ The app must be operable with a guitar in your hands. Global, in the runner:
 | Key       | Action                                                |
 | --------- | ----------------------------------------------------- |
 | `Space`   | Pause / resume                                        |
-| `Enter`   | Advance (dismiss brief, skip question, next exercise) |
+| `Enter`   | Play (and in theory: skip question)                   |
 | `[` / `]` | `currentTempo` −1 / +1 bpm (Shift for ±5)             |
 | `1`–`6`   | Answer a single-pick theory question                  |
 | `R`       | Re-roll this exercise's variation                     |
-| `Esc`     | End the session (with confirm)                        |
+| `M` / `L` | Metronome on/off · loop on/off                        |
+| `Esc`     | Leave the exercise (every pass is already logged)     |
+
+Keys with Cmd/Ctrl/Alt held are never taken, so browser shortcuts such as Cmd+[ still work.
 
 Focus management comes from Radix; the global shortcuts live in one `useRunnerHotkeys` hook so
 they are registered and torn down in a single place.

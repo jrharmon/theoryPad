@@ -87,12 +87,12 @@ export function ExerciseLibrary() {
 
                 {/* Two instances of one definition share a name and summary,
                     so what differs has to be on the row. */}
-                <p className="mt-1 text-[12px] text-ink/50">
-                  {[
-                    `${exercise.defaultReps} rep${exercise.defaultReps === 1 ? '' : 's'}`,
-                    ...describePolicies(exercise.axisPolicies, definition.axes, instrument),
-                  ].join(' · ')}
-                </p>
+                {(() => {
+                  const policies = describePolicies(exercise.axisPolicies, definition.axes, instrument);
+                  return policies.length > 0 ? (
+                    <p className="mt-1 text-[12px] text-ink/50">{policies.join(' · ')}</p>
+                  ) : null;
+                })()}
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {definition.tags.map((t) => (

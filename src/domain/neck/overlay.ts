@@ -55,12 +55,19 @@ function roleFor(p: ScaleNotePosition, targetDegree?: Degree): NoteRole {
   return 'chord-tone';
 }
 
-/** Frets the overlay actually uses, for choosing a sensible display window. */
+/**
+ * The frets an overlay uses, and one either side — a shape at the 7th fret has
+ * no business drawing the nut. Open strings keep the nut in view.
+ */
 export function overlayFretRange(
   overlay: NeckOverlay,
   instrument: Instrument,
 ): { low: number; high: number } {
-  const fretted = overlay.notes.map((n) => n.position.fret).filter((f) => f > 0);
-  if (fretted.length === 0) return { low: 0, high: Math.min(12, instrument.fretCount) };
-  return { low: Math.min(...fretted), high: Math.max(...fretted) };
+  const { fretCount } = instrument;
+  const frets = overlay.notes.map((n) => n.position.fret);
+  if (frets.length === 0) return { low: 0, high: Math.min(12, fretCount) };
+  return {
+    low: Math.max(0, Math.min(...frets) - 1),
+    high: Math.min(fretCount, Math.max(...frets) + 1),
+  };
 }

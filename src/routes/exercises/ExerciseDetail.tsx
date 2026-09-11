@@ -75,7 +75,7 @@ export function ExerciseDetail() {
 
       <div className="grid gap-8 px-8 py-7 lg:grid-cols-[320px_1fr]">
         <div>
-          <Kicker>Tempo and reps</Kicker>
+          <Kicker>Tempo</Kicker>
           <div className="mt-3 space-y-4">
             <Field
               label="Target tempo"
@@ -123,19 +123,6 @@ export function ExerciseDetail() {
               />
             </Field>
 
-            <Field label="Reps" htmlFor="reps">
-              <Input
-                id="reps"
-                type="number"
-                min={1}
-                max={9}
-                className="tabular-nums"
-                value={exercise.defaultReps}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  void update(exercise.id, { defaultReps: Number(e.target.value) })
-                }
-              />
-            </Field>
           </div>
         </div>
 

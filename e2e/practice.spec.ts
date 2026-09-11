@@ -75,15 +75,13 @@ test('seeds the library exactly once, however many screens ask for it', async ({
 test('the library row shows how an exercise is configured', async ({ page }) => {
   // Names come from definitions, so configuration is what tells two instances
   // of one definition apart.
-  await expect(row(page).getByText('2 reps', { exact: false })).toBeVisible();
-
   await page.getByRole('link', { name: EXERCISE }).click();
   await page.getByRole('combobox', { name: 'Key policy' }).click();
   await page.getByRole('option', { name: 'Fixed' }).click();
   await expect(page.getByRole('combobox', { name: 'Key value' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Exercises' }).click();
-  await expect(row(page).getByText('2 reps · Key: C')).toBeVisible();
+  await expect(row(page).getByText('Key: C')).toBeVisible();
 });
 
 test('deleting removes an exercise from the library', async ({ page }) => {
@@ -102,9 +100,10 @@ test('hold says what it is holding', async ({ page }) => {
   await page.getByRole('option', { name: 'Hold' }).click();
   await expect(page.getByTestId('held-direction')).toContainText('Nothing held yet');
 
+  // Playing and leaving is enough: the pass is logged, and its values held.
   await page.getByRole('link', { name: 'Practice this' }).click();
-  await page.getByRole('button', { name: 'Skip' }).click();
-  await page.getByRole('button', { name: 'End' }).click();
+  await page.getByTestId('play').click();
+  await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: EXERCISE }).click();
   await expect(page.getByTestId('held-direction')).toContainText('Holding');
@@ -205,26 +204,49 @@ test('a practice run rolls, briefs, plays and logs the rep', async ({ page }) =>
   await page.getByTestId('play').click();
   await expect(page.getByTestId('pause')).toBeVisible();
 
-  // Skipping ends the rep without waiting out twenty-one bars.
-  await page.getByRole('button', { name: 'Skip' }).click();
+  // There is no End button to remember: leaving the screen logs the pass.
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
 
   const reps = await storedReps(page);
   expect(reps).toHaveLength(1);
-  expect(reps[0]).toMatchObject({ status: 'skipped', freeTime: false });
+  expect(reps[0]).toMatchObject({ status: 'abandoned', freeTime: false });
   expect(reps[0]!.axes.key).toBeTruthy();
 });
 
-test('finishes after the configured reps', async ({ page }) => {
+test('the transport toggles are remembered', async ({ page }) => {
   await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
-  await expect(page.getByTestId('play')).toBeVisible();
+  const loop = page.getByRole('button', { name: 'Loop', exact: true });
+  const metronome = page.getByRole('button', { name: 'Metronome', exact: true });
+  await expect(loop).toHaveAttribute('aria-pressed', 'false');
+  await expect(metronome).toHaveAttribute('aria-pressed', 'true');
 
-  // Two reps by default.
-  await page.getByRole('button', { name: 'Skip' }).click();
-  await expect(page.getByText('This time you are playing')).toBeVisible();
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await loop.click();
+  // M toggles the metronome without taking a hand off the guitar.
+  await page.keyboard.press('m');
+  await expect(loop).toHaveAttribute('aria-pressed', 'true');
+  await expect(metronome).toHaveAttribute('aria-pressed', 'false');
 
-  await expect(page.getByRole('heading', { name: 'That’s the set.' })).toBeVisible();
-  expect(await storedReps(page)).toHaveLength(2);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Loop', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Metronome', exact: true })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('settings can be changed without leaving the exercise', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('combobox', { name: 'Key policy' }).click();
+  await page.getByRole('option', { name: 'Fixed' }).click();
+  await dialog.getByRole('combobox', { name: 'Key value' }).click();
+  await page.getByRole('option', { name: 'G', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+
+  await expect(page.getByTestId('axis-key')).toContainText(/G [A-Z]/);
+  // Saved to the exercise, not just this run.
+  await page.keyboard.press('Escape');
+  await expect(row(page).getByText('Key: G')).toBeVisible();
 });
 
 test('moving the tempo while practising never changes the target', async ({ page }) => {
@@ -240,8 +262,7 @@ test('moving the tempo while practising never changes the target', async ({ page
   // The configured tempo is shown alongside, unchanged.
   await expect(page.getByText('target 70')).toBeVisible();
 
-  await page.getByRole('button', { name: 'End' }).click();
-  await page.getByRole('link', { name: 'Exercises' }).click();
+  await page.keyboard.press('Escape');
   await page.getByRole('link', { name: EXERCISE }).click();
   await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
@@ -265,7 +286,7 @@ test('space pauses and resumes, with a guitar in your hands', async ({ page }) =
   await expect(page.getByTestId('tempo')).toHaveText('71');
 });
 
-test('re-rolling gives a fresh variation from the brief', async ({ page }) => {
+test('re-rolling stops, and waits with a fresh variation', async ({ page }) => {
   await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   await page.getByTestId('play').click();
 
@@ -273,8 +294,8 @@ test('re-rolling gives a fresh variation from the brief', async ({ page }) => {
   await expect(page.getByText('This time you are playing')).toBeVisible();
   await expect(page.getByTestId('play')).toBeVisible();
 
-  // Nothing was logged: a re-roll is not a rep.
-  expect(await storedReps(page)).toHaveLength(0);
+  // The pass it cut short is logged as abandoned, like leaving would.
+  expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned']);
 });
 
 test('a roll can leave values out, and the run honours it', async ({ page }) => {

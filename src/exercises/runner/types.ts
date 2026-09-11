@@ -5,17 +5,12 @@ import type { RolledVariation } from '@/domain/variation';
 /**
  * The runner's states.
  *
- * `brief` has no countdown of its own: the design is emphatic that the whole
- * rolled variation is revealed and read before anything starts moving.
+ * `brief` is "ready": the material is generated and shown, and nothing moves
+ * until the player says so. A standalone exercise comes back here after every
+ * pass, with the same variation, ready to play again. `done` is only reached
+ * when a routine has had all the passes it asked for.
  */
-export type RunnerState =
-  | 'idle'
-  | 'brief'
-  | 'count-in'
-  | 'playing'
-  | 'paused'
-  | 'rep-complete'
-  | 'done';
+export type RunnerState = 'idle' | 'brief' | 'count-in' | 'playing' | 'paused' | 'done';
 
 export type RepOutcome = 'completed' | 'skipped' | 'abandoned';
 
@@ -35,9 +30,12 @@ export interface RepRecord {
 
 export interface RunnerSnapshot {
   state: RunnerState;
-  /** 0-based rep being played. */
-  repIndex: number;
-  totalReps: number;
+  /** Passes finished since the exercise was opened, across every variation. */
+  passesPlayed: number;
+  /** Passes one press of Play runs before stopping: 1 standalone, the item's reps in a routine. */
+  passes: number;
+  /** Keep playing the same material until told to stop. */
+  loop: boolean;
   variation: RolledVariation | null;
   /** Ticks into the phrase, with any count-in already discounted. */
   phraseTick: number;

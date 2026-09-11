@@ -271,3 +271,19 @@ suite(
 );
 
 suite('in-memory repositories', () => Promise.resolve(createMemoryRepositories()));
+
+describe('settings saved before a field existed', () => {
+  it('fill in the new field from the defaults, not as false', async () => {
+    // A stored row from before `showNeck` would otherwise hide the neck.
+    const database = new TheoryPadDB(`old-settings-${Math.random()}`);
+    const repos = createRepositories(database);
+    const current = await repos.settings.get();
+    const { showNeck: _dropped, ...oldUi } = current.ui;
+    await database.settings.put({ ...current, ui: oldUi as typeof current.ui });
+
+    const loaded = await repos.settings.get();
+    expect(loaded.ui.showNeck).toBe(true);
+    expect(loaded.audio.loop).toBe(false);
+    await database.delete();
+  });
+});

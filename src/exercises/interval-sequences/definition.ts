@@ -41,7 +41,6 @@ export const intervalSequences: ExerciseDefinition = {
   ],
   defaults: { targetTempo: 80, reps: 2 },
   timing: 'either',
-  rerollPolicy: 'per-rep',
 
   generate({ keyMode, instrument, variation }): PlayedInstance {
     const position = axisValue<NeckPosition>(variation, 'neckPosition', { fret: 5, span: 4 });

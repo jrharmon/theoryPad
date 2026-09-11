@@ -40,6 +40,7 @@ export interface ExerciseDefinition<P = void> {
   /** Sensible starting config when the user adds this to their library. */
   defaults: {
     targetTempo: number | null;
+    /** Passes it plays in a routine. Standalone practice has no reps. */
     reps: number;
     tempoPlan?: TempoPlan;
     params?: P;
@@ -49,9 +50,6 @@ export interface ExerciseDefinition<P = void> {
 
   /** Does a metronome make sense here at all? 'never' hides the free-time toggle's opposite. */
   timing?: 'metronome' | 'free' | 'either'; // default 'either'
-
-  /** Fresh variation per rep, or one variation for the whole exercise. Default 'per-rep'. */
-  rerollPolicy?: 'per-rep' | 'per-exercise';
 
   /** THE function. Pure. Given everything rolled, produce what to play/answer. */
   generate(ctx: GenerationContext<P>): ExerciseInstance;
@@ -365,46 +363,47 @@ actually needs them.
 
 ## How an exercise runs
 
-The runner is shared and definition-agnostic. One state machine, used identically by
-standalone practice and by a chained routine.
+The runner is shared and definition-agnostic: standalone practice and a routine item are the
+same machine with different settings. _(Revised after M3: there are no reps in standalone
+practice, and nothing ever re-rolls on its own.)_
 
 ```
 IDLE
- └─ start ─▶ ROLLING          roll exercise-scoped axes from the seeded RNG
+ └─ open ─▶ ROLL + GENERATE   roll exercise-scoped axes once, from the seeded RNG
               │
               ▼
-            BRIEF             reveal the full variation. No countdown here — the design
-              │               is emphatic that the player reads it before anything moves.
-              │               Advance on keypress / click / (in a chain) after a short dwell.
+            READY (brief)     the full variation and its material, shown. Nothing moves.
+              │  Play
               ▼
-            COUNT_IN          optional 1-2 bars of clicks. Skipped in free time.
-              │
+            COUNT_IN          optional bar of clicks, before the first pass only.
               ▼
-            PLAYING ⇄ PAUSED  metronome + playhead + optional backing. Space toggles pause.
-              │               currentTempo adjustable live.
-              │               In free time: clock never starts; advance on Enter/Done.
-              ▼
-            REP_COMPLETE      more reps? → ROLLING (re-roll per repeat policy) : DONE
-              ▼
-            DONE              log the rep(s), then:
-                              standalone → back to the exercise page
-                              chained    → GAP (interExerciseGap countdown, announces next)
+            PLAYING ⇄ PAUSED  metronome + playhead. Space toggles pause. Tempo adjustable.
+              │  end of phrase → the pass is logged
+              ├─ loop on, or routine passes left → next pass straight on, same material,
+              │                                    clock never stops
+              └─ otherwise → READY again (standalone) | DONE (routine item → next item)
 ```
 
-Key behaviours:
+The rules, from the player:
 
+- **A variation is rolled when you open an exercise or start a routine, and stays put** until
+  you press Re-roll. Passes, loops and a routine item's reps all play the same material.
+- **Any setting can be changed by hand at any time** — the settings dialog in the practice
+  view, or the config page. Changing an axis policy rolls just that axis again; the rest
+  keep their values. Re-rolls push you toward variety; they never stand between you and
+  practicing something specific.
+- **Standalone practice has no reps, no Skip and no End.** Play runs the material once and
+  comes back ready; Loop repeats it. Leaving the screen is how you finish.
+- **Every pass is logged as it ends**, and a pass cut short — by leaving, re-rolling or
+  changing settings — is logged as abandoned. Nothing depends on remembering to press a button.
+- **In a routine, reps are passes of one item** before moving on, played back to back.
+- **Max tempo is only ever entered by hand.** Nothing writes it: a pass at a high tempo says
+  nothing about whether it was played well.
 - **Pause is global and always available** — space bar plus a visible button. It halts the
-  clock, so the metronome, playhead, backing and countdown all stop together (they share one
-  `Clock`).
-- **The variation is revealed in full before the rep**, never just-in-time. Axes that changed
-  from the previous roll are highlighted.
-- **Re-roll policy per rep** is a definition-level choice: `'per-rep'` (default — reps 2 and 3
-  get fresh exercise-scoped axes) or `'per-exercise'` (all reps share one variation, for
-  exercises where repetition is the point, like speed drills). An axis with a `fixed` or
-  `hold` policy never changes under either.
-- **Every rep writes a `Rep` row** on completion, including skipped and abandoned ones.
-- The whole loop is keyboard-operable: space = pause, `[`/`]` = tempo down/up,
-  `Enter` = advance/skip, `1`–`6` = theory answers.
+  clock, so the metronome, playhead and backing stop together (they share one `Clock`).
+- **Re-roll highlights the axes it changed.**
+- Keyboard: space = pause, `[`/`]` = tempo, `Enter` = play, `R` = re-roll, `M` = metronome,
+  `L` = loop, `Esc` = leave, `1`–`6` = theory answers.
 
 Because the state machine is driven entirely by the injected `Clock`, all of the above is
 unit-testable with `FakeClock` and no audio at all.

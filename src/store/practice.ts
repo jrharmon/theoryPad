@@ -1,17 +1,26 @@
 import { create } from 'zustand';
 import type { KeyMode } from '@/domain/music';
 import { canonicalKeyMode, pitchClass } from '@/domain/music';
-import { coverageCounts, createRepositories, db, type Exercise } from '@/data';
+import { coverageCounts, createRepositories, db, type Exercise, type Settings } from '@/data';
 import type { CoverageCounts } from '@/domain/variation';
 import { AXIS_IDS } from '@/domain/variation';
 import type { ExerciseInstance } from '@/exercises/types';
 import { exerciseDefinition } from '@/exercises/registry';
 import { resolveParams } from '@/exercises/params';
-import { ExerciseRunner, type RepRecord, type RunnerSnapshot } from '@/exercises/runner';
+import {
+  ExerciseRunner,
+  type Reconfiguration,
+  type RepRecord,
+  type RunnerSnapshot,
+} from '@/exercises/runner';
+import { ticksPerBar } from '@/domain/phrase';
 import { newId } from '@/data';
+import { useSettings } from './settings';
 
 interface PracticeState {
   runner: ExerciseRunner | null;
+  /** The configured exercise being practiced, so changes can be saved back to it. */
+  exerciseId: string | null;
   snapshot: RunnerSnapshot | null;
   instance: ExerciseInstance | null;
   /** Ticks into the phrase; polled on rAF so playback does not re-render. */
@@ -35,10 +44,21 @@ interface PracticeState {
   setTempo: (bpm: number) => void;
   nudgeTempo: (delta: number) => void;
   completeRep: () => void;
-  skipRep: () => void;
   reroll: () => void;
+  /** Apply settings changed from the practice screen, and save them to the exercise. */
+  reconfigure: (changes: Reconfiguration) => Promise<void>;
+  /** Tear the runner down. Leaving the screen calls this; there is no End button. */
   end: () => Promise<void>;
   setFreeTime: (freeTime: boolean) => void;
+  /** The transport's toggles. Remembered app-wide, and applied straight away. */
+  setMetronome: (on: boolean) => Promise<void>;
+  setCountIn: (on: boolean) => Promise<void>;
+  setLoop: (on: boolean) => Promise<void>;
+}
+
+async function saveAudio(changes: Partial<Settings['audio']>) {
+  const { settings, save } = useSettings.getState();
+  await save({ audio: { ...settings.audio, ...changes } });
 }
 
 /** Recent rolls, so the roller can push toward ground you have not covered. */
@@ -62,6 +82,7 @@ function rollSessionKeyMode(): KeyMode {
 
 export const usePractice = create<PracticeState>((set, get) => ({
   runner: null,
+  exerciseId: null,
   snapshot: null,
   instance: null,
   sessionId: null,
@@ -79,7 +100,6 @@ export const usePractice = create<PracticeState>((set, get) => ({
     const { getAudioEngine } = await import('@/audio');
     const engine = getAudioEngine();
 
-    const { useSettings } = await import('./settings');
     const settings = useSettings.getState().settings;
     const { useExercises } = await import('./exercises');
 
@@ -102,18 +122,38 @@ export const usePractice = create<PracticeState>((set, get) => ({
       params: resolveParams(definition, exercise.params),
       tempo: exercise.tempo,
       ...(definition.defaults.tempoPlan ? { tempoPlan: definition.defaults.tempoPlan } : {}),
-      reps: exercise.defaultReps,
+      passes: 1,
+      loop: settings.audio.loop,
       countInBars: settings.audio.countInBars,
       heldAxisValues: exercise.heldAxisValues,
       axisPolicies: exercise.axisPolicies,
       coverage: await loadCoverage(exercise.id),
       now: () => Date.now(),
 
-      onRepStart: ({ phrase, countInTicks, freeTime }) => {
+      onRepStart: ({ phrase, countInTicks, freeTime, continuation }) => {
+        if (continuation) {
+          // Straight on from the last pass: the clock and the click never
+          // stopped, so only the notes need scheduling again.
+          engine.phrase.clear();
+          if (phrase) engine.phrase.load(phrase, settings.instrument, countInTicks);
+          return;
+        }
         engine.metronome.stop();
         engine.phrase.clear();
         if (freeTime) return;
-        if (settings.audio.metronomeEnabled) engine.metronome.start();
+        // The metronome always runs, muted or not: the count-in clicks either
+        // way, and switching it mid-bar must not shift the beat.
+        const audio = useSettings.getState().settings.audio;
+        if (phrase) {
+          const perBar = ticksPerBar(phrase.timeSignature);
+          engine.configureMetronome({
+            timeSignature: phrase.timeSignature,
+            // The runner only ever counts in whole bars, from the 0–2 setting.
+            countInBars: (perBar > 0 ? Math.round(countInTicks / perBar) : 0) as 0 | 1 | 2,
+          });
+        }
+        engine.metronome.setMuted(!audio.metronomeEnabled);
+        engine.metronome.start();
         // The phrase goes after the count-in, not at zero.
         if (phrase) engine.phrase.load(phrase, settings.instrument, countInTicks);
       },
@@ -139,6 +179,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
     runner.start();
     set({
       runner,
+      exerciseId: exercise.id,
       sessionId: session.id,
       audioReady: false,
       error: null,
@@ -166,9 +207,40 @@ export const usePractice = create<PracticeState>((set, get) => ({
   setTempo: (bpm) => get().runner?.setTempo(bpm),
   nudgeTempo: (delta) => get().runner?.nudgeTempo(delta),
   completeRep: () => get().runner?.completeRep(),
-  skipRep: () => get().runner?.skipRep(),
   reroll: () => get().runner?.reroll(),
   setFreeTime: (freeTime) => get().runner?.setFreeTime(freeTime),
+
+  async reconfigure(changes) {
+    const { runner, exerciseId } = get();
+    if (!runner || !exerciseId) return;
+    runner.reconfigure(changes);
+
+    // Saved to the exercise too: the dialog is a shortcut to the config page,
+    // not a separate, temporary set of settings.
+    const { useExercises } = await import('./exercises');
+    await useExercises.getState().update(exerciseId, {
+      ...(changes.params !== undefined ? { params: changes.params } : {}),
+      ...(changes.tempo ? { tempo: changes.tempo } : {}),
+      ...(changes.axisPolicies ? { axisPolicies: changes.axisPolicies } : {}),
+    });
+  },
+
+  async setMetronome(on) {
+    const { getAudioEngine } = await import('@/audio');
+    getAudioEngine().metronome.setMuted(!on);
+    await saveAudio({ metronomeEnabled: on });
+  },
+
+  async setCountIn(on) {
+    const bars = on ? 1 : 0;
+    get().runner?.setCountInBars(bars);
+    await saveAudio({ countInBars: bars });
+  },
+
+  async setLoop(on) {
+    get().runner?.setLoop(on);
+    await saveAudio({ loop: on });
+  },
 
   async end() {
     const { runner, sessionId } = get();
@@ -186,7 +258,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
       await repos.sessions.end(sessionId, Date.now());
     }
 
-    set({ runner: null, snapshot: null, instance: null, sessionId: null });
+    set({ runner: null, exerciseId: null, snapshot: null, instance: null, sessionId: null });
   },
 }));
 

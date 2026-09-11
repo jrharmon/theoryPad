@@ -23,9 +23,6 @@ export type ExerciseTag = (typeof KNOWN_TAGS)[number];
 /** Whether a metronome makes sense for this exercise at all. */
 export type ExerciseTiming = 'metronome' | 'free' | 'either';
 
-/** Fresh variation per rep, or one variation for the whole exercise. */
-export type RerollPolicy = 'per-rep' | 'per-exercise';
-
 export interface Brief {
   /** One sentence stating the whole rolled variation. The headline. */
   headline: string;
@@ -75,6 +72,10 @@ export interface ExerciseRendererProps {
 export interface ExerciseDefaults<P> {
   /** Null for theory exercises and anything with no pulse. */
   targetTempo: number | null;
+  /**
+   * Passes an item plays in a routine before moving on. Standalone practice
+   * has no reps: you play it as often as you like.
+   */
   reps: number;
   tempoPlan?: TempoPlan;
   params?: P;
@@ -106,7 +107,6 @@ export interface ExerciseDefinition<P = void> {
   defaults: ExerciseDefaults<P>;
 
   timing?: ExerciseTiming;
-  rerollPolicy?: RerollPolicy;
 
   /** The function. Pure: same context in, same instance out. */
   generate(context: GenerationContext<P>): ExerciseInstance;

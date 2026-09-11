@@ -1,73 +1,62 @@
 # Status — start here
 
-**Last updated:** 2026-09-10, end of M3 (awaiting review).
+**Last updated:** 2026-09-11, M3 follow-up (practice view) awaiting review.
 
 ## Where the project is
 
 | Milestone | State |
 | --- | --- |
-| M0 — Foundations & rails | ✅ complete |
-| M1 — Music domain & rendering primitives | ✅ complete |
-| M2 — The vertical slice: one exercise, end to end | ✅ complete, reviewed |
-| **M3 — The scale & mode family** | **✅ complete, awaiting review** |
-| M4–M10 | not started |
+| M0–M3 | ✅ complete, merged to `main`, pushed |
+| **M3 follow-up — the practice view** | **✅ built on `practice-view`, awaiting review** |
+| **M5 — Routines** | **next** (moved ahead of M4) |
+| M4 — Theory | after M5 |
+| M6–M10 | not started |
 
-599 unit tests, 31 E2E, `pnpm check` green. M0–M2 are merged to `main` (fast-forward, in
-order); M3 is on `m3-scale-family`, to be merged at the gate. **Nothing has been pushed** —
-the GitHub remote is empty, and a push to `main` triggers the Pages deploy.
+613 unit tests, 32 E2E, `pnpm check` green. `main` is pushed to GitHub; the Pages deploy
+needs Pages enabled in the repo settings (source: GitHub Actions), and a private repo needs
+a paid plan for Pages.
 
 ## What works today
 
 `pnpm dev`, then **Exercises**:
 
-- **Modes up the neck** — all seven 3nps shapes of a rolled key; variants `plain`,
-  `arpeggio-then-scale` (each shape's 7th chord up, scale down) and `pause-on-root`
-  (roots a beat, everything else an eighth).
-- **Interval sequences** — 3rds to 7ths, groups of 3 and 4, same-direction or alternating,
-  through the shape at a rolled position.
-- **One note per string** — a note-finding sweep. The tab shows note names, not frets, and
-  the neck is left empty.
-- **Position shifting** — up through the shapes with a slide on each four-note string, back
-  down by another route.
-- The config page: tempo and reps, a **Settings** form generated from each exercise's params,
-  and **What varies** — Roll / Fixed / Hold per axis, with chips to leave values out of a roll.
-- Running an exercise, logging reps, `/#/dev/gallery` — as in M2.
+- Four exercises: **Modes up the neck** (three variants), **Interval sequences**, **One note
+  per string** (note names, no neck), **Position shifting**.
+- **Practicing**: a variation is rolled on arrival and stays until Re-roll. Play runs it
+  once; Loop repeats it on a running clock. Metronome, Count-in and Loop toggles, remembered
+  app-wide. A **Settings** dialog changes tempo, params and what varies without leaving; only
+  the axes you changed roll again. Every pass is logged; leaving logs one in progress. No
+  reps, no Skip, no End.
+- **Tab**: bar lines, zoom (bars per line follow the available width), neck show/hide; the
+  neck shows only the frets in use.
+- **Keys**: Space pause · Enter play · `[` `]` tempo · R re-roll · M metronome · L loop ·
+  Esc leave.
+- The config page: tempo, Settings (from each exercise's params), What varies with
+  roll-from-subset chips.
 
-## Next: the M3 review, then M4
+## Next: M5 — Routines
 
-Doc 08 has the M3 outcome and the line-count measurement (the claim held: 32–37 lines of
-`generate` per new exercise). M4 is the theory exercises.
+Doc 08 has the tasks and the rules agreed after M3; doc 02 has `RoutineItem` (each item its
+own copy of an exercise's settings). The runner already supports what a routine needs:
+`passes`, `endWhenFinished`, and continuation passes on a running clock.
 
 ## Open questions for the player
 
-Only a guitar can answer these:
+Recorded by the player to try with a guitar:
 
-- **Is 50 bpm right for one-note-per-string?** One note per beat is ~1.2 s to find each.
-- **Does position-shifting's route feel natural?** The slide is marked on the fourth note of
-  a string going up and the lowest going down. Does that match where you actually shift?
-- **Are the interval figures playable in 3nps?** 3rds on one string stretch across the shape.
-- **Does the arpeggio sit well inside each shape**, or does it want its own fingering?
-- **Still open from M2:** is seven shapes, frets 1→12, a playable amount of neck? Does it
-  flow between shapes? Doc 10 §A has the rest.
+- Is 35 bpm right for one-note-per-string?
+- Position-shifting: is the slide where you actually shift?
+- Are 3rds in 3nps comfortable, and does the arpeggio sit well inside each shape?
+- Do the seven shapes flow up the neck?
 
-## Decisions made during M2's review round
+## Decisions made after M3's review
 
-These came from playing with the app and are not obvious from the code alone:
-
-- **shadcn/ui was adopted mid-milestone**, not deferred to M6 — the point of M2 is setting
-  patterns later milestones follow, so validating it early was worth more than the delay.
-- **No interstitial before an exercise.** `prepare` (roll + generate, no audio) is split
-  from `play` (starts the AudioContext, which needs a user gesture).
-- **The transport is frozen to the bottom** and the tab auto-scrolls, because a 21-bar
-  exercise otherwise means scrolling away from the controls with a guitar in your hands.
-- **The metronome is a 2kHz click, not a drum.** A low thud sits in the same register as
-  the low strings and disappears under them.
-- **Re-roll releases `hold`.** A hold that nothing can release is a trap.
-- **An exercise's identity lives on its definition, its configuration in the database.**
-  Copying `name` across that line let it go stale. See doc 02 §6.
-- **Names and tags are edited in code**, not the UI. No name editor, no Duplicate.
-- **Identical unplayed copies of one exercise are cleaned up on load** — damage from a
-  seeding race that has since been fixed.
+- **No reps standalone; no automatic re-roll anywhere.** Roll on arrival or routine start,
+  stay put until Re-roll. Any setting can be changed by hand at any time.
+- **Routine items are independent copies** of an exercise's settings; the same exercise can
+  appear more than once. Their passes count toward the source exercise.
+- **Max tempo is manual, always** — a fast pass says nothing about whether it was clean.
+- **Routines before theory**: M5, then M4.
 
 ## Decisions made at the start of M3
 
@@ -93,6 +82,12 @@ These came from playing with the app and are not obvious from the code alone:
   support it, and losing type-aware linting costs more than the compiler speed.
 - **A fresh Playwright browser has an empty IndexedDB**, so exercise ids differ from the
   dev pane's. Drive screenshots by exercise name through the library, not by URL.
+- **Settings saves must update memory first.** Waiting for the write let two quick toggles
+  merge into the same stale settings. Stored settings are also laid over the defaults on
+  load, so a new field is never read as `undefined`/false.
+- **FakeClock fires anything due within one advance**, including events scheduled from a
+  callback. Restarting the clock inside a pass-end callback looped forever; passes now
+  continue on the running clock instead.
 - **The E2E suite assumed one exercise.** Locators in `e2e/practice.spec.ts` are now scoped
   to one library row; keep new ones scoped too.
 - **Look at the output.** M1's shape tiling, M2's key mismatch, the unreadable sixteenth-note

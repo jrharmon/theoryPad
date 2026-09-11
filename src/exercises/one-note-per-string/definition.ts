@@ -39,12 +39,13 @@ export const oneNotePerString: ExerciseDefinition<OneNotePerStringParams> = {
   axes: ['mode', 'key', 'stringSet'],
   params,
   defaults: {
-    targetTempo: 50,
+    targetTempo: 35,
     reps: 2,
     params: { stopCondition: 'return-to-root', cycles: 4, step: 'next-scale-degree' },
+    // All six strings unless you choose otherwise; a set is still a choice.
+    axisPolicies: { stringSet: { mode: 'fixed', value: 'all' } },
   },
   timing: 'either',
-  rerollPolicy: 'per-rep',
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
     const set = axisValue<StringSet>(variation, 'stringSet', allStrings(instrument));
@@ -79,5 +80,5 @@ export const oneNotePerString: ExerciseDefinition<OneNotePerStringParams> = {
     };
   },
 
-  estimateRepSeconds: phraseEstimate(50),
+  estimateRepSeconds: phraseEstimate(35),
 };

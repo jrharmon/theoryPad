@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
 import type { Articulation, Bar, Phrase, TabNote } from '@/domain/phrase';
 import { PPQ, requiredSubdivision, ticksPerBar } from '@/domain/phrase';
+import { barsPerLine, zoomScale } from './tabLayout';
 
 export interface TabStaffProps {
   phrase: Phrase;
@@ -20,6 +21,11 @@ export interface TabStaffProps {
   /** Bars per line. 'auto' keeps a line readable at any subdivision. */
   barsPerSystem?: number | 'auto';
   /**
+   * Size steps from the default: positive is bigger (fewer bars fit a line),
+   * negative smaller (more fit). With 'auto', bars per line follow the width.
+   */
+  zoom?: number;
+  /**
    * Keep the line being played in view. On by default while a playhead is
    * shown: you cannot scroll with a guitar in your hands.
    */
@@ -30,9 +36,6 @@ export interface TabStaffProps {
 const ROW_HEIGHT = { compact: 19, large: 30 } as const;
 const FRET_SIZE = { compact: 12, large: 19 } as const;
 const LABEL_COL = { compact: 28, large: 34 } as const;
-
-/** Widest a line gets before adjacent fret numbers stop reading as separate. */
-const MAX_COLUMNS_PER_SYSTEM = 24;
 
 /**
  * Written articulation marks.
@@ -61,25 +64,6 @@ interface Placed {
   column: number;
 }
 
-/**
- * How many bars go on one line.
- *
- * Real tab breaks into systems rather than running one long line off the page,
- * and generated exercise phrases get long — seven modes across the neck is
- * dozens of bars. Four bars is the conventional line, but at fine subdivisions
- * that is far too many columns to read: two bars of sixteenths is 32 columns,
- * and two-digit frets at that width run into each other, so 14 16 17 reads as
- * 141617. The default targets 24 columns a line, which keeps adjacent numbers
- * apart at every subdivision.
- */
-function resolveBarsPerSystem(
-  barsPerSystem: number | 'auto',
-  columnsPerBar: number,
-): number {
-  if (barsPerSystem !== 'auto') return Math.max(1, barsPerSystem);
-  return Math.min(4, Math.max(1, Math.floor(MAX_COLUMNS_PER_SYSTEM / Math.max(1, columnsPerBar))));
-}
-
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
@@ -95,13 +79,35 @@ export function TabStaff({
   showBarLabels = true,
   showPickStrokes = false,
   barsPerSystem = 'auto',
+  zoom = 0,
   autoScroll = true,
   className,
 }: TabStaffProps) {
   const resolution = subdivision ?? requiredSubdivision(phrase);
   const ticksPerColumn = PPQ / resolution;
   const columnsPerBar = ticksPerBar(phrase.timeSignature) / ticksPerColumn;
-  const perSystem = resolveBarsPerSystem(barsPerSystem, columnsPerBar);
+  const scale = zoomScale(zoom);
+  const fretSize = FRET_SIZE[size] * scale;
+  const rowHeight = Math.round(ROW_HEIGHT[size] * scale);
+
+  // Bars per line follow the width actually available, so a wide screen or a
+  // hidden neck diagram gets more on each line.
+  const container = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const element = container.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setWidth(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const perSystem =
+    barsPerSystem === 'auto'
+      ? barsPerLine(columnsPerBar, width === null ? null : width - LABEL_COL[size], fretSize)
+      : Math.max(1, barsPerSystem);
 
   const placed = useMemo(() => {
     const map = new Map<number, Placed[]>();
@@ -129,7 +135,6 @@ export function TabStaff({
   const activeSystem =
     playheadColumn === null ? null : Math.floor(playheadColumn / columnsPerSystem);
 
-  const container = useRef<HTMLDivElement>(null);
   const lastScrolled = useRef<number | null>(null);
 
   useEffect(() => {
@@ -160,6 +165,8 @@ export function TabStaff({
           instrument={instrument}
           placed={placed}
           size={size}
+          rowHeight={rowHeight}
+          fretSize={fretSize}
           ticksPerColumn={ticksPerColumn}
           columnsPerBar={columnsPerBar}
           playheadColumn={playheadColumn}
@@ -177,6 +184,8 @@ interface TabSystemProps {
   instrument: Instrument;
   placed: Map<number, Placed[]>;
   size: 'compact' | 'large';
+  rowHeight: number;
+  fretSize: number;
   ticksPerColumn: number;
   columnsPerBar: number;
   playheadColumn: number | null;
@@ -190,6 +199,8 @@ function TabSystem({
   instrument,
   placed,
   size,
+  rowHeight,
+  fretSize,
   ticksPerColumn,
   columnsPerBar,
   playheadColumn,
@@ -206,8 +217,6 @@ function TabSystem({
     [strings],
   );
 
-  const rowHeight = ROW_HEIGHT[size];
-  const fretSize = FRET_SIZE[size];
   const labelCol = LABEL_COL[size];
   const gridColumns = `${labelCol}px repeat(${columnCount}, minmax(0, 1fr))`;
 
@@ -236,6 +245,23 @@ function TabSystem({
             }}
           />
         )}
+
+        {/* A rule at the start and end of every bar, from the top string to
+            the bottom one. Column edges, so it never runs through a number. */}
+        {Array.from({ length: bars.length + 1 }, (_, k) => (
+          <div
+            key={`bar-line-${k}`}
+            data-testid="bar-line"
+            aria-hidden
+            className="pointer-events-none absolute w-px bg-ink/60"
+            style={{
+              top: rowHeight / 2,
+              bottom: rowHeight / 2,
+              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${(k * columnsPerBar) / columnCount})`,
+              ...(k === bars.length ? { transform: 'translateX(-1px)' } : {}),
+            }}
+          />
+        ))}
 
         <div style={{ display: 'grid', gridTemplateColumns: gridColumns }}>
           {rows.map((stringIndex) => (
