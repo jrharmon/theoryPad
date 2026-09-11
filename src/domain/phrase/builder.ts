@@ -23,6 +23,7 @@ export interface NoteOptions {
   finger?: Finger;
   role?: NoteRole;
   annotation?: string;
+  display?: string;
   pickStroke?: 'down' | 'up';
   tied?: boolean;
 }

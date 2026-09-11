@@ -9,6 +9,32 @@ import type { AxisContext, AxisDefinition, AxisId } from './types';
 export type Direction = 'ascending' | 'descending' | 'up-down' | 'down-up';
 export type ShapeSystem = '3nps' | 'positional';
 
+/**
+ * A figure repeated up the scale: 3rds are 1-3, 2-4, 3-5…; groups of three
+ * are 1-2-3, 2-3-4…. `figure` holds each note's offset in scale steps from
+ * the figure's first note, which is all a generator needs to know.
+ */
+export interface IntervalPattern {
+  id: string;
+  name: string;
+  figure: number[];
+}
+
+const INTERVAL_PATTERNS: IntervalPattern[] = [
+  { id: '3rds', name: '3rds', figure: [0, 2] },
+  { id: '4ths', name: '4ths', figure: [0, 3] },
+  { id: '5ths', name: '5ths', figure: [0, 4] },
+  { id: '6ths', name: '6ths', figure: [0, 5] },
+  { id: '7ths', name: '7ths', figure: [0, 6] },
+  { id: 'groups-of-3', name: 'Groups of 3', figure: [0, 1, 2] },
+  { id: 'groups-of-4', name: 'Groups of 4', figure: [0, 1, 2, 3] },
+];
+
+/** Whether every figure runs the same way, or every other one turns round: 1-3, 4-2, 3-5, 6-4. */
+export type IntervalPairing = 'same-direction' | 'alternating';
+
+const INTERVAL_PAIRINGS: IntervalPairing[] = ['same-direction', 'alternating'];
+
 /** Positions the roller offers. Deliberately the ones a player thinks in. */
 const NECK_POSITIONS: NeckPosition[] = [
   { fret: 0, span: 4 },
@@ -153,6 +179,27 @@ const shapeSystemAxis: AxisDefinition<ShapeSystem> = {
   parse: (key) => (key === '3nps' || key === 'positional' ? key : null),
 };
 
+const intervalPatternAxis: AxisDefinition<IntervalPattern> = {
+  id: 'intervalPattern',
+  scope: 'exercise',
+  label: 'Interval',
+  candidates: () => [...INTERVAL_PATTERNS],
+  key: (pattern) => pattern.id,
+  format: (pattern) => pattern.name,
+  parse: (key) => INTERVAL_PATTERNS.find((p) => p.id === key) ?? null,
+};
+
+const intervalPairingAxis: AxisDefinition<IntervalPairing> = {
+  id: 'intervalPairing',
+  scope: 'exercise',
+  label: 'Pairing',
+  candidates: () => INTERVAL_PAIRINGS,
+  key: (pairing) => pairing,
+  format: (pairing) => (pairing === 'same-direction' ? 'Same direction' : 'Alternating'),
+  parse: (key) =>
+    INTERVAL_PAIRINGS.includes(key as IntervalPairing) ? (key as IntervalPairing) : null,
+};
+
 const DEFINITIONS = [
   modeAxis,
   keyAxis,
@@ -162,6 +209,8 @@ const DEFINITIONS = [
   rhythmPatternAxis,
   directionAxis,
   shapeSystemAxis,
+  intervalPatternAxis,
+  intervalPairingAxis,
 ] as const;
 
 const BY_ID = new Map<AxisId, AxisDefinition>(
@@ -212,4 +261,4 @@ export function axisPreferenceWeight(
   return 1;
 }
 
-export { NECK_POSITIONS, DIRECTIONS };
+export { NECK_POSITIONS, DIRECTIONS, INTERVAL_PATTERNS };

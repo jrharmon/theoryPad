@@ -39,6 +39,18 @@ describe('TabStaff', () => {
     }
   });
 
+  it('shows a note’s display text in place of its fret', () => {
+    // Note-finding exercises write the note name; the fret would give it away.
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .note(p(3, 11), { display: 'F#' })
+      .note(p(3, 5))
+      .build();
+    render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} />);
+    const notes = screen.getAllByTestId(/^tab-note-/);
+    expect(notes.map((el) => el.textContent)).toEqual(['F#', '5']);
+  });
+
   it('draws the highest string on top, matching how tab is written', () => {
     render(<TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} />);
     const labels = screen.getAllByTestId(/^tab-string-label-/);

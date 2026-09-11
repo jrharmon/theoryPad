@@ -3,10 +3,12 @@ import { pitchClass } from '@/domain/music';
 import { SEVEN_STRING_GUITAR, STANDARD_GUITAR } from '@/domain/instrument';
 import type { AxisId } from '../types';
 import { freshAxes, rollVariation, variationKeyMode, variationKeys } from '../roll';
+import { allAxisDefinitions } from '../axes';
 
 const base = { seed: 1234, instrument: STANDARD_GUITAR };
 const ALL: AxisId[] = [
   'mode', 'key', 'neckPosition', 'stringSet', 'targetScaleDegree', 'rhythmPattern', 'direction',
+  'intervalPattern', 'intervalPairing',
 ];
 
 describe('rollVariation', () => {
@@ -363,5 +365,21 @@ describe('display', () => {
     expect(display('3')).toBe('3rd position');
     expect(display('5')).toBe('5th position');
     expect(display('12')).toBe('12th position');
+  });
+});
+
+describe('every axis', () => {
+  it('rebuilds each candidate from its key', () => {
+    // A fixed or held policy stores only the key; if parse cannot rebuild the
+    // value, pinning that axis silently falls back to rolling.
+    const context = { instrument: STANDARD_GUITAR, resolved: {} };
+    for (const axis of allAxisDefinitions()) {
+      for (const candidate of axis.candidates(context)) {
+        const key = axis.key(candidate);
+        const parsed = axis.parse(key, context);
+        expect(parsed, `${axis.id} ${key}`).not.toBeNull();
+        expect(axis.key(parsed), `${axis.id} ${key}`).toBe(key);
+      }
+    }
   });
 });

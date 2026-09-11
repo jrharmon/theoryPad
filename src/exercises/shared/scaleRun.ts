@@ -1,6 +1,7 @@
 import type { DegreeNumber, KeyMode } from '@/domain/music';
+import { chroma, scaleNotes } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
-import { scaleShape, shapesUpTheNeck } from '@/domain/instrument';
+import { lowestFret, pitchClassAt, scaleShape, shapesUpTheNeck } from '@/domain/instrument';
 import type { Direction } from '@/domain/variation';
 
 export interface ScaleRunOptions {
@@ -77,4 +78,56 @@ export function shapeRuns(options: {
     startFret: shape.startFret,
     positions: applyDirection(shape.positions, direction),
   }));
+}
+
+/** The first scale note at or above `fret` on the lowest string, and which degree it is. */
+export function scaleNoteFrom(
+  instrument: Instrument,
+  keyMode: KeyMode,
+  fret: number,
+): { fret: number; degree: DegreeNumber } | null {
+  const notes = scaleNotes(keyMode);
+  for (let f = fret; f <= instrument.fretCount; f += 1) {
+    const sounding = chroma(pitchClassAt(instrument, { string: 0, fret: f }));
+    const index = notes.findIndex((n) => chroma(n) === sounding);
+    if (index !== -1) return { fret: f, degree: (index + 1) as DegreeNumber };
+  }
+  return null;
+}
+
+/**
+ * The shape a player means by "7th position": the one starting on whichever
+ * scale note falls first at or above that fret on the lowest string — not the
+ * root, which in C would put a 3rd-position shape at the 8th fret.
+ *
+ * Near the top of the neck the shape may not fit, so the start moves down
+ * until it does. `startFret` is where it actually landed.
+ */
+export function shapeFrom(options: {
+  instrument: Instrument;
+  keyMode: KeyMode;
+  fret: number;
+  notesPerString?: number | readonly number[];
+}): ShapeRun | null {
+  const { instrument, keyMode, fret, notesPerString = 3 } = options;
+  const strings = instrument.tuning.length;
+  const expected =
+    typeof notesPerString === 'number'
+      ? notesPerString * strings
+      : notesPerString.reduce((sum, n) => sum + n, 0);
+
+  for (let f = fret; f >= lowestFret(instrument); f -= 1) {
+    const start = scaleNoteFrom(instrument, keyMode, f);
+    if (!start) continue;
+    const positions = scaleShape(instrument, {
+      keyMode,
+      startDegree: start.degree,
+      minFret: start.fret,
+      notesPerString,
+    });
+    if (positions.length === expected) {
+      return { startDegree: start.degree, startFret: start.fret, positions };
+    }
+  }
+  return null;
 }

@@ -53,6 +53,11 @@ export interface TabNote {
   role?: NoteRole;
   /** Shown under the note, e.g. "♭3". */
   annotation?: string;
+  /**
+   * Shown in place of the fret number. A note-finding exercise writes the
+   * note name here, because printing the fret would give the answer away.
+   */
+  display?: string;
   /** Picking direction, for technique exercises. */
   pickStroke?: 'down' | 'up';
   /** Tied from the previous note on the same string. */

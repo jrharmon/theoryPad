@@ -12,6 +12,8 @@ export const AXIS_IDS = [
   'rhythmPattern',
   'direction',
   'shapeSystem',
+  'intervalPattern',
+  'intervalPairing',
 ] as const;
 
 export type AxisId = (typeof AXIS_IDS)[number];

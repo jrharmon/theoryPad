@@ -325,7 +325,7 @@ function NoteChip({
         </span>
       )}
       {mark?.leading && glyph}
-      {note.fret}
+      {note.display ?? note.fret}
       {mark && !mark.leading && glyph}
     </span>
   );

@@ -370,7 +370,9 @@ export interface AxisDefinition<T = unknown> {
 | `permutation`        | exercise | 1234, 1324, 1423, 4321 (technique drills)                   |
 
 Session-scoped axes are rolled **once per session** and shared by every exercise in a routine,
-so the practice hangs together musically.
+so the practice hangs together musically. **Only `key` and `mode` are session-scoped.** Every
+other axis is rolled independently for each exercise in a routine — a position or rhythm that
+suits one exercise means nothing to the next, so a routine never shares them.
 
 ### Per-axis policies — how variation is actually controlled
 

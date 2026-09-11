@@ -220,3 +220,27 @@ describe('shapesUpTheNeck', () => {
     }
   });
 });
+
+describe('scaleShape with a count per string', () => {
+  it.each(TEST_INSTRUMENTS.map((i) => [i.id, i] as const))(
+    'places exactly the asked-for notes on each string, ascending in pitch (%s)',
+    (_id, instrument) => {
+      const counts = Array.from({ length: stringCount(instrument) }, (_, k) => (k % 2 ? 3 : 4));
+      const shape = scaleShape(instrument, { keyMode: G_MAJOR, minFret: 3, notesPerString: counts });
+
+      expect(shape).toHaveLength(counts.reduce((a, b) => a + b, 0));
+      const byString = fretsByString(shape);
+      counts.forEach((count, string) => expect(byString.get(string), `string ${string}`).toHaveLength(count));
+
+      const midis = shape.map((p) => midiAt(instrument, p));
+      for (let i = 1; i < midis.length; i += 1) expect(midis[i]!).toBeGreaterThan(midis[i - 1]!);
+    },
+  );
+
+  it('matches a single count when every entry is the same', () => {
+    const counts = Array.from({ length: 6 }, () => 3);
+    expect(scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: counts })).toEqual(
+      scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: 3 }),
+    );
+  });
+});

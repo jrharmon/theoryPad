@@ -23,8 +23,12 @@ export interface ScaleShapeOptions {
   startDegree?: DegreeNumber;
   /** Lowest fret the shape may use. */
   minFret?: number;
-  /** Notes to place on each string. */
-  notesPerString?: number;
+  /**
+   * Notes to place on each string: one count for every string, or one per
+   * entry in `strings`. Four on a string where the rest have three is a
+   * position shift — the extra note carries the hand into the next shape.
+   */
+  notesPerString?: number | readonly number[];
   /** String indices to use, ascending. Defaults to the whole instrument. */
   strings?: number[];
 }
@@ -73,10 +77,13 @@ export function scaleShape(
   let anchor = minFret;
   let isFirstString = true;
 
-  for (const string of strings) {
+  const countFor = (k: number): number =>
+    typeof notesPerString === 'number' ? notesPerString : (notesPerString[k] ?? 0);
+
+  for (const [k, string] of strings.entries()) {
     let previousFret: number | null = null;
 
-    for (let n = 0; n < notesPerString; n += 1) {
+    for (let n = 0; n < countFor(k); n += 1) {
       const pc = notes[degreeIndex % notes.length]!;
 
       // minFret positions the shape; it does not constrain every note. Once the
