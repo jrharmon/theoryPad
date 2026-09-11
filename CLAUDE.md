@@ -6,7 +6,8 @@ accounts: static bundle + IndexedDB.
 
 ## Before you start
 
-Full plans are in `docs/plan/`. Your task spec names which ones to read.
+**Read `docs/plan/STATUS.md` first** — where the project is and what is next.
+Full plans are in `docs/plan/`; your task spec names which others to read.
 **Do not read `design_handoff_fretwork/`** — it is superseded and contradicts current
 decisions (notably its `cleanTempo` model, which we dropped).
 
@@ -41,8 +42,20 @@ decisions (notably its `cleanTempo` model, which we dropped).
   primary action, active state, small emphasis. Tabular numerals on all timers, tempos and
   counts (`.tabular`). Small-caps section labels use `.kicker`.
 - Tailwind utilities + tokens from `src/styles/theme.css`. Don't hard-code a hex or a font.
+- UI is shadcn/ui, themed through the tokens in `theme.css`. **Never hand-edit a shadcn
+  component's internals** — change the tokens. Our own primitives (`kicker`, `field`,
+  `empty-state`) live alongside them in `src/components/ui/`.
+- Tailwind layering bites: a `@layer components` or `@layer base` rule loses to a utility.
+  `.kicker` is an `@utility`; the zero-radius `[data-slot]` rule is deliberately unlayered.
 - Prefer composing `src/exercises/shared/` generators over new code. If a piece is missing,
   add it to `shared/` **with tests** — never inline it in an exercise.
+
+## Verify by looking
+
+Several real bugs in this project were invisible to tests and obvious in a screenshot:
+inverted scale shapes, a brief naming one key while the axis strip named another, tab digits
+running together, rounded badges. When a change affects what something looks like, render it
+and look before saying it works.
 
 ## Testing
 

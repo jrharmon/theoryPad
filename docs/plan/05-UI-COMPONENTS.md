@@ -31,12 +31,28 @@ the handoff.
 
 ### `components/ui/` — shadcn primitives
 
-`button`, `badge` (tags), `table`, `dialog`, `sheet` (the key/mode drawer), `popover`
-(the key/mode popover), `toggle-group` (segmented controls), `select`, `input`, `slider`
-(tempo), `progress`, `tooltip`, `tabs`, `separator`, `sonner` (toasts).
+Installed as of M2: `button`, `badge`, `input`, `label`, `select`, `separator`, `card`.
+Still to come as screens need them: `dialog` and `sheet` (the key/mode drawer), `popover`,
+`toggle-group` (segmented controls), `slider`, `tooltip`, `tabs`.
 
-Installed via the shadcn CLI, then themed once by editing the token layer. Agents should not
-hand-edit shadcn component internals except to remove radius.
+Alongside them, three of our own following the same convention (we own these files):
+`kicker.tsx`, `field.tsx`, `empty-state.tsx`.
+
+Theming is done once, in `src/styles/theme.css`: shadcn's semantic tokens (`--primary`,
+`--border`, `--muted-foreground`…) are mapped onto the Modernist palette, so generated
+components come out in the design without editing their source. **Do not hand-edit a shadcn
+component's internals** — change the tokens instead.
+
+Three things that were not obvious and cost time:
+
+- The CLI reads the **root** `tsconfig.json`, which is solution-style with no `paths`.
+  Without the alias duplicated there it writes components into a literal `@/` directory.
+- `--radius` is 0, but `rounded-full` does not read it and `Badge` uses it. Squareness is
+  enforced by an **unlayered** `[data-slot] { border-radius: 0 }` rule — `data-slot` is the
+  attribute shadcn puts on every component, so a future `shadcn add` cannot reintroduce a
+  radius. It must stay unlayered: a rule in `@layer base` loses to a utility.
+- `.kicker` is declared with `@utility`, not in `@layer components`, for the same reason —
+  it kept losing to shadcn's own `text-sm`.
 
 ### `components/music/` — the bespoke, high-value components
 
