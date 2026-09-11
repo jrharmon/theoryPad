@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import { createRepositories, db, type Exercise, type NewExercise } from '@/data';
+import {
+  createRepositories,
+  db,
+  findRedundantExercises,
+  type Exercise,
+  type NewExercise,
+} from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
@@ -84,7 +90,16 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     if (get().loaded) return;
     inFlight ??= (async () => {
       const repos = createRepositories(db());
-      const existing = await repos.exercises.all();
+      let existing = await repos.exercises.all();
+
+      // Clear up after the seeding race that shipped: identical, unplayed
+      // copies of one definition cannot be told apart because there is nothing
+      // to tell apart. Anything with practice behind it is left alone.
+      const { remove } = findRedundantExercises(existing, await repos.stats.all());
+      if (remove.length > 0) {
+        for (const exercise of remove) await repos.exercises.softDelete(exercise.id);
+        existing = await repos.exercises.all();
+      }
 
       // Seed by definition rather than by count, so this is idempotent even if
       // it does somehow run twice.

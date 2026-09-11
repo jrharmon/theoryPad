@@ -31,6 +31,36 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('link', { name: EXERCISE })).toBeVisible();
 });
 
+test('clears up identical unplayed copies of one exercise', async ({ page }) => {
+  // An earlier seeding race left some databases holding two identical rows.
+  // Two instances of a definition are a fine thing to want, but two with the
+  // same configuration and no history cannot be told apart, because there is
+  // nothing to tell apart.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('theorypad');
+        open.onerror = () => reject(new Error('cannot open db'));
+        open.onsuccess = () => {
+          const store = open.result
+            .transaction('exercises', 'readwrite')
+            .objectStore('exercises');
+          const all = store.getAll();
+          all.onsuccess = () => {
+            const first = (all.result as { id: string }[])[0]!;
+            const copy = { ...first, id: 'duplicate-row', createdAt: Date.now() };
+            const put = store.put(copy);
+            put.onsuccess = () => resolve();
+            put.onerror = () => reject(new Error('cannot write'));
+          };
+        };
+      }),
+  );
+
+  await page.reload();
+  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);
+});
+
 test('seeds the library exactly once, however many screens ask for it', async ({ page }) => {
   // Several screens load on mount and StrictMode runs each effect twice, which
   // used to race and seed the library twice over.
