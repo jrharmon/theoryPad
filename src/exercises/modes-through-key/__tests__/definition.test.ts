@@ -4,6 +4,7 @@ import {
   SEVEN_STRING_GUITAR,
   STANDARD_GUITAR,
   isValidPosition,
+  midiAt,
   pitchClassAt,
 } from '@/domain/instrument';
 import { mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
@@ -141,11 +142,57 @@ describe('modes-through-key', () => {
     expect(seconds).toBeLessThan(400);
   });
 
-  it('refuses the variants that are not built yet', () => {
-    // Failing loudly beats silently playing something other than the brief.
-    expect(() =>
-      generate(1, { params: { ...DEFAULTS, variant: 'arpeggio-then-scale' } }),
-    ).toThrow(/not implemented/);
+  describe('arpeggio-then-scale', () => {
+    const instance = () => generate(1, { params: { ...DEFAULTS, variant: 'arpeggio-then-scale' } });
+
+    it('arpeggiates each shape’s 7th chord up, then runs the scale down', () => {
+      const { phrase } = instance();
+      const starts = phrase.bars.filter((b) => b.label).map((b) => b.startTick);
+      expect(starts).toHaveLength(7);
+
+      const first = phrase.notes.filter((n) => n.startTick < starts[1]!);
+      const pitches = first.map((n) => midiAt(STANDARD_GUITAR, n));
+      const scale = pitches.slice(-18);
+      const arpeggio = pitches.slice(0, -18);
+
+      // Four chord tones across a two-octave shape: eight to ten of them.
+      expect(arpeggio.length).toBeGreaterThanOrEqual(8);
+      expect(arpeggio.length).toBeLessThanOrEqual(10);
+      for (let i = 1; i < arpeggio.length; i += 1) expect(arpeggio[i]!).toBeGreaterThan(arpeggio[i - 1]!);
+      for (let i = 1; i < scale.length; i += 1) expect(scale[i]!).toBeLessThan(scale[i - 1]!);
+      // The chord is built on the shape's own first note, not the key's root.
+      expect(arpeggio[0]).toBe(scale[scale.length - 1]);
+    });
+
+    it('names the variant in the brief and drops direction from the strip', () => {
+      const { brief } = instance();
+      expect(brief.headline).toMatch(/chord then scale/);
+      expect(brief.highlightAxes).not.toContain('direction');
+    });
+  });
+
+  describe('pause-on-root', () => {
+    const instance = () => generate(1, { params: { ...DEFAULTS, variant: 'pause-on-root' } });
+
+    it('gives every root a beat and every other note an eighth', () => {
+      const { phrase } = instance();
+      for (const note of phrase.notes) {
+        expect(note.durationTicks, `role ${note.role}`).toBe(note.role === 'root' ? 480 : 240);
+      }
+    });
+
+    it('still starts each shape on a bar line', () => {
+      const { phrase } = instance();
+      const labelled = phrase.bars.filter((b) => b.label);
+      expect(labelled).toHaveLength(7);
+      for (const bar of labelled) {
+        expect(phrase.notes.some((n) => n.startTick === bar.startTick)).toBe(true);
+      }
+    });
+
+    it('leaves the rhythm out of the strip, since it does not use it', () => {
+      expect(instance().brief.highlightAxes).not.toContain('rhythmPattern');
+    });
   });
 
   it('validates its params', () => {

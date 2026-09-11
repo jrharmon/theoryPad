@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import type { DegreeNumber } from '@/domain/music';
 import { noteAtDegree } from '@/domain/music';
-import { EIGHTH, phraseBuilder, phraseSeconds, rhythmById } from '@/domain/phrase';
+import { EIGHTH, QUARTER, phraseBuilder, phraseSeconds, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
-import type { Direction } from '@/domain/variation';
+import type { AxisId, Direction } from '@/domain/variation';
 import type { ExerciseDefinition, GenerationContext, PlayedInstance } from '../types';
 import {
+  arpeggioRun,
   axisDisplay,
   keyModeLabel,
   makeBrief,
@@ -57,12 +58,7 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
 
   generate(context: GenerationContext<ModesThroughKeyParams>): PlayedInstance {
     const { keyMode, instrument, params: config, variation } = context;
-
-    if (config.variant !== 'plain') {
-      // Declared in the catalogue, built in milestone 3. Failing loudly beats
-      // silently playing something other than what the brief promises.
-      throw new Error(`modes-through-key variant "${config.variant}" is not implemented yet`);
-    }
+    const { variant } = config;
 
     const direction = (variation.axes.direction?.value ?? 'ascending') as Direction;
     const rhythm = (variation.axes.rhythmPattern?.value ??
@@ -72,43 +68,67 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
     const runs = shapeRuns({
       instrument,
       keyMode,
-      direction,
+      // The arpeggio variant has its own shape — chord up, scale down.
+      direction: variant === 'arpeggio-then-scale' ? 'ascending' : direction,
       minFret: config.minFret,
       count: config.shapesPerRep,
     });
 
     const builder = phraseBuilder().rhythm(EIGHTH);
-    const allPositions = runs.flatMap((run) => run.positions);
 
     for (const run of runs) {
+      const positions =
+        variant === 'arpeggio-then-scale'
+          ? [...arpeggioRun(run.positions, run.startDegree), ...[...run.positions].reverse()]
+          : run.positions;
+      const options = (i: number) => noteOptionsFor(positions[i]!, targetDegree);
+
       builder.labelBar(`Fret ${run.startFret} · degree ${run.startDegree}`);
-      builder.withRhythm(
-        run.positions.map((p) => ({ string: p.string, fret: p.fret })),
-        rhythm,
-        (_position, index) => noteOptionsFor(run.positions[index]!, targetDegree),
-      );
+      if (variant === 'pause-on-root') {
+        // Not meant to be musical: a beat on every root, eighths otherwise.
+        positions.forEach((p, i) => builder.note(p, options(i), p.isRoot ? QUARTER : EIGHTH));
+      } else {
+        builder.withRhythm(positions, rhythm, (_p, i) => options(i));
+      }
       // Each shape starts on a bar line, so the player can hear where one ends.
       builder.fillBar();
     }
 
     const phrase = builder.build();
+    const shapes = runs.length === 7 ? 'All seven shapes' : `${runs.length} shapes`;
+    const landing =
+      targetDegree === undefined
+        ? ''
+        : `, landing each on the ${ordinal(targetDegree)} (${noteAtDegree(keyMode, targetDegree)})`;
+    const [headline, instruction, highlights] = {
+      plain: [
+        `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}.`,
+        `Work up the neck, one shape at a time${landing}.`,
+        ['key', 'direction', 'targetScaleDegree', 'rhythmPattern'],
+      ],
+      'arpeggio-then-scale': [
+        `${shapes} in ${keyModeLabel(keyMode)}, each chord then scale.`,
+        `For each shape, arpeggiate its 7th chord up, then run the scale down${landing}.`,
+        ['key', 'targetScaleDegree', 'rhythmPattern'],
+      ],
+      'pause-on-root': [
+        `${shapes} in ${keyModeLabel(keyMode)}, holding every root.`,
+        `Work up the neck, giving each root a full beat${landing}.`,
+        ['key', 'direction', 'targetScaleDegree'],
+      ],
+    }[variant] as [string, string, AxisId[]];
 
     return {
       kind: 'played',
       phrase,
-      neck: overlayFromPositions(allPositions, {
-        ...(targetDegree !== undefined ? { targetDegree } : {}),
-        emphasisFrets: runs.map((run) => run.startFret),
-      }),
-      brief: makeBrief(
-        `${runs.length === 7 ? 'All seven shapes' : `${runs.length} shapes`} in ` +
-          `${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}.`,
-        targetDegree === undefined
-          ? 'Work up the neck, one shape at a time.'
-          : `Work up the neck, one shape at a time, landing each on the ` +
-            `${ordinal(targetDegree)} (${noteAtDegree(keyMode, targetDegree)}).`,
-        orderedHighlights(variation, ['key', 'direction', 'targetScaleDegree', 'rhythmPattern']),
+      neck: overlayFromPositions(
+        runs.flatMap((run) => run.positions),
+        {
+          ...(targetDegree !== undefined ? { targetDegree } : {}),
+          emphasisFrets: runs.map((run) => run.startFret),
+        },
       ),
+      brief: makeBrief(headline, instruction, orderedHighlights(variation, highlights)),
     };
   },
 
