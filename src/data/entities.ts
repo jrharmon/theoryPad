@@ -93,10 +93,19 @@ export interface Session extends Row {
   sessionMode: ModeName;
 }
 
+/**
+ * A theory set's result. How long it took is the rep's own start and end —
+ * the player asked for a whole set to be timed, not each question.
+ */
 export interface RepScore {
   correct: number;
   total: number;
-  medianSecPerQuestion: number;
+}
+
+/** One theory question's outcome: what it was about, and whether it was right. */
+export interface RepAnswer {
+  subject: string;
+  correct: boolean;
 }
 
 export interface Rep extends Row {
@@ -118,6 +127,8 @@ export interface Rep extends Row {
   seed: number;
   status: 'completed' | 'skipped' | 'abandoned';
   score?: RepScore;
+  /** Theory only: each question, so later practice can lean toward what you miss. */
+  answers?: RepAnswer[];
 }
 
 /**

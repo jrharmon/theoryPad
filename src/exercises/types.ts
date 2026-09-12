@@ -4,6 +4,7 @@ import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { NeckOverlay } from '@/domain/neck';
 import type { Phrase } from '@/domain/phrase';
+import type { TheoryQuestion } from '@/domain/theory';
 import type { TempoPlan } from '@/domain/tempo';
 import type { AxisId, AxisPolicies, Rng, RolledVariation } from '@/domain/variation';
 
@@ -46,8 +47,8 @@ export interface PlayedInstance {
 export interface TheoryInstance {
   kind: 'theory';
   brief: Brief;
-  /** Filled in when the theory question model lands in milestone 4. */
-  questions: unknown[];
+  /** One set. Each pass is a fresh set on the same variation. */
+  questions: TheoryQuestion[];
 }
 
 export type ExerciseInstance = PlayedInstance | TheoryInstance;

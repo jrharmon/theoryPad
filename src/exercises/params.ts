@@ -11,6 +11,8 @@ export type ParamField = {
   hint?: string;
 } & (
   | { kind: 'choice'; options: { value: string | number; label: string }[] }
+  /** Any number of a fixed set — at least one, when the schema says so. */
+  | { kind: 'multi'; options: { value: string; label: string }[]; min: number }
   | { kind: 'number'; min?: number; max?: number }
   | { kind: 'toggle' }
 );
@@ -49,6 +51,15 @@ function fieldFor(key: string, schema: z.ZodType): ParamField | null {
     return { ...base, kind: 'choice', options };
   }
   if (inner instanceof z.ZodBoolean) return { ...base, kind: 'toggle' };
+  if (inner instanceof z.ZodArray) {
+    const element = unwrap(inner.element as z.ZodType);
+    if (element instanceof z.ZodEnum) {
+      const options = (element.options as string[]).map((value) => ({ value, label: humanize(value) }));
+      // Zod gathers a schema's constraints into its bag: `.min(1)` is minimum 1.
+      const min = (inner._zod.bag as { minimum?: number }).minimum ?? 0;
+      return { ...base, kind: 'multi', options, min };
+    }
+  }
   if (inner instanceof z.ZodNumber) {
     const min = inner.minValue ?? undefined;
     const max = inner.maxValue ?? undefined;

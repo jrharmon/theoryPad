@@ -3,6 +3,8 @@ import { modesThroughKey } from './modes-through-key/definition';
 import { intervalSequences } from './interval-sequences/definition';
 import { oneNotePerString } from './one-note-per-string/definition';
 import { positionShifting } from './position-shifting/definition';
+import { diatonicDrill } from './diatonic-drill/definition';
+import { circleOfFifths } from './circle-of-fifths/definition';
 
 /**
  * Every exercise the app knows about.
@@ -16,6 +18,8 @@ export const EXERCISE_DEFINITIONS: readonly AnyExerciseDefinition[] = [
   intervalSequences,
   oneNotePerString,
   positionShifting,
+  diatonicDrill,
+  circleOfFifths,
 ];
 
 const BY_ID = new Map(EXERCISE_DEFINITIONS.map((d) => [d.id, d]));

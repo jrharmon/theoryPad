@@ -70,3 +70,19 @@ describe('resolveParams', () => {
     expect(resolveParams(definition, { variant: 'retired' })).toEqual(definition.defaults.params);
   });
 });
+
+describe('paramFields for a list', () => {
+  it('turns an array of an enum into a multi-select, with its minimum', () => {
+    const [field] = paramFields(
+      z.object({ kinds: z.array(z.enum(['name-notes', 'spell-chord'])).min(1).default(['name-notes']) }),
+    );
+    expect(field).toMatchObject({
+      kind: 'multi',
+      min: 1,
+      options: [
+        { value: 'name-notes', label: 'Name notes' },
+        { value: 'spell-chord', label: 'Spell chord' },
+      ],
+    });
+  });
+});

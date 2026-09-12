@@ -5,7 +5,7 @@ import { STANDARD_GUITAR, TEST_INSTRUMENTS, isValidPosition, pitchClassAt } from
 import type { AxisPolicies } from '@/domain/variation';
 import { axisDefinition, mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '../registry';
-import type { AnyExerciseDefinition, PlayedInstance } from '../types';
+import type { AnyExerciseDefinition, ExerciseInstance, PlayedInstance } from '../types';
 
 /**
  * Invariants every played exercise must hold, run over the whole registry so
@@ -17,12 +17,12 @@ const D_DORIAN: AxisPolicies = {
   key: { mode: 'fixed', value: 'D' },
 };
 
-function generate(
+function generateAny(
   definition: AnyExerciseDefinition,
   seed: number,
   instrument: Instrument = STANDARD_GUITAR,
   policies: AxisPolicies = D_DORIAN,
-): PlayedInstance {
+): ExerciseInstance {
   const variation = rollVariation({
     axes: definition.axes,
     seed,
@@ -39,6 +39,16 @@ function generate(
     rng: mulberry32(seed),
     repIndex: 0,
   });
+  return instance;
+}
+
+function generate(
+  definition: AnyExerciseDefinition,
+  seed: number,
+  instrument: Instrument = STANDARD_GUITAR,
+  policies: AxisPolicies = D_DORIAN,
+): PlayedInstance {
+  const instance = generateAny(definition, seed, instrument, policies);
   if (instance.kind !== 'played') throw new Error(`${definition.id} is not played`);
   return instance;
 }
@@ -133,5 +143,46 @@ describe('position-shifting', () => {
     const slides = phrase.notes.map((n) => n.articulation).filter(Boolean);
     expect(slides).toContain('slide-up');
     expect(slides).toContain('slide-down');
+  });
+});
+
+const THEORY = EXERCISE_DEFINITIONS.filter((d) => d.kind === 'theory');
+
+describe.each(THEORY.map((d) => [d.id, d] as const))('%s', (_id, definition) => {
+  const questions = (seed: number) => {
+    const instance = generateAny(definition, seed);
+    if (instance.kind !== 'theory') throw new Error('expected theory');
+    return instance;
+  };
+
+  it('asks a set of well-formed questions, each with one right answer', () => {
+    for (const seed of SEEDS) {
+      const { questions: set, brief } = questions(seed);
+      expect(set.length).toBeGreaterThan(0);
+      expect(brief.headline).not.toMatch(/undefined|\s\s/);
+      for (const q of set) {
+        expect(q.prompt).not.toMatch(/undefined|NaN/);
+        if (q.kind === 'single-pick') {
+          expect(q.options.length).toBeGreaterThanOrEqual(2);
+          expect(q.options.length).toBeLessThanOrEqual(6);
+          expect(q.options.filter((o) => o.id === q.correctOptionId)).toHaveLength(1);
+          expect(new Set(q.options.map((o) => o.label)).size).toBe(q.options.length);
+        } else {
+          for (const row of q.rows) {
+            expect(row.options.filter((o) => o.id === row.correctOptionId)).toHaveLength(1);
+            expect(row.options.length).toBeLessThanOrEqual(6);
+          }
+        }
+      }
+    }
+  });
+
+  it('is the same for the same seed, and new for a new one', () => {
+    expect(JSON.stringify(questions(4))).toBe(JSON.stringify(questions(4)));
+    expect(JSON.stringify(questions(4).questions)).not.toBe(JSON.stringify(questions(5).questions));
+  });
+
+  it('declares no tempo', () => {
+    expect(definition.defaults.targetTempo).toBeNull();
   });
 });

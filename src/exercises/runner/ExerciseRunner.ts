@@ -14,7 +14,7 @@ import {
 import type { TempoConfig, TempoPlan } from '@/domain/tempo';
 import { clampTempo, resolveStartTempo } from '@/domain/tempo';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
-import type { RepOutcome, RepRecord, RunnerSnapshot, RunnerState } from './types';
+import type { RepOutcome, RepRecord, RunnerSnapshot, RunnerState, SetResult } from './types';
 
 export interface RunnerConfig {
   clock: Clock;
@@ -135,6 +135,7 @@ export class ExerciseRunner {
   /** Tick the current pass's phrase starts at. Passes after the first run straight on. */
   private passStartTick = 0;
   private completed: RepRecord[] = [];
+  private lastSet: SetResult | null = null;
 
   constructor(config: RunnerConfig) {
     this.config = config;
@@ -149,6 +150,7 @@ export class ExerciseRunner {
       passesPlayed: this.passesPlayed,
       passes: this.passes,
       loop: this.config.loop ?? false,
+      lastSet: this.lastSet,
       variation: this.variation,
       phraseTick: Math.max(0, raw - this.passStartTick),
       countInRemaining: Math.max(0, this.countInEndTick - raw),
@@ -175,6 +177,11 @@ export class ExerciseRunner {
 
   private get passes(): number {
     return Math.max(1, this.config.passes ?? 1);
+  }
+
+  /** A theory exercise: questions rather than a phrase, and no clock at all. */
+  private get isTheory(): boolean {
+    return this.config.definition.kind === 'theory';
   }
 
   private get isFreeTime(): boolean {
@@ -219,6 +226,20 @@ export class ExerciseRunner {
   }
 
   /**
+   * Finish a theory set. The screen asks the questions; the runner logs the
+   * result and moves on — to a fresh set if a routine wants more passes, or
+   * back to ready with a fresh set waiting.
+   */
+  submitSet(result: { answers: { subject: string; correct: boolean }[] }): void {
+    if (!this.isTheory || this.state !== 'playing') return;
+    const correct = result.answers.filter((a) => a.correct).length;
+    this.finishPass('completed', {
+      score: { correct, total: result.answers.length },
+      answers: result.answers,
+    });
+  }
+
+  /**
    * Start straight on from a running clock, counting in first: a routine's
    * next item. The count-in is the pause between items, and it is played at
    * this item's tempo, so a change of tempo is heard before it matters.
@@ -226,7 +247,8 @@ export class ExerciseRunner {
   beginNext(countInBars: number): void {
     if (this.state !== 'brief') return;
     const { clock } = this.config;
-    if (clock.state !== 'started' || this.isFreeTime) {
+    if (clock.state !== 'started' || this.isFreeTime || this.isTheory) {
+      if (this.isTheory) clock.stop();
       this.begin();
       return;
     }
@@ -274,6 +296,8 @@ export class ExerciseRunner {
   }
 
   pause(): void {
+    // A theory set has no clock to stop; it waits for you anyway.
+    if (this.isTheory) return;
     if (this.state !== 'playing' && this.state !== 'count-in') return;
     this.config.clock.pause();
     this.setState('paused');
@@ -459,7 +483,11 @@ export class ExerciseRunner {
       keyMode: this.currentKeyMode,
       instrument,
       params: this.config.params,
-      rng: mulberry32(this.variation.seed),
+      // A theory set is new questions each pass, on the same variation. A
+      // played exercise's material never changes between passes.
+      rng: mulberry32(
+        this.isTheory ? hashSeed(this.variation.seed, this.passesPlayed) : this.variation.seed,
+      ),
       repIndex: this.passesPlayed,
     });
   }
@@ -473,8 +501,9 @@ export class ExerciseRunner {
 
     this.repStartedAt = this.config.now();
 
-    if (this.isFreeTime) {
-      // No clock, no count-in, no playhead. The pass ends when the player says.
+    if (this.isFreeTime || this.isTheory) {
+      // No clock, no count-in, no playhead. The pass ends when the player says
+      // — or, for theory, when the set is submitted.
       this.countInEndTick = 0;
       this.passStartTick = 0;
       this.config.onRepStart?.({
@@ -553,7 +582,10 @@ export class ExerciseRunner {
     this.config.clock.stop();
   }
 
-  private finishPass(outcome: RepOutcome, options: { stop?: boolean } = {}): void {
+  private finishPass(
+    outcome: RepOutcome,
+    options: { stop?: boolean; score?: RepRecord['score']; answers?: RepRecord['answers'] } = {},
+  ): void {
     this.clearScheduled();
 
     if (this.variation) {
@@ -568,7 +600,15 @@ export class ExerciseRunner {
         axes: variationKeys(this.variation),
         seed: this.variation.seed,
         status: outcome,
+        ...(options.score ? { score: options.score } : {}),
+        ...(options.answers ? { answers: options.answers } : {}),
       };
+      if (options.score) {
+        this.lastSet = {
+          ...options.score,
+          seconds: Math.round((record.endedAt - record.startedAt) / 1000),
+        };
+      }
       this.completed.push(record);
       this.config.onRepEnd?.(record);
       // What was played is what a `hold` keeps next time.
@@ -577,9 +617,18 @@ export class ExerciseRunner {
 
     this.passesPlayed += 1;
     this.passesThisRun += 1;
+    // A fresh set for the next pass — whether that is straight away in a
+    // routine, or the next press of Again.
+    if (this.isTheory) this.generate();
     if (options.stop) return;
 
-    const again = this.config.loop || this.passesThisRun < this.passes;
+    // Loop means nothing to a theory set: it runs its passes and stops.
+    const again = (this.config.loop && !this.isTheory) || this.passesThisRun < this.passes;
+    if (again && this.isTheory) {
+      this.repStartedAt = this.config.now();
+      this.emit();
+      return;
+    }
     if (again && !this.isFreeTime) {
       this.continuePass();
       return;

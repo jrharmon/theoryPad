@@ -69,8 +69,8 @@ describe('applyRep', () => {
 
   it('accumulates theory scores', () => {
     let stats = emptyStats('exercise-1', 'd');
-    stats = applyRep(stats, rep({ score: { correct: 6, total: 8, medianSecPerQuestion: 4 } }));
-    stats = applyRep(stats, rep({ score: { correct: 7, total: 8, medianSecPerQuestion: 3 } }));
+    stats = applyRep(stats, rep({ score: { correct: 6, total: 8 } }));
+    stats = applyRep(stats, rep({ score: { correct: 7, total: 8 } }));
     expect(stats.questionsAnswered).toBe(16);
     expect(stats.questionsCorrect).toBe(13);
   });
@@ -97,7 +97,7 @@ describe('rebuildStats', () => {
         status: rng.pick(statuses),
         axes: { neckPosition: rng.pick(positions), key: rng.pick(['C', 'D', 'G']) },
         ...(rng.next() > 0.7
-          ? { score: { correct: rng.int(9), total: 8, medianSecPerQuestion: 4 } }
+          ? { score: { correct: rng.int(9), total: 8 } }
           : {}),
       }),
     );

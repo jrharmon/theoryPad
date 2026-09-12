@@ -26,6 +26,16 @@ export interface RepRecord {
   axes: Record<string, string>;
   seed: number;
   status: RepOutcome;
+  /** Theory sets only. */
+  score?: { correct: number; total: number };
+  answers?: { subject: string; correct: boolean }[];
+}
+
+/** A finished theory set, as the screen shows it. */
+export interface SetResult {
+  correct: number;
+  total: number;
+  seconds: number;
 }
 
 export interface RunnerSnapshot {
@@ -36,6 +46,8 @@ export interface RunnerSnapshot {
   passes: number;
   /** Keep playing the same material until told to stop. */
   loop: boolean;
+  /** The last theory set finished, for its summary. */
+  lastSet: SetResult | null;
   variation: RolledVariation | null;
   /** Ticks into the phrase, with any count-in already discounted. */
   phraseTick: number;

@@ -4,6 +4,7 @@ import { STANDARD_GUITAR } from '@/domain/instrument';
 import { FakeClock } from '@/domain/time';
 import { QUARTER, ticksPerBar } from '@/domain/phrase';
 import { modesThroughKey } from '../../modes-through-key/definition';
+import { diatonicDrill } from '../../diatonic-drill/definition';
 import type { AnyExerciseDefinition } from '../../types';
 import { ExerciseRunner, type RunnerConfig } from '../ExerciseRunner';
 
@@ -577,5 +578,66 @@ describe('subscription', () => {
     runner.begin();
     playThrough(runner, clock);
     expect(clock.scheduledCount).toBe(0);
+  });
+});
+
+describe('theory', () => {
+  const theory = (overrides: Partial<RunnerConfig> = {}) =>
+    makeRunner({
+      definition: diatonicDrill,
+      params: diatonicDrill.params!.parse({}),
+      tempo: { targetTempo: null, maxTempo: null },
+      ...overrides,
+    });
+  const answers = (n: number, right: number) =>
+    Array.from({ length: n }, (_, i) => ({ subject: 'D Dorian', correct: i < right }));
+
+  it('runs a set with no clock and no tempo', () => {
+    const { runner, clock } = theory();
+    runner.start();
+    expect(runner.snapshot.currentTempo).toBeNull();
+    runner.begin();
+    expect(runner.snapshot.state).toBe('playing');
+    expect(clock.state).toBe('stopped');
+    // Nothing to pause.
+    runner.pause();
+    expect(runner.snapshot.state).toBe('playing');
+  });
+
+  it('logs a submitted set with its score and what each question was about', () => {
+    const onRepEnd = vi.fn();
+    const { runner } = theory({ onRepEnd });
+    runner.start();
+    runner.begin();
+    runner.submitSet({ answers: answers(8, 6) });
+
+    expect(onRepEnd.mock.calls[0]![0]).toMatchObject({
+      status: 'completed',
+      score: { correct: 6, total: 8 },
+      answers: expect.arrayContaining([{ subject: 'D Dorian', correct: false }]) as unknown,
+    });
+    expect(runner.snapshot.lastSet).toMatchObject({ correct: 6, total: 8 });
+    expect(runner.snapshot.state).toBe('brief');
+  });
+
+  it('has fresh questions for the next set, in the same key', () => {
+    const { runner } = theory();
+    runner.start();
+    const before = runner.currentInstance;
+    const key = runner.snapshot.variation!.axes.key!.key;
+    runner.begin();
+    runner.submitSet({ answers: answers(8, 8) });
+    expect(JSON.stringify(runner.currentInstance)).not.toBe(JSON.stringify(before));
+    expect(runner.snapshot.variation!.axes.key!.key).toBe(key);
+  });
+
+  it('plays a routine’s passes as consecutive sets, then finishes, ignoring loop', () => {
+    const { runner } = theory({ passes: 2, endWhenFinished: true, loop: true });
+    runner.start();
+    runner.begin();
+    runner.submitSet({ answers: answers(8, 8) });
+    expect(runner.snapshot.state).toBe('playing');
+    runner.submitSet({ answers: answers(8, 8) });
+    expect(runner.snapshot.state).toBe('done');
   });
 });
