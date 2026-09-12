@@ -133,7 +133,7 @@ of patterns established here.
 
 ---
 
-## M3 — The scale & mode family ✅ *complete (2026-09-10), awaiting review*
+## M3 — The scale & mode family ✅ *complete (2026-09-10), reviewed*
 
 _First test of the "adding an exercise is cheap" claim._
 
