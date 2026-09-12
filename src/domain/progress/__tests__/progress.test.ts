@@ -13,6 +13,9 @@ import {
   emptyDay,
   exerciseLog,
   formatPracticeTime,
+  fretRuns,
+  heatLevels,
+  neckSummary,
   fretTally,
   intensity,
   keyModeCounts,
@@ -117,6 +120,21 @@ describe('fretTally', () => {
   it('counts a repeated phrase each time it plays, and a tie once', () => {
     const tally = fretTally(phrase([note(2, 7), note(2, 7, true)], 3), 7);
     expect(tally).toEqual({ strings: 7, counts: { '2:7': 3 } });
+  });
+});
+
+describe('neck heat', () => {
+  it('scales each spot against the busiest, gently', () => {
+    expect(heatLevels({ '0:5': 100, '1:7': 25, '2:9': 1 })).toEqual({ '0:5': 1, '1:7': 0.5, '2:9': 0.1 });
+    expect(heatLevels({})).toEqual({});
+  });
+
+  it('counts the spots touched and names the frets never played', () => {
+    const summary = neckSummary({ '0:0': 3, '5:0': 1, '2:3': 1, '2:4': 0 }, 6, 5);
+    expect(summary).toEqual({ touched: 3, total: 36, untouchedFrets: [1, 2, 4, 5] });
+    expect(fretRuns(summary.untouchedFrets)).toBe('1–2, 4–5');
+    expect(fretRuns([0, 15, 16, 17, 22])).toBe('0, 15–17, 22');
+    expect(fretRuns([])).toBe('');
   });
 });
 

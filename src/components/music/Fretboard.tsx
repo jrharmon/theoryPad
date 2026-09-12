@@ -16,6 +16,12 @@ export interface FretboardProps {
   fretRange?: { low: number; high: number };
   size?: 'compact' | 'large';
   onFretClick?: (position: FretPosition) => void;
+  /**
+   * Shading under the dots, 0–1 per `"string:fret"` — the explorer's note
+   * counts. `heatCounts` gives each shaded spot its hover text.
+   */
+  heat?: Record<string, number>;
+  heatCounts?: Record<string, number>;
   className?: string;
 }
 
@@ -56,6 +62,8 @@ export function Fretboard({
   fretRange,
   size = 'compact',
   onFretClick,
+  heat,
+  heatCounts,
   className,
 }: FretboardProps) {
   const strings = stringCount(instrument);
@@ -107,6 +115,8 @@ export function Fretboard({
             labelMode={labelMode}
             byPosition={byPosition}
             size={size}
+            {...(heat ? { heat } : {})}
+            {...(heatCounts ? { heatCounts } : {})}
             {...(onFretClick ? { onFretClick } : {})}
           />
         ))}
@@ -145,6 +155,8 @@ interface RowProps {
   byPosition: Map<string, NeckOverlay['notes'][number]>;
   size: 'compact' | 'large';
   onFretClick?: (position: FretPosition) => void;
+  heat?: Record<string, number>;
+  heatCounts?: Record<string, number>;
 }
 
 function FretboardRow({
@@ -156,6 +168,8 @@ function FretboardRow({
   labelMode,
   byPosition,
   onFretClick,
+  heat,
+  heatCounts,
 }: RowProps) {
   return (
     <>
@@ -193,6 +207,8 @@ function FretboardRow({
                 className={[
                   'relative grid place-items-center rounded-full font-extrabold',
                   ROLE_CLASS[note.role],
+                  // Over shading, a ring of the ground keeps each dot its own shape.
+                  heat ? 'ring-2 ring-bg' : '',
                 ].join(' ')}
                 style={{ width: dotSize, height: dotSize, fontSize: dotSize * 0.42 }}
               >
@@ -202,10 +218,21 @@ function FretboardRow({
           </>
         );
 
+        const level = heat?.[`${stringIndex}:${fret}`] ?? 0;
+        const count = heatCounts?.[`${stringIndex}:${fret}`];
         const style = {
           height: rowHeight,
           borderLeftWidth: isNut ? 2 : 1,
+          ...(level > 0
+            ? {
+                backgroundColor: `color-mix(in srgb, var(--color-ink) ${Math.round(6 + level * 64)}%, transparent)`,
+              }
+            : {}),
         };
+        const title =
+          heat && count !== undefined
+            ? `${count} ${count === 1 ? 'note' : 'notes'} played here`
+            : undefined;
 
         return onFretClick ? (
           <button
@@ -223,6 +250,8 @@ function FretboardRow({
             key={fret}
             className="relative grid place-items-center border-l border-ink/30"
             style={style}
+            title={title}
+            data-heat={level > 0 ? level.toFixed(2) : undefined}
           >
             {cell}
           </div>

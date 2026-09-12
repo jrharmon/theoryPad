@@ -8,6 +8,7 @@ import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
 import { RoutineBuilder } from '@/routes/routines/RoutineBuilder';
+import { FretboardExplorer } from '@/routes/fretboard/FretboardExplorer';
 import { ReportPage } from '@/routes/report/ReportPage';
 import { SettingsPage } from '@/routes/settings/SettingsPage';
 
@@ -30,16 +31,7 @@ export const router = createHashRouter([
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
       { path: 'practice/routine/:routineId', element: <PracticeRoutine /> },
-      {
-        path: 'fretboard',
-        element: (
-          <Placeholder
-            title="Fretboard"
-            milestone="Milestone 6"
-            summary="The mode across the whole neck, and which positions the roller has never sent you to."
-          />
-        ),
-      },
+      { path: 'fretboard', element: <FretboardExplorer /> },
       { path: 'report', element: <ReportPage /> },
       { path: 'settings', element: <SettingsPage /> },
       // Development only: the M1 primitives against fixture data.

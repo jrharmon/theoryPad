@@ -38,3 +38,50 @@ export function neckCounts(days: readonly PracticeDay[], strings: number): Recor
   for (const day of days) addCounts(out, day.frets[strings] ?? {});
   return out;
 }
+
+/**
+ * Each spot's share of the busiest one, 0–1, on a square-root scale — played
+ * counts are lopsided, and a linear scale leaves everything but the favorite
+ * shape looking untouched.
+ */
+export function heatLevels(counts: Record<string, number>): Record<string, number> {
+  const max = Math.max(0, ...Object.values(counts));
+  if (max === 0) return {};
+  return Object.fromEntries(
+    Object.entries(counts).map(([key, n]) => [key, Math.sqrt(n) / Math.sqrt(max)]),
+  );
+}
+
+/** How much of the neck has been played, and the frets no string has been played at. */
+export function neckSummary(
+  counts: Record<string, number>,
+  strings: number,
+  fretCount: number,
+): { touched: number; total: number; untouchedFrets: number[] } {
+  let touched = 0;
+  const untouchedFrets: number[] = [];
+  for (let fret = 0; fret <= fretCount; fret += 1) {
+    let any = false;
+    for (let string = 0; string < strings; string += 1) {
+      if ((counts[fretKey({ string, fret })] ?? 0) > 0) {
+        touched += 1;
+        any = true;
+      }
+    }
+    if (!any) untouchedFrets.push(fret);
+  }
+  return { touched, total: strings * (fretCount + 1), untouchedFrets };
+}
+
+/** Frets as runs: [0, 15, 16, 17, 22] → "0, 15–17, 22". */
+export function fretRuns(frets: readonly number[]): string {
+  const runs: string[] = [];
+  const sorted = [...frets].sort((a, b) => a - b);
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j]! + 1) j += 1;
+    runs.push(i === j ? `${sorted[i]}` : `${sorted[i]}–${sorted[j]}`);
+    i = j + 1;
+  }
+  return runs.join(', ');
+}
