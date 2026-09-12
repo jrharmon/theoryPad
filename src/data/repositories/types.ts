@@ -1,6 +1,7 @@
-import type { Exercise, ExerciseStats, Rep, Session, Settings, Uuid } from '../entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Uuid } from '../entities';
 
 export type NewExercise = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewRoutine = Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewSession = Omit<Session, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewRep = Omit<Rep, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -10,6 +11,14 @@ export interface ExerciseRepository {
   all(): Promise<Exercise[]>;
   byDefinition(definitionId: string): Promise<Exercise[]>;
   update(id: Uuid, changes: Partial<NewExercise>): Promise<Exercise>;
+  softDelete(id: Uuid): Promise<void>;
+}
+
+export interface RoutineRepository {
+  add(routine: NewRoutine): Promise<Routine>;
+  byId(id: Uuid): Promise<Routine | undefined>;
+  all(): Promise<Routine[]>;
+  update(id: Uuid, changes: Partial<NewRoutine>): Promise<Routine>;
   softDelete(id: Uuid): Promise<void>;
 }
 
@@ -45,6 +54,7 @@ export interface SettingsRepository {
 
 export interface Repositories {
   exercises: ExerciseRepository;
+  routines: RoutineRepository;
   sessions: SessionRepository;
   reps: RepRepository;
   stats: StatsRepository;

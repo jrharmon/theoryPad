@@ -41,6 +41,8 @@ export class Metronome {
   private listeners = new Set<BeatListener>();
   private running = false;
   private muted = false;
+  /** A count-in in the middle of the clock — a routine's next item. */
+  private extraCountIn: { from: number; to: number } | null = null;
 
   constructor(clock: Clock, sink: ClickSink | null = null, options: MetronomeOptions = {}) {
     this.clock = clock;
@@ -83,7 +85,7 @@ export class Metronome {
       this.clock.scheduleRepeat((audioTime, tick) => {
         // The count-in occupies the first bars, so musical bar 0 starts after it.
         const musicalTick = tick - countIn;
-        const isCountIn = musicalTick < 0;
+        const isCountIn = musicalTick < 0 || this.inExtraCountIn(tick);
         const bar = Math.floor(musicalTick / perBar);
         const beat = Math.floor(((musicalTick % perBar) + perBar) % perBar / perBeat);
         const isDownbeat = beat === 0;
@@ -108,7 +110,7 @@ export class Metronome {
         this.clock.scheduleRepeat((audioTime, tick) => {
           // The beat itself is already clicked above.
           if (tick % perBeat === 0) return;
-          if (this.muted && tick >= countIn) return;
+          if (this.muted && tick >= countIn && !this.inExtraCountIn(tick)) return;
           this.sink?.click(audioTime, 'subdivision');
         }, step),
       );
@@ -119,6 +121,7 @@ export class Metronome {
     for (const handle of this.handles) this.clock.clear(handle);
     this.handles = [];
     this.running = false;
+    this.extraCountIn = null;
   }
 
   /**
@@ -127,6 +130,18 @@ export class Metronome {
    */
   setMuted(muted: boolean): void {
     this.muted = muted;
+  }
+
+  /**
+   * Treat these ticks as a count-in: they click even when muted. For a count-in
+   * that does not start at zero, like the one between a routine's items.
+   */
+  countInBetween(from: number, to: number): void {
+    this.extraCountIn = { from, to };
+  }
+
+  private inExtraCountIn(tick: number): boolean {
+    return this.extraCountIn !== null && tick >= this.extraCountIn.from && tick < this.extraCountIn.to;
   }
 
   get isMuted(): boolean {

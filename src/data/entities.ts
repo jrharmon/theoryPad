@@ -45,8 +45,43 @@ export interface Exercise extends Row {
   tempo: TempoConfig;
   /** Passes it starts with when added to a routine. Standalone practice has no reps. */
   defaultReps: number;
+  /** Pinned to the top of the library. */
+  favorite?: boolean;
   video?: VideoRef;
   notes?: string;
+}
+
+/**
+ * One exercise in a routine, with its own copy of the settings.
+ *
+ * Copied from the exercise when added and independent afterwards, so the same
+ * exercise can appear more than once — different params, different axes
+ * pinned or held — without any of it touching the library's copy. Its passes
+ * are logged against the exercise it came from: they are that exercise's
+ * history.
+ */
+export interface RoutineItem {
+  /** Stable within the routine, so reps can say which item played them. */
+  id: Uuid;
+  /** The exercise it was copied from. */
+  exerciseId: Uuid;
+  definitionId: string;
+  /** Passes played back to back before the routine moves on. */
+  reps: number;
+  params: unknown;
+  tempo: TempoConfig;
+  axisPolicies: AxisPolicies;
+  heldAxisValues: Record<string, string>;
+}
+
+export interface Routine extends Row {
+  name: string;
+  items: RoutineItem[];
+  /** Key and mode, rolled once per run and shared by every item. */
+  sessionAxisPolicies: AxisPolicies;
+  /** Pinned to the top of the list. */
+  favorite?: boolean;
+  lastPlayedAt?: number;
 }
 
 export interface Session extends Row {
@@ -66,7 +101,10 @@ export interface RepScore {
 
 export interface Rep extends Row {
   sessionId: Uuid;
+  /** The library exercise — for a routine item, the one it was copied from. */
   exerciseId: Uuid;
+  /** Set when the pass was played as part of a routine. */
+  routineItemId?: Uuid;
   definitionId: string;
   /** Rep number within this exercise in this session. */
   index: number;

@@ -1,11 +1,12 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import type { TheoryPadDB } from '../db';
-import type { Exercise, Rep, Session, Settings, Uuid } from '../entities';
+import type { Exercise, Rep, Routine, Session, Settings, Uuid } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import type {
   NewExercise,
   NewRep,
+  NewRoutine,
   NewSession,
   Repositories,
 } from './types';
@@ -52,6 +53,38 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
         const existing = await database.exercises.get(id);
         if (!existing) return;
         await database.exercises.put({ ...existing, deletedAt: stamp(), updatedAt: stamp() });
+      },
+    },
+
+    routines: {
+      async add(routine: NewRoutine): Promise<Routine> {
+        const at = stamp();
+        const row: Routine = { ...routine, id: newId(), createdAt: at, updatedAt: at };
+        await database.routines.add(row);
+        return row;
+      },
+
+      async byId(id) {
+        const row = await database.routines.get(id);
+        return row?.deletedAt === undefined ? row : undefined;
+      },
+
+      async all() {
+        return live(await database.routines.toArray());
+      },
+
+      async update(id, changes) {
+        const existing = await database.routines.get(id);
+        if (!existing) throw new Error(`No routine ${id}`);
+        const row: Routine = { ...existing, ...changes, updatedAt: stamp() };
+        await database.routines.put(row);
+        return row;
+      },
+
+      async softDelete(id) {
+        const existing = await database.routines.get(id);
+        if (!existing) return;
+        await database.routines.put({ ...existing, deletedAt: stamp(), updatedAt: stamp() });
       },
     },
 

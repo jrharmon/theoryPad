@@ -60,6 +60,42 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
       await teardown?.();
     });
 
+    describe('routines', () => {
+      const routine = {
+        name: 'Morning',
+        sessionAxisPolicies: {},
+        items: [
+          {
+            id: 'item-1',
+            exerciseId: 'ex-1',
+            definitionId: 'modes-through-key',
+            reps: 2,
+            params: {},
+            tempo: { targetTempo: 70, maxTempo: null },
+            axisPolicies: {},
+            heldAxisValues: {},
+          },
+        ],
+      };
+
+      it('adds, reads back, lists and updates', async () => {
+        const saved = await repos.routines.add(routine);
+        expect(await repos.routines.byId(saved.id)).toEqual(saved);
+        expect(await repos.routines.all()).toHaveLength(1);
+
+        const renamed = await repos.routines.update(saved.id, { name: 'Evening', favorite: true });
+        expect(renamed).toMatchObject({ name: 'Evening', favorite: true });
+        expect(renamed.items).toEqual(routine.items);
+      });
+
+      it('soft-deletes, so a sync layer could propagate it', async () => {
+        const saved = await repos.routines.add(routine);
+        await repos.routines.softDelete(saved.id);
+        expect(await repos.routines.byId(saved.id)).toBeUndefined();
+        expect(await repos.routines.all()).toHaveLength(0);
+      });
+    });
+
     describe('exercises', () => {
       it('adds with an id and timestamps', async () => {
         const saved = await repos.exercises.add(exerciseFixture);

@@ -21,6 +21,12 @@ export interface RunnerConfig {
   definition: AnyExerciseDefinition;
   /** Persisted id of the configured exercise, for the rep log. */
   exerciseId: string;
+  /**
+   * What the roll is seeded from, with the session. Defaults to the exercise
+   * id; a routine uses the item's, so two items copied from one exercise do
+   * not roll the same thing.
+   */
+  seedKey?: string;
   instrument: Instrument;
   sessionId: string;
   sessionKeyMode: KeyMode;
@@ -65,6 +71,11 @@ export interface RepStartInfo {
    * phrase needs scheduling again.
    */
   continuation: boolean;
+  /**
+   * Where a count-in in the middle of a running clock starts — a routine's
+   * next item. The metronome needs to know, so it clicks it even when muted.
+   */
+  countInFrom?: number;
   tempo: number | null;
   freeTime: boolean;
   repIndex: number;
@@ -119,7 +130,8 @@ export class ExerciseRunner {
    * exactly what was there — the button appeared to do nothing.
    */
   private rollAttempt = 0;
-  private countInTicks = 0;
+  /** Absolute tick the current count-in ends on. A routine's next item counts in mid-clock. */
+  private countInEndTick = 0;
   /** Tick the current pass's phrase starts at. Passes after the first run straight on. */
   private passStartTick = 0;
   private completed: RepRecord[] = [];
@@ -139,7 +151,7 @@ export class ExerciseRunner {
       loop: this.config.loop ?? false,
       variation: this.variation,
       phraseTick: Math.max(0, raw - this.passStartTick),
-      countInRemaining: Math.max(0, this.countInTicks - raw),
+      countInRemaining: Math.max(0, this.countInEndTick - raw),
       currentTempo: this.currentTempo,
       targetTempo: this.config.tempo.targetTempo,
       freeTime: this.isFreeTime,
@@ -206,6 +218,61 @@ export class ExerciseRunner {
     this.beginPass();
   }
 
+  /**
+   * Start straight on from a running clock, counting in first: a routine's
+   * next item. The count-in is the pause between items, and it is played at
+   * this item's tempo, so a change of tempo is heard before it matters.
+   */
+  beginNext(countInBars: number): void {
+    if (this.state !== 'brief') return;
+    const { clock } = this.config;
+    if (clock.state !== 'started' || this.isFreeTime) {
+      this.begin();
+      return;
+    }
+
+    this.passesThisRun = 0;
+    this.repStartedAt = this.config.now();
+    if (this.currentTempo !== null) clock.setBpm(this.currentTempo);
+
+    const phrase = this.currentPhrase;
+    const from = clock.ticks;
+    this.countInEndTick = from + (phrase ? ticksPerBar(phrase.timeSignature) : 0) * countInBars;
+    this.passStartTick = this.countInEndTick;
+
+    if (this.countInEndTick > from) {
+      this.setState('count-in');
+      this.handles.push(clock.schedule(() => this.setState('playing'), this.countInEndTick));
+    } else {
+      this.setState('playing');
+    }
+
+    this.scheduleEnd();
+    this.config.onRepStart?.({
+      phrase,
+      countInTicks: this.passStartTick,
+      continuation: true,
+      countInFrom: from,
+      tempo: this.currentTempo,
+      freeTime: false,
+      repIndex: this.passesPlayed,
+    });
+  }
+
+  /**
+   * Give up on this exercise for now — a routine moving to its next item. A
+   * pass in progress is logged as skipped. The clock is left running for
+   * whatever comes next.
+   */
+  skip(): void {
+    if (this.state === 'done' || this.state === 'idle') return;
+    if (this.state === 'playing' || this.state === 'paused' || this.state === 'count-in') {
+      this.finishPass('skipped', { stop: true });
+    }
+    this.clearScheduled();
+    this.setState('done');
+  }
+
   pause(): void {
     if (this.state !== 'playing' && this.state !== 'count-in') return;
     this.config.clock.pause();
@@ -216,7 +283,7 @@ export class ExerciseRunner {
     if (this.state !== 'paused') return;
     this.config.clock.start();
     // Coming back mid-count-in should look like the count-in again.
-    this.setState(this.config.clock.ticks < this.countInTicks ? 'count-in' : 'playing');
+    this.setState(this.config.clock.ticks < this.countInEndTick ? 'count-in' : 'playing');
   }
 
   /**
@@ -367,7 +434,7 @@ export class ExerciseRunner {
 
     this.variation = rollVariation({
       axes: definition.axes,
-      seed: hashSeed(sessionId, exerciseId, 0, this.rollAttempt),
+      seed: hashSeed(sessionId, this.config.seedKey ?? exerciseId, 0, this.rollAttempt),
       instrument,
       ...(policies ? { policies } : {}),
       held,
@@ -408,7 +475,7 @@ export class ExerciseRunner {
 
     if (this.isFreeTime) {
       // No clock, no count-in, no playhead. The pass ends when the player says.
-      this.countInTicks = 0;
+      this.countInEndTick = 0;
       this.passStartTick = 0;
       this.config.onRepStart?.({
         phrase: this.currentPhrase,
@@ -426,12 +493,12 @@ export class ExerciseRunner {
 
     const phrase = this.currentPhrase;
     const bars = phrase ? ticksPerBar(phrase.timeSignature) : 0;
-    this.countInTicks = bars * (this.config.countInBars ?? 0);
-    this.passStartTick = this.countInTicks;
+    this.countInEndTick = bars * (this.config.countInBars ?? 0);
+    this.passStartTick = this.countInEndTick;
 
-    if (this.countInTicks > 0) {
+    if (this.countInEndTick > 0) {
       this.setState('count-in');
-      this.handles.push(clock.schedule(() => this.setState('playing'), this.countInTicks));
+      this.handles.push(clock.schedule(() => this.setState('playing'), this.countInEndTick));
     } else {
       this.setState('playing');
     }
@@ -517,8 +584,13 @@ export class ExerciseRunner {
       this.continuePass();
       return;
     }
+    if (this.config.endWhenFinished) {
+      // The routine owns the clock from here: its next item counts in on it.
+      this.setState('done');
+      return;
+    }
     this.config.clock.stop();
-    this.setState(this.config.endWhenFinished ? 'done' : 'brief');
+    this.setState('brief');
   }
 
   private clearScheduled(): void {

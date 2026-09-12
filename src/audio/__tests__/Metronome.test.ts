@@ -30,6 +30,22 @@ describe('Metronome', () => {
     expect(clicks).toHaveLength(5);
   });
 
+  it('clicks a count-in in the middle of the clock even when muted', () => {
+    // Between a routine's items: the count-in is the only warning of what is next.
+    const clock = new FakeClock();
+    const { s, clicks } = sink();
+    const metronome = new Metronome(clock, s);
+    metronome.setMuted(true);
+    metronome.start();
+    clock.start();
+    clock.advanceTicks(QUARTER * 7);
+    expect(clicks).toHaveLength(0);
+
+    metronome.countInBetween(QUARTER * 8, QUARTER * 12);
+    clock.advanceTicks(QUARTER * 8);
+    expect(clicks).toHaveLength(4);
+  });
+
   it('clicks once per beat', () => {
     const clock = new FakeClock();
     const { s, clicks } = sink();

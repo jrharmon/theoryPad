@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Exercise, ExerciseStats, Rep, Session, Settings } from './entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from './entities';
 
 /**
  * The only place `dexie` is imported. Everything else goes through a
@@ -8,6 +8,7 @@ import type { Exercise, ExerciseStats, Rep, Session, Settings } from './entities
  */
 export class TheoryPadDB extends Dexie {
   exercises!: Table<Exercise, string>;
+  routines!: Table<Routine, string>;
   sessions!: Table<Session, string>;
   reps!: Table<Rep, string>;
   exerciseStats!: Table<ExerciseStats, string>;
@@ -36,6 +37,9 @@ export class TheoryPadDB extends Dexie {
             delete row.userTags;
           }),
       );
+
+    // Routines arrive in milestone 5. A new table, nothing to migrate.
+    this.version(3).stores({ routines: 'id, updatedAt, deletedAt' });
   }
 }
 

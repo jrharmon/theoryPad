@@ -1,8 +1,8 @@
-import type { Exercise, ExerciseStats, Rep, Session, Settings } from '../entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import { defaultSettings } from './dexie';
-import type { NewExercise, NewRep, NewSession, Repositories } from './types';
+import type { NewExercise, NewRep, NewRoutine, NewSession, Repositories } from './types';
 
 /**
  * An in-memory implementation of the same interfaces.
@@ -13,6 +13,7 @@ import type { NewExercise, NewRep, NewSession, Repositories } from './types';
  */
 export function createMemoryRepositories(now = () => Date.now()): Repositories {
   const exercises = new Map<string, Exercise>();
+  const routines = new Map<string, Routine>();
   const sessions = new Map<string, Session>();
   const reps = new Map<string, Rep>();
   const stats = new Map<string, ExerciseStats>();
@@ -47,6 +48,32 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
       softDelete(id) {
         const existing = exercises.get(id);
         if (existing) exercises.set(id, { ...existing, deletedAt: stamp(), updatedAt: stamp() });
+        return Promise.resolve();
+      },
+    },
+
+    routines: {
+      add(routine: NewRoutine) {
+        const at = stamp();
+        const row: Routine = { ...routine, id: newId(), createdAt: at, updatedAt: at };
+        routines.set(row.id, row);
+        return Promise.resolve(row);
+      },
+      byId(id) {
+        const row = routines.get(id);
+        return Promise.resolve(row?.deletedAt === undefined ? row : undefined);
+      },
+      all: () => Promise.resolve(live([...routines.values()])),
+      update(id, changes) {
+        const existing = routines.get(id);
+        if (!existing) return Promise.reject(new Error(`No routine ${id}`));
+        const row: Routine = { ...existing, ...changes, updatedAt: stamp() };
+        routines.set(id, row);
+        return Promise.resolve(row);
+      },
+      softDelete(id) {
+        const existing = routines.get(id);
+        if (existing) routines.set(id, { ...existing, deletedAt: stamp(), updatedAt: stamp() });
         return Promise.resolve();
       },
     },

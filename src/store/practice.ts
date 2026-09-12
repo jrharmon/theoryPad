@@ -130,10 +130,11 @@ export const usePractice = create<PracticeState>((set, get) => ({
       coverage: await loadCoverage(exercise.id),
       now: () => Date.now(),
 
-      onRepStart: ({ phrase, countInTicks, freeTime, continuation }) => {
+      onRepStart: ({ phrase, countInTicks, freeTime, continuation, countInFrom }) => {
         if (continuation) {
           // Straight on from the last pass: the clock and the click never
           // stopped, so only the notes need scheduling again.
+          if (countInFrom !== undefined) engine.metronome.countInBetween(countInFrom, countInTicks);
           engine.phrase.clear();
           if (phrase) engine.phrase.load(phrase, settings.instrument, countInTicks);
           return;
