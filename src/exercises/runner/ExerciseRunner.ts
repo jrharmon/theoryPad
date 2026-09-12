@@ -247,9 +247,16 @@ export class ExerciseRunner {
   beginNext(countInBars: number): void {
     if (this.state !== 'brief') return;
     const { clock } = this.config;
-    if (clock.state !== 'started' || this.isFreeTime || this.isTheory) {
-      if (this.isTheory) clock.stop();
+    if (this.isFreeTime || this.isTheory) {
+      clock.stop();
       this.begin();
+      return;
+    }
+    if (clock.state !== 'started') {
+      // Coming from something with no clock — a theory set. Start one, still
+      // counted in: it is the only warning of what is next.
+      this.passesThisRun = 0;
+      this.beginPass({ countInBars });
       return;
     }
 
@@ -493,7 +500,7 @@ export class ExerciseRunner {
   }
 
   /** Start playing from the ready state, counting in first. */
-  private beginPass(): void {
+  private beginPass(options: { countInBars?: number } = {}): void {
     const { clock } = this.config;
     this.clearScheduled();
     clock.stop();
@@ -522,7 +529,7 @@ export class ExerciseRunner {
 
     const phrase = this.currentPhrase;
     const bars = phrase ? ticksPerBar(phrase.timeSignature) : 0;
-    this.countInEndTick = bars * (this.config.countInBars ?? 0);
+    this.countInEndTick = bars * (options.countInBars ?? this.config.countInBars ?? 0);
     this.passStartTick = this.countInEndTick;
 
     if (this.countInEndTick > 0) {

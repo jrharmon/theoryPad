@@ -7,6 +7,7 @@ import { overlayFretRange } from '@/domain/neck';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
+import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
 
 /**
@@ -33,6 +34,7 @@ export function PracticeBody() {
       <AxisStrip />
 
       {instance.kind === 'played' && <PlayedBody instance={instance} instrument={instrument} />}
+      {instance.kind === 'theory' && <TheoryBody instance={instance} />}
     </>
   );
 }

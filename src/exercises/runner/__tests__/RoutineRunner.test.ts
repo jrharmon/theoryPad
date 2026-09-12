@@ -4,6 +4,7 @@ import { FakeClock } from '@/domain/time';
 import { QUARTER, ticksPerBar } from '@/domain/phrase';
 import { modesThroughKey } from '../../modes-through-key/definition';
 import { intervalSequences } from '../../interval-sequences/definition';
+import { circleOfFifths } from '../../circle-of-fifths/definition';
 import type { AnyExerciseDefinition } from '../../types';
 import { RoutineRunner, type RoutineRunItem, type RoutineRunnerConfig } from '../RoutineRunner';
 
@@ -193,5 +194,23 @@ describe('RoutineRunner', () => {
     expect(onRepEnd.mock.calls.map((c) => (c[0] as { status: string }).status)).toEqual(['abandoned']);
     expect(routine.snapshot.index).toBe(0);
     expect(clock.state).toBe('stopped');
+  });
+
+  it('counts the next item in by itself after a theory set, on a fresh clock', () => {
+    const onRepStart = vi.fn();
+    const { routine, clock } = makeRoutine(
+      [
+        item('quiz', { definition: circleOfFifths, params: undefined, tempo: { targetTempo: null, maxTempo: null } }),
+        item('play'),
+      ],
+      { onRepStart },
+    );
+    routine.play();
+    expect(clock.state).toBe('stopped');
+    routine.current!.submitSet({ answers: [{ subject: 'key:C', correct: true }] });
+
+    expect(routine.snapshot.index).toBe(1);
+    expect(routine.current!.snapshot.state).toBe('count-in');
+    expect(clock.state).toBe('started');
   });
 });

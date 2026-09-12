@@ -117,8 +117,13 @@ function chordFor(km: KeyMode, degree: number, sevenths: boolean) {
 }
 
 /** "Spell Gmaj7." — pick the right notes from spellings with one note wrong. */
-export function spellChord(km: KeyMode, rng: Rng, sevenths: boolean, id: string): SinglePickQuestion {
-  const degree = rng.int(7) + 1;
+export function spellChord(
+  km: KeyMode,
+  rng: Rng,
+  sevenths: boolean,
+  id: string,
+  degree = rng.int(7) + 1,
+): SinglePickQuestion {
   const { symbol, notes } = chordFor(km, degree, sevenths);
   const wrong = spellingDistractors(notes, rng);
   const { items, index } = withCorrect(notes, wrong, rng);
@@ -147,8 +152,13 @@ export function spellChord(km: KeyMode, rng: Rng, sevenths: boolean, id: string)
 }
 
 /** "Which chord is the subdominant in D Dorian?" */
-export function chordFunction(km: KeyMode, rng: Rng, sevenths: boolean, id: string): SinglePickQuestion {
-  const degree = rng.int(7) + 1;
+export function chordFunction(
+  km: KeyMode,
+  rng: Rng,
+  sevenths: boolean,
+  id: string,
+  degree = rng.int(7) + 1,
+): SinglePickQuestion {
   const others = rng.shuffle([1, 2, 3, 4, 5, 6, 7].filter((d) => d !== degree)).slice(0, 3);
   const { items, index } = withCorrect(degree, others, rng);
   const options = items.map((d) => ({ id: `${id}-${d}`, label: chordFor(km, d, sevenths).symbol }));
@@ -192,6 +202,17 @@ export function diatonicQuestions(options: {
   const sevenths = (i: number) => (depth === 'both' ? i % 2 === 1 : depth === 'sevenths');
   const out: TheoryQuestion[] = [];
   const start = rng.int(types.length);
+  // Each kind of single question works through the degrees in a shuffled
+  // order, so a set does not ask about the same chord twice.
+  const degreeQueues = new Map<DiatonicQuestionType, number[]>();
+  const nextDegree = (type: DiatonicQuestionType) => {
+    let queue = degreeQueues.get(type);
+    if (!queue || queue.length === 0) {
+      queue = rng.shuffle([1, 2, 3, 4, 5, 6, 7]);
+      degreeQueues.set(type, queue);
+    }
+    return queue.shift()!;
+  };
 
   for (let i = 0; out.length < count && i < count * 3; i += 1) {
     let type = types[(start + i) % types.length]!;
@@ -210,9 +231,9 @@ export function diatonicQuestions(options: {
       usedTables.add(type);
       out.push(nameChords(km, sevenths(i) ? 'sevenths' : 'triads', id));
     } else if (type === 'spell-chord') {
-      out.push(spellChord(km, rng, sevenths(i), id));
+      out.push(spellChord(km, rng, sevenths(i), id, nextDegree(type)));
     } else {
-      out.push(chordFunction(km, rng, sevenths(i), id));
+      out.push(chordFunction(km, rng, sevenths(i), id, nextDegree(type)));
     }
   }
   return out;

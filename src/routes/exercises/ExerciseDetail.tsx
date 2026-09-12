@@ -73,58 +73,62 @@ export function ExerciseDetail() {
         </div>
       </div>
 
-      <div className="grid gap-8 px-8 py-7 lg:grid-cols-[320px_1fr]">
-        <div>
-          <Kicker>Tempo</Kicker>
-          <div className="mt-3 space-y-4">
-            <Field
-              label="Target tempo"
-              htmlFor="target-tempo"
-              hint="The tempo you mean to play this at. Moving the tempo while practicing never changes it."
-            >
-              <Input
-                id="target-tempo"
-                type="number"
-                min={30}
-                max={300}
-                className="tabular-nums"
-                value={exercise.tempo.targetTempo ?? ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  void update(exercise.id, {
-                    tempo: {
-                      ...exercise.tempo,
-                      targetTempo: e.target.value === '' ? null : Number(e.target.value),
-                    },
-                  })
-                }
-              />
-            </Field>
+      <div
+        className={`grid gap-8 px-8 py-7 ${definition.kind === 'played' ? 'lg:grid-cols-[320px_1fr]' : ''}`}
+      >
+        {/* A theory exercise has no pulse, so nothing to set a tempo for. */}
+        {definition.kind === 'played' && (
+          <div>
+            <Kicker>Tempo</Kicker>
+            <div className="mt-3 space-y-4">
+              <Field
+                label="Target tempo"
+                htmlFor="target-tempo"
+                hint="The tempo you mean to play this at. Moving the tempo while practicing never changes it."
+              >
+                <Input
+                  id="target-tempo"
+                  type="number"
+                  min={30}
+                  max={300}
+                  className="tabular-nums"
+                  value={exercise.tempo.targetTempo ?? ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    void update(exercise.id, {
+                      tempo: {
+                        ...exercise.tempo,
+                        targetTempo: e.target.value === '' ? null : Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </Field>
 
-            <Field
-              label="Best ever"
-              htmlFor="best-tempo"
-              hint="Record keeping only. Nothing reads this."
-            >
-              <Input
-                id="best-tempo"
-                type="number"
-                min={30}
-                max={300}
-                className="tabular-nums"
-                value={exercise.tempo.maxTempo ?? ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  void update(exercise.id, {
-                    tempo: {
-                      ...exercise.tempo,
-                      maxTempo: e.target.value === '' ? null : Number(e.target.value),
-                    },
-                  })
-                }
-              />
-            </Field>
-
+              <Field
+                label="Best ever"
+                htmlFor="best-tempo"
+                hint="Record keeping only. Nothing reads this."
+              >
+                <Input
+                  id="best-tempo"
+                  type="number"
+                  min={30}
+                  max={300}
+                  className="tabular-nums"
+                  value={exercise.tempo.maxTempo ?? ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    void update(exercise.id, {
+                      tempo: {
+                        ...exercise.tempo,
+                        maxTempo: e.target.value === '' ? null : Number(e.target.value),
+                      },
+                    })
+                  }
+                />
+              </Field>
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           {definition.params && (
@@ -142,7 +146,7 @@ export function ExerciseDetail() {
 
           <Kicker>What varies</Kicker>
           <p className="mb-3 max-w-[560px] text-[13px] text-ink/60">
-            <strong>Roll</strong> picks a new value each rep. <strong>Fixed</strong> pins one.{' '}
+            <strong>Roll</strong> picks a new value each time you open it or re-roll. <strong>Fixed</strong> pins one.{' '}
             <strong>Hold</strong> keeps whatever came up last and stays there until you press
             re-roll — for working one key for a while without pinning it forever. When rolling,
             click values to leave them out.

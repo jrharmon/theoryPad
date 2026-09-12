@@ -17,7 +17,10 @@ export function RunningChrome({ name }: { name: string }) {
     const current = findExerciseDefinition(items[index]?.definitionId ?? '')?.name;
     const next = findExerciseDefinition(items[index + 1]?.definitionId ?? '')?.name;
     return (
-      <div className="flex items-center gap-4 bg-ink px-6 py-3 text-bg" data-testid="routine-chrome">
+      <div
+        className="flex items-center gap-4 bg-ink px-6 py-3 text-bg"
+        data-testid="routine-chrome"
+      >
         <span className="text-[16px] font-extrabold tabular-nums">
           {String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
         </span>
@@ -39,7 +42,9 @@ export function RunningChrome({ name }: { name: string }) {
 
   const { passesPlayed, state, phraseTick } = snapshot;
   const paused = state === 'paused';
-  const running = state === 'playing' || state === 'count-in' || paused;
+  // A theory set has no clock: nothing to pause, and no phrase to be through.
+  const theory = instance?.kind === 'theory';
+  const running = !theory && (state === 'playing' || state === 'count-in' || paused);
   const total = instance?.kind === 'played' ? instance.phrase.totalTicks : 0;
   const progress = running && total > 0 ? Math.min(1, phraseTick / total) : 0;
 
@@ -47,11 +52,19 @@ export function RunningChrome({ name }: { name: string }) {
     <div className="flex items-center gap-4 bg-ink px-6 py-3 text-bg">
       <span className="text-[13px] font-semibold">{name}</span>
       <span className="text-[13px] tabular-nums opacity-75" data-testid="passes">
-        {passesPlayed === 1 ? '1 pass' : `${passesPlayed} passes`}
+        {theory
+          ? passesPlayed === 1
+            ? '1 set'
+            : `${passesPlayed} sets`
+          : passesPlayed === 1
+            ? '1 pass'
+            : `${passesPlayed} passes`}
       </span>
 
-      <div className="h-1.5 flex-1 bg-bg/25" aria-hidden>
-        <div className="h-full bg-accent" style={{ width: `${progress * 100}%` }} />
+      <div className={`h-1.5 flex-1 ${theory ? '' : 'bg-bg/25'}`} aria-hidden>
+        {!theory && (
+          <div className="h-full bg-accent" style={{ width: `${progress * 100}%` }} />
+        )}
       </div>
 
       {running && (

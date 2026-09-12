@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { paramFields, resolveParams } from '@/exercises/params';
 import { Field } from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -73,6 +74,35 @@ export function ParamsEditor({
                   set(field.key, Number(e.target.value))
                 }
               />
+            )}
+            {field.kind === 'multi' && (
+              <div className="flex flex-wrap gap-1" role="group" aria-label={field.label}>
+                {field.options.map((o) => {
+                  const chosen = Array.isArray(value) ? (value as string[]) : [];
+                  const on = chosen.includes(o.value);
+                  return (
+                    <Button
+                      key={o.value}
+                      size="xs"
+                      variant={on ? 'secondary' : 'ghost'}
+                      className={on ? '' : 'text-ink/35 line-through'}
+                      aria-pressed={on}
+                      // Keep the schema's order, and never drop below its minimum.
+                      disabled={on && chosen.length <= field.min}
+                      onClick={() =>
+                        set(
+                          field.key,
+                          field.options
+                            .map((x) => x.value)
+                            .filter((v) => (v === o.value ? !on : chosen.includes(v))),
+                        )
+                      }
+                    >
+                      {o.label}
+                    </Button>
+                  );
+                })}
+              </div>
             )}
             {field.kind === 'toggle' && (
               <input

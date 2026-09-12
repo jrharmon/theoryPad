@@ -156,10 +156,8 @@ export function circleQuestions(options: {
   const pool = types.length > 0 ? types : (['signature-to-key'] as const);
   const start = rng.int(pool.length);
 
-  return Array.from({ length: count }, (_, i) => {
-    const type = pool[(start + i) % pool.length]!;
+  const make = (type: CircleQuestionType, id: string): SinglePickQuestion => {
     const p = rng.pick([...CIRCLE_POSITIONS]);
-    const id = `q${i + 1}`;
     switch (type) {
       case 'signature-to-key':
         return signatureToKey(p, rng, id);
@@ -174,6 +172,17 @@ export function circleQuestions(options: {
       case 'mode-signature':
         return modeSignature(rng, id);
     }
+  };
+
+  // The same question twice in one set is wasted; a few tries finds another.
+  const seen = new Set<string>();
+  return Array.from({ length: count }, (_, i) => {
+    const type = pool[(start + i) % pool.length]!;
+    const id = `q${i + 1}`;
+    let question = make(type, id);
+    for (let tries = 0; seen.has(question.prompt) && tries < 8; tries += 1) question = make(type, id);
+    seen.add(question.prompt);
+    return question;
   });
 }
 

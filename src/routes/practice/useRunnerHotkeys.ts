@@ -43,6 +43,13 @@ export function useRunnerHotkeys({
       const state = practice.snapshot?.state;
       if (!state || state === 'done') return;
 
+      // Mid-set, Enter and the number keys are the question screen's.
+      if (practice.instance?.kind === 'theory' && state === 'playing') {
+        if (event.key === 'Escape') onLeave();
+        else if (event.key === 's' || event.key === 'S') practice.skip();
+        return;
+      }
+
       switch (event.key) {
         case ' ':
           event.preventDefault();

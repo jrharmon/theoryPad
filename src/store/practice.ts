@@ -68,6 +68,8 @@ interface PracticeState {
   reroll: () => void;
   /** Routine only: move to the next item now. */
   skip: () => void;
+  /** Theory: the set is answered. */
+  submitSet: (answers: { subject: string; correct: boolean }[]) => void;
   /** Routine overview only: a fresh roll of everything, key and mode included. */
   rerollAll: () => void;
   /** Routine overview only: a fresh roll of one item. */
@@ -331,6 +333,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
     else runner?.reroll();
   },
   skip: () => get().routine?.skip(),
+  submitSet: (answers) => get().runner?.submitSet({ answers }),
   rerollAll: () => get().routine?.rerollAll(),
   rerollItem: (index) => get().routine?.rerollItem(index),
   setFreeTime: (freeTime) => get().runner?.setFreeTime(freeTime),

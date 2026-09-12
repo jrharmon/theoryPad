@@ -202,3 +202,30 @@ describe('the circle', () => {
     expect(set.every((q) => !q.subject.startsWith('mode:'))).toBe(true);
   });
 });
+
+describe('a set does not repeat itself', () => {
+  it('asks about different chords within one diatonic set', () => {
+    for (let seed = 0; seed < 10; seed += 1) {
+      const prompts = diatonicQuestions({
+        keyMode: D_DORIAN,
+        rng: mulberry32(seed),
+        types: ['spell-chord', 'chord-function'],
+        depth: 'triads',
+        count: 12,
+      }).map((q) => q.prompt);
+      expect(new Set(prompts).size).toBe(prompts.length);
+    }
+  });
+
+  it('asks different circle questions within one set', () => {
+    for (let seed = 0; seed < 10; seed += 1) {
+      const prompts = circleQuestions({
+        rng: mulberry32(seed),
+        types: ['key-to-signature', 'signature-to-key'],
+        count: 10,
+        includeModes: false,
+      }).map((q) => q.prompt);
+      expect(new Set(prompts).size).toBe(prompts.length);
+    }
+  });
+});

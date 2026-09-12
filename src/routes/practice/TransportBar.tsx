@@ -23,6 +23,8 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
 
   const { state, currentTempo, targetTempo } = snapshot;
   const phrase = instance?.kind === 'played' ? instance.phrase : null;
+  // A theory set has no pulse: no tempo, no click, nothing to pause.
+  const theory = instance?.kind === 'theory';
   const position = phrase ? tickToBarBeat(phrase, snapshot.phraseTick) : null;
   const running = state === 'playing' || state === 'count-in';
 
@@ -30,11 +32,11 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
     <div className="flex flex-wrap items-center gap-3 px-8 py-3">
       {state === 'brief' && (
         <Button size="lg" onClick={() => void practice.play()} data-testid="play">
-          Play
+          {theory ? (snapshot.lastSet ? 'Again' : 'Start') : 'Play'}
         </Button>
       )}
 
-      {(running || state === 'paused') && (
+      {!theory && (running || state === 'paused') && (
         <Button
           size="lg"
           variant={state === 'paused' ? 'default' : 'secondary'}
@@ -45,7 +47,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </Button>
       )}
 
-      {currentTempo !== null && (
+      {!theory && currentTempo !== null && (
         <div className="flex items-center gap-1">
           <Button
             variant="secondary"
@@ -75,7 +77,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </div>
       )}
 
-      <PlaybackToggles />
+      {!theory && <PlaybackToggles />}
 
       {state === 'count-in' && (
         <span className="text-[13px] font-extrabold tabular-nums">Counting in…</span>

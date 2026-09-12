@@ -206,15 +206,20 @@ export class RoutineRunner {
       return runner;
     });
 
-    this.unsubscribers = this.runners.map((runner, i) =>
-      runner.subscribe((snapshot) => {
+    this.unsubscribers = this.runners.map((runner, i) => {
+      // What the item was doing before it finished: playing or answering means
+      // the routine carries straight on; stopped or paused means it waits.
+      let before = runner.snapshot.state;
+      return runner.subscribe((snapshot) => {
+        const was = before;
+        before = snapshot.state;
         if (i === this.index && this.phase === 'running' && snapshot.state === 'done') {
-          this.advance();
+          this.advance(was === 'playing' || was === 'count-in');
           return;
         }
         this.emit();
-      }),
-    );
+      });
+    });
 
     this.phase = 'overview';
     this.index = 0;
@@ -289,14 +294,13 @@ export class RoutineRunner {
   }
 
   /**
-   * The current item is finished — played out or skipped. If the clock is
-   * running the next one counts in on it; if nothing was playing, it waits
-   * for Play.
+   * The current item is finished — played out, answered, or skipped. If it
+   * was going, the next counts in straight away; if it was stopped or
+   * paused, the next waits for Play.
    */
-  private advance(): void {
-    const running = this.config.clock.state === 'started';
-    if (!running) this.config.clock.stop();
-    this.moveOn({ start: running });
+  private advance(active: boolean): void {
+    if (!active) this.config.clock.stop();
+    this.moveOn({ start: active });
   }
 
   private moveOn({ start }: { start: boolean }): void {
