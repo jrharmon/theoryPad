@@ -7,6 +7,11 @@ import { Kicker } from '@/components/ui/kicker';
 import { DayBarChart } from '@/components/charts/DayBarChart';
 import { useExercises } from '@/store/exercises';
 import { useReport } from '@/store/report';
+import { useRoutines } from '@/store/routines';
+import { downloadFile } from '@/lib/download';
+import { findExerciseDefinition } from '@/exercises/registry';
+import type { Palette } from './export';
+import { reportCsv, reportHtml } from './export';
 import type { SortColumn } from './model';
 import { buildReport, formatRange, formatTempos, sortRows } from './model';
 
@@ -38,9 +43,23 @@ function Stat({ label, value, testId }: { label: string; value: string; testId: 
   );
 }
 
+/** The file's colors, from the same tokens the app is drawn with. */
+function themePalette(): Palette {
+  const style = getComputedStyle(document.documentElement);
+  const token = (name: string) => style.getPropertyValue(name).trim();
+  return {
+    ink: token('--color-ink'),
+    bg: token('--color-bg'),
+    rule: token('--color-neutral-300'),
+    muted: token('--color-neutral-600'),
+    accent: token('--color-accent'),
+  };
+}
+
 /** What you practiced over a range: four numbers, time by day, and one table. */
 export function ReportPage() {
-  const { today, reps, days, from, to, load, touch } = useReport();
+  const { today, reps, days, sessions, from, to, load, touch } = useReport();
+  const { routines, load: loadRoutines } = useRoutines();
   const { exercises, load: loadExercises } = useExercises();
   const [choice, setChoice] = useState<Choice>('last-7');
   const [custom, setCustom] = useState<{ from: DayKey; to: DayKey }>(() =>
@@ -54,7 +73,8 @@ export function ReportPage() {
   useEffect(() => {
     touch();
     void loadExercises();
-  }, [touch, loadExercises]);
+    void loadRoutines();
+  }, [touch, loadExercises, loadRoutines]);
 
   const range = choice === 'custom' ? custom : presetRange(choice, today);
   useEffect(() => {
@@ -69,6 +89,29 @@ export function ReportPage() {
     () => (report ? sortRows(report.rows, sort.column, sort.descending) : []),
     [report, sort],
   );
+
+  const exportHtml = () => {
+    if (!report) return;
+    downloadFile(
+      `theorypad-report-${report.from}-to-${report.to}.html`,
+      reportHtml({ ...report, rows }, themePalette()),
+      'text/html',
+    );
+  };
+
+  const exportCsv = () => {
+    if (!report) return;
+    const routineBySession = new Map(sessions.map((s) => [s.id, s.routineId]));
+    const routineName = new Map(routines.map((r) => [r.id, r.name]));
+    const csv = reportCsv(reps, {
+      exercise: (rep) => findExerciseDefinition(rep.definitionId)?.name ?? rep.definitionId,
+      routine: (rep) => {
+        const routineId = routineBySession.get(rep.sessionId);
+        return routineId ? (routineName.get(routineId) ?? null) : null;
+      },
+    });
+    downloadFile(`theorypad-log-${report.from}-to-${report.to}.csv`, csv, 'text/csv');
+  };
 
   const sortBy = (column: SortColumn) =>
     setSort((s) =>
@@ -127,6 +170,14 @@ export function ReportPage() {
             />
           </div>
         )}
+        <div className="ml-auto flex gap-1">
+          <Button size="sm" variant="secondary" disabled={!report} onClick={exportHtml}>
+            Export report
+          </Button>
+          <Button size="sm" variant="secondary" disabled={!report} onClick={exportCsv}>
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {report && (

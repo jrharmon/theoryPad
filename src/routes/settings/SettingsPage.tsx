@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSettings } from '@/store/settings';
+import { downloadFile } from '@/lib/download';
 import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
 
 export function SettingsPage() {
@@ -194,13 +195,11 @@ function DataSection() {
 
   const download = async () => {
     const data = await exportData(db());
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `theorypad-${new Date(data.exportedAt).toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      `theorypad-${new Date(data.exportedAt).toISOString().slice(0, 10)}.json`,
+      JSON.stringify(data, null, 2),
+      'application/json',
+    );
   };
 
   const choose = async (picked: File | undefined) => {
