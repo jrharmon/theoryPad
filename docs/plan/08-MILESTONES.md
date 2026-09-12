@@ -205,7 +205,7 @@ Notes from the M3 review, built before M5:
 
 ---
 
-## M4 — Theory exercises ✅ *complete (2026-09-12), awaiting review*
+## M4 — Theory exercises ✅ *complete (2026-09-12), reviewed*
 
 _Now after M5: routines matter more to daily practice than theory drills, and the M3 review's
 notes were mostly about routines._
@@ -241,10 +241,12 @@ partial credit. No countdown; a set is timed as a whole, not question by questio
   wrong accidental, semitone neighbour; one note wrong in a chord; the mirror signature; the
   parallel key; the same tonic's major for a mode.
 - **Circle weighting toward misses is deferred to M6**; the data it needs is logged now.
+- **At review: traps occasionally, not on every question.** About one question in three sets
+  a near miss (`TRICK_RATE`); the rest offer plain alternatives.
 
 ---
 
-## M5 — Routines, the session runner & settings ✅ *complete (2026-09-12), awaiting review*
+## M5 — Routines, the session runner & settings ✅ *complete (2026-09-12), reviewed*
 
 _Where the "hands-off run" premise finally works._
 

@@ -226,7 +226,9 @@ function questions work through the degrees in a shuffled order so a set never r
 | `chord-function` | single-pick               | "Which chord is the subdominant in D Dorian?" — the `by-function` grouping you described. |
 
 **Distractor generation matters more than the question.** A drill where the wrong answers are
-obviously wrong teaches nothing. Rules: for note answers, use chromatic neighbours and the
+obviously wrong teaches nothing. _(At the M4 review: but a drill made only of traps is a game
+about spotting the trap. About one question in three sets a near miss; the rest offer plain
+alternatives — the key's other notes, its other chords.)_ Rules: for note answers, use chromatic neighbours and the
 enharmonic spelling (offer `A♯` when `B♭` is correct); for chord qualities, use the qualities
 that appear elsewhere in the same key; for spellings, alter exactly one note. This lives in
 _(new shared generator: `distractors`)_ and is worth real test coverage.
