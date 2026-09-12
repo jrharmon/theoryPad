@@ -6,10 +6,15 @@
  *
  * This test lints in-memory fixtures to assert the boundaries actually fire.
  */
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { ESLint } from 'eslint';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+// Real, type-aware ESLint: the first lint builds a TypeScript program over the
+// project, which takes a couple of seconds here and more than the default 5
+// on a CI runner. It failed CI that way from the practice-view merge on.
+vi.setConfig({ testTimeout: 30_000 });
 
 const eslint = new ESLint({ cwd: process.cwd() });
 
