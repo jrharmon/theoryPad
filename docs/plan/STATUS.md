@@ -9,7 +9,7 @@
 | Milestone | State |
 | --- | --- |
 | M0–M3, M3 follow-up | ✅ complete, merged, live |
-| **M5 — Routines, settings, export/import** | **✅ built on `m5-routines`, awaiting review** |
+| M5 — Routines, settings, export/import | ✅ reviewed, merged, live |
 | M4 — Theory | next |
 | M6–M10 | not started |
 
