@@ -6,3 +6,4 @@ export * from './db';
 export * from './repositories/types';
 export * from './repositories/dexie';
 export * from './repositories/memory';
+export * from './transfer';

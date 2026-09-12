@@ -39,10 +39,9 @@ export const BASS_4_STRING = make('bass-standard', 'Bass — 4 string', [
 ], 20);
 
 /**
- * Every instrument the domain is tested against. Only STANDARD_GUITAR is
- * offered in the UI in v1, but the others are in the test matrix from day one
- * so a hard-coded string count fails a test rather than surviving until
- * someone picks up a seven-string.
+ * Every instrument the domain is tested against. They are in the test matrix
+ * from day one so a hard-coded string count fails a test rather than
+ * surviving until someone picks up a seven-string.
  */
 export const TEST_INSTRUMENTS = [
   STANDARD_GUITAR,
@@ -52,3 +51,10 @@ export const TEST_INSTRUMENTS = [
 ] as const;
 
 export const DEFAULT_INSTRUMENT = STANDARD_GUITAR;
+
+/**
+ * What the settings page offers: the guitar tunings every exercise is tested
+ * against. DADGAD is not in the exercise matrix yet, and the bass is there to
+ * catch string-count assumptions rather than to practice these exercises on.
+ */
+export const OFFERED_INSTRUMENTS = [STANDARD_GUITAR, DROP_D_GUITAR, SEVEN_STRING_GUITAR] as const;

@@ -8,6 +8,7 @@ import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
 import { RoutineBuilder } from '@/routes/routines/RoutineBuilder';
+import { SettingsPage } from '@/routes/settings/SettingsPage';
 
 /**
  * Hash routing: GitHub Pages serves from a subpath and has no SPA fallback,
@@ -48,16 +49,7 @@ export const router = createHashRouter([
           />
         ),
       },
-      {
-        path: 'settings',
-        element: (
-          <Placeholder
-            title="Settings"
-            milestone="Milestone 5"
-            summary="Instrument, audio, practice defaults, and data export/import."
-          />
-        ),
-      },
+      { path: 'settings', element: <SettingsPage /> },
       // Development only: the M1 primitives against fixture data.
       { path: 'dev/gallery', element: <Gallery /> },
       {

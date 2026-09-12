@@ -306,6 +306,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
     const { getAudioEngine } = await import('@/audio');
     const engine = getAudioEngine();
     await engine.init();
+    engine.setMasterVolume(useSettings.getState().settings.audio.masterVolumeDb);
     set({ audioReady: true });
 
     if (routine) {
