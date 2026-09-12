@@ -15,6 +15,7 @@ import { PracticeSettingsDialog } from './PracticeSettingsDialog';
 import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
+import { clampZoom, nudgeTabZoom } from './tabZoom';
 
 /**
  * Opening an exercise puts you straight into it: the variation is rolled and
@@ -142,31 +143,35 @@ function PlayedBody({
   const hasNeck = instance.neck.notes.length > 0;
   const showNeck = hasNeck && ui.showNeck;
   // One size for every exercise. The tab works out how many bars fit.
-  const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, ui.tabZoom));
-  const setZoom = (next: number) => void save({ ui: { ...ui, tabZoom: next } });
+  const zoom = clampZoom(ui.tabZoom);
 
   return (
     <div className={`grid gap-6 px-8 py-6 ${showNeck ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
       <div className="min-w-0">
         <div className="flex items-center gap-3">
           <Kicker>Tab · generated for this variation</Kicker>
-          <div className="ml-auto flex items-center gap-1" role="group" aria-label="Tab zoom">
+          <div className="ml-auto flex items-center gap-1.5" role="group" aria-label="Tab size">
             {/* Smaller fits more bars on a line; bigger, fewer. */}
+            <span className="kicker mr-1" aria-hidden>
+              Tab size
+            </span>
             <Button
               variant="secondary"
-              size="icon-xs"
-              aria-label="Zoom out"
+              size="icon-sm"
+              aria-label="Smaller"
+              title="Smaller  ( - )"
               disabled={zoom <= ZOOM_MIN}
-              onClick={() => setZoom(zoom - 1)}
+              onClick={() => nudgeTabZoom(-1)}
             >
               −
             </Button>
             <Button
               variant="secondary"
-              size="icon-xs"
-              aria-label="Zoom in"
+              size="icon-sm"
+              aria-label="Bigger"
+              title="Bigger  ( = )"
               disabled={zoom >= ZOOM_MAX}
-              onClick={() => setZoom(zoom + 1)}
+              onClick={() => nudgeTabZoom(1)}
             >
               +
             </Button>

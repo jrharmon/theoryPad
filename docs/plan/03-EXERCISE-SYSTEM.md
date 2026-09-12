@@ -403,7 +403,7 @@ The rules, from the player:
   clock, so the metronome, playhead and backing stop together (they share one `Clock`).
 - **Re-roll highlights the axes it changed.**
 - Keyboard: space = pause, `[`/`]` = tempo, `Enter` = play, `R` = re-roll, `M` = metronome,
-  `L` = loop, `Esc` = leave, `1`–`6` = theory answers.
+  `L` = loop, `-`/`=` = tab size, `Esc` = leave, `1`–`6` = theory answers.
 
 Because the state machine is driven entirely by the injected `Clock`, all of the above is
 unit-testable with `FakeClock` and no audio at all.

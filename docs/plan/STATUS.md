@@ -27,10 +27,10 @@ a paid plan for Pages.
   app-wide. A **Settings** dialog changes tempo, params and what varies without leaving; only
   the axes you changed roll again. Every pass is logged; leaving logs one in progress. No
   reps, no Skip, no End.
-- **Tab**: bar lines, zoom (bars per line follow the available width), neck show/hide; the
-  neck shows only the frets in use.
+- **Tab**: bar lines; a labeled **Tab size** control (and `-` / `=`) — bars per line follow
+  the available width; neck show/hide; the neck shows only the frets in use.
 - **Keys**: Space pause · Enter play · `[` `]` tempo · R re-roll · M metronome · L loop ·
-  Esc leave.
+  `-` `=` tab size · Esc leave.
 - The config page: tempo, Settings (from each exercise's params), What varies with
   roll-from-subset chips.
 

@@ -323,3 +323,22 @@ test('a variant chosen on the config page is what gets played', async ({ page })
   await page.getByRole('link', { name: 'Practice this' }).click();
   await expect(page.getByText('holding every root')).toBeVisible();
 });
+
+test('the tab size changes from its buttons and from - and =', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  const bigger = page.getByRole('button', { name: 'Bigger' });
+  const smaller = page.getByRole('button', { name: 'Smaller' });
+  await expect(page.getByText('Tab size')).toBeVisible();
+
+  // Two steps up from the default is as big as it goes.
+  await page.keyboard.press('=');
+  await page.keyboard.press('=');
+  await expect(bigger).toBeDisabled();
+
+  await page.keyboard.press('-');
+  await expect(bigger).toBeEnabled();
+  await smaller.click();
+  await smaller.click();
+  await smaller.click();
+  await expect(smaller).toBeDisabled();
+});

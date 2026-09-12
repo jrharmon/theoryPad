@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
+import { nudgeTabZoom } from './tabZoom';
 
 /**
  * The app has to be operable with a guitar in your hands, so the running view
@@ -57,6 +58,16 @@ export function useRunnerHotkeys({
         case 'l':
         case 'L':
           void practice.setLoop(!useSettings.getState().settings.audio.loop);
+          break;
+        // Tab size. `=` and `-` sit together and need no Shift; `+` and `_`
+        // are the same keys with it held.
+        case '=':
+        case '+':
+          nudgeTabZoom(1);
+          break;
+        case '-':
+        case '_':
+          nudgeTabZoom(-1);
           break;
         case 'Escape':
           onLeave();

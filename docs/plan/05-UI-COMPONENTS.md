@@ -290,6 +290,7 @@ The app must be operable with a guitar in your hands. Global, in the runner:
 | `1`–`6`   | Answer a single-pick theory question                  |
 | `R`       | Re-roll this exercise's variation                     |
 | `M` / `L` | Metronome on/off · loop on/off                        |
+| `-` / `=` | Tab size smaller / bigger                             |
 | `Esc`     | Leave the exercise (every pass is already logged)     |
 
 Keys with Cmd/Ctrl/Alt held are never taken, so browser shortcuts such as Cmd+[ still work.
