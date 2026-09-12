@@ -1,5 +1,5 @@
 import type { Chroma, KeyMode, ModeName } from '@/domain/music';
-import { MODE_NAMES, chroma, preferredTonic } from '@/domain/music';
+import { MODE_NAMES, chroma, modeTitle, preferredTonic } from '@/domain/music';
 import { cn } from 'cn';
 
 const SHADES = ['bg-neutral-200', 'bg-neutral-400', 'bg-neutral-600', 'bg-ink'];
@@ -10,7 +10,7 @@ function shade(n: number, max: number): string {
   return share < 0.34 ? SHADES[1]! : share < 0.67 ? SHADES[2]! : SHADES[3]!;
 }
 
-const title = (mode: ModeName) => mode.charAt(0).toUpperCase() + mode.slice(1);
+const title = modeTitle;
 
 /**
  * Every key in every mode, shaded by finished passes. Picking a cell shows

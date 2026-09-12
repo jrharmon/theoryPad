@@ -9,6 +9,7 @@ import { PracticeBody } from './PracticeBody';
 import { PracticeSettingsDialog } from './PracticeSettingsDialog';
 import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
+import { useKeyModeView } from '@/store/keyModeView';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
 
 /**
@@ -43,7 +44,8 @@ export function PracticeExercise() {
   useEffect(() => () => void usePractice.getState().end(), []);
 
   const leave = useCallback(() => void navigate('/exercises'), [navigate]);
-  useRunnerHotkeys({ onLeave: leave, enabled: !settingsOpen });
+  const referenceOpen = useKeyModeView((s) => s.popover || s.sheet);
+  useRunnerHotkeys({ onLeave: leave, enabled: !settingsOpen && !referenceOpen });
 
   const openSettings = () => {
     // Nothing should keep playing behind a dialog.

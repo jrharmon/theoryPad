@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import type { Instrument } from '@/domain/instrument';
 import { axisDefinition, toggleSubset } from '@/domain/variation';
 import type { AxisDefinition, AxisId, AxisPolicy } from '@/domain/variation';
+import type { ModeName, PitchClass } from '@/domain/music';
+import { MODE_NAMES, modeTitle } from '@/domain/music';
 import { Button } from '@/components/ui/button';
+import { KeyModeTrigger } from '@/components/music/KeyModeTrigger';
 import {
   Select,
   SelectContent,
@@ -29,6 +32,21 @@ export function AxisPolicyEditor({
   instrument: Instrument;
   onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
+  // A key and a mode both settled — fixed, or held with a value — have a
+  // reference to show. A rolled one has nothing to show until it rolls.
+  const settled = (id: AxisId): string | undefined => {
+    const policy = policies[id] ?? { mode: 'roll' };
+    if (policy.mode === 'fixed') return policy.value;
+    if (policy.mode === 'hold') return held[id];
+    return undefined;
+  };
+  const tonic = axes.includes('key') ? settled('key') : undefined;
+  const mode = axes.includes('mode') ? settled('mode') : undefined;
+  const keyMode =
+    tonic && mode && MODE_NAMES.includes(mode as ModeName)
+      ? { tonic: tonic as PitchClass, mode: mode as ModeName }
+      : null;
+
   return (
     <div className="border border-divider">
       {axes.map((id, index) => (
@@ -42,6 +60,14 @@ export function AxisPolicyEditor({
           onChange={(policy) => onChange(id, policy)}
         />
       ))}
+      {keyMode && (
+        <div className="border-t border-divider px-3 py-2 text-[13px] text-ink/70" data-testid="key-mode-reference">
+          Notes and chords of{' '}
+          <KeyModeTrigger keyMode={keyMode}>
+            {keyMode.tonic} {modeTitle(keyMode.mode)}
+          </KeyModeTrigger>
+        </div>
+      )}
     </div>
   );
 }

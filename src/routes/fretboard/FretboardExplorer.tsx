@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Chroma, KeyMode, ModeName } from '@/domain/music';
 import {
   MODE_NAMES,
+  modeTitle,
   canonicalKeyMode,
   chroma,
   scaleDegrees,
@@ -19,7 +20,7 @@ import {
   neckCounts,
   neckSummary,
 } from '@/domain/progress';
-import { Fretboard } from '@/components/music';
+import { Fretboard, KeyModeView } from '@/components/music';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,7 +30,7 @@ import { KeyModeGrid } from './KeyModeGrid';
 
 type Layer = 'off' | 'all' | 'recent';
 
-const title = (mode: ModeName) => mode.charAt(0).toUpperCase() + mode.slice(1);
+const title = modeTitle;
 
 function Toggle<T extends string>({
   label,
@@ -267,7 +268,7 @@ export function FretboardExplorer() {
             <KeyModeGrid grid={grid} selected={keyMode} onSelect={choose} />
           </div>
         </div>
-        <div data-testid="key-mode-slot" />
+        <KeyModeView keyMode={keyMode} variant="full" className="max-w-[620px]" />
       </div>
     </section>
   );

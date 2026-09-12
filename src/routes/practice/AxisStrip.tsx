@@ -1,5 +1,6 @@
 import { axisDefinition } from '@/domain/variation';
 import { usePractice } from '@/store/practice';
+import { ReferenceTrigger } from './ReferenceTrigger';
 
 /**
  * The rolled variation, one cell per axis.
@@ -57,7 +58,16 @@ export function AxisStrip() {
             {cell.label}
             {cell.fresh && <span className="ml-1 font-bold"> ▲ new</span>}
           </p>
-          <p className="text-[19px] font-extrabold">{cell.value}</p>
+          {cell.key === 'key' ? (
+            <ReferenceTrigger
+              keyMode={snapshot.keyMode}
+              className="text-left text-[19px] font-extrabold underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current"
+            >
+              {cell.value}
+            </ReferenceTrigger>
+          ) : (
+            <p className="text-[19px] font-extrabold">{cell.value}</p>
+          )}
           {cell.note && <p className="text-[11px] text-ink/55 tabular-nums">{cell.note}</p>}
         </div>
       ))}

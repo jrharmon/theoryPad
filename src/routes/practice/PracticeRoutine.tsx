@@ -13,6 +13,8 @@ import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
 import { RunningChrome } from './RunningChrome';
 import { PlaybackToggles, TransportBar } from './TransportBar';
+import { useKeyModeView } from '@/store/keyModeView';
+import { ReferenceTrigger } from './ReferenceTrigger';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
 
 /**
@@ -47,7 +49,8 @@ export function PracticeRoutine() {
   useEffect(() => () => void usePractice.getState().end(), []);
 
   const leave = useCallback(() => void navigate('/home'), [navigate]);
-  useRunnerHotkeys({ onLeave: leave });
+  const referenceOpen = useKeyModeView((s) => s.popover || s.sheet);
+  useRunnerHotkeys({ onLeave: leave, enabled: !referenceOpen });
 
   if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/55">Loading…</p>;
   if (!routine) {
@@ -99,7 +102,11 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
         <Kicker accent>Routine · about {formatDuration(total)}</Kicker>
         <h1 className="text-[42px]">{routine.name}</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
-          Everything in <strong>{key}</strong>. Read it through, re-roll anything you would rather
+          Everything in{' '}
+          <ReferenceTrigger keyMode={snapshot.keyMode}>
+            <strong>{key}</strong>
+          </ReferenceTrigger>
+          . Read it through, re-roll anything you would rather
           not play, then start — it runs to the end on its own.
         </p>
       </div>

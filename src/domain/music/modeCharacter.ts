@@ -136,3 +136,8 @@ export const MODE_CHARACTER: Record<ModeName, ModeCharacter> = {
 export function modeCharacter(mode: ModeName): ModeCharacter {
   return MODE_CHARACTER[mode];
 }
+
+/** "dorian" → "Dorian". */
+export function modeTitle(mode: ModeName): string {
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
+import { useKeyModeView } from '@/store/keyModeView';
 import { nudgeTabZoom } from './tabZoom';
 
 /**
@@ -23,6 +24,10 @@ export function useRunnerHotkeys({
       const target = event.target as HTMLElement | null;
       // Never steal keys from a field the player is typing in.
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      // Nor from a dialog or popover. Checked on the event, not only through
+      // `enabled`: closing one on Escape re-renders mid-dispatch, re-attaching
+      // this listener in time to hear the same Escape and leave the exercise.
+      if (target?.closest('[role="dialog"], [data-radix-popper-content-wrapper]')) return;
       // Browser and OS shortcuts — Cmd+[ is back — are not ours.
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 
@@ -34,6 +39,8 @@ export function useRunnerHotkeys({
         if (event.key === 'Enter' && phase === 'overview') {
           event.preventDefault();
           void practice.play();
+        } else if (event.key === 'k' || event.key === 'K') {
+          useKeyModeView.getState().togglePopover();
         } else if (event.key === 'Escape') {
           onLeave();
         }
@@ -93,6 +100,11 @@ export function useRunnerHotkeys({
         case '-':
         case '_':
           nudgeTabZoom(-1);
+          break;
+        // The key and mode's notes and chords, without stopping anything.
+        case 'k':
+        case 'K':
+          useKeyModeView.getState().togglePopover();
           break;
         case 'Escape':
           onLeave();
