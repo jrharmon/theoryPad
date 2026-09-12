@@ -84,3 +84,12 @@ export function tempoHistory(
     .flatMap((r) => (r.tempo === null ? [] : [{ at: r.startedAt, tempo: r.tempo }]))
     .sort((a, b) => a.at - b.at);
 }
+
+/** Practice time the way the report writes it: "2h 41m", "34m", "<1m". */
+export function formatPracticeTime(seconds: number): string {
+  if (seconds <= 0) return '0m';
+  if (seconds < 60) return '<1m';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`;
+}

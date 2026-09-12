@@ -12,6 +12,7 @@ import {
   daysBetween,
   emptyDay,
   exerciseLog,
+  formatPracticeTime,
   fretTally,
   intensity,
   keyModeCounts,
@@ -267,6 +268,17 @@ describe('log', () => {
       tempos: null,
       score: { correct: 14, total: 20 },
     });
+  });
+
+  it('writes practice time compactly', () => {
+    expect([0, 20, 90, 34 * 60, 60 * 60, 161 * 60].map(formatPracticeTime)).toEqual([
+      '0m',
+      '<1m',
+      '2m',
+      '34m',
+      '1h 00m',
+      '2h 41m',
+    ]);
   });
 
   it('counts sessions, time, distinct rolls and exercises', () => {

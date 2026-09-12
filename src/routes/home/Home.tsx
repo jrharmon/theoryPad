@@ -10,6 +10,15 @@ import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
 import { sortRoutines, useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
+import { useProgress } from '@/store/progress';
+import { HeatmapGrid } from '@/components/charts/HeatmapGrid';
+import {
+  formatPracticeTime,
+  practiceHeatmap,
+  secondsBetween,
+  streak,
+  weekStart,
+} from '@/domain/progress';
 
 /** About how long a routine takes, from its items' own settings. */
 function routineSeconds(routine: Routine, instrument: Instrument): number {
@@ -17,6 +26,40 @@ function routineSeconds(routine: Routine, instrument: Instrument): number {
     const definition = findExerciseDefinition(item.definitionId);
     return definition ? total + estimateItemSeconds(definition, item, instrument) : total;
   }, 0);
+}
+
+/** The last four weeks at a glance: the heatmap, the streak, this week's time. */
+function PracticeStrip() {
+  const { days, today, loaded, load } = useProgress();
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const cells = useMemo(() => practiceHeatmap(days, today), [days, today]);
+  const { current } = useMemo(() => streak(days, today), [days, today]);
+  const thisWeek = secondsBetween(days, weekStart(today), today);
+
+  if (!loaded) return null;
+  return (
+    <div
+      className="flex items-center gap-10 border-b-2 border-divider px-8 py-5"
+      data-testid="practice-strip"
+    >
+      <HeatmapGrid cells={cells} today={today} cellSize={13} />
+      <div>
+        <Kicker>Streak</Kicker>
+        <p className="tabular text-[28px] leading-tight" data-testid="streak">
+          {current} {current === 1 ? 'day' : 'days'}
+        </p>
+      </div>
+      <div>
+        <Kicker>This week</Kicker>
+        <p className="tabular text-[28px] leading-tight" data-testid="week-time">
+          {formatPracticeTime(thisWeek)}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 /** Your routines: favorites pinned to the top, then the ones you played last. */
@@ -55,6 +98,8 @@ export function Home() {
         </div>
         <Button onClick={() => void newRoutine()}>New routine</Button>
       </div>
+
+      <PracticeStrip />
 
       <div className="px-8 py-6">
         {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
