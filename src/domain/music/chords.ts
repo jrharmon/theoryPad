@@ -117,6 +117,21 @@ export function chordOnDegree(km: KeyMode, degreeNumber: number): DiatonicChord 
   return chord;
 }
 
+const NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+
+/**
+ * The chord as a roman numeral relative to the mode's own tonic: "i", "♭III",
+ * "vi°". Case follows the triad — lower for minor and diminished.
+ */
+export function romanNumeral(chord: DiatonicChord): string {
+  const { number, alteration } = chord.degree;
+  const accidental = alteration === -1 ? '♭' : alteration === 1 ? '♯' : '';
+  const base = NUMERALS[number - 1]!;
+  const numeral = chord.triad === 'min' || chord.triad === 'dim' ? base.toLowerCase() : base;
+  const suffix = chord.triad === 'dim' ? '°' : chord.triad === 'aug' ? '+' : '';
+  return `${accidental}${numeral}${suffix}`;
+}
+
 const TRIAD_INTERVALS: Record<TriadQuality, number[]> = {
   maj: [0, 4, 7],
   min: [0, 3, 7],

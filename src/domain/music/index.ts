@@ -9,3 +9,4 @@ export * from './spelling';
 export * from './scale';
 export * from './chords';
 export * from './keySignature';
+export * from './modeCharacter';
