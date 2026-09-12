@@ -240,6 +240,9 @@ interface TheoryPadExport {
   428 reps").
 - Import is transactional — one Dexie transaction, all or nothing.
 - A round-trip test (export → wipe → import → deep-equal) is part of the E2E suite.
+- _As built (M5):_ `src/data/transfer.ts`. The file carries `app: { name }` without a
+  version — `formatVersion` is what import checks. Soft-deleted rows are exported, so a
+  merge cannot resurrect a deletion. Backing tracks join the file when they exist (M7).
 
 Also worth having, cheaply: a "download my practice log as CSV" for the report, since that is
 the thing you might want in a spreadsheet.

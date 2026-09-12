@@ -226,7 +226,7 @@ worthless — this is the thing to judge here.
 
 ---
 
-## M5 — Routines, the session runner & settings
+## M5 — Routines, the session runner & settings ✅ *complete (2026-09-12), awaiting review*
 
 _Where the "hands-off run" premise finally works._
 
@@ -244,6 +244,30 @@ _Where the "hands-off run" premise finally works._
 until an explicit re-roll; any item's settings can be changed by hand; an item's passes play
 the same material back to back and count toward the exercise it was copied from; nothing
 ever writes `maxTempo`; moving to the next item needs no click.
+
+**Agreed at the start of M5:** Home is a plain list — no "today's routine" — with
+favorites (routines and exercises) pinned to the top. A routine opens on an overview of
+everything rolled. No Previous button: a routine is for getting through the set. No gap
+between items — the count-in is the pause, at the next item's tempo (at least a bar, even
+with count-in off). Settings and export/import stay in M5.
+
+**Outcome.** 640 unit tests, 39 E2E. Things to carry forward:
+
+- **One clock runs a whole routine.** The next item counts in on the running clock rather
+  than stopping and restarting it — FakeClock fires anything due within one advance, so a
+  restart inside a callback cascades, and the real transport would click on a restart too.
+  The metronome clicks a mid-clock count-in even when muted.
+- **Every item is its own `ExerciseRunner`,** built when the routine opens, so the overview
+  is real material and a re-roll of one item touches nothing else. Items are seeded by item
+  id, so two copies of one exercise roll independently.
+- **The practice store drives either** — its `runner` is always the current item's, so the
+  tab, playhead and transport needed no routine awareness. The settings dialog is shared
+  by the practice view and the item editor.
+- **Instrument presets pulled forward from M9**, limited to the guitar tunings the exercise
+  matrix covers: standard, drop D, 7-string.
+- **5.7's hands-off routine is proven in unit tests** on `FakeClock` (every item, passes,
+  count-ins, tempo changes, no input). The E2E drives a routine with Skip; a real-time
+  hands-off run would take minutes.
 
 **Deliverable:** you can build a routine and run it hands-off from start to finish.
 

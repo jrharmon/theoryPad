@@ -8,47 +8,43 @@
 
 | Milestone | State |
 | --- | --- |
-| M0–M3 | ✅ complete, merged to `main`, pushed |
-| M3 follow-up — the practice view | ✅ reviewed, merged |
-| **M5 — Routines** | **next** (moved ahead of M4) |
-| M4 — Theory | after M5 |
+| M0–M3, M3 follow-up | ✅ complete, merged, live |
+| **M5 — Routines, settings, export/import** | **✅ built on `m5-routines`, awaiting review** |
+| M4 — Theory | next |
 | M6–M10 | not started |
 
-613 unit tests, 33 E2E, `pnpm check` green. The repo is public; Pages deploys from GitHub
-Actions.
+640 unit tests, 39 E2E, `pnpm check` green.
 
 ## What works today
 
-`pnpm dev`, then **Exercises**:
+- **Home** — your routines, favorites pinned; Start and Edit; New routine.
+- **Routine builder** — name, key and mode for the whole routine, and items added from the
+  library (each its own copy; the same exercise can go in twice): passes, Edit (tempo,
+  settings, what varies), reorder, remove. Estimated length.
+- **Running a routine** — an overview of everything rolled (re-roll one or all), then it runs
+  hands-off: each item's passes back to back, the next item counted in at its own tempo. Skip
+  (or S), "Stay on this" to hold on an item. A summary at the end.
+- **Exercises** — four scale/mode exercises, favorites pinned; practicing as in the M3
+  follow-up (no reps, Loop, settings dialog, tab size, neck).
+- **Settings** — tuning (standard, drop D, 7-string), metronome default, count-in bars,
+  volume, neck, tab size; **Export / Import** (merge or replace, with a summary first).
+- **Keys**: Space pause · Enter play/start · `[` `]` tempo · R re-roll · M metronome ·
+  L loop · S skip (routine) · `-` `=` tab size · Esc leave.
 
-- Four exercises: **Modes up the neck** (three variants), **Interval sequences**, **One note
-  per string** (note names, no neck), **Position shifting**.
-- **Practicing**: a variation is rolled on arrival and stays until Re-roll. Play runs it
-  once; Loop repeats it on a running clock. Metronome, Count-in and Loop toggles, remembered
-  app-wide. A **Settings** dialog changes tempo, params and what varies without leaving; only
-  the axes you changed roll again. Every pass is logged; leaving logs one in progress. No
-  reps, no Skip, no End.
-- **Tab**: bar lines; a labeled **Tab size** control (and `-` / `=`) — bars per line follow
-  the available width; neck show/hide; the neck shows only the frets in use.
-- **Keys**: Space pause · Enter play · `[` `]` tempo · R re-roll · M metronome · L loop ·
-  `-` `=` tab size · Esc leave.
-- The config page: tempo, Settings (from each exercise's params), What varies with
-  roll-from-subset chips.
-
-## Next: M5 — Routines
-
-Doc 08 has the tasks and the rules agreed after M3; doc 02 has `RoutineItem` (each item its
-own copy of an exercise's settings). The runner already supports what a routine needs:
-`passes`, `endWhenFinished`, and continuation passes on a running clock.
+## Next: M5 review, then M4 — Theory
 
 ## Open questions for the player
 
-Recorded by the player to try with a guitar:
+- Is the count-in enough of a pause between a routine's items, especially at a big tempo change?
+- Does "Stay on this" feel right for lingering on an item mid-routine?
+- Still open: 35 bpm for one-note-per-string; where position-shifting's slide falls; 3rds in
+  3nps; the arpeggio inside each shape; whether the seven shapes flow up the neck.
 
-- Is 35 bpm right for one-note-per-string?
-- Position-shifting: is the slide where you actually shift?
-- Are 3rds in 3nps comfortable, and does the arpeggio sit well inside each shape?
-- Do the seven shapes flow up the neck?
+## Decisions made at the start of M5
+
+- **No "today's routine"**; favorites pin routines and exercises to the top of their lists.
+- **An overview before a routine starts**; **no Previous**; **no gap** — the count-in is the pause.
+- **Settings and export/import in M5**, as orthogonal to routines.
 
 ## Decisions made after M3's review
 
