@@ -40,17 +40,16 @@ export function lastKeyMode(reps: readonly LoggedRep[]): KeyMode | null {
 }
 
 /**
- * How much a theory drill should lean toward each subject: `(1 + 2 × misses)
- * ÷ (1 + times seen)`. A subject never seen weighs 1; one you keep getting
- * right sinks below it; one you miss rises above.
+ * How much a theory drill should lean toward each subject (`"key:Eb"`):
+ * `(1 + 2 × misses) ÷ (1 + times seen)`. A subject never seen weighs 1; one
+ * you keep getting right sinks below it; one you miss rises above.
  */
-export function answerWeights(reps: readonly LoggedRep[], prefix: string): Record<string, number> {
+export function answerWeights(reps: readonly LoggedRep[]): Record<string, number> {
   const seen: Record<string, number> = {};
   const missed: Record<string, number> = {};
   for (const rep of reps) {
     for (const answer of rep.answers ?? []) {
-      if (!answer.subject.startsWith(prefix)) continue;
-      const subject = answer.subject.slice(prefix.length);
+      const subject = answer.subject;
       seen[subject] = (seen[subject] ?? 0) + 1;
       if (!answer.correct) missed[subject] = (missed[subject] ?? 0) + 1;
     }

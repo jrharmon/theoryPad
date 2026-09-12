@@ -20,6 +20,8 @@ export interface RoutineRunItem {
   tempo: TempoConfig;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
+  /** Theory: lean toward subjects missed or seen least. */
+  subjectWeights?: Readonly<Record<string, number>>;
 }
 
 export interface RoutineRunnerConfig {
@@ -190,6 +192,7 @@ export class RoutineRunner {
         loop: this.config.loop ?? false,
         countInBars: this.config.countInBars ?? 0,
         heldAxisValues: item.heldAxisValues,
+        ...(item.subjectWeights ? { subjectWeights: item.subjectWeights } : {}),
         // Key and mode belong to the routine, whatever the item's own policy.
         axisPolicies: { ...item.axisPolicies, ...shared },
         now: this.config.now,

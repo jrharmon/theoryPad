@@ -65,9 +65,15 @@ export const circleOfFifths: ExerciseDefinition<CircleOfFifthsParams> = {
   },
   timing: 'free',
 
-  generate({ rng, params: config }): TheoryInstance {
+  generate({ rng, params: config, subjectWeights = {} }): TheoryInstance {
+    const keyWeights = Object.fromEntries(
+      Object.entries(subjectWeights).flatMap(([subject, weight]) =>
+        subject.startsWith('key:') ? [[subject.slice(4), weight]] : [],
+      ),
+    );
     const questions = circleQuestions({
       rng,
+      keyWeights,
       types: config.questionTypes,
       count: config.questionCount,
       includeModes: config.includeModes,

@@ -327,8 +327,7 @@ describe('coverage', () => {
           ['key:G', true],
         ]),
       ],
-      'key:',
     );
-    expect(weights).toEqual({ Eb: 1, G: 1 / 3 });
+    expect(weights).toEqual({ 'key:Eb': 1, 'key:G': 1 / 3, 'mode:D dorian': 3 / 2 });
   });
 });

@@ -49,6 +49,8 @@ export interface RunnerConfig {
   heldAxisValues?: Record<string, string>;
   axisPolicies?: AxisPolicies;
   coverage?: CoverageCounts;
+  /** Theory: lean toward subjects missed or seen least. */
+  subjectWeights?: Readonly<Record<string, number>>;
   /** Injected so the runner stays pure — nothing here reads a real clock. */
   now: () => number;
 
@@ -286,6 +288,7 @@ export class ExerciseRunner {
       tempo: this.currentTempo,
       freeTime: false,
       repIndex: this.passesPlayed,
+      ...(this.config.subjectWeights ? { subjectWeights: this.config.subjectWeights } : {}),
     });
   }
 

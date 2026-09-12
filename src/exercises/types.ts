@@ -63,6 +63,11 @@ export interface GenerationContext<P = void> {
   /** Seeded. Use this, never Math.random(). */
   rng: Rng;
   repIndex: number;
+  /**
+   * Theory: how much to lean toward each subject, from recent answers
+   * (`"key:Eb"` → 1.6). Absent or missing a subject means even.
+   */
+  subjectWeights?: Readonly<Record<string, number>>;
 }
 
 export interface ExerciseRendererProps {

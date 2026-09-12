@@ -186,6 +186,22 @@ describe('the circle', () => {
     expect(trapped / set.length).toBeLessThan(0.5);
   });
 
+  it('leans toward the keys it is told to, without leaving the others out', () => {
+    const subjects = (keyWeights: Record<string, number>) =>
+      circleQuestions({
+        rng: mulberry32(5),
+        types: ['key-to-signature'],
+        count: 300,
+        includeModes: false,
+        keyWeights,
+      }).map((q) => q.subject);
+    const even = subjects({}).filter((s) => s === 'key:Eb').length;
+    const leaning = subjects({ Eb: 4, G: 0.25 });
+    expect(leaning.filter((s) => s === 'key:Eb').length).toBeGreaterThan(even * 2);
+    expect(leaning.filter((s) => s === 'key:G').length).toBeLessThan(even);
+    expect(new Set(leaning).size).toBeGreaterThan(10);
+  });
+
   it('gets relative minors right, and offers the parallel minor as a trap', () => {
     for (const q of questions('relative-minor', 11)) {
       const major = pitchClass(/of (\S+) major/.exec(q.prompt)![1]!);

@@ -14,6 +14,7 @@ import type { Instrument } from '@/domain/instrument';
 import type { AudioEngine } from '@/audio';
 import type { CoverageCounts } from '@/domain/variation';
 import { AXIS_IDS } from '@/domain/variation';
+import { answerWeights } from '@/domain/progress';
 import type { ExerciseInstance } from '@/exercises/types';
 import { exerciseDefinition, findExerciseDefinition } from '@/exercises/registry';
 import { resolveParams } from '@/exercises/params';
@@ -100,6 +101,13 @@ async function loadCoverage(exerciseId: string): Promise<CoverageCounts> {
     if (Object.keys(values).length > 0) counts[axis] = values;
   }
   return counts;
+}
+
+/** A theory drill's leanings, from the last 30 days of its answers. */
+async function loadSubjectWeights(exerciseId: string): Promise<Record<string, number>> {
+  const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recent = await createRepositories(db()).reps.byExercise(exerciseId, 200);
+  return answerWeights(recent.filter((rep) => rep.startedAt >= since));
 }
 
 /**
@@ -196,6 +204,9 @@ export const usePractice = create<PracticeState>((set, get) => ({
       heldAxisValues: exercise.heldAxisValues,
       axisPolicies: exercise.axisPolicies,
       coverage: await loadCoverage(exercise.id),
+      ...(definition.kind === 'theory'
+        ? { subjectWeights: await loadSubjectWeights(exercise.id) }
+        : {}),
       now: () => Date.now(),
 
       onRepStart: soundFor(engine, settings.instrument),
@@ -249,10 +260,16 @@ export const usePractice = create<PracticeState>((set, get) => ({
 
     // An item whose exercise no longer exists in code is left out rather than
     // failing the whole routine.
-    const items: RoutineRunItem[] = routine.items.flatMap((item) => {
+    const items: RoutineRunItem[] = [];
+    for (const item of routine.items) {
       const definition = findExerciseDefinition(item.definitionId);
-      return definition ? [{ ...item, definition }] : [];
-    });
+      if (!definition) continue;
+      items.push(
+        definition.kind === 'theory'
+          ? { ...item, definition, subjectWeights: await loadSubjectWeights(item.exerciseId) }
+          : { ...item, definition },
+      );
+    }
 
     const runner = new RoutineRunner({
       clock: engine.clock,

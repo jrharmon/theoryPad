@@ -163,14 +163,17 @@ export function circleQuestions(options: {
   types: readonly CircleQuestionType[];
   count: number;
   includeModes: boolean;
+  /** Lean toward some major keys (by name, `"Eb"`): 1 is even, higher is more often. */
+  keyWeights?: Readonly<Record<string, number>>;
 }): SinglePickQuestion[] {
-  const { rng, count, includeModes } = options;
+  const { rng, count, includeModes, keyWeights = {} } = options;
+  const positions = CIRCLE_POSITIONS.map((p) => ({ value: p, weight: keyWeights[majorAt(p)] ?? 1 }));
   const types = options.types.filter((t) => includeModes || t !== 'mode-signature');
   const pool = types.length > 0 ? types : (['signature-to-key'] as const);
   const start = rng.int(pool.length);
 
   const make = (type: CircleQuestionType, id: string): SinglePickQuestion => {
-    const p = rng.pick([...CIRCLE_POSITIONS]);
+    const p = rng.weighted(positions);
     switch (type) {
       case 'signature-to-key':
         return signatureToKey(p, rng, id);
