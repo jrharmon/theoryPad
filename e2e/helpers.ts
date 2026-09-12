@@ -1,0 +1,34 @@
+import { expect, type Page } from '@playwright/test';
+
+/** Answer whatever is on screen with the keyboard: 1 for picks, every row then Enter for tables. */
+export async function answerSet(page: Page) {
+  await page.getByTestId('theory-question').waitFor();
+  for (let i = 0; i < 40; i += 1) {
+    // Standalone, the set ends on its score; in a routine, on the next exercise.
+    if (await page.getByTestId('theory-ready').isVisible()) return;
+    if (!(await page.getByTestId('theory-question').isVisible())) return;
+    if (await page.getByTestId('submit-table').isVisible()) {
+      const rows = await page.getByTestId('table-row').count();
+      for (let r = 0; r < rows; r += 1) await page.keyboard.press('1');
+      await page.keyboard.press('Enter');
+    } else {
+      await page.keyboard.press('1');
+    }
+    // A wrong answer waits for Enter; a right one moves on by itself.
+    const wrong = page.getByTestId('theory-continue');
+    const right = page.getByTestId('theory-right');
+    const over = page.getByTestId('theory-ready').or(page.getByTestId('tab-staff'));
+    await expect(wrong.or(right).or(over).first()).toBeVisible();
+    if (await wrong.isVisible()) await page.keyboard.press('Enter');
+    else if (await right.isVisible()) await expect(right).toBeHidden();
+  }
+}
+
+/** Open an exercise's practice screen from the library. */
+export async function open(page: Page, name: string) {
+  await page.goto('/#/exercises');
+  await page
+    .locator('li', { hasText: name })
+    .getByRole('link', { name: 'Practice', exact: true })
+    .click();
+}
