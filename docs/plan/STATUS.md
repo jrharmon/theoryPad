@@ -1,20 +1,21 @@
 # Status — start here
 
-**Last updated:** 2026-09-11, M3 follow-up (practice view) awaiting review.
+**Last updated:** 2026-09-12, start of M5.
+
+**Live:** https://jrharmon.github.io/theoryPad/ — every push to `main` deploys.
 
 ## Where the project is
 
 | Milestone | State |
 | --- | --- |
 | M0–M3 | ✅ complete, merged to `main`, pushed |
-| **M3 follow-up — the practice view** | **✅ built on `practice-view`, awaiting review** |
+| M3 follow-up — the practice view | ✅ reviewed, merged |
 | **M5 — Routines** | **next** (moved ahead of M4) |
 | M4 — Theory | after M5 |
 | M6–M10 | not started |
 
-613 unit tests, 32 E2E, `pnpm check` green. `main` is pushed to GitHub; the Pages deploy
-needs Pages enabled in the repo settings (source: GitHub Actions), and a private repo needs
-a paid plan for Pages.
+613 unit tests, 33 E2E, `pnpm check` green. The repo is public; Pages deploys from GitHub
+Actions.
 
 ## What works today
 
