@@ -1,7 +1,13 @@
 import type { KeyMode, SeventhQuality, TriadQuality } from '@/domain/music';
 import { chordOnDegree, diatonicChords, keySignature, scaleDegrees, scaleNotes, semitonesBetween } from '@/domain/music';
 import type { Rng } from '@/domain/variation';
-import { noteDistractors, spellingDistractors, withCorrect } from './distractors';
+import {
+  noteDistractors,
+  plainDistractors,
+  spellingDistractors,
+  wantsTrick,
+  withCorrect,
+} from './distractors';
 import type { SinglePickQuestion, TableFillQuestion, TheoryQuestion } from './types';
 
 export type DiatonicQuestionType = 'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function';
@@ -62,7 +68,12 @@ export function nameNotes(km: KeyMode, rng: Rng, id: string): TableFillQuestion 
     ],
     answerColumnId: 'note',
     rows: notes.slice(1).map((note, i) => {
-      const { items, index } = withCorrect(note, noteDistractors(note, rng), rng);
+      // Mostly the key's other notes — you have to know which is which — and
+      // now and then a spelling trap.
+      const wrong = wantsTrick(rng)
+        ? noteDistractors(note, rng)
+        : plainDistractors(note, notes.filter((n) => n !== note && n !== km.tonic), rng);
+      const { items, index } = withCorrect(note, wrong, rng);
       return {
         id: `${id}-${i + 2}`,
         given: { degree: degrees[i + 1]!.label },
@@ -125,13 +136,25 @@ export function spellChord(
   degree = rng.int(7) + 1,
 ): SinglePickQuestion {
   const { symbol, notes } = chordFor(km, degree, sevenths);
-  const wrong = spellingDistractors(notes, rng);
+  // Mostly the key's other chords; now and then one note wrong in this one.
+  const trick = wantsTrick(rng);
+  const others = [1, 2, 3, 4, 5, 6, 7]
+    .filter((d) => d !== degree)
+    .map((d) => chordFor(km, d, sevenths));
+  const wrong = trick
+    ? spellingDistractors(notes, rng)
+    : plainDistractors(notes, others.map((o) => o.notes), rng);
   const { items, index } = withCorrect(notes, wrong, rng);
   const options = items.map((spelled, i) => ({ id: `${id}-${i}`, label: spelled.join(' ') }));
 
   const whatItIs: Record<string, string> = {};
   items.forEach((spelled, i) => {
     if (i === index) return;
+    const other = others.find((o) => o.notes.join(' ') === spelled.join(' '));
+    if (other) {
+      whatItIs[options[i]!.id] = `That’s ${other.symbol}.`;
+      return;
+    }
     const k = spelled.findIndex((n, j) => n !== notes[j]);
     whatItIs[options[i]!.id] = `That has ${spelled[k]} where ${symbol} has ${notes[k]}.`;
   });

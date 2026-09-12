@@ -172,10 +172,18 @@ describe('the circle', () => {
     for (const q of questions('key-to-signature', 7)) {
       const key = pitchClass(/does (\S+) major/.exec(q.prompt)![1]!);
       expect(answer(q)).toBe(signatureLabel(positionOfMajor(key)));
-      // The mirror count is offered as a trap.
-      const p = positionOfMajor(key);
-      if (p !== 0 && Math.abs(p) <= 7) expect(q.options.map((o) => o.label)).toContain(signatureLabel(-p));
     }
+  });
+
+  it('sets its trap now and then, not on most questions', () => {
+    // The mirror count — 3 sharps for 3 flats — is the trap here.
+    const set = circleQuestions({ rng: mulberry32(21), types: ['key-to-signature'], count: 200, includeModes: false });
+    const trapped = set.filter((q) => {
+      const p = positionOfMajor(pitchClass(/does (\S+) major/.exec(q.prompt)![1]!));
+      return p !== 0 && q.options.some((o) => o.label === signatureLabel(-p));
+    }).length;
+    expect(trapped / set.length).toBeGreaterThan(0.1);
+    expect(trapped / set.length).toBeLessThan(0.5);
   });
 
   it('gets relative minors right, and offers the parallel minor as a trap', () => {
@@ -183,9 +191,13 @@ describe('the circle', () => {
       const major = pitchClass(/of (\S+) major/.exec(q.prompt)![1]!);
       expect(answer(q)).toBe(`${minorAt(positionOfMajor(major))} minor`);
     }
-    const f = circleQuestions({ rng: mulberry32(0), types: ['relative-minor'], count: 60, includeModes: false })
-      .find((q) => q.prompt.includes('of F major'))!;
-    expect(f.options.map((o) => o.label)).toContain('F minor');
+    const set = circleQuestions({ rng: mulberry32(0), types: ['relative-minor'], count: 200, includeModes: false });
+    const trapped = set.filter((q) => {
+      const major = /of (\S+) major/.exec(q.prompt)![1]!;
+      return q.options.some((o) => o.label === `${major} minor`);
+    }).length;
+    expect(trapped).toBeGreaterThan(0);
+    expect(trapped / set.length).toBeLessThan(0.5);
   });
 
   it('gets mode signatures right, and offers the same tonic’s major as a trap', () => {
@@ -200,6 +212,23 @@ describe('the circle', () => {
   it('leaves out mode questions when asked to', () => {
     const set = circleQuestions({ rng: mulberry32(1), types: ['mode-signature', 'key-to-signature'], count: 10, includeModes: false });
     expect(set.every((q) => !q.subject.startsWith('mode:'))).toBe(true);
+  });
+});
+
+describe('traps are occasional', () => {
+  it('mostly asks for the key’s notes among its other notes, with a spelling trap now and then', () => {
+    let rows = 0;
+    let plain = 0;
+    for (let seed = 0; seed < 20; seed += 1) {
+      const q = nameNotes(D_DORIAN, mulberry32(seed), 'q');
+      const inKey = new Set<string>(scaleNotes(D_DORIAN));
+      for (const row of q.rows) {
+        rows += 1;
+        if (row.options.every((o) => inKey.has(o.id))) plain += 1;
+      }
+    }
+    expect(plain / rows).toBeGreaterThan(0.5);
+    expect(plain).toBeLessThan(rows);
   });
 });
 

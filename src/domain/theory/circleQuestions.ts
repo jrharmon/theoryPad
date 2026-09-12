@@ -9,7 +9,7 @@ import {
   wrapPosition,
 } from './circle';
 import { keyModeName } from './diatonic';
-import { withCorrect } from './distractors';
+import { wantsTrick, withCorrect } from './distractors';
 import type { SinglePickQuestion } from './types';
 
 export type CircleQuestionType =
@@ -75,9 +75,20 @@ function signatureToKey(p: number, rng: Rng, id: string): SinglePickQuestion {
   });
 }
 
+/**
+ * Wrong answers for a question with a known trap: now and then the trap
+ * leads, otherwise only the plain alternatives are offered.
+ */
+function traps(rng: Rng, trap: readonly number[], plain: readonly number[]): number[] {
+  const honest = rng.shuffle(plain);
+  return wantsTrick(rng) ? [...trap, ...honest] : honest;
+}
+
 function keyToSignature(p: number, rng: Rng, id: string): SinglePickQuestion {
   // The same count on the other side is the classic slip: 3 sharps for 3 flats.
-  const wrong = [p === 0 ? 1 : -p, p + 1, p - 1].filter((q) => Math.abs(q) <= 7);
+  const wrong = traps(rng, p === 0 ? [] : [-p], [p + 1, p - 1, p + 2, p - 2]).filter(
+    (q) => Math.abs(q) <= 7,
+  );
   return pick(id, rng, p, wrong, signatureLabel, {
     prompt: `How many sharps or flats does ${majorAt(p)} major have?`,
     subject: `key:${majorAt(p)}`,
@@ -89,7 +100,7 @@ function relativeMinor(p: number, rng: Rng, id: string): SinglePickQuestion {
   const major = majorAt(p);
   // The parallel minor — same letter — is the answer people reach for.
   const parallel = CIRCLE_POSITIONS.find((q) => minorAt(q) === major);
-  const wrong = [...(parallel !== undefined ? [parallel] : []), ...rng.shuffle([p + 1, p - 1, p + 3]).map(wrapPosition)];
+  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [p + 1, p - 1, p + 2, p - 2]).map(wrapPosition);
   return pick(id, rng, p, wrong, (q) => `${minorAt(q)} minor`, {
     prompt: `What is the relative minor of ${major} major?`,
     subject: `key:${major}`,
@@ -101,7 +112,7 @@ function relativeMinor(p: number, rng: Rng, id: string): SinglePickQuestion {
 function relativeMajor(p: number, rng: Rng, id: string): SinglePickQuestion {
   const minor = minorAt(p);
   const parallel = CIRCLE_POSITIONS.find((q) => majorAt(q) === minor);
-  const wrong = [...(parallel !== undefined ? [parallel] : []), ...rng.shuffle([p + 1, p - 1, p - 3]).map(wrapPosition)];
+  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [p + 1, p - 1, p + 2, p - 2]).map(wrapPosition);
   return pick(id, rng, p, wrong, (q) => `${majorAt(q)} major`, {
     prompt: `What is the relative major of ${minor} minor?`,
     subject: `key:${majorAt(p)}`,
@@ -115,7 +126,7 @@ function neighbourKey(p: number, rng: Rng, id: string): SinglePickQuestion {
   const step = clockwise ? 1 : -1;
   const target = wrapPosition(p + step);
   // Going the wrong way round is the trap.
-  const wrong = [wrapPosition(p - step), wrapPosition(p + 2 * step), wrapPosition(p - 2 * step)];
+  const wrong = traps(rng, [p - step], [p + 2 * step, p + 3 * step, p - 2 * step]).map(wrapPosition);
   return pick(id, rng, target, wrong, (q) => `${majorAt(q)} major`, {
     prompt: clockwise
       ? `One step clockwise from ${majorAt(p)} major — one more sharp or one fewer flat — is which key?`
@@ -134,9 +145,11 @@ function modeSignature(rng: Rng, id: string): SinglePickQuestion {
   // The slip is the major key on the same tonic: 2 sharps for D Dorian.
   // Only when that major is on the circle as spelled (C# Dorian's is not).
   const parallel = CIRCLE_POSITIONS.find((q) => majorAt(q) === tonic) ?? null;
-  const wrong = [...(parallel !== null ? [parallel] : []), position === 0 ? 1 : -position, position + 1, position - 1].filter(
-    (q) => Math.abs(q) <= 7,
-  );
+  const wrong = traps(
+    rng,
+    [...(parallel !== null ? [parallel] : []), ...(position === 0 ? [] : [-position])],
+    [position + 1, position - 1, position + 2, position - 2],
+  ).filter((q) => Math.abs(q) <= 7);
   return pick(id, rng, position, wrong, signatureLabel, {
     prompt: `How many sharps or flats does ${keyModeName(km)} have?`,
     subject: `mode:${keyModeName(km)}`,

@@ -13,6 +13,32 @@ import type { Rng } from '@/domain/variation';
 
 const LETTERS = 'CDEFGAB';
 
+/**
+ * How often a question sets a trap. A near miss teaches, but a drill made of
+ * nothing but traps becomes a game about spotting the trap rather than
+ * knowing the theory — so most questions offer plainly wrong answers, and
+ * about one in three offers the near miss. (The player's call, after M4.)
+ */
+export const TRICK_RATE = 0.3;
+
+export function wantsTrick(rng: Rng): boolean {
+  return rng.next() < TRICK_RATE;
+}
+
+/** Plain wrong answers: a few from a pool of honest alternatives, in a seeded order. */
+export function plainDistractors<T>(correct: T, pool: readonly T[], rng: Rng, count = 3): T[] {
+  const seen = new Set<string>([JSON.stringify(correct)]);
+  const out: T[] = [];
+  for (const item of rng.shuffle(pool)) {
+    const key = JSON.stringify(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+    if (out.length === count) break;
+  }
+  return out;
+}
+
 function letterOf(pc: PitchClass): string {
   return pc[0]!;
 }
@@ -47,7 +73,7 @@ function unique<T>(items: T[]): T[] {
 }
 
 /**
- * Near misses for a note: its other spelling first, then its letter with the
+ * Traps for a note: its other spelling first, then its letter with the
  * wrong accidental, then its chromatic neighbours. One from each kind, so a
  * question always offers a spelling trap and a pitch trap.
  */
