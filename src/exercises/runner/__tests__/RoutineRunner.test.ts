@@ -67,9 +67,19 @@ describe('RoutineRunner', () => {
   });
 
   it('rolls two items copied from one exercise independently', () => {
-    const { routine } = makeRoutine([item('a', { exerciseId: 'same' }), item('b', { exerciseId: 'same' })]);
-    const [a, b] = routine.snapshot.items;
-    expect(a!.variation!.seed).not.toBe(b!.variation!.seed);
+    // Different values, not just different seeds: the same exercise twice in a
+    // routine is there to be played two ways.
+    let identical = 0;
+    for (let session = 0; session < 10; session += 1) {
+      const pair = [
+        item('a', { exerciseId: 'same', definition: intervalSequences, params: undefined }),
+        item('b', { exerciseId: 'same', definition: intervalSequences, params: undefined }),
+      ];
+      const { routine } = makeRoutine(pair, { sessionId: `session-${session}` });
+      const [a, b] = routine.snapshot.items.map((i) => JSON.stringify(i.variation!.axes));
+      if (a === b) identical += 1;
+    }
+    expect(identical).toBeLessThan(3);
   });
 
   it('plays through every item without being touched', () => {
@@ -91,6 +101,7 @@ describe('RoutineRunner', () => {
     expect(routine.snapshot.phase).toBe('done');
     expect(clock.state).toBe('stopped');
 
+    expect(routine.snapshot.items.map((i) => i.completed)).toEqual([2, 1, 1]);
     const reps = onRepEnd.mock.calls.map((c) => c[0] as { routineItemId: string; exerciseId: string; status: string });
     expect(reps.map((r) => r.routineItemId)).toEqual(['a', 'a', 'b', 'c']);
     // Logged against the exercise each item was copied from.
@@ -122,6 +133,7 @@ describe('RoutineRunner', () => {
 
     expect(onRepEnd.mock.calls[0]![0]).toMatchObject({ status: 'skipped', routineItemId: 'a' });
     expect(routine.snapshot.index).toBe(1);
+    expect(routine.snapshot.items[0]).toMatchObject({ completed: 0, skipped: true });
     expect(routine.current!.snapshot.state).toBe('count-in');
   });
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
 import { describePolicies } from '@/exercises/describe';
 import { findExerciseDefinition } from '@/exercises/registry';
@@ -10,7 +11,7 @@ import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 
 export function ExerciseLibrary() {
-  const { exercises, loaded, load } = useExercises();
+  const { exercises, loaded, load, update } = useExercises();
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
   const [tag, setTag] = useState<string | null>(null);
@@ -22,10 +23,13 @@ export function ExerciseLibrary() {
 
   const rows = useMemo(
     () =>
-      exercises.flatMap((exercise) => {
-        const definition = findExerciseDefinition(exercise.definitionId);
-        return definition ? [{ exercise, definition }] : [];
-      }),
+      exercises
+        .flatMap((exercise) => {
+          const definition = findExerciseDefinition(exercise.definitionId);
+          return definition ? [{ exercise, definition }] : [];
+        })
+        // Favorites pinned to the top; otherwise the order they were added.
+        .sort((a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false)),
     [exercises],
   );
 
@@ -76,6 +80,11 @@ export function ExerciseLibrary() {
         <ul>
           {visible.map(({ exercise, definition }) => (
             <li key={exercise.id} className="flex items-baseline gap-4 border-b border-divider py-4">
+              <FavoriteToggle
+                on={exercise.favorite ?? false}
+                label={definition.name}
+                onChange={(on) => void update(exercise.id, { favorite: on })}
+              />
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/exercises/${exercise.id}`}

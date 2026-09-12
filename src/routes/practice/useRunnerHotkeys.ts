@@ -27,6 +27,19 @@ export function useRunnerHotkeys({
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 
       const practice = usePractice.getState();
+      const phase = practice.routineSnapshot?.phase;
+
+      // A routine's overview and summary have no transport, only these.
+      if (phase === 'overview' || phase === 'done') {
+        if (event.key === 'Enter' && phase === 'overview') {
+          event.preventDefault();
+          void practice.play();
+        } else if (event.key === 'Escape') {
+          onLeave();
+        }
+        return;
+      }
+
       const state = practice.snapshot?.state;
       if (!state || state === 'done') return;
 
@@ -50,6 +63,11 @@ export function useRunnerHotkeys({
         case 'r':
         case 'R':
           practice.reroll();
+          break;
+        case 's':
+        case 'S':
+          // Only a routine has a next exercise to skip to.
+          practice.skip();
           break;
         case 'm':
         case 'M':

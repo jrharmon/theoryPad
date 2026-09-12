@@ -1,16 +1,30 @@
 import { create } from 'zustand';
 import type { KeyMode } from '@/domain/music';
 import { canonicalKeyMode, pitchClass } from '@/domain/music';
-import { coverageCounts, createRepositories, db, type Exercise, type Settings } from '@/data';
+import {
+  coverageCounts,
+  createRepositories,
+  db,
+  type Exercise,
+  type Routine,
+  type Settings,
+} from '@/data';
+import type { Instrument } from '@/domain/instrument';
+// Type only: the engine itself is imported lazily, so Tone loads on first use.
+import type { AudioEngine } from '@/audio';
 import type { CoverageCounts } from '@/domain/variation';
 import { AXIS_IDS } from '@/domain/variation';
 import type { ExerciseInstance } from '@/exercises/types';
-import { exerciseDefinition } from '@/exercises/registry';
+import { exerciseDefinition, findExerciseDefinition } from '@/exercises/registry';
 import { resolveParams } from '@/exercises/params';
 import {
   ExerciseRunner,
+  RoutineRunner,
   type Reconfiguration,
   type RepRecord,
+  type RepStartInfo,
+  type RoutineRunItem,
+  type RoutineSnapshot,
   type RunnerSnapshot,
 } from '@/exercises/runner';
 import { ticksPerBar } from '@/domain/phrase';
@@ -18,7 +32,12 @@ import { newId } from '@/data';
 import { useSettings } from './settings';
 
 interface PracticeState {
+  /** The exercise being played — in a routine, the current item's. */
   runner: ExerciseRunner | null;
+  /** Set when practicing a routine rather than one exercise. */
+  routine: RoutineRunner | null;
+  routineId: string | null;
+  routineSnapshot: RoutineSnapshot | null;
   /** The configured exercise being practiced, so changes can be saved back to it. */
   exerciseId: string | null;
   snapshot: RunnerSnapshot | null;
@@ -37,6 +56,8 @@ interface PracticeState {
    * through first.
    */
   prepare: (exercise: Exercise) => Promise<void>;
+  /** Roll a whole routine for its overview. Nothing plays until `play`. */
+  prepareRoutine: (routine: Routine) => Promise<void>;
   /** Start the clock. Must be called from a click or keypress. */
   play: () => Promise<void>;
   pause: () => void;
@@ -45,6 +66,12 @@ interface PracticeState {
   nudgeTempo: (delta: number) => void;
   completeRep: () => void;
   reroll: () => void;
+  /** Routine only: move to the next item now. */
+  skip: () => void;
+  /** Routine overview only: a fresh roll of everything, key and mode included. */
+  rerollAll: () => void;
+  /** Routine overview only: a fresh roll of one item. */
+  rerollItem: (index: number) => void;
   /** Apply settings changed from the practice screen, and save them to the exercise. */
   reconfigure: (changes: Reconfiguration) => Promise<void>;
   /** Tear the runner down. Leaving the screen calls this; there is no End button. */
@@ -73,6 +100,42 @@ async function loadCoverage(exerciseId: string): Promise<CoverageCounts> {
   return counts;
 }
 
+/**
+ * What to do with the audio as each pass starts. Shared by a single exercise
+ * and a routine: they differ in what drives them, not in how they sound.
+ */
+function soundFor(engine: AudioEngine, instrument: Instrument) {
+  return ({ phrase, countInTicks, freeTime, continuation, countInFrom }: RepStartInfo) => {
+    if (continuation) {
+      // Straight on from the last pass or item: the clock and the click never
+      // stopped, so only the notes need scheduling again — and a count-in in
+      // the middle of the clock needs to click even when the metronome is off.
+      if (countInFrom !== undefined) engine.metronome.countInBetween(countInFrom, countInTicks);
+      engine.phrase.clear();
+      if (phrase) engine.phrase.load(phrase, instrument, countInTicks);
+      return;
+    }
+    engine.metronome.stop();
+    engine.phrase.clear();
+    if (freeTime) return;
+    // The metronome always runs, muted or not: the count-in clicks either way,
+    // and switching it mid-bar must not shift the beat.
+    const audio = useSettings.getState().settings.audio;
+    if (phrase) {
+      const perBar = ticksPerBar(phrase.timeSignature);
+      engine.configureMetronome({
+        timeSignature: phrase.timeSignature,
+        // The runner only ever counts in whole bars, from the 0–2 setting.
+        countInBars: (perBar > 0 ? Math.round(countInTicks / perBar) : 0) as 0 | 1 | 2,
+      });
+    }
+    engine.metronome.setMuted(!audio.metronomeEnabled);
+    engine.metronome.start();
+    // The phrase goes after the count-in, not at zero.
+    if (phrase) engine.phrase.load(phrase, instrument, countInTicks);
+  };
+}
+
 function rollSessionKeyMode(): KeyMode {
   // Standalone practice has no routine to inherit a key from, so the exercise's
   // own key axis decides. This is only the fallback for exercises that do not
@@ -82,6 +145,9 @@ function rollSessionKeyMode(): KeyMode {
 
 export const usePractice = create<PracticeState>((set, get) => ({
   runner: null,
+  routine: null,
+  routineId: null,
+  routineSnapshot: null,
   exerciseId: null,
   snapshot: null,
   instance: null,
@@ -130,34 +196,7 @@ export const usePractice = create<PracticeState>((set, get) => ({
       coverage: await loadCoverage(exercise.id),
       now: () => Date.now(),
 
-      onRepStart: ({ phrase, countInTicks, freeTime, continuation, countInFrom }) => {
-        if (continuation) {
-          // Straight on from the last pass: the clock and the click never
-          // stopped, so only the notes need scheduling again.
-          if (countInFrom !== undefined) engine.metronome.countInBetween(countInFrom, countInTicks);
-          engine.phrase.clear();
-          if (phrase) engine.phrase.load(phrase, settings.instrument, countInTicks);
-          return;
-        }
-        engine.metronome.stop();
-        engine.phrase.clear();
-        if (freeTime) return;
-        // The metronome always runs, muted or not: the count-in clicks either
-        // way, and switching it mid-bar must not shift the beat.
-        const audio = useSettings.getState().settings.audio;
-        if (phrase) {
-          const perBar = ticksPerBar(phrase.timeSignature);
-          engine.configureMetronome({
-            timeSignature: phrase.timeSignature,
-            // The runner only ever counts in whole bars, from the 0–2 setting.
-            countInBars: (perBar > 0 ? Math.round(countInTicks / perBar) : 0) as 0 | 1 | 2,
-          });
-        }
-        engine.metronome.setMuted(!audio.metronomeEnabled);
-        engine.metronome.start();
-        // The phrase goes after the count-in, not at zero.
-        if (phrase) engine.phrase.load(phrase, settings.instrument, countInTicks);
-      },
+      onRepStart: soundFor(engine, settings.instrument),
 
       onRepEnd: (rep: RepRecord) => {
         void repos.reps.add({ ...rep, sessionId: session.id });
@@ -189,9 +228,78 @@ export const usePractice = create<PracticeState>((set, get) => ({
     });
   },
 
+  async prepareRoutine(routine) {
+    await get().end();
+    const repos = createRepositories(db());
+    const { getAudioEngine } = await import('@/audio');
+    const engine = getAudioEngine();
+    const settings = useSettings.getState().settings;
+    const { useRoutines } = await import('./routines');
+
+    const session = await repos.sessions.add({
+      routineId: routine.id,
+      seed: Math.floor(Date.now() % 2 ** 31),
+      startedAt: Date.now(),
+      endedAt: null,
+      sessionKey: rollSessionKeyMode().tonic,
+      sessionMode: rollSessionKeyMode().mode,
+    });
+
+    // An item whose exercise no longer exists in code is left out rather than
+    // failing the whole routine.
+    const items: RoutineRunItem[] = routine.items.flatMap((item) => {
+      const definition = findExerciseDefinition(item.definitionId);
+      return definition ? [{ ...item, definition }] : [];
+    });
+
+    const runner = new RoutineRunner({
+      clock: engine.clock,
+      instrument: settings.instrument,
+      sessionId: session.id,
+      items,
+      sessionAxisPolicies: routine.sessionAxisPolicies,
+      countInBars: settings.audio.countInBars,
+      loop: settings.audio.loop,
+      now: () => Date.now(),
+      onRepStart: soundFor(engine, settings.instrument),
+      onRepEnd: (rep) => {
+        // Logged against the exercise the item came from — its history — and
+        // the item remembers what it rolled, for its own `hold` policies.
+        void repos.reps.add({ ...rep, sessionId: session.id });
+        void useRoutines
+          .getState()
+          .updateItem(routine.id, rep.routineItemId, { heldAxisValues: rep.axes });
+      },
+    });
+
+    runner.subscribe((snapshot) => {
+      const current = runner.current;
+      set({
+        routineSnapshot: snapshot,
+        runner: current,
+        snapshot: snapshot.current,
+        instance: current?.currentInstance ?? null,
+      });
+      if (snapshot.phase === 'done' || snapshot.current?.state === 'brief') {
+        engine.metronome.stop();
+        engine.phrase.clear();
+      }
+    });
+
+    runner.open();
+    set({
+      routine: runner,
+      routineId: routine.id,
+      sessionId: session.id,
+      exerciseId: null,
+      audioReady: false,
+      error: null,
+    });
+  },
+
   async play() {
-    const runner = get().runner;
-    if (!runner) return;
+    const { runner, routine, routineId } = get();
+    if (!runner && !routine) return;
 
     // This call is inside the click handler's task, which is what lets the
     // AudioContext start. Getting that wrong is the classic silent-app bug.
@@ -200,7 +308,15 @@ export const usePractice = create<PracticeState>((set, get) => ({
     await engine.init();
     set({ audioReady: true });
 
-    runner.begin();
+    if (routine) {
+      if (routine.snapshot.phase === 'overview' && routineId) {
+        const { useRoutines } = await import('./routines');
+        void useRoutines.getState().markPlayed(routineId, Date.now());
+      }
+      routine.play();
+      return;
+    }
+    runner?.begin();
   },
 
   pause: () => get().runner?.pause(),
@@ -208,7 +324,14 @@ export const usePractice = create<PracticeState>((set, get) => ({
   setTempo: (bpm) => get().runner?.setTempo(bpm),
   nudgeTempo: (delta) => get().runner?.nudgeTempo(delta),
   completeRep: () => get().runner?.completeRep(),
-  reroll: () => get().runner?.reroll(),
+  reroll: () => {
+    const { routine, runner } = get();
+    if (routine) routine.rerollCurrent();
+    else runner?.reroll();
+  },
+  skip: () => get().routine?.skip(),
+  rerollAll: () => get().routine?.rerollAll(),
+  rerollItem: (index) => get().routine?.rerollItem(index),
   setFreeTime: (freeTime) => get().runner?.setFreeTime(freeTime),
 
   async reconfigure(changes) {
@@ -234,20 +357,25 @@ export const usePractice = create<PracticeState>((set, get) => ({
 
   async setCountIn(on) {
     const bars = on ? 1 : 0;
-    get().runner?.setCountInBars(bars);
+    const { routine, runner } = get();
+    if (routine) routine.setCountInBars(bars);
+    else runner?.setCountInBars(bars);
     await saveAudio({ countInBars: bars });
   },
 
   async setLoop(on) {
-    get().runner?.setLoop(on);
+    const { routine, runner } = get();
+    if (routine) routine.setLoop(on);
+    else runner?.setLoop(on);
     await saveAudio({ loop: on });
   },
 
   async end() {
-    const { runner, sessionId } = get();
-    if (!runner) return;
+    const { runner, routine, sessionId } = get();
+    if (!runner && !routine) return;
 
-    runner.end();
+    if (routine) routine.end();
+    else runner?.end();
     const { getAudioEngine } = await import('@/audio');
     const engine = getAudioEngine();
     engine.metronome.stop();
@@ -259,7 +387,16 @@ export const usePractice = create<PracticeState>((set, get) => ({
       await repos.sessions.end(sessionId, Date.now());
     }
 
-    set({ runner: null, exerciseId: null, snapshot: null, instance: null, sessionId: null });
+    set({
+      runner: null,
+      routine: null,
+      routineId: null,
+      routineSnapshot: null,
+      exerciseId: null,
+      snapshot: null,
+      instance: null,
+      sessionId: null,
+    });
   },
 }));
 

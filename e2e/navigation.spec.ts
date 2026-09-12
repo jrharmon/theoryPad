@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
 test('the app boots and every nav destination renders', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/#\/home$/);
-  await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your routines' })).toBeVisible();
 
   for (const label of ['Exercises', 'Fretboard', 'Report', 'Settings']) {
     await page.getByRole('link', { name: label, exact: true }).click();

@@ -1,3 +1,4 @@
+import { findExerciseDefinition } from '@/exercises/registry';
 import { usePractice } from '@/store/practice';
 
 /**
@@ -7,8 +8,34 @@ import { usePractice } from '@/store/practice';
 export function RunningChrome({ name }: { name: string }) {
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
+  const routine = usePractice((s) => s.routineSnapshot);
   const practice = usePractice();
   if (!snapshot) return null;
+
+  if (routine) {
+    const { index, items } = routine;
+    const current = findExerciseDefinition(items[index]?.definitionId ?? '')?.name;
+    const next = findExerciseDefinition(items[index + 1]?.definitionId ?? '')?.name;
+    return (
+      <div className="flex items-center gap-4 bg-ink px-6 py-3 text-bg" data-testid="routine-chrome">
+        <span className="text-[16px] font-extrabold tabular-nums">
+          {String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
+        </span>
+        <span className="text-[13px] font-semibold">{current}</span>
+        <div className="flex flex-1 gap-[3px]" aria-hidden>
+          {items.map((item, i) => (
+            <span
+              key={item.id}
+              className={`h-1.5 flex-1 ${i < index ? 'bg-accent' : i === index ? 'bg-accent-400' : 'bg-bg/25'}`}
+            />
+          ))}
+        </div>
+        <span className="text-[12px] opacity-70">
+          {next ? `Next: ${next}` : `${name} · last one`}
+        </span>
+      </div>
+    );
+  }
 
   const { passesPlayed, state, phraseTick } = snapshot;
   const paused = state === 'paused';

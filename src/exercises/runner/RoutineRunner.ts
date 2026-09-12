@@ -50,7 +50,10 @@ export interface RoutineItemSnapshot {
   reps: number;
   instance: ExerciseInstance | null;
   variation: RolledVariation | null;
-  passesPlayed: number;
+  /** Passes played to the end — skipped and abandoned ones do not count. */
+  completed: number;
+  /** Skipped before it had all its passes. */
+  skipped: boolean;
 }
 
 export interface RoutineSnapshot {
@@ -61,6 +64,7 @@ export interface RoutineSnapshot {
   /** The current item's own snapshot, while running. */
   current: RunnerSnapshot | null;
   startedAt: number | null;
+  endedAt: number | null;
 }
 
 /**
@@ -84,6 +88,8 @@ export class RoutineRunner {
   private keyMode: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
   private rollAttempt = 0;
   private startedAt: number | null = null;
+  private endedAt: number | null = null;
+  private results = new Map<string, { completed: number; skipped: boolean }>();
 
   constructor(config: RoutineRunnerConfig) {
     this.config = config;
@@ -105,11 +111,13 @@ export class RoutineRunner {
           reps: item.reps,
           instance: runner.currentInstance,
           variation: snap.variation,
-          passesPlayed: snap.passesPlayed,
+          completed: this.results.get(item.id)?.completed ?? 0,
+          skipped: this.results.get(item.id)?.skipped ?? false,
         };
       }),
       current: this.phase === 'running' ? (this.current?.snapshot ?? null) : null,
       startedAt: this.startedAt,
+      endedAt: this.endedAt,
     };
   }
 
@@ -186,7 +194,13 @@ export class RoutineRunner {
         axisPolicies: { ...item.axisPolicies, ...shared },
         now: this.config.now,
         ...(this.config.onRepStart ? { onRepStart: this.config.onRepStart } : {}),
-        onRepEnd: (rep) => this.config.onRepEnd?.({ ...rep, routineItemId: item.id }),
+        onRepEnd: (rep) => {
+          const result = this.results.get(item.id) ?? { completed: 0, skipped: false };
+          if (rep.status === 'completed') result.completed += 1;
+          if (rep.status === 'skipped') result.skipped = true;
+          this.results.set(item.id, result);
+          this.config.onRepEnd?.({ ...rep, routineItemId: item.id });
+        },
       });
       runner.start();
       return runner;
@@ -204,6 +218,7 @@ export class RoutineRunner {
 
     this.phase = 'overview';
     this.index = 0;
+    this.results = new Map();
     this.emit();
   }
 
@@ -222,9 +237,13 @@ export class RoutineRunner {
 
   /** Move to the next item now. A pass in progress is logged as skipped. */
   skip(): void {
-    if (this.phase !== 'running') return;
+    if (this.phase !== 'running' || !this.current) return;
+    // Skipped from ready, with no pass in progress, is still a skip.
+    const id = this.config.items[this.index]!.id;
+    const result = this.results.get(id) ?? { completed: 0, skipped: false };
+    this.results.set(id, { ...result, skipped: true });
     // The item goes to `done`, and the subscription moves on from there.
-    this.current?.skip();
+    this.current.skip();
   }
 
   pause(): void {
@@ -285,6 +304,7 @@ export class RoutineRunner {
     if (this.index >= this.runners.length) {
       this.index = this.runners.length - 1;
       this.phase = 'done';
+      this.endedAt = this.config.now();
       this.config.clock.stop();
       this.emit();
       return;

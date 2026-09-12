@@ -103,6 +103,8 @@ test('hold says what it is holding', async ({ page }) => {
   // Playing and leaving is enough: the pass is logged, and its values held.
   await page.getByRole('link', { name: 'Practice this' }).click();
   await page.getByTestId('play').click();
+  // Play waits for the audio engine; leave once something is actually playing.
+  await expect(page.getByTestId('pause')).toBeVisible();
   await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: EXERCISE }).click();

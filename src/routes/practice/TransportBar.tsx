@@ -9,14 +9,15 @@ import { useSettings } from '@/store/settings';
  * A generated exercise can run to twenty-one bars, and having to scroll to the
  * end to press start and back to the top to read it was the wrong shape.
  *
- * There is no End and no Skip: leaving the screen is how you finish, and every
- * pass is logged as it ends, so there is nothing to remember to press.
+ * There is no End: leaving the screen is how you finish, and every pass is
+ * logged as it ends, so there is nothing to remember to press. Skip appears
+ * only in a routine, where there is a next exercise to skip to.
  */
 export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }) {
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
   const practice = usePractice();
-  const audio = useSettings((s) => s.settings.audio);
+  const inRoutine = usePractice((s) => s.routine !== null);
 
   if (!snapshot) return null;
 
@@ -74,19 +75,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </div>
       )}
 
-      <div className="flex items-center gap-1" role="group" aria-label="Playback">
-        <Toggle
-          label="Metronome"
-          on={audio.metronomeEnabled}
-          onChange={(on) => void practice.setMetronome(on)}
-        />
-        <Toggle
-          label="Count-in"
-          on={audio.countInBars > 0}
-          onChange={(on) => void practice.setCountIn(on)}
-        />
-        <Toggle label="Loop" on={audio.loop} onChange={(on) => void practice.setLoop(on)} />
-      </div>
+      <PlaybackToggles />
 
       {state === 'count-in' && (
         <span className="text-[13px] font-extrabold tabular-nums">Counting in…</span>
@@ -106,7 +95,40 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         <Button variant="secondary" size="sm" onClick={() => practice.reroll()}>
           Re-roll
         </Button>
+        {/* Only a routine has somewhere to skip to. */}
+        {inRoutine && (
+          <Button variant="secondary" size="sm" onClick={() => practice.skip()}>
+            Skip
+          </Button>
+        )}
       </div>
+    </div>
+  );
+}
+
+/** Metronome, count-in and loop. Remembered app-wide, and applied straight away. */
+export function PlaybackToggles() {
+  const practice = usePractice();
+  const audio = useSettings((s) => s.settings.audio);
+  const inRoutine = usePractice((s) => s.routine !== null);
+  return (
+    <div className="flex items-center gap-1" role="group" aria-label="Playback">
+      <Toggle
+        label="Metronome"
+        on={audio.metronomeEnabled}
+        onChange={(on) => void practice.setMetronome(on)}
+      />
+      <Toggle
+        label="Count-in"
+        on={audio.countInBars > 0}
+        onChange={(on) => void practice.setCountIn(on)}
+      />
+      <Toggle
+        // In a routine, looping holds you on the current exercise.
+        label={inRoutine ? 'Stay on this' : 'Loop'}
+        on={audio.loop}
+        onChange={(on) => void practice.setLoop(on)}
+      />
     </div>
   );
 }

@@ -5,6 +5,9 @@ import { Gallery } from '@/routes/dev/Gallery';
 import { ExerciseLibrary } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
 import { PracticeExercise } from '@/routes/practice/PracticeExercise';
+import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
+import { Home } from '@/routes/home/Home';
+import { RoutineBuilder } from '@/routes/routines/RoutineBuilder';
 
 /**
  * Hash routing: GitHub Pages serves from a subpath and has no SPA fallback,
@@ -19,39 +22,12 @@ export const router = createHashRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <Navigate to="/home" replace /> },
-      {
-        path: 'home',
-        element: (
-          <Placeholder
-            title="Home"
-            milestone="Milestone 5"
-            summary="Today's routine, your other routines, the practice heatmap and personal bests."
-          />
-        ),
-      },
-      {
-        path: 'routines/:routineId',
-        element: (
-          <Placeholder
-            title="Routine builder"
-            milestone="Milestone 5"
-            summary="Add, reorder and remove exercises; set rep counts, the inter-exercise gap and the session axis policies."
-          />
-        ),
-      },
+      { path: 'home', element: <Home /> },
+      { path: 'routines/:routineId', element: <RoutineBuilder /> },
       { path: 'exercises', element: <ExerciseLibrary /> },
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
-      {
-        path: 'practice/routine/:routineId',
-        element: (
-          <Placeholder
-            title="Run routine"
-            milestone="Milestone 5"
-            summary="The chained, hands-off session runner."
-          />
-        ),
-      },
+      { path: 'practice/routine/:routineId', element: <PracticeRoutine /> },
       {
         path: 'fretboard',
         element: (
