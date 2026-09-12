@@ -10,10 +10,10 @@
 | --- | --- |
 | M0–M3, M3 follow-up | ✅ complete, merged, live |
 | M5 — Routines, settings, export/import | ✅ reviewed, merged, live |
-| M4 — Theory | next |
+| **M4 — Theory** | **✅ built on `m4-theory`, awaiting review** |
 | M6–M10 | not started |
 
-640 unit tests, 39 E2E, `pnpm check` green.
+670 unit tests, 43 E2E, `pnpm check` green.
 
 ## What works today
 
@@ -26,19 +26,31 @@
   (or S), "Stay on this" to hold on an item. A summary at the end.
 - **Exercises** — four scale/mode exercises, favorites pinned; practicing as in the M3
   follow-up (no reps, Loop, settings dialog, tab size, neck).
+- **Theory** — **Key signature drill** (notes, chord qualities, spelling, function, in the
+  rolled key — the routine's in a routine) and **Circle of fifths** (signatures, relatives,
+  neighbours, mode signatures across all keys). Right answers move on; wrong ones show the
+  correction until Enter. Tables are submitted whole. Score and time per set.
 - **Settings** — tuning (standard, drop D, 7-string), metronome default, count-in bars,
   volume, neck, tab size; **Export / Import** (merge or replace, with a summary first).
 - **Keys**: Space pause · Enter play/start · `[` `]` tempo · R re-roll · M metronome ·
-  L loop · S skip (routine) · `-` `=` tab size · Esc leave.
+  L loop · S skip (routine) · `-` `=` tab size · Esc leave · theory: 1–6 answer, Enter
+  submits a table or moves on, ↑ ↓ pick a table row.
 
-## Next: M5 review, then M4 — Theory
+## Next: M4 review, then M6 — practice log, report and fretboard explorer
 
 ## Open questions for the player
 
+- **Are the theory distractors actually tempting?** That is M4's whole verify step.
 - Is the count-in enough of a pause between a routine's items, especially at a big tempo change?
 - Does "Stay on this" feel right for lingering on an item mid-routine?
 - Still open: 35 bpm for one-note-per-string; where position-shifting's slide falls; 3rds in
   3nps; the arpeggio inside each shape; whether the seven shapes flow up the neck.
+
+## Decisions made at the start of M4
+
+- **Right answers move on; wrong ones wait** with the correction until you move on.
+- **Tables are submitted whole**, one right or wrong — no partial credit.
+- **No countdown**; a set is timed as a whole, not per question.
 
 ## Decisions made at the start of M5
 

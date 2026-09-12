@@ -593,7 +593,9 @@ export interface Rep {
   seed: number;
   status: 'completed' | 'skipped' | 'abandoned';
   /** Theory exercises only. */
-  score?: { correct: number; total: number; medianSecPerQuestion: number };
+  score?: { correct: number; total: number };
+  /** Theory: each question's subject ("key:Eb") and whether it was right. */
+  answers?: { subject: string; correct: boolean }[];
 }
 ```
 
@@ -649,6 +651,12 @@ export interface Feedback {
 
 Generalising `Feedback.visual` is what makes the "wrong answer" screen reusable across every
 theory exercise instead of being hard-coded to the circle of fifths.
+
+_As built (M4), in `src/domain/theory/`:_ `whatYouPicked` is data, not a function — a
+`whatItIs` map from option id to sentence. The circle visual carries `positions` (option id →
+place on the circle), so the screen can mark whichever option was picked. Every question has a
+`subject` for the log. A table is **one** answer: submitted whole, right only if every cell is.
+A set is timed as a whole (the rep's start and end); questions are not timed individually.
 
 ---
 

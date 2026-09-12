@@ -189,7 +189,7 @@ notes carry `slide-up` / `slide-down`.
 
 ## Family B — Theory (no guitar)
 
-### B1. `diatonic-drill` — Notes, chords and spelling from a key signature
+### B1. `diatonic-drill` — Notes, chords and spelling from a key signature ("Key signature drill")
 
 **Tags:** `theory` `chords` `no-guitar` `key-signatures`
 
@@ -205,13 +205,16 @@ the theory to what you just played).
 
 ```ts
 {
-  questionTypes: Array<'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function'>,
+  questionTypes: Array<'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function'>, // at least one
   chordDepth: 'triads' | 'sevenths' | 'both',       // default 'both'
-  chordOrder: 'sequential' | 'random' | 'by-function',
-  questionCount: number,                             // default 8
-  useSessionKey: boolean,                            // default true; false = roll a fresh key
+  questionCount: number,                             // default 8, 4–16
 }
 ```
+
+_As built (M4):_ `useSessionKey` is gone — the exercise declares `key` and `mode` like any
+other, so in a routine it asks about the routine's key automatically. `chordOrder` was not
+built. The table questions (notes, qualities) come up at most once per set; spelling and
+function questions work through the degrees in a shuffled order so a set never repeats one.
 
 **Question generators:**
 
@@ -252,7 +255,9 @@ position. Number-key answerable, ~6 seconds each.
 
 **Axes:** none rolled from the session — this one deliberately roams all 12 keys regardless of
 the session key, because coverage is the point. It uses its own internal weighting toward keys
-you've answered wrong or seen least.
+you've answered wrong or seen least. _(As built in M4: keys are drawn evenly; every rep logs
+each question's key and whether it was right, and the weighting arrives with M6's progress
+work.)_
 
 **Params:**
 

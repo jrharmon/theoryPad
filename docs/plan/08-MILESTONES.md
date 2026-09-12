@@ -205,7 +205,7 @@ Notes from the M3 review, built before M5:
 
 ---
 
-## M4 — Theory exercises
+## M4 — Theory exercises ✅ *complete (2026-09-12), awaiting review*
 
 _Now after M5: routines matter more to daily practice than theory drills, and the M3 review's
 notes were mostly about routines._
@@ -223,6 +223,24 @@ screen.
 
 **Verify:** are the distractors actually hard? A theory drill with obvious wrong answers is
 worthless — this is the thing to judge here.
+
+**Agreed at the start of M4:** a right answer moves on by itself; a wrong one waits, with the
+correction, until you move on. Tables are filled and submitted whole — one right or wrong, not
+partial credit. No countdown; a set is timed as a whole, not question by question.
+
+**Outcome.** 670 unit tests, 43 E2E. Things to carry forward:
+
+- **A set is a pass.** The runner has no clock for theory; the screen submits the set, and
+  the rep carries its score and each question's subject and result. Each pass is a fresh
+  set on the same variation — the one place new material appears without a re-roll, because
+  the variation (the key) is what stays put.
+- **"Going" is playing or answering, not "the clock is running".** A routine moving on from
+  a theory set starts the next exercise on a fresh clock, counted in — found when a routine
+  stalled on Play after a quiz.
+- **Distractors are domain code with their own tests**, per kind of answer: other spelling,
+  wrong accidental, semitone neighbour; one note wrong in a chord; the mirror signature; the
+  parallel key; the same tonic's major for a mode.
+- **Circle weighting toward misses is deferred to M6**; the data it needs is logged now.
 
 ---
 
