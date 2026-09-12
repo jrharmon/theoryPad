@@ -1,4 +1,5 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
+import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import type { TheoryPadDB } from '../db';
 import type { Exercise, Rep, Routine, Session, Settings, Uuid } from '../entities';
 import { newId } from '../ids';
@@ -124,13 +125,20 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
 
         // The rep and its aggregates commit together or not at all, so a crash
         // mid-write cannot leave the cache disagreeing with the log.
-        await database.transaction('rw', database.reps, database.exerciseStats, async () => {
-          await database.reps.add(row);
-          const current =
-            (await database.exerciseStats.get(row.exerciseId)) ??
-            emptyStats(row.exerciseId, row.definitionId);
-          await database.exerciseStats.put(applyRep(current, row));
-        });
+        await database.transaction(
+          'rw',
+          [database.reps, database.exerciseStats, database.practiceDays],
+          async () => {
+            await database.reps.add(row);
+            const current =
+              (await database.exerciseStats.get(row.exerciseId)) ??
+              emptyStats(row.exerciseId, row.definitionId);
+            await database.exerciseStats.put(applyRep(current, row));
+            const date = dayKey(row.startedAt);
+            const day = (await database.practiceDays.get(date)) ?? emptyDay(date);
+            await database.practiceDays.put(applyRepToDay(day, row));
+          },
+        );
 
         return row;
       },
@@ -171,11 +179,27 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
 
       async rebuild() {
         // The log stays authoritative; this is what makes the cache safe.
-        await database.transaction('rw', database.reps, database.exerciseStats, async () => {
-          const reps = await database.reps.toArray();
-          await database.exerciseStats.clear();
-          await database.exerciseStats.bulkPut(rebuildStats(reps));
-        });
+        await database.transaction(
+          'rw',
+          [database.reps, database.exerciseStats, database.practiceDays],
+          async () => {
+            const reps = await database.reps.toArray();
+            await database.exerciseStats.clear();
+            await database.exerciseStats.bulkPut(rebuildStats(reps));
+            await database.practiceDays.clear();
+            await database.practiceDays.bulkPut(rollupDays(reps));
+          },
+        );
+      },
+    },
+
+    days: {
+      async all() {
+        return database.practiceDays.toArray();
+      },
+
+      async inRange(from, to) {
+        return database.practiceDays.where('date').between(from, to, true, true).toArray();
       },
     },
 

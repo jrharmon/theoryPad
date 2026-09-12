@@ -2,6 +2,7 @@ import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { Phrase } from '@/domain/phrase';
 import { ticksPerBar } from '@/domain/phrase';
+import { fretTally } from '@/domain/progress';
 import type { Clock } from '@/domain/time';
 import type { AxisPolicies, CoverageCounts, RolledVariation } from '@/domain/variation';
 import {
@@ -596,6 +597,9 @@ export class ExerciseRunner {
     this.clearScheduled();
 
     if (this.variation) {
+      // Only a pass played to the end played every note, so only it counts
+      // toward the neck's note counts.
+      const phrase = outcome === 'completed' ? this.currentPhrase : null;
       const record: RepRecord = {
         exerciseId: this.config.exerciseId,
         definitionId: this.config.definition.id,
@@ -609,6 +613,7 @@ export class ExerciseRunner {
         status: outcome,
         ...(options.score ? { score: options.score } : {}),
         ...(options.answers ? { answers: options.answers } : {}),
+        ...(phrase ? { frets: fretTally(phrase, this.config.instrument.tuning.length) } : {}),
       };
       if (options.score) {
         this.lastSet = {

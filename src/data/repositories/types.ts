@@ -1,3 +1,4 @@
+import type { DayKey, PracticeDay } from '@/domain/progress';
 import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Uuid } from '../entities';
 
 export type NewExercise = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
@@ -43,8 +44,15 @@ export interface RepRepository {
 export interface StatsRepository {
   byExercise(exerciseId: Uuid): Promise<ExerciseStats | undefined>;
   all(): Promise<ExerciseStats[]>;
-  /** Recompute every aggregate from the rep log. */
+  /** Recompute every aggregate, the practice days included, from the rep log. */
   rebuild(): Promise<void>;
+}
+
+/** The per-day rollup: time, finished passes, keys and modes, notes by fret. */
+export interface PracticeDayRepository {
+  all(): Promise<PracticeDay[]>;
+  /** Inclusive, by local day. */
+  inRange(from: DayKey, to: DayKey): Promise<PracticeDay[]>;
 }
 
 export interface SettingsRepository {
@@ -58,5 +66,6 @@ export interface Repositories {
   sessions: SessionRepository;
   reps: RepRepository;
   stats: StatsRepository;
+  days: PracticeDayRepository;
   settings: SettingsRepository;
 }

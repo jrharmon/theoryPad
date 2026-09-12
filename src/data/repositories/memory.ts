@@ -1,3 +1,5 @@
+import type { PracticeDay } from '@/domain/progress';
+import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
@@ -17,6 +19,7 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
   const sessions = new Map<string, Session>();
   const reps = new Map<string, Rep>();
   const stats = new Map<string, ExerciseStats>();
+  const days = new Map<string, PracticeDay>();
   let settings: Settings | null = null;
 
   const stamp = () => now();
@@ -110,6 +113,8 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
         reps.set(row.id, row);
         const current = stats.get(row.exerciseId) ?? emptyStats(row.exerciseId, row.definitionId);
         stats.set(row.exerciseId, applyRep(current, row));
+        const date = dayKey(row.startedAt);
+        days.set(date, applyRepToDay(days.get(date) ?? emptyDay(date), row));
         return Promise.resolve(row);
       },
       byId: (id) => Promise.resolve(reps.get(id)),
@@ -134,8 +139,21 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
       rebuild() {
         stats.clear();
         for (const entry of rebuildStats([...reps.values()])) stats.set(entry.exerciseId, entry);
+        days.clear();
+        for (const day of rollupDays([...reps.values()])) days.set(day.date, day);
         return Promise.resolve();
       },
+    },
+
+    days: {
+      all: () =>
+        Promise.resolve([...days.values()].sort((a, b) => (a.date < b.date ? -1 : 1))),
+      inRange: (from, to) =>
+        Promise.resolve(
+          [...days.values()]
+            .filter((d) => d.date >= from && d.date <= to)
+            .sort((a, b) => (a.date < b.date ? -1 : 1)),
+        ),
     },
 
     settings: {

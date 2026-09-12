@@ -1,4 +1,6 @@
 import Dexie, { type Table } from 'dexie';
+import type { PracticeDay } from '@/domain/progress';
+import { rollupDays } from '@/domain/progress';
 import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from './entities';
 
 /**
@@ -13,6 +15,7 @@ export class TheoryPadDB extends Dexie {
   reps!: Table<Rep, string>;
   exerciseStats!: Table<ExerciseStats, string>;
   settings!: Table<Settings, string>;
+  practiceDays!: Table<PracticeDay, string>;
 
   constructor(name = 'theorypad') {
     super(name);
@@ -40,6 +43,15 @@ export class TheoryPadDB extends Dexie {
 
     // Routines arrive in milestone 5. A new table, nothing to migrate.
     this.version(3).stores({ routines: 'id, updatedAt, deletedAt' });
+
+    // Milestone 6: a per-day rollup for the heatmap, streak and fretboard
+    // explorer. A cache over the log, so it starts out rebuilt from it.
+    this.version(4)
+      .stores({ practiceDays: 'date' })
+      .upgrade(async (transaction) => {
+        const reps = await transaction.table<Rep>('reps').toArray();
+        await transaction.table<PracticeDay>('practiceDays').bulkPut(rollupDays(reps));
+      });
   }
 }
 

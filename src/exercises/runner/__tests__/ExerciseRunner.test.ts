@@ -350,6 +350,19 @@ describe('rep records', () => {
     expect(rep.endedAt).toBeGreaterThan(rep.startedAt);
   });
 
+  it('counts every note a finished pass played, by string and fret', () => {
+    const { runner, clock } = makeRunner();
+    runner.start();
+    const phrase = runner.currentPhrase!;
+    runner.begin();
+    playThrough(runner, clock);
+
+    const frets = runner.completedReps[0]!.frets!;
+    expect(frets.strings).toBe(runner.snapshot.instrument.tuning.length);
+    const played = Object.values(frets.counts).reduce((a, b) => a + b, 0);
+    expect(played).toBe(phrase.notes.filter((n) => !n.tied).length * (phrase.repeat ?? 1));
+  });
+
   it('records an abandoned pass when the exercise is left mid-play', () => {
     const { runner, clock } = makeRunner();
     runner.start();
@@ -360,6 +373,8 @@ describe('rep records', () => {
     expect(runner.snapshot.state).toBe('done');
     expect(runner.completedReps).toHaveLength(1);
     expect(runner.completedReps[0]!.status).toBe('abandoned');
+    // Not every note was played, so none of them count.
+    expect(runner.completedReps[0]!.frets).toBeUndefined();
   });
 
   it('records nothing when ended from the brief', () => {

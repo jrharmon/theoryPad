@@ -2,6 +2,7 @@ import type { ModeName, PitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
+import type { FretTally } from '@/domain/progress';
 
 export type Uuid = string;
 
@@ -129,6 +130,8 @@ export interface Rep extends Row {
   score?: RepScore;
   /** Theory only: each question, so later practice can lean toward what you miss. */
   answers?: RepAnswer[];
+  /** Finished played passes: every note, counted by string and fret. */
+  frets?: FretTally;
 }
 
 /**

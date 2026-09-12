@@ -1,6 +1,7 @@
 import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { RolledVariation } from '@/domain/variation';
+import type { FretTally } from '@/domain/progress';
 
 /**
  * The runner's states.
@@ -29,6 +30,8 @@ export interface RepRecord {
   /** Theory sets only. */
   score?: { correct: number; total: number };
   answers?: { subject: string; correct: boolean }[];
+  /** Finished played passes: every note, by string and fret. */
+  frets?: FretTally;
 }
 
 /** A finished theory set, as the screen shows it. */

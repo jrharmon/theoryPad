@@ -82,6 +82,10 @@ describe('export and import', () => {
     const stats = await createRepositories(target).stats.all();
     expect(stats).toHaveLength(1);
     expect(stats[0]!.repCount).toBe(3);
+    // So are the practice days.
+    expect(await createRepositories(target).days.all()).toEqual(
+      await createRepositories(db).days.all(),
+    );
   });
 
   it('merges by keeping whichever copy changed last', async () => {

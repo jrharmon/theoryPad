@@ -3,6 +3,7 @@ import type { TheoryPadDB } from './db';
 import type { Exercise, Rep, Routine, Row, Session, Settings } from './entities';
 import { withDefaults } from './repositories/dexie';
 import { rebuildStats } from './stats';
+import { rollupDays } from '@/domain/progress';
 
 /**
  * Export and import: the backup story, and the way to move between devices.
@@ -178,6 +179,7 @@ export async function applyImport(
       database.reps,
       database.settings,
       database.exerciseStats,
+      database.practiceDays,
     ],
     async () => {
       for (const table of TABLES) {
@@ -205,7 +207,10 @@ export async function applyImport(
       }
 
       await database.exerciseStats.clear();
-      await database.exerciseStats.bulkPut(rebuildStats(await database.reps.toArray()));
+      const reps = await database.reps.toArray();
+      await database.exerciseStats.bulkPut(rebuildStats(reps));
+      await database.practiceDays.clear();
+      await database.practiceDays.bulkPut(rollupDays(reps));
     },
   );
 

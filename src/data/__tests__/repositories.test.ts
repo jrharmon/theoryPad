@@ -227,6 +227,51 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
       it('has nothing before anything is played', async () => {
         expect(await repos.stats.all()).toEqual([]);
         expect(await repos.stats.byExercise('exercise-1')).toBeUndefined();
+        expect(await repos.days.all()).toEqual([]);
+      });
+    });
+
+    describe('practice days', () => {
+      const day = (d: number, hour = 12) => new Date(2026, 8, d, hour).getTime();
+
+      it('rolls each rep into its day as it is written', async () => {
+        const frets = { strings: 6, counts: { '0:5': 2, '1:7': 1 } };
+        await repos.reps.add(
+          repFixture({ startedAt: day(7), endedAt: day(7) + 60_000, frets, axes: { key: 'D', mode: 'dorian' } }),
+        );
+        await repos.reps.add(repFixture({ startedAt: day(7, 20), endedAt: day(7, 20) + 30_000, frets }));
+        await repos.reps.add(
+          repFixture({ startedAt: day(9), endedAt: day(9) + 30_000, frets, status: 'abandoned' }),
+        );
+
+        const days = await repos.days.all();
+        expect(days.map((d) => [d.date, d.seconds, d.passes])).toEqual([
+          ['2026-09-07', 90, 2],
+          ['2026-09-09', 30, 0],
+        ]);
+        expect(days[0]!.frets).toEqual({ 6: { '0:5': 4, '1:7': 2 } });
+        expect(days[0]!.keyModes).toEqual({ 'D dorian': 1 });
+        expect((await repos.days.inRange('2026-09-08', '2026-09-30')).map((d) => d.date)).toEqual([
+          '2026-09-09',
+        ]);
+      });
+
+      it('rebuilds to exactly what incremental maintenance produced', async () => {
+        for (let i = 0; i < 30; i += 1) {
+          const startedAt = day(1 + (i % 9), 8 + (i % 12));
+          await repos.reps.add(
+            repFixture({
+              startedAt,
+              endedAt: startedAt + 45_000,
+              axes: { key: i % 2 ? 'C' : 'Bb', mode: 'lydian' },
+              frets: { strings: 6, counts: { [`${i % 6}:${i % 13}`]: 1 + (i % 3) } },
+              status: i % 5 === 0 ? 'abandoned' : 'completed',
+            }),
+          );
+        }
+        const before = await repos.days.all();
+        await repos.stats.rebuild();
+        expect(await repos.days.all()).toEqual(before);
       });
     });
 
@@ -286,6 +331,36 @@ describe('the v2 migration', () => {
     expect(row!.tempo.targetTempo).toBe(76);
     expect(row!.definitionId).toBe('modes-through-key');
 
+    await after.delete();
+  });
+});
+
+describe('the v4 migration', () => {
+  it('builds the practice days from the reps already logged', async () => {
+    const name = `theorypad-migration-v4-${Date.now()}`;
+    const before = new Dexie(name);
+    before.version(3).stores({
+      exercises: 'id, definitionId, updatedAt, deletedAt',
+      sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
+      reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
+      exerciseStats: 'exerciseId, definitionId, updatedAt',
+      settings: 'key',
+      routines: 'id, updatedAt, deletedAt',
+    });
+    await before.open();
+    const startedAt = new Date(2026, 8, 10, 18).getTime();
+    await before.table('reps').add({
+      ...repFixture({ startedAt, endedAt: startedAt + 120_000, axes: { key: 'A', mode: 'aeolian' } }),
+      id: 'old-rep',
+      createdAt: 1,
+      updatedAt: 1,
+    });
+    before.close();
+
+    const after = new TheoryPadDB(name);
+    expect(await after.practiceDays.toArray()).toEqual([
+      { date: '2026-09-10', seconds: 120, passes: 1, keyModes: { 'A aeolian': 1 }, frets: {} },
+    ]);
     await after.delete();
   });
 });
