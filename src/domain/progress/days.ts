@@ -54,3 +54,17 @@ export function weekStart(key: DayKey): DayKey {
 export function monthStart(key: DayKey): DayKey {
   return `${key.slice(0, 7)}-01`;
 }
+
+export type RangePreset = 'last-7' | 'last-30' | 'this-month';
+
+/** A report range by name, ending today. */
+export function presetRange(preset: RangePreset, today: DayKey): { from: DayKey; to: DayKey } {
+  switch (preset) {
+    case 'last-7':
+      return { from: addDays(today, -6), to: today };
+    case 'last-30':
+      return { from: addDays(today, -29), to: today };
+    case 'this-month':
+      return { from: monthStart(today), to: today };
+  }
+}

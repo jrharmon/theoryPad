@@ -21,6 +21,7 @@ import {
   monthStart,
   neckCounts,
   practiceHeatmap,
+  presetRange,
   reportSummary,
   rollupDays,
   secondsBetween,
@@ -82,6 +83,12 @@ describe('days', () => {
     expect(weekStart('2026-09-12')).toBe('2026-09-07');
     expect(weekStart('2026-09-07')).toBe('2026-09-07');
     expect(monthStart('2026-09-12')).toBe('2026-09-01');
+  });
+
+  it('names report ranges that end today', () => {
+    expect(presetRange('last-7', '2026-09-12')).toEqual({ from: '2026-09-06', to: '2026-09-12' });
+    expect(presetRange('last-30', '2026-09-12')).toEqual({ from: '2026-08-14', to: '2026-09-12' });
+    expect(presetRange('this-month', '2026-09-12')).toEqual({ from: '2026-09-01', to: '2026-09-12' });
   });
 });
 

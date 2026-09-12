@@ -8,6 +8,7 @@ import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
 import { RoutineBuilder } from '@/routes/routines/RoutineBuilder';
+import { ReportPage } from '@/routes/report/ReportPage';
 import { SettingsPage } from '@/routes/settings/SettingsPage';
 
 /**
@@ -39,16 +40,7 @@ export const router = createHashRouter([
           />
         ),
       },
-      {
-        path: 'report',
-        element: (
-          <Placeholder
-            title="Practice summary"
-            milestone="Milestone 6"
-            summary="Exercises, times played, tempos used and total time over a date range."
-          />
-        ),
-      },
+      { path: 'report', element: <ReportPage /> },
       { path: 'settings', element: <SettingsPage /> },
       // Development only: the M1 primitives against fixture data.
       { path: 'dev/gallery', element: <Gallery /> },

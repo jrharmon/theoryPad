@@ -24,7 +24,7 @@ export function DayBarChart({
         {days.map((day) => (
           <div
             key={day.date}
-            className="flex h-full min-w-[8px] flex-1 flex-col justify-end"
+            className="flex h-full min-w-[8px] max-w-[32px] flex-1 flex-col justify-end"
             title={`${new Date(dayStart(day.date)).toLocaleDateString('en-US', {
               weekday: 'short',
               month: 'short',
@@ -43,7 +43,7 @@ export function DayBarChart({
           <span
             key={day.date}
             className={cn(
-              'tabular min-w-[8px] flex-1 text-center text-[10px] leading-none',
+              'tabular min-w-[8px] max-w-[32px] flex-1 text-center text-[10px] leading-none',
               weekday(day.date) === 0 ? 'text-ink' : 'text-ink/45',
             )}
           >
