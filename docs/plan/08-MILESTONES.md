@@ -308,6 +308,33 @@ genuinely usable, and the first point real usage will tell us things planning ca
 | 6.6 | Mode character prose — 7 modes × (sounds like / signature note / avoid / compare), **practical voice**: what to play, not what genre it belongs to. Drafted for your edit, stored as `domain/music/modeCharacter.ts`. | S    |
 | 6.7 | Report export: self-contained single-file HTML (styles inlined) plus CSV of the raw log                                                                                                                               | S    |
 
+**Agreed at the start of M6:**
+
+- **No personal bests** for now. Home gets a slim strip above the routines: a 28-day heatmap
+  (none / under 15m / 15–29m / 30m+), the current streak, and this week's time.
+- **Every finished pass records the notes it played** — a count per string and fret, from
+  every played exercise, modes up the neck included. The fretboard explorer shades the whole
+  neck by it: a heatmap of every fret on the guitar. The rep carries its tally, so the log stays
+  authoritative; a per-day rollup (`fretDays`) is the rebuildable cache that makes all-time and
+  windowed views cheap. Counting starts when this ships.
+- **`/fretboard`** is a reference first: pick a key and mode (starting on the last one
+  practiced), see it across the whole neck by degree or note name, isolate one of the seven 3nps
+  shapes. Note-count shading is a layer you switch on, all-time or the last 30 days. Beside it,
+  a key × mode grid of what you've played.
+- **`<KeyModeView />`:** clicking "Key & mode" in the practice screen opens the compact
+  popover without stopping playback (notes with degrees, triads, a one-line character); "Full
+  view" opens the drawer (7ths, 9ths, function, go-to progressions, the prose). Same trigger
+  from the routine overview, builder and What varies; `/fretboard` shows the full view beside
+  the neck; `K` toggles the popover.
+- **Report:** presets Last 7 days / Last 30 days / This month / Custom (two plain date
+  fields), default Last 7 days; days split at local midnight. Played = finished passes; time
+  includes skipped and abandoned; sessions count only if something was logged; theory rows
+  show a score instead of tempos.
+- **Streak:** a day counts with any finished pass or set; today not practiced yet doesn't
+  break it until tomorrow.
+- **Circle of fifths** leans toward keys you miss or have seen least: weight
+  (1 + 2 × misses) ÷ (1 + seen) over the last 30 days.
+
 **Deliverable:** you can see what you've practised and what you've never touched, and export a
 week's summary as one file.
 
