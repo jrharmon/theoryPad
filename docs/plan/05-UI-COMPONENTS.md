@@ -262,13 +262,13 @@ Hash router. `/` redirects to `/home`.
 
 | Route                    | Screen                                                                                                           | Mockup       | Milestone |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------ | --------- |
-| `/home`                  | Your routines — favorites pinned, then most recently played; Start and Edit. (Heatmap and bests: M6)            | 1a           | M5        |
+| `/home`                  | Your routines — favorites pinned, then most recently played; Start and Edit. Above them (M6): a four-week heatmap, the streak, this week's time| 1a           | M5        |
 | `/routines/:id`          | Routine builder — name, key/mode policies, items (each its own copy: passes, Edit, reorder, remove)               | 1a           | M5        |
 | `/exercises`             | Exercise library — everything in the registry, plus your configured instances; filtered by tag                   | —            | M2        |
 | `/exercises/:id`         | Exercise detail — description, config (target tempo, max tempo, params, video), history, **Practice this** | —            | M2        |
 | `/practice/exercise/:id` | Standalone runner for one exercise                                                                               | 1b/1c merged | M2        |
 | `/practice/routine/:id`  | Routine: overview (re-roll one or all) → hands-off run (Skip, "Stay on this") → summary                          | 1b/1c/3a-3c  | M5        |
-| `/fretboard`             | Fretboard explorer with coverage                                                                                 | 1d           | M6        |
+| `/fretboard`             | A key and mode across the neck, one 3nps shape at a time; notes-played heat; key × mode grid; the full key/mode view | 1d           | M6        |
 | `/report`                | Practice summary over a date range — a table, not a document                                                     | 1e           | M6        |
 | `/settings`              | Tuning, sound (metronome, count-in, volume), display (neck, tab size), export/import                            | —            | M5        |
 

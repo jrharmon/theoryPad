@@ -211,6 +211,15 @@ coverage(stats): {
 The split is the rule to remember: **windowed questions query the log; all-time questions read
 the cache; the cache is always rebuildable from the log.**
 
+_As built (M6):_ the player-wide rollup became **`practiceDays`** (Dexie v4), one row per local
+day: seconds (every pass), finished passes, finished passes per `"Bb dorian"`, and notes played
+per string count → `"string:fret"` → count. It is written in the rep's transaction, rebuilt by
+`stats.rebuild()` and on import, and built from the existing log by the v4 upgrade. The fold is
+`applyRepToDay` in `domain/progress/rollup.ts`, tested equal to `rollupDays` over a random log.
+The notes come from a new optional `rep.frets` (`{ strings, counts }`), set only on a finished
+played pass — an unfinished pass didn't play every note. The streak, heatmap, explorer and key ×
+mode grid read the days; the report's table reads the reps in range.
+
 ## Export / import
 
 The multi-device story for v1, and the backup story forever.

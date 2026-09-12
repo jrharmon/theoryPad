@@ -296,7 +296,7 @@ genuinely usable, and the first point real usage will tell us things planning ca
 
 ---
 
-## M6 — Practice log, report & fretboard explorer
+## M6 — Practice log, report & fretboard explorer ✅ *complete (2026-09-12)*
 
 | #   | Task                                                                                                                                                                                                                  | Size |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
@@ -334,6 +334,25 @@ genuinely usable, and the first point real usage will tell us things planning ca
   break it until tomorrow.
 - **Circle of fifths** leans toward keys you miss or have seen least: weight
   (1 + 2 × misses) ÷ (1 + seen) over the last 30 days.
+
+**Outcome.** 713 unit tests, 46 E2E. Things to carry forward:
+
+- **`domain/progress/` is the whole of progress**: day keys (local midnight, Monday weeks),
+  the per-day rollup, heatmap, streak, time-by-day, exercise log, report summary, tempo
+  history, fret tally, neck heat and summary, key × mode grid, answer weights. Pure, over reps
+  and `PracticeDay`s.
+- **`practiceDays` (Dexie v4) is the cache** for everything all-time; the report's table reads
+  reps. Doc 07 has the as-built.
+- **The neck counts only finished played passes**, at absolute string and fret, kept apart per
+  string count. Heat is on the ink ramp with ringed dots — accent stays for the signature note.
+- **Shared `KeyModeTrigger`** (popover → drawer) with controlled state on the practice screens,
+  so `K` toggles it. The practice hotkeys now ignore keys typed inside any dialog or popover:
+  closing one on Escape re-rendered mid-dispatch and re-attached the listener in time to hear
+  the same Escape and leave the exercise.
+- **The report's HTML export takes its colors from the theme tokens** at export time; the CSV
+  is a row per pass.
+- Mode prose and go-to progressions are in `domain/music/modeCharacter.ts`, for editing; a test
+  checks each progression's advice only names chords that progression contains.
 
 **Deliverable:** you can see what you've practised and what you've never touched, and export a
 week's summary as one file.

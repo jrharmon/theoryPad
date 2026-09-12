@@ -1,7 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-12, end of M4. Written as a hand-off: a fresh session should be able
-to start M6 from this file, `CLAUDE.md`, and the plan docs it points to.
+**Last updated:** 2026-09-12, end of M6 (built, awaiting review). Written as a hand-off: a
+fresh session should be able to pick up the M6 review — or, once it is merged, start M7 — from
+this file, `CLAUDE.md`, and the plan docs it points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -14,13 +15,16 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M3 — Scale & mode family, and its practice-view follow-up | ✅ merged, live |
 | M5 — Routines, settings, export/import | ✅ merged, live |
 | M4 — Theory | ✅ merged, live |
-| **M6 — Practice log, report & fretboard explorer** | **next** — doc 08 has the tasks |
+| **M6 — Practice log, report & fretboard explorer** | **built on `m6-progress`, awaiting the player's review** — not merged, not pushed |
 | M7 — Audio richness · M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. Everything is on `main`; there are no open branches.
-672 unit tests, 43 E2E, `pnpm check` green.
+M5 was deliberately built before M4. `main` holds M0–M5 and M4; M6 is one branch,
+`m6-progress`, a commit per task. 713 unit tests, 46 E2E, `pnpm check` green.
 
-## How the player works — read before starting M6
+**If the M6 review is done:** apply any changes on `m6-progress`, fast-forward `main` to it,
+push, check CI and the deploy, mark M6 reviewed in doc 08, and update this file. Then M7.
+
+## How the player works — read before starting anything
 
 - **One milestone at a time, and stop at the gate.** Build the milestone, verify it, report,
   and wait. The player reviews hands-on (often with a guitar) before the next one starts.
@@ -51,10 +55,11 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
 | --- | --- |
 | `src/domain/` | Pure logic. `music` (tonal wrapper), `instrument` (shapes, fretboard), `phrase` (ticks, builder), `variation` (axes, policies, roller), `theory` (questions, distractors), `neck`, `tempo`, `time` (Clock, FakeClock). |
 | `src/exercises/` | Definitions, one directory each, registered in `registry.ts`; `shared/` generators; `params.ts` (a Zod schema → a settings form); `runner/` — `ExerciseRunner` and `RoutineRunner`. |
-| `src/data/` | Dexie (schema v3: exercises, routines, sessions, reps, exerciseStats, settings), repositories (Dexie + in-memory, one test suite), stats, `transfer.ts` (export/import). |
-| `src/store/` | Zustand: `practice` (drives one exercise or a routine through the same screen), `exercises`, `routines`, `settings`. |
-| `src/routes/` | Screens: `home` (routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `settings`, `dev/gallery`. `/fretboard` and `/report` are still placeholders — M6. |
-| `src/components/` | `music` (Fretboard, TabStaff, tab layout), `theory` (single pick, table fill, feedback, circle strip, note row), `variation` (AxisPolicyEditor), `ui` (shadcn + our own). |
+| `src/domain/progress/` | Everything progress, pure: local day keys, the per-day rollup, heatmap, streak, time by day, exercise log, report summary, fret tally and neck heat, key × mode grid, answer weights. |
+| `src/data/` | Dexie (schema v4: exercises, routines, sessions, reps, exerciseStats, practiceDays, settings), repositories (Dexie + in-memory, one test suite), stats, `transfer.ts` (export/import). |
+| `src/store/` | Zustand: `practice` (drives one exercise or a routine through the same screen), `exercises`, `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state). |
+| `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
+| `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 
 ### The run model, briefly (doc 03 has it in full)
 
@@ -71,10 +76,25 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   key. A right answer moves on after a beat; a wrong one waits with the correction. Tables are
   submitted whole. The rep logs the score and each question's subject and result; the set is
   timed as a whole.
+- **Progress:** the log is the truth; `practiceDays` is a cache over it. A finished played
+  pass also logs `frets` — every note by string and fret — which feeds the explorer's heat.
+  Days split at local midnight; weeks start Monday.
 
 ## What works today
 
-- **Home**: your routines, favorites pinned, with Start and Edit.
+- **Home**: a four-week heatmap, the streak and this week's time; then your routines,
+  favorites pinned, with Start and Edit.
+- **Report** (`/report`): Last 7 / 30 days, This month or Custom; sessions, time, variations,
+  exercises; time by day; a sortable exercise table (theory rows show a score). Export a
+  self-contained HTML report or the raw log as CSV.
+- **Fretboard** (`/fretboard`): a key and mode across the whole neck (starts on the last one
+  practiced), degrees or notes, one 3nps shape at a time; a notes-played heat layer (all time
+  or 30 days); spots played, frets never played; a key × mode grid that picks the key; the full
+  key/mode view beside it.
+- **Key/mode reference**: click the key in the practice strip or routine overview (or press K)
+  for a compact popover; Full view for the drawer — notes, chords with 7ths/9ths/function,
+  progressions, and the mode prose. Also linked from What varies and the routine builder once a
+  key and mode are both fixed or held.
 - **Routine builder**: name, key/mode policies, items (passes, Edit, reorder, remove), and an
   estimated length.
 - **Running a routine**: an overview (re-roll one item or all), then hands-off play; Skip (or
@@ -86,7 +106,7 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   - *One note per string* — note names on the tab, no neck
   - *Position shifting*
   - *Key signature drill* (theory)
-  - *Circle of fifths* (theory)
+  - *Circle of fifths* (theory) — leans toward keys you miss or have seen least
 - **Practicing**:
   - Metronome, Count-in and Loop toggles
   - a settings dialog
@@ -102,26 +122,35 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   - M: metronome
   - L: loop
   - S: skip (routines)
+  - K: the key/mode reference
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: M6
+## At the M6 gate — for the player
 
-Doc 08 §M6: `domain/progress/` (coverage, heatmap, time-by-day, streak, tempo history), the
-home page's heatmap and personal bests, `/report`, `/fretboard`, `<KeyModeView />`, the
-mode-character prose (drafted for the player to edit), and report export.
+Only you can judge these:
+- **Does the coverage match reality?** Play a few passes, then look at `/fretboard` with
+  Notes played on. The heat should sit exactly where you played. Counting starts with this
+  build; older passes have no notes recorded.
+- **Does the report tell you something you didn't know?** Tempos used against target is the
+  intended one.
+- **The mode prose** in `src/domain/music/modeCharacter.ts` is a draft for you to edit: what
+  each mode sounds like, its signature note, what to steer round, how it compares, and the
+  go-to progressions (stored as degrees, spelled in the key on screen).
+- Whether the Home strip earns its place above the routines.
 
-Carried into M6 from earlier milestones:
-- **Circle of fifths should lean toward keys you miss or have seen least.** Keys are drawn
-  evenly for now. Every theory rep already logs `answers: { subject, correct }[]` for this.
-- Home gets its **heatmap and personal bests** here. It is just the routines list today.
-- Things the report can use: set duration comes from the rep's start and end; theory scores
-  are on `rep.score`; routine passes carry `routineItemId`.
+Built as agreed, plus: the policy editor links to the reference only when key and mode are
+both fixed or held (a rolled key has nothing to show yet). The heat is grey rather than red so
+the accent stays for the signature note.
 
-Ask the player first, per the working agreement. Likely questions: what "personal bests"
-means without auto-tracked max tempo; the report's default date range; whether the fretboard
-explorer's coverage counts every rep or only completed ones.
+## Next after the review: M7
+
+Doc 08 §M7: backing tracks (model, YouTube source with rate, control, track management and
+the 12×7 coverage grid), reference videos, `free-improv-target`, `ear-training`, and
+`PreviewPlayer`. Ask the player first, per the working agreement — likely questions: which
+tracks seed the shared pool beyond the first, whether reference videos matter before backing,
+and which of the five ear-training drills come first.
 
 ## Open questions for the player
 
@@ -135,6 +164,13 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Start of M6**
+- No personal bests for now; Home gets the heatmap, streak and week's time.
+- Every finished played pass records each note by string and fret; a per-day rollup makes the
+  neck's all-time and 30-day heat cheap.
+- `/fretboard` is a reference first, with note-count shading as a layer.
+- The key/mode popover never stops playback; Full view is a drawer.
 
 **M4 review**
 - **Traps occasionally, not on every question.** About one question in three offers a near
@@ -184,8 +220,20 @@ back:
   not by stored ids.
 - Wait for the thing you want. `play()` awaits the audio engine, so the screen changes a
   moment after the click.
+- **Seeding practice history:** against the dev server, `page.evaluate` can
+  `await import('/src/data/index.ts')` and write reps through `createRepositories(db())` — the
+  rollup and stats update as they would in use. A few weeks of plausible reps is enough to
+  look at the heatmap, report and explorer. For the real write path, raise the tempo
+  (Shift+] repeatedly) and play one pass of Position shifting — about 40 s.
 
 ## Things that bit, and would bite again
+
+- **Escape in a popover or drawer left the exercise.** Radix closes it during the keydown
+  dispatch; React re-renders synchronously, the hotkey effect re-attaches its window listener,
+  and the same event reaches it. `useRunnerHotkeys` now ignores keys whose target is inside a
+  dialog or popover — don't rely on `enabled` alone for that.
+- **`Date.now()` in render fails lint** (`react-hooks/purity`). Stores keep a `today` set on
+  load; screens read it.
 
 - **CI was red for three pushes and nobody looked.** The ESLint-boundaries test builds a
   TypeScript program and took over 5 s on the CI runner. It now has a 30 s timeout. After a

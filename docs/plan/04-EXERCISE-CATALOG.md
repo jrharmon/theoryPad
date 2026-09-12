@@ -257,9 +257,9 @@ position. Number-key answerable, ~6 seconds each.
 
 **Axes:** none rolled from the session — this one deliberately roams all 12 keys regardless of
 the session key, because coverage is the point. It uses its own internal weighting toward keys
-you've answered wrong or seen least. _(As built in M4: keys are drawn evenly; every rep logs
-each question's key and whether it was right, and the weighting arrives with M6's progress
-work.)_
+you've answered wrong or seen least. _(As built in M6: each key weighs (1 + 2 × misses) ÷ (1 + times seen) over the last 30
+days of answers, from `answerWeights` in `domain/progress`; a key never seen weighs 1. Mode
+questions are still drawn evenly.)_
 
 **Params:**
 
