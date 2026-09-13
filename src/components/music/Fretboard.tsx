@@ -31,11 +31,11 @@ const LABEL_COL = { compact: 26, large: 34 } as const;
 
 /** Note dots are the one round thing in the design — they are markers, not UI surfaces. */
 const ROLE_CLASS: Record<NoteRole, string> = {
-  root: 'bg-neutral-800 text-bg',
-  target: 'bg-accent text-bg',
-  'chord-tone': 'bg-neutral-300 text-ink',
-  passing: 'bg-neutral-200 text-ink/70',
-  none: 'bg-neutral-200 text-ink/70',
+  root: 'bg-dot-root text-dot-root-ink',
+  target: 'bg-dot-target text-dot-target-ink',
+  'chord-tone': 'bg-dot-chord text-dot-chord-ink',
+  passing: 'bg-dot-pass text-dot-pass-ink',
+  none: 'bg-dot-pass text-dot-pass-ink',
 };
 
 function labelFor(
@@ -99,7 +99,7 @@ export function Fretboard({
   return (
     <div className={className} data-testid="fretboard">
       <div
-        className="border-t-2 border-b-2 border-divider"
+        className="border-t-2 border-b-2 border-neck-edge"
         style={{ display: 'grid', gridTemplateColumns: gridColumns }}
         role="grid"
         aria-label={`${instrument.name} fretboard, frets ${low} to ${high}`}
@@ -133,8 +133,8 @@ export function Fretboard({
             key={fret}
             data-testid={`fret-number-${fret}`}
             className={[
-              'text-center text-[10px] tabular-nums',
-              emphasis.has(fret) ? 'font-semibold text-accent-700' : 'text-ink/50',
+              'num text-center text-[10px]',
+              emphasis.has(fret) ? 'font-semibold text-accent-text' : 'text-ink/50',
             ].join(' ')}
           >
             {fret}
@@ -184,18 +184,19 @@ function FretboardRow({
       {frets.map((fret) => {
         const note = byPosition.get(`${stringIndex}:${fret}`);
         const isNut = fret === 0;
+        const edge = isNut ? 'border-neck-nut' : 'border-neck-fret';
         const cell = (
           <>
             {/* The string line is drawn as a row background, not a border. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-ink/40"
+              className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-neck-string"
             />
             {isMarkerFret(fret) && !note && (
               <span
                 aria-hidden
                 className={[
-                  'pointer-events-none absolute size-1.5 rounded-full bg-ink/15',
+                  'pointer-events-none absolute size-1.5 rounded-full bg-inlay',
                   isDoubleMarkerFret(fret) ? 'opacity-100' : 'opacity-70',
                 ].join(' ')}
               />
@@ -222,10 +223,10 @@ function FretboardRow({
         const count = heatCounts?.[`${stringIndex}:${fret}`];
         const style = {
           height: rowHeight,
-          borderLeftWidth: isNut ? 2 : 1,
+          borderLeftWidth: isNut ? 'var(--neck-nut-w)' : 1,
           ...(level > 0
             ? {
-                backgroundColor: `color-mix(in srgb, var(--color-ink) ${Math.round(6 + level * 64)}%, transparent)`,
+                backgroundColor: `color-mix(in srgb, var(--color-neck-heat) ${Math.round(6 + level * 64)}%, transparent)`,
               }
             : {}),
         };
@@ -240,7 +241,7 @@ function FretboardRow({
             type="button"
             onClick={() => onFretClick({ string: stringIndex, fret })}
             aria-label={`String ${stringLabel(instrument, stringIndex)}, fret ${fret}`}
-            className="relative grid place-items-center border-l border-ink/30 hover:bg-ink/5"
+            className={`relative grid place-items-center border-l bg-neck hover:bg-ink/5 ${edge}`}
             style={style}
           >
             {cell}
@@ -248,7 +249,7 @@ function FretboardRow({
         ) : (
           <div
             key={fret}
-            className="relative grid place-items-center border-l border-ink/30"
+            className={`relative grid place-items-center border-l bg-neck ${edge}`}
             style={style}
             title={title}
             data-heat={level > 0 ? level.toFixed(2) : undefined}

@@ -118,8 +118,8 @@ describe('Fretboard', () => {
   it('emphasises the frets of the rolled position', () => {
     const overlay = { ...overlayFor(), emphasisFrets: [7, 8, 9, 10] };
     render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlay} />);
-    expect(screen.getByTestId('fret-number-7').className).toContain('text-accent-700');
-    expect(screen.getByTestId('fret-number-3').className).not.toContain('text-accent-700');
+    expect(screen.getByTestId('fret-number-7').className).toContain('text-accent-text');
+    expect(screen.getByTestId('fret-number-3').className).not.toContain('text-accent-text');
   });
 
   it('is not interactive unless a click handler is given', () => {

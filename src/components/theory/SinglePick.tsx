@@ -29,10 +29,10 @@ export function SinglePick({
             onClick={() => onPick(option.id)}
             className={[
               'flex items-center gap-3 border px-4 py-3 text-left text-[17px] font-semibold',
-              state === 'open' ? 'border-divider hover:border-ink' : '',
+              state === 'open' ? 'border-rule hover:border-ink' : '',
               state === 'correct' ? 'border-accent bg-accent text-white' : '',
               state === 'wrong' ? 'border-ink border-2 text-ink' : '',
-              state === 'other' ? 'border-divider text-ink/40' : '',
+              state === 'other' ? 'border-rule text-ink/40' : '',
             ].join(' ')}
           >
             <span

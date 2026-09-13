@@ -25,13 +25,13 @@ function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }
   const degrees = scaleDegrees(keyMode);
   const signature = signatureDegree(keyMode).number;
   return (
-    <div className="grid grid-cols-7 border-y border-divider" data-testid="key-mode-notes">
+    <div className="grid grid-cols-7 border-y border-rule" data-testid="key-mode-notes">
       {notes.map((note, i) => {
         const isSignature = degrees[i]!.number === signature;
         return (
           <div
             key={note}
-            className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-divider')}
+            className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-rule')}
             data-signature={isSignature || undefined}
           >
             <p className={cn('font-extrabold', size === 'full' ? 'text-[22px]' : 'text-[17px]', isSignature && 'text-accent')}>
@@ -49,7 +49,7 @@ function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }
 
 function Prose({ label, children }: { label: string; children: string }) {
   return (
-    <div className="border-b border-divider py-3">
+    <div className="border-b border-rule py-3">
       <Kicker>{label}</Kicker>
       <p className="mt-1 text-[14px] leading-relaxed">{children}</p>
     </div>
@@ -86,9 +86,9 @@ export function KeyModeView({
         <p className="text-[20px] font-extrabold">{name}</p>
         <p className="mb-3 text-[13px] text-ink/70">{character.summary}</p>
         <Notes keyMode={keyMode} size="compact" />
-        <div className="grid grid-cols-7 border-b border-divider">
+        <div className="grid grid-cols-7 border-b border-rule">
           {chords.map((chord, i) => (
-            <div key={chord.root} className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-divider')}>
+            <div key={chord.root} className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-rule')}>
               <p className="tabular text-[11px] text-ink/55">{romanNumeral(chord)}</p>
               <p className="text-[13px] font-bold">{chord.triadSymbol}</p>
             </div>
@@ -118,7 +118,7 @@ export function KeyModeView({
       <div className="overflow-x-auto">
         <table className="mt-2 w-full border-collapse text-left text-[14px]">
           <thead>
-            <tr className="border-b-2 border-divider">
+            <tr className="border-b-(length:--rule-section-w) border-divider">
               {['', 'Triad', '7th', '9th', 'Function'].map((h) => (
                 <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink/55">
                   {h}
@@ -130,7 +130,7 @@ export function KeyModeView({
             {chords.map((chord) => (
               <tr
                 key={chord.root}
-                className={cn('border-b border-divider', chord.function !== 'other' && 'bg-neutral-200')}
+                className={cn('border-b border-rule', chord.function !== 'other' && 'bg-neutral-200')}
                 data-function={chord.function}
               >
                 <td className="tabular py-1.5 pr-4 pl-1 text-ink/60">{romanNumeral(chord)}</td>
@@ -147,7 +147,7 @@ export function KeyModeView({
       <Kicker className="mt-6 block">Go-to progressions</Kicker>
       <ul className="mt-1">
         {character.progressions.map((progression) => (
-          <li key={progression.degrees.join('-')} className="border-b border-divider py-2.5">
+          <li key={progression.degrees.join('-')} className="border-b border-rule py-2.5">
             <p className="text-[15px]">
               <span className="font-bold">
                 {progression.degrees.map((d) => romanNumeral(chordOnDegree(keyMode, d))).join(' – ')}

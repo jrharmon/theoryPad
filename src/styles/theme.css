@@ -33,8 +33,13 @@
   --color-accent-800: #7c1405;
   --color-accent-900: #4d170e;
 
-  /* ---- Type ---- */
+  /* ---- Type ----
+     UI text; h1/h2; names and titles (face-title); numbers read while playing (num); kickers. */
   --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-kicker: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ---- Shape: nothing in this app has a rounded corner ---- */
   --radius-none: 0px;
@@ -44,11 +49,94 @@
   --radius-xl: 0px;
   --radius-2xl: 0px;
   --radius-3xl: 0px;
+  --radius-control: 0px;
+  --radius-panel: 0px;
+  --radius-toggle: 0px;
 }
 
 /* Divider colour is used as a border everywhere; 2px between sections, 1px within. */
 @theme {
   --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+}
+
+/*
+ * Every role a color plays, named. Components use these, never a hex or a
+ * `bg-ink text-bg` pair, so a theme is only a change of values. Where a value
+ * reads `color-mix(in oklab, …)` it reproduces the opacity utility it replaced.
+ * Static, so tokens read only through var() are always emitted.
+ */
+@theme static {
+  /* Grounds: the page, a sheet on it, a ruled line inside a sheet. */
+  --color-paper: var(--color-bg);
+  --color-rule: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-grid: transparent;
+  --color-highlight: transparent;
+
+  /* Accent in its other jobs. */
+  --color-accent-text: #ae1800;
+  --color-accent-tint: #fff2ef;
+  --color-on-accent: var(--color-bg);
+
+  /* App chrome: the nav header, the avatar, the running-exercise bar and its progress. */
+  --color-nav: var(--color-bg);
+  --color-nav-ink: var(--color-ink);
+  --color-nav-active: #ae1800;
+  --color-avatar: var(--color-ink);
+  --color-avatar-ink: var(--color-bg);
+  --color-chrome: var(--color-ink);
+  --color-chrome-ink: var(--color-bg);
+  --color-track: color-mix(in oklab, var(--color-bg) 25%, transparent);
+  --color-fill: var(--color-accent);
+  --color-fill-current: var(--color-accent-400);
+
+  /* The transport bar fixed to the bottom of a practice screen. */
+  --color-transport: var(--color-bg);
+  --color-transport-ink: var(--color-ink);
+  --color-transport-edge: var(--color-divider);
+
+  /* Pressed and selected: every toggle, and a picked table cell. */
+  --color-toggle-on: var(--color-ink);
+  --color-toggle-on-ink: var(--color-bg);
+  --color-toggle-on-ring: transparent;
+  --color-toggle-off: var(--color-surface);
+  --color-toggle-off-ink: color-mix(in oklab, var(--color-ink) 45%, transparent);
+  --color-toggle-edge: transparent;
+
+  /* Tab. */
+  --color-tab-line: rgba(32, 30, 29, 0.42);
+  --color-tab-bar: color-mix(in oklab, var(--color-ink) 60%, transparent);
+  --color-tab-digit: var(--color-ink);
+  --color-playhead: color-mix(in oklab, var(--color-accent) 20%, transparent);
+
+  /* The neck, and the dots on it by role. */
+  --color-neck: transparent;
+  --color-neck-fret: color-mix(in oklab, var(--color-ink) 30%, transparent);
+  --color-neck-nut: color-mix(in oklab, var(--color-ink) 30%, transparent);
+  --color-neck-string: color-mix(in oklab, var(--color-ink) 40%, transparent);
+  --color-neck-edge: var(--color-divider);
+  --color-neck-heat: var(--color-ink);
+  --color-inlay: color-mix(in oklab, var(--color-ink) 15%, transparent);
+  --color-dot-root: #444141;
+  --color-dot-root-ink: var(--color-bg);
+  --color-dot-target: var(--color-accent);
+  --color-dot-target-ink: var(--color-bg);
+  --color-dot-chord: #d7d3d3;
+  --color-dot-chord-ink: var(--color-ink);
+  --color-dot-pass: #eae7e7;
+  --color-dot-pass-ink: color-mix(in oklab, var(--color-ink) 70%, transparent);
+
+  /* An axis that changed since the last roll; a favorite. */
+  --color-fresh: #fff2ef;
+  --color-fresh-ink: #7c1405;
+  --color-star: var(--color-accent);
+
+  /* Heatmaps and the time-by-day chart, none to most. */
+  --color-heat-0: var(--color-neutral-200);
+  --color-heat-1: var(--color-neutral-400);
+  --color-heat-2: var(--color-neutral-600);
+  --color-heat-3: var(--color-ink);
+  --color-heat-future: var(--color-neutral-300);
+  --color-heat-today: var(--color-accent);
 }
 
 /**
@@ -61,6 +149,22 @@
  * corner except a fretboard note dot.
  */
 :root {
+  /* Rules, type and depth that a theme may change along with its colors. */
+  --rule-section-w: 2px;
+  --display-weight: 800;
+  --display-tracking: -0.015em;
+  --h1-size: 42px;
+  --h2-size: 34px;
+  --h2-weight: 800;
+  --h2-tracking: -0.015em;
+  --title-weight: 800;
+  --kicker-size: 11px;
+  --kicker-tracking: 0.12em;
+  --kicker-weight: 400;
+  --tab-digit-weight: 800;
+  --neck-nut-w: 2px;
+  --shadow-float: 0 0 #0000;
+
   --radius: 0px;
 
   --background: var(--color-bg);
@@ -72,7 +176,7 @@
   --popover-foreground: var(--color-ink);
 
   --primary: var(--color-accent);
-  --primary-foreground: var(--color-bg);
+  --primary-foreground: var(--color-on-accent);
 
   --secondary: var(--color-surface);
   --secondary-foreground: var(--color-ink);

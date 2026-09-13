@@ -57,7 +57,7 @@ export function RoutineBuilder() {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such routine">
-          <Link to="/home" className="text-accent-700 underline">
+          <Link to="/home" className="text-accent-text underline">
             Back to your routines
           </Link>
         </EmptyState>
@@ -67,7 +67,7 @@ export function RoutineBuilder() {
 
   return (
     <section className="pb-16">
-      <div className="flex items-end justify-between gap-6 border-b-2 border-divider px-8 py-7">
+      <div className="flex items-end justify-between gap-6 border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Routine</Kicker>
           <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export function RoutineBuilder() {
         </div>
       </div>
 
-      <div className="border-b border-divider px-8 py-6">
+      <div className="border-b border-rule px-8 py-6">
         <Kicker>Key and mode</Kicker>
         <p className="mb-3 mt-1 text-[13px] text-ink/60">
           Rolled once when the routine starts, and shared by every exercise in it.
@@ -132,7 +132,7 @@ export function RoutineBuilder() {
         {routine.items.length === 0 ? (
           <EmptyState title="Nothing in it yet">Add an exercise to start.</EmptyState>
         ) : (
-          <ol className="border border-divider">
+          <ol className="border border-rule">
             {routine.items.map((item, index) => (
               <ItemRow
                 key={item.id}
@@ -176,7 +176,7 @@ function NameField({ routine, onRename }: { routine: Routine; onRename: (name: s
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur();
       }}
-      className="w-full min-w-0 border-b border-transparent bg-transparent text-[42px] font-extrabold leading-tight outline-none hover:border-divider focus:border-ink"
+      className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-[42px] leading-tight [font-weight:var(--display-weight)] outline-none hover:border-rule focus:border-ink"
     />
   );
 }
@@ -199,7 +199,7 @@ function ItemRow({
 
   if (!definition) {
     return (
-      <li className="flex items-center gap-3 border-b border-divider px-3 py-3 text-[13px] text-ink/55">
+      <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-[13px] text-ink/55">
         An exercise that no longer exists ({item.definitionId}) — it will be left out.
         <Button variant="secondary" size="xs" onClick={() => void routines.removeItem(routine.id, item.id)}>
           Remove
@@ -216,12 +216,12 @@ function ItemRow({
 
   return (
     <li
-      className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-3 py-3 ${last ? '' : 'border-b border-divider'}`}
+      className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-3 py-3 ${last ? '' : 'border-b border-rule'}`}
       data-testid="routine-item"
     >
       <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
       <div className="min-w-0">
-        <p className="text-[15px] font-extrabold">{definition.name}</p>
+        <p className="face-title text-[15px]">{definition.name}</p>
         <p className="truncate text-[12px] text-ink/55">{described.join(' · ')}</p>
       </div>
 
@@ -327,15 +327,15 @@ function AddExerciseDialog({
         </DialogHeader>
         <ul>
           {sorted.map(({ exercise, definition }) => (
-            <li key={exercise.id} className="border-b border-divider">
+            <li key={exercise.id} className="border-b border-rule">
               <button
                 type="button"
                 onClick={() => onPick(exercise)}
                 className="flex w-full items-baseline gap-3 px-2 py-3 text-left hover:bg-ink/5"
               >
-                <span className="w-4 text-accent">{exercise.favorite ? '★' : ''}</span>
+                <span className="w-4 text-star">{exercise.favorite ? '★' : ''}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-extrabold">{definition.name}</span>
+                  <span className="face-title block text-[15px]">{definition.name}</span>
                   <span className="block text-[12px] text-ink/55">{definition.summary}</span>
                 </span>
               </button>

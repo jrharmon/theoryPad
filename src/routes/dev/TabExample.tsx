@@ -54,8 +54,8 @@ export function TabExample({
           className={[
             'px-5 py-2 text-[14px] font-semibold',
             isPlaying
-              ? 'border border-divider hover:bg-ink/5'
-              : 'bg-accent text-bg hover:bg-accent-600 active:bg-accent-700',
+              ? 'border border-rule hover:bg-ink/5'
+              : 'bg-accent text-on-accent hover:bg-accent-600 active:bg-accent-700',
           ].join(' ')}
         >
           {isPlaying ? 'Pause' : isActive ? 'Resume' : 'Play'}
@@ -65,7 +65,7 @@ export function TabExample({
           type="button"
           onClick={transport.stop}
           disabled={!isActive}
-          className="border border-divider px-4 py-2 text-[13px] hover:bg-ink/5 disabled:opacity-45"
+          className="border border-rule px-4 py-2 text-[13px] hover:bg-ink/5 disabled:opacity-45"
         >
           Stop
         </button>
@@ -76,7 +76,7 @@ export function TabExample({
         </span>
 
         {pass !== null && passes > 1 && (
-          <span className="text-[12px] font-semibold text-accent-700 tabular-nums">
+          <span className="text-[12px] font-semibold text-accent-text tabular-nums">
             Pass {pass} of {passes}
           </span>
         )}

@@ -3,10 +3,10 @@ import { dayStart, formatPracticeTime } from '@/domain/progress';
 import { cn } from 'cn';
 
 const SHADE: Record<Intensity, string> = {
-  0: 'bg-neutral-200',
-  1: 'bg-neutral-400',
-  2: 'bg-neutral-600',
-  3: 'bg-ink',
+  0: 'bg-heat-0',
+  1: 'bg-heat-1',
+  2: 'bg-heat-2',
+  3: 'bg-heat-3',
 };
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -55,8 +55,8 @@ export function HeatmapGrid({
           title={label(cell)}
           data-intensity={cell.future ? undefined : cell.intensity}
           className={cn(
-            cell.future ? 'border border-neutral-300' : SHADE[cell.intensity],
-            cell.date === today && 'outline-2 outline-offset-1 outline-accent',
+            cell.future ? 'border border-heat-future' : SHADE[cell.intensity],
+            cell.date === today && 'outline-2 outline-offset-1 outline-heat-today',
           )}
           style={{ width: cellSize, height: cellSize }}
         />

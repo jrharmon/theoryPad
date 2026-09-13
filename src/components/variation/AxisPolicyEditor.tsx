@@ -48,7 +48,7 @@ export function AxisPolicyEditor({
       : null;
 
   return (
-    <div className="border border-divider">
+    <div className="border border-rule">
       {axes.map((id, index) => (
         <AxisRow
           key={id}
@@ -61,7 +61,7 @@ export function AxisPolicyEditor({
         />
       ))}
       {keyMode && (
-        <div className="border-t border-divider px-3 py-2 text-[13px] text-ink/70" data-testid="key-mode-reference">
+        <div className="border-t border-rule px-3 py-2 text-[13px] text-ink/70" data-testid="key-mode-reference">
           Notes and chords of{' '}
           <KeyModeTrigger keyMode={keyMode}>
             {keyMode.tonic} {modeTitle(keyMode.mode)}
@@ -106,7 +106,7 @@ function AxisRow({
   return (
     <div
       className={`grid grid-cols-[140px_120px_1fr] items-start gap-3 px-3 py-2 ${
-        first ? '' : 'border-t border-divider'
+        first ? '' : 'border-t border-rule'
       }`}
     >
       <span className="pt-1.5 text-[13px] font-semibold">{definition.label}</span>

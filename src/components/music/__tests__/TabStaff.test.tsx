@@ -383,8 +383,8 @@ describe('TabStaff', () => {
       <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} showPickStrokes />,
     );
     // A grey mark on a grey note is unreadable; every functional mark is accent.
-    expect(screen.getByTestId('pick-stroke-0-0').className).toContain('text-accent-700');
-    expect(screen.getByTestId('articulation-0-1').className).toContain('text-accent-700');
+    expect(screen.getByTestId('pick-stroke-0-0').className).toContain('text-accent-text');
+    expect(screen.getByTestId('articulation-0-1').className).toContain('text-accent-text');
   });
 
   it('scrolls the line being played into view, once per line', () => {

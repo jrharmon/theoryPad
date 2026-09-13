@@ -39,7 +39,7 @@ export function AxisStrip() {
 
   return (
     <div
-      className="grid border-b border-divider"
+      className="grid border-b border-rule"
       style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
       data-testid="axis-strip"
     >
@@ -50,8 +50,8 @@ export function AxisStrip() {
           data-fresh={cell.fresh}
           className={[
             'px-4 py-3',
-            index > 0 ? 'border-l border-divider' : '',
-            cell.fresh ? 'bg-accent-100 text-accent-800' : '',
+            index > 0 ? 'border-l border-rule' : '',
+            cell.fresh ? 'bg-fresh text-fresh-ink' : '',
           ].join(' ')}
         >
           <p className="kicker">
@@ -61,12 +61,12 @@ export function AxisStrip() {
           {cell.key === 'key' ? (
             <ReferenceTrigger
               keyMode={snapshot.keyMode}
-              className="text-left text-[19px] font-extrabold underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current"
+              className="face-title text-left text-[19px] underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current"
             >
               {cell.value}
             </ReferenceTrigger>
           ) : (
-            <p className="text-[19px] font-extrabold">{cell.value}</p>
+            <p className="face-title text-[19px]">{cell.value}</p>
           )}
           {cell.note && <p className="text-[11px] text-ink/55 tabular-nums">{cell.note}</p>}
         </div>

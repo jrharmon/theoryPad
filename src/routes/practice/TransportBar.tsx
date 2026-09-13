@@ -58,7 +58,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
             −
           </Button>
           <span
-            className="w-12 text-center text-[17px] font-extrabold tabular-nums"
+            className="num w-12 text-center text-[17px] font-extrabold"
             data-testid="tempo"
           >
             {currentTempo}
@@ -83,7 +83,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         <span className="text-[13px] font-extrabold tabular-nums">Counting in…</span>
       )}
       {state === 'playing' && position && (
-        <span className="text-[13px] font-extrabold tabular-nums" data-testid="position">
+        <span className="num text-[13px] font-extrabold" data-testid="position">
           Bar {position.bar + 1} · beat {position.beat + 1}
         </span>
       )}
@@ -150,7 +150,7 @@ function Toggle({
       size="sm"
       variant="secondary"
       aria-pressed={on}
-      className={on ? 'bg-ink text-bg hover:bg-ink/85' : 'text-ink/45'}
+      className={on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}
       onClick={() => onChange(!on)}
     >
       {label}

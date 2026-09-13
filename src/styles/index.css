@@ -1,5 +1,13 @@
 @import './theme.css';
 
+/*
+ * `dark:` follows the theme the app stamps on <html>, not the system.
+ * Tailwind's default is prefers-color-scheme, which gave shadcn's outline
+ * button, input, select and badge dark fills on the light app on a Mac in
+ * dark mode.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @layer base {
   html {
     background: var(--color-bg);
@@ -28,10 +36,16 @@
   }
 
   h1 {
-    font-size: 42px;
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-size: var(--h1-size);
   }
   h2 {
-    font-size: 32px;
+    font-family: var(--font-display);
+    font-weight: var(--h2-weight);
+    letter-spacing: var(--h2-tracking);
+    font-size: var(--h2-size);
   }
   h3 {
     font-size: 25px;
@@ -46,6 +60,15 @@
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+
+  /*
+   * The kicker's face. Not in the utility: Tailwind orders utilities by their
+   * properties, and a font-family would sort .kicker ahead of text-sm — which
+   * then wins on a shadcn Label that carries .kicker.
+   */
+  .kicker {
+    font-family: var(--font-kicker);
   }
 
   /* Every timer, tempo and count is tabular. */
@@ -74,15 +97,27 @@
  * components-layer class loses to a utility regardless of which is applied.
  */
 @utility kicker {
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
+  font-size: var(--kicker-size);
+  font-weight: var(--kicker-weight);
+  letter-spacing: var(--kicker-tracking);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-ink) 55%, transparent);
 }
 
 @utility kicker-accent {
-  color: var(--color-accent-700);
+  color: var(--color-accent-text);
+}
+
+/* Names and titles: routines, exercises, axis values, the wordmark. */
+@utility face-title {
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+}
+
+/* Numbers read at a glance while playing: tab digits, frets, tempo, counts. */
+@utility num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
 }
 
 /*

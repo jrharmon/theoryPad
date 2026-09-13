@@ -47,16 +47,16 @@ export function ExerciseLibrary() {
 
   return (
     <section>
-      <div className="border-b-2 border-divider px-8 py-7">
+      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <Kicker accent>Exercises</Kicker>
-        <h1 className="text-[42px]">Your library</h1>
+        <h1>Your library</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
           Everything you can practice. Open one to set its target tempo and how much it varies.
         </p>
       </div>
 
       {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-divider px-8 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-rule px-8 py-3">
           <span className="kicker mr-1">Filter</span>
           <TagFilter label="All" active={tag === null} onClick={() => setTag(null)} />
           {tags.map((t) => (
@@ -79,7 +79,7 @@ export function ExerciseLibrary() {
 
         <ul>
           {visible.map(({ exercise, definition }) => (
-            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-divider py-4">
+            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-rule py-4">
               <FavoriteToggle
                 on={exercise.favorite ?? false}
                 label={definition.name}
@@ -88,7 +88,7 @@ export function ExerciseLibrary() {
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/exercises/${exercise.id}`}
-                  className="text-[20px] font-extrabold hover:text-accent-700"
+                  className="face-title text-[20px] hover:text-accent-text"
                 >
                   {definition.name}
                 </Link>

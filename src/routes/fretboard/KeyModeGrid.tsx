@@ -2,7 +2,7 @@ import type { Chroma, KeyMode, ModeName } from '@/domain/music';
 import { MODE_NAMES, chroma, modeTitle, preferredTonic } from '@/domain/music';
 import { cn } from 'cn';
 
-const SHADES = ['bg-neutral-200', 'bg-neutral-400', 'bg-neutral-600', 'bg-ink'];
+const SHADES = ['bg-heat-0', 'bg-heat-1', 'bg-heat-2', 'bg-heat-3'];
 
 function shade(n: number, max: number): string {
   if (n === 0) return SHADES[0]!;

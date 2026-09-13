@@ -236,7 +236,7 @@ function TabSystem({
             data-column={playheadColumn}
             data-system={systemIndex}
             aria-hidden
-            className="pointer-events-none absolute -top-1 -bottom-1 bg-accent/20"
+            className="pointer-events-none absolute -top-1 -bottom-1 bg-playhead"
             style={{
               // Positioned by CSS against the column count so it tracks the grid
               // at any width, and so playback need not re-render the tree.
@@ -253,7 +253,7 @@ function TabSystem({
             key={`bar-line-${k}`}
             data-testid="bar-line"
             aria-hidden
-            className="pointer-events-none absolute w-px bg-ink/60"
+            className="pointer-events-none absolute w-px bg-tab-bar"
             style={{
               top: rowHeight / 2,
               bottom: rowHeight / 2,
@@ -322,7 +322,7 @@ function NoteChip({
       data-testid={`articulation-${stringIndex}-${column}`}
       className={[
         mark.leading ? 'mr-[1px]' : 'ml-[1px]',
-        'font-semibold text-accent-700',
+        'font-semibold text-accent-text',
       ].join(' ')}
       style={{ fontSize: fretSize * 0.72 }}
     >
@@ -337,15 +337,15 @@ function NoteChip({
       data-role={note.role ?? 'none'}
       data-articulation={note.articulation ?? ''}
       className={[
-        'flex items-baseline whitespace-nowrap bg-bg px-[1px] font-extrabold tabular-nums leading-none',
-        note.role === 'target' ? 'text-accent-700' : 'text-ink',
+        'num flex items-baseline whitespace-nowrap bg-paper px-[1px] leading-none [font-weight:var(--tab-digit-weight)]',
+        note.role === 'target' ? 'text-accent-text' : 'text-tab-digit',
       ].join(' ')}
       style={{ fontSize: fretSize }}
     >
       {showPickStrokes && note.pickStroke && (
         <span
           data-testid={`pick-stroke-${stringIndex}-${column}`}
-          className="mr-[1px] self-start text-[0.62em] font-semibold text-accent-700"
+          className="mr-[1px] self-start text-[0.62em] font-semibold text-accent-text"
         >
           {note.pickStroke === 'down' ? '⊓' : 'V'}
         </span>
@@ -388,17 +388,17 @@ function TabRow({
    */
   const lineBackground = {
     backgroundImage:
-      'linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(32,30,29,.42) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px))',
+      'linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--color-tab-line) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px))',
   };
 
   return (
     <>
       <div
-        className="grid place-items-center bg-bg text-[11px] text-ink/50"
+        className="grid place-items-center bg-paper text-[11px] text-ink/50"
         style={{ height: rowHeight, ...lineBackground }}
         data-testid={`tab-string-label-${stringIndex}`}
       >
-        <span className="bg-bg px-1">{stringLabel(instrument, stringIndex)}</span>
+        <span className="bg-paper px-1">{stringLabel(instrument, stringIndex)}</span>
       </div>
 
       {Array.from({ length: columnCount }, (_, offset) => {

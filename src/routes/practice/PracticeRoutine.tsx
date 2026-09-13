@@ -57,7 +57,7 @@ export function PracticeRoutine() {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such routine">
-          <Link to="/home" className="text-accent-700 underline">
+          <Link to="/home" className="text-accent-text underline">
             Back to your routines
           </Link>
         </EmptyState>
@@ -76,7 +76,7 @@ export function PracticeRoutine() {
         <>
           <RunningChrome name={routine.name} />
           <PracticeBody />
-          <div className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-divider bg-bg">
+          <div className="fixed inset-x-0 bottom-0 z-20 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink">
             <TransportBar />
           </div>
         </>
@@ -98,9 +98,9 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
 
   return (
     <>
-      <div className="border-b-2 border-divider px-8 py-7">
+      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <Kicker accent>Routine · about {formatDuration(total)}</Kicker>
-        <h1 className="text-[42px]">{routine.name}</h1>
+        <h1>{routine.name}</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
           Everything in{' '}
           <ReferenceTrigger keyMode={snapshot.keyMode}>
@@ -117,7 +117,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
           return (
             <li
               key={item.id}
-              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-divider py-4"
+              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4"
               data-testid="overview-item"
             >
               <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
@@ -125,7 +125,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
                 <p className="kicker">
                   {definition?.name} · {item.reps === 1 ? '1 pass' : `${item.reps} passes`}
                 </p>
-                <p className="text-[18px] font-extrabold">{item.instance?.brief.headline}</p>
+                <p className="face-title text-[18px]">{item.instance?.brief.headline}</p>
               </div>
               <Button variant="secondary" size="sm" onClick={() => practice.rerollItem(index)}>
                 Re-roll
@@ -135,7 +135,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
         })}
       </ol>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 flex flex-wrap items-center gap-3 border-t-2 border-divider bg-bg px-8 py-3">
+      <div className="fixed inset-x-0 bottom-0 z-20 flex flex-wrap items-center gap-3 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink px-8 py-3">
         <Button size="lg" onClick={() => void practice.play()} data-testid="start-routine">
           Start
         </Button>
@@ -156,13 +156,13 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
   return (
     <div className="px-8 py-10">
       <Kicker accent>Finished</Kicker>
-      <h2 className="text-[34px]">{routine.name}</h2>
+      <h2>{routine.name}</h2>
       <p className="mb-6 text-[14px] text-ink/70 tabular-nums">
         {formatDuration(seconds)} · every pass logged against its exercise.
       </p>
       <ol className="mb-8 max-w-[640px]">
         {snapshot.items.map((item, index) => (
-          <li key={item.id} className="flex gap-3 border-b border-divider py-2 text-[14px]">
+          <li key={item.id} className="flex gap-3 border-b border-rule py-2 text-[14px]">
             <span className="w-6 tabular-nums text-ink/45">{index + 1}</span>
             <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
             <span className="tabular-nums text-ink/60">

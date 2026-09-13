@@ -58,7 +58,7 @@ export function PracticeExercise() {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such exercise">
-          <Link to="/exercises" className="text-accent-700 underline">
+          <Link to="/exercises" className="text-accent-text underline">
             Back to the library
           </Link>
         </EmptyState>
@@ -74,7 +74,7 @@ export function PracticeExercise() {
 
       {/* Frozen at the bottom, so a long exercise never means scrolling back
           down to reach the controls. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-divider bg-bg">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink">
         <TransportBar onOpenSettings={openSettings} />
       </div>
 

@@ -25,9 +25,9 @@ export function PracticeBody() {
 
   return (
     <>
-      <div className="border-b border-divider px-8 py-6">
+      <div className="border-b border-rule px-8 py-6">
         <Kicker accent>This time you are playing</Kicker>
-        <h2 className="max-w-[820px] text-[34px]">{instance.brief.headline}</h2>
+        <h2 className="max-w-[820px]">{instance.brief.headline}</h2>
         <p className="max-w-[640px] text-[14px] text-ink/70">{instance.brief.instruction}</p>
       </div>
 

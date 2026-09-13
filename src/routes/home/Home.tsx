@@ -42,19 +42,19 @@ function PracticeStrip() {
   if (!loaded) return null;
   return (
     <div
-      className="flex items-center gap-10 border-b-2 border-divider px-8 py-5"
+      className="flex items-center gap-10 border-b-(length:--rule-section-w) border-divider px-8 py-5"
       data-testid="practice-strip"
     >
       <HeatmapGrid cells={cells} today={today} cellSize={13} />
       <div>
         <Kicker>Streak</Kicker>
-        <p className="tabular text-[28px] leading-tight" data-testid="streak">
+        <p className="num text-[28px] leading-tight" data-testid="streak">
           {current} {current === 1 ? 'day' : 'days'}
         </p>
       </div>
       <div>
         <Kicker>This week</Kicker>
-        <p className="tabular text-[28px] leading-tight" data-testid="week-time">
+        <p className="num text-[28px] leading-tight" data-testid="week-time">
           {formatPracticeTime(thisWeek)}
         </p>
       </div>
@@ -87,10 +87,10 @@ export function Home() {
 
   return (
     <section>
-      <div className="flex items-end justify-between border-b-2 border-divider px-8 py-7">
+      <div className="flex items-end justify-between border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <div>
           <Kicker accent>Practice</Kicker>
-          <h1 className="text-[42px]">Your routines</h1>
+          <h1>Your routines</h1>
           <p className="max-w-[640px] text-[15px] text-ink/70">
             A routine plays several exercises straight through, each counted in at its own
             tempo — nothing to click once it starts.
@@ -117,7 +117,7 @@ export function Home() {
             return (
               <li
                 key={routine.id}
-                className="flex items-center gap-4 border-b border-divider py-4"
+                className="flex items-center gap-4 border-b border-rule py-4"
                 data-testid="routine-row"
               >
                 <FavoriteToggle
@@ -128,7 +128,7 @@ export function Home() {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/routines/${routine.id}`}
-                    className="text-[18px] font-extrabold hover:text-accent-700"
+                    className="face-title text-[18px] hover:text-accent-text"
                   >
                     {routine.name}
                   </Link>

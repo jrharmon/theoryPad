@@ -18,10 +18,10 @@ export function RunningChrome({ name }: { name: string }) {
     const next = findExerciseDefinition(items[index + 1]?.definitionId ?? '')?.name;
     return (
       <div
-        className="flex items-center gap-4 bg-ink px-6 py-3 text-bg"
+        className="flex items-center gap-4 bg-chrome px-6 py-3 text-chrome-ink"
         data-testid="routine-chrome"
       >
-        <span className="text-[16px] font-extrabold tabular-nums">
+        <span className="num text-[16px] font-extrabold">
           {String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
         </span>
         <span className="text-[13px] font-semibold">{current}</span>
@@ -29,7 +29,7 @@ export function RunningChrome({ name }: { name: string }) {
           {items.map((item, i) => (
             <span
               key={item.id}
-              className={`h-1.5 flex-1 ${i < index ? 'bg-accent' : i === index ? 'bg-accent-400' : 'bg-bg/25'}`}
+              className={`h-1.5 flex-1 ${i < index ? 'bg-fill' : i === index ? 'bg-fill-current' : 'bg-track'}`}
             />
           ))}
         </div>
@@ -49,9 +49,9 @@ export function RunningChrome({ name }: { name: string }) {
   const progress = running && total > 0 ? Math.min(1, phraseTick / total) : 0;
 
   return (
-    <div className="flex items-center gap-4 bg-ink px-6 py-3 text-bg">
+    <div className="flex items-center gap-4 bg-chrome px-6 py-3 text-chrome-ink">
       <span className="text-[13px] font-semibold">{name}</span>
-      <span className="text-[13px] tabular-nums opacity-75" data-testid="passes">
+      <span className="num text-[13px] opacity-75" data-testid="passes">
         {theory
           ? passesPlayed === 1
             ? '1 set'
@@ -61,9 +61,9 @@ export function RunningChrome({ name }: { name: string }) {
             : `${passesPlayed} passes`}
       </span>
 
-      <div className={`h-1.5 flex-1 ${theory ? '' : 'bg-bg/25'}`} aria-hidden>
+      <div className={`h-1.5 flex-1 ${theory ? '' : 'bg-track'}`} aria-hidden>
         {!theory && (
-          <div className="h-full bg-accent" style={{ width: `${progress * 100}%` }} />
+          <div className="h-full bg-fill" style={{ width: `${progress * 100}%` }} />
         )}
       </div>
 
@@ -71,7 +71,7 @@ export function RunningChrome({ name }: { name: string }) {
         <button
           type="button"
           onClick={() => (paused ? practice.resume() : practice.pause())}
-          className="border border-bg/40 px-3 py-1 text-[13px] font-semibold hover:bg-bg/10"
+          className="border border-chrome-ink/40 px-3 py-1 text-[13px] font-semibold hover:bg-chrome-ink/10"
         >
           {paused ? 'Resume' : 'Pause'}
         </button>

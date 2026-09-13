@@ -30,8 +30,8 @@ export function TableFill({
 
   return (
     <div>
-      <div className="border border-divider" role="table" aria-label={question.prompt}>
-        <div className="flex border-b border-divider bg-ink/5 px-3 py-1.5" role="row">
+      <div className="border border-rule" role="table" aria-label={question.prompt}>
+        <div className="flex border-b border-rule bg-ink/5 px-3 py-1.5" role="row">
           {givenColumns.map((c) => (
             <span key={c.id} className="kicker w-20 shrink-0" role="columnheader">
               {c.label}
@@ -55,7 +55,7 @@ export function TableFill({
               onClick={() => !submitted && onFocusRow(r)}
               className={[
                 'flex items-center px-3 py-2',
-                r > 0 ? 'border-t border-divider' : '',
+                r > 0 ? 'border-t border-rule' : '',
                 active ? 'bg-ink/5' : '',
               ].join(' ')}
             >
@@ -80,11 +80,11 @@ export function TableFill({
                       }}
                       className={[
                         'min-w-12 border px-2.5 py-1 text-[14px] font-semibold',
-                        isPicked && !submitted ? 'border-ink bg-ink text-bg' : '',
+                        isPicked && !submitted ? 'border-toggle-on-ring bg-toggle-on text-toggle-on-ink' : '',
                         isPicked && submitted && right ? 'border-accent bg-accent text-white' : '',
                         isPicked && submitted && !right ? 'border-2 border-ink line-through' : '',
                         showCorrect ? 'border-accent bg-accent text-white' : '',
-                        !isPicked && !showCorrect ? 'border-divider hover:border-ink disabled:text-ink/35 disabled:hover:border-divider' : '',
+                        !isPicked && !showCorrect ? 'border-rule hover:border-ink disabled:text-ink/35 disabled:hover:border-rule' : '',
                       ].join(' ')}
                     >
                       {active && <span className="mr-1 text-[10px] text-ink/45">{i + 1}</span>}
@@ -93,7 +93,7 @@ export function TableFill({
                   );
                 })}
                 {submitted && (
-                  <span className={`ml-2 text-[13px] font-semibold ${right ? 'text-ink/50' : 'text-accent-700'}`}>
+                  <span className={`ml-2 text-[13px] font-semibold ${right ? 'text-ink/50' : 'text-destructive'}`}>
                     {right ? '✓' : '✗'}
                   </span>
                 )}

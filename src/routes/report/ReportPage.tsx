@@ -122,15 +122,15 @@ export function ReportPage() {
 
   return (
     <section>
-      <div className="border-b-2 border-divider px-8 py-7">
+      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <Kicker accent>Practice</Kicker>
-        <h1 className="text-[42px]">Report</h1>
+        <h1>Report</h1>
         <p className="text-[15px] text-ink/70" data-testid="report-range">
           {formatRange(range.from, range.to)}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 border-b border-divider px-8 py-4">
+      <div className="flex flex-wrap items-center gap-4 border-b border-rule px-8 py-4">
         <div className="flex gap-1" role="group" aria-label="Date range">
           {PRESETS.map((preset) => (
             <Button
@@ -138,7 +138,7 @@ export function ReportPage() {
               size="sm"
               variant="secondary"
               aria-pressed={choice === preset.id}
-              className={choice === preset.id ? 'bg-ink text-bg hover:bg-ink/85' : ''}
+              className={choice === preset.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
               onClick={() => {
                 if (preset.id === 'custom' && choice !== 'custom') setCustom(range);
                 setChoice(preset.id);
@@ -156,7 +156,7 @@ export function ReportPage() {
               value={custom.from}
               max={custom.to}
               onChange={(e) => e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))}
-              className="border border-divider bg-bg px-2 py-1"
+              className="border border-rule bg-paper px-2 py-1"
             />
             <span className="text-ink/55">to</span>
             <input
@@ -166,7 +166,7 @@ export function ReportPage() {
               min={custom.from}
               max={today}
               onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))}
-              className="border border-divider bg-bg px-2 py-1"
+              className="border border-rule bg-paper px-2 py-1"
             />
           </div>
         )}
@@ -182,14 +182,14 @@ export function ReportPage() {
 
       {report && (
         <>
-          <div className="flex flex-wrap gap-12 border-b-2 border-divider px-8 py-6">
+          <div className="flex flex-wrap gap-12 border-b-(length:--rule-section-w) border-divider px-8 py-6">
             <Stat label="Sessions" value={String(report.summary.sessions)} testId="stat-sessions" />
             <Stat label="Time" value={formatPracticeTime(report.summary.seconds)} testId="stat-time" />
             <Stat label="Variations" value={String(report.summary.variations)} testId="stat-variations" />
             <Stat label="Exercises" value={String(report.summary.exercises)} testId="stat-exercises" />
           </div>
 
-          <div className="border-b-2 border-divider px-8 py-6">
+          <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
             <Kicker>Time by day</Kicker>
             <DayBarChart days={report.days} className="mt-3" />
           </div>
@@ -203,7 +203,7 @@ export function ReportPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-[14px]" data-testid="report-table">
                   <thead>
-                    <tr className="border-b-2 border-divider">
+                    <tr className="border-b-(length:--rule-section-w) border-divider">
                       {COLUMNS.map((column) => (
                         <th
                           key={column.id}
@@ -234,7 +234,7 @@ export function ReportPage() {
                   </thead>
                   <tbody>
                     {rows.map((row) => (
-                      <tr key={row.exerciseId} className="border-b border-divider" data-testid="report-row">
+                      <tr key={row.exerciseId} className="border-b border-rule" data-testid="report-row">
                         <td className="py-3 pr-6">{row.name}</td>
                         <td className="tabular py-3 pr-6">{row.played}</td>
                         <td className="tabular py-3 pr-6">{formatTempos(row)}</td>

@@ -34,7 +34,7 @@ export function ExerciseDetail() {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such exercise">
-          <Link to="/exercises" className="text-accent-700 underline">
+          <Link to="/exercises" className="text-accent-text underline">
             Back to the library
           </Link>
         </EmptyState>
@@ -44,10 +44,10 @@ export function ExerciseDetail() {
 
   return (
     <section>
-      <div className="flex items-end justify-between border-b-2 border-divider px-8 py-7">
+      <div className="flex items-end justify-between border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          <h1 className="text-[42px]">{definition.name}</h1>
+          <h1>{definition.name}</h1>
           <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (
@@ -167,7 +167,7 @@ export function ExerciseDetail() {
         </div>
       </div>
 
-      <Separator className="border-t-2 border-divider" />
+      <Separator className="border-t-(length:--rule-section-w) border-divider" />
     </section>
   );
 }

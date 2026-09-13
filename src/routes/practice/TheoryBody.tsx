@@ -166,7 +166,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
           Question {index + 1} of {questions.length}
         </Kicker>
         {phase === 'right' && (
-          <span className="text-[13px] font-semibold text-accent-700" data-testid="theory-right">
+          <span className="text-[13px] font-semibold text-accent-text" data-testid="theory-right">
             Right
           </span>
         )}

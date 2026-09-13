@@ -20,7 +20,7 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
   const cells = Array.from({ length: high - low + 1 }, (_, i) => wrapPosition(correct + low + i));
 
   return (
-    <div className="flex border border-divider" data-testid="circle-strip" role="img" aria-label="Circle of fifths">
+    <div className="flex border border-rule" data-testid="circle-strip" role="img" aria-label="Circle of fifths">
       {cells.map((position, i) => {
         const isCorrect = position === correct;
         const isPicked = picked !== undefined && position === wrapPosition(picked) && !isCorrect;
@@ -30,7 +30,7 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
             data-testid={isCorrect ? 'circle-correct' : isPicked ? 'circle-picked' : undefined}
             className={[
               'flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-2',
-              i > 0 ? 'border-l border-divider' : '',
+              i > 0 ? 'border-l border-rule' : '',
               isCorrect ? 'bg-accent text-white' : '',
               isPicked ? 'outline-2 -outline-offset-2 outline-ink' : '',
             ].join(' ')}

@@ -106,8 +106,8 @@ export function Gallery() {
               className={[
                 'px-3 py-1 text-[13px] tabular-nums',
                 i === shapeIndex
-                  ? 'bg-accent font-semibold text-bg'
-                  : 'border border-divider hover:bg-ink/5',
+                  ? 'bg-accent font-semibold text-on-accent'
+                  : 'border border-rule hover:bg-ink/5',
               ].join(' ')}
             >
               fret {shape.startFret}
@@ -153,9 +153,9 @@ export function Gallery() {
 function Header() {
   const sig = keySignature(D_DORIAN);
   return (
-    <div className="border-b-2 border-divider px-8 py-6">
+    <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
       <p className="kicker kicker-accent">Dev gallery · milestone 1</p>
-      <h1 className="text-[42px]">D Dorian</h1>
+      <h1>D Dorian</h1>
       <p className="text-[15px] text-ink/70">
         {scaleNotes(D_DORIAN).join(' · ')} — signature note {signatureNote(D_DORIAN)}, relative
         major {sig.relativeMajor}, {sig.sharps} sharps and {sig.flats} flats.
@@ -174,10 +174,10 @@ function ArticulationLegend() {
     ['b r', 'bend, release'],
   ];
   return (
-    <dl className="mt-4 flex flex-wrap gap-x-7 gap-y-2 border-t border-divider pt-3">
+    <dl className="mt-4 flex flex-wrap gap-x-7 gap-y-2 border-t border-rule pt-3">
       {marks.map(([glyph, meaning]) => (
         <div key={meaning} className="flex items-baseline gap-2">
-          <dt className="font-extrabold text-accent-700">{glyph}</dt>
+          <dt className="font-extrabold text-accent-text">{glyph}</dt>
           <dd className="text-[12px] text-ink/60">{meaning}</dd>
         </div>
       ))}
@@ -188,7 +188,7 @@ function ArticulationLegend() {
 /** Settings shared by every example: they all use one engine and one clock. */
 function TransportBar({ transport }: { transport: Transport }) {
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-5 border-b-2 border-divider bg-bg px-8 py-3">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-5 border-b-(length:--rule-section-w) border-divider bg-bg px-8 py-3">
       <span className="kicker kicker-accent">Playback</span>
 
       <label className="flex items-center gap-2 text-[13px]">
@@ -233,7 +233,7 @@ function Section({
   return (
     // scroll-mt keeps the sticky toolbar from covering a section's controls
     // when it is scrolled to.
-    <section className="scroll-mt-14 border-b border-divider px-8 py-7">
+    <section className="scroll-mt-14 border-b border-rule px-8 py-7">
       <div className="mb-4">
         <p className="kicker">{title}</p>
         {note && <p className="text-[12px] text-ink/55">{note}</p>}
@@ -265,7 +265,7 @@ function TheoryTable() {
   return (
     <table className="w-full text-left text-[13px]">
       <thead>
-        <tr className="border-b border-divider">
+        <tr className="border-b border-rule">
           {['Deg', 'Triad', '7th', '9th', 'Function'].map((h) => (
             <th key={h} className="kicker py-2 font-normal">
               {h}
@@ -278,7 +278,7 @@ function TheoryTable() {
           <tr
             key={chord.degree.label}
             className={[
-              'border-b border-divider/50',
+              'border-b border-rule/50',
               chord.function !== 'other' ? 'bg-accent/8' : '',
             ].join(' ')}
           >

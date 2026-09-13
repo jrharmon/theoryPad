@@ -51,7 +51,7 @@ function Toggle<T extends string>({
           size="sm"
           variant="secondary"
           aria-pressed={value === option.id}
-          className={value === option.id ? 'bg-ink text-bg hover:bg-ink/85' : ''}
+          className={value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
           onClick={() => onChange(option.id)}
         >
           {option.label}
@@ -115,9 +115,9 @@ export function FretboardExplorer() {
 
   return (
     <section>
-      <div className="border-b-2 border-divider px-8 py-7">
+      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
         <Kicker accent>Explore</Kicker>
-        <h1 className="text-[42px]" data-testid="explorer-title">
+        <h1 data-testid="explorer-title">
           {keyMode.tonic} {title(keyMode.mode)}
         </h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
@@ -126,7 +126,7 @@ export function FretboardExplorer() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-divider px-8 py-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule px-8 py-4">
         <div className="flex items-center gap-2">
           <Select
             value={String(chroma(keyMode.tonic))}
@@ -180,13 +180,13 @@ export function FretboardExplorer() {
         />
       </div>
 
-      <div className="border-b border-divider px-8 py-4">
+      <div className="border-b border-rule px-8 py-4">
         <div className="flex flex-wrap gap-1" role="group" aria-label="Shape">
           <Button
             size="sm"
             variant="secondary"
             aria-pressed={shapeIndex === null}
-            className={shapeIndex === null ? 'bg-ink text-bg hover:bg-ink/85' : ''}
+            className={shapeIndex === null ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
             onClick={() => setShapeIndex(null)}
           >
             Whole neck
@@ -198,7 +198,7 @@ export function FretboardExplorer() {
               variant="secondary"
               aria-pressed={shapeIndex === i}
               aria-label={`Shape starting on ${degrees[s.startDegree - 1]!.label} at fret ${s.startFret}`}
-              className={shapeIndex === i ? 'bg-ink text-bg hover:bg-ink/85' : ''}
+              className={shapeIndex === i ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
               onClick={() => setShapeIndex(i)}
             >
               <span className="tabular">{degrees[s.startDegree - 1]!.label}</span>
@@ -208,7 +208,7 @@ export function FretboardExplorer() {
         </div>
       </div>
 
-      <div className="border-b-2 border-divider px-8 py-6">
+      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
         <Fretboard
           instrument={instrument}
           overlay={overlay}
@@ -218,14 +218,14 @@ export function FretboardExplorer() {
         />
         <div className="mt-4 flex flex-wrap items-center gap-6 text-[12px] text-ink/70" data-testid="legend">
           <span className="flex items-center gap-2">
-            <span className="size-3.5 rounded-full bg-neutral-800" /> Root
+            <span className="size-3.5 rounded-full bg-dot-root" /> Root
           </span>
           <span className="flex items-center gap-2">
-            <span className="size-3.5 rounded-full bg-accent" /> {signature.label} — the note that makes{' '}
+            <span className="size-3.5 rounded-full bg-dot-target" /> {signature.label} — the note that makes{' '}
             {title(keyMode.mode)}
           </span>
           <span className="flex items-center gap-2">
-            <span className="size-3.5 rounded-full bg-neutral-300" /> The rest of the key
+            <span className="size-3.5 rounded-full bg-dot-chord" /> The rest of the key
           </span>
           {heat && (
             <span className="flex items-center gap-2">

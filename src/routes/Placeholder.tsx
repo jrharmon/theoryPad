@@ -14,7 +14,7 @@ export function Placeholder({
   return (
     <section className="px-8 py-8">
       <p className="kicker kicker-accent">{milestone}</p>
-      <h1 className="text-[42px]">{title}</h1>
+      <h1>{title}</h1>
       <p className="max-w-[640px] text-[15px] text-ink/70">{summary}</p>
     </section>
   );
