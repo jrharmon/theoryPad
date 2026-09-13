@@ -1,7 +1,9 @@
 # Status — start here
 
-**Last updated:** 2026-09-13, M6 reviewed and merged. Written as a hand-off: a fresh session
-should be able to start M7 from this file, `CLAUDE.md`, and the plan docs it points to.
+**Last updated:** 2026-09-13, the Notebook restyle built and **at the gate** — on branch
+`restyle-notebook` (R1–R6), not yet merged or pushed. Written as a hand-off: a fresh session
+should be able to finish the restyle's review, then start M7, from this file, `CLAUDE.md`, and
+the plan docs it points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -15,11 +17,14 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M5 — Routines, settings, export/import | ✅ merged, live |
 | M4 — Theory | ✅ merged, live |
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
-| **M7 — Audio richness: backing, ear training, improv** | **next** — doc 08 has the tasks |
+| **Restyle — Notebook, light and dark** | **at the gate** — branch `restyle-notebook`; doc 11 |
+| M7 — Audio richness: backing, ear training, improv | after the restyle merges — doc 08 has the tasks |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. Everything is on `main`; there are no open branches.
-713 unit tests, 46 E2E, `pnpm check` green.
+M5 was deliberately built before M4. `main` has M0–M6; `restyle-notebook` has the restyle
+(six commits, R1–R6) waiting for review, then a fast-forward merge and push. 723 unit tests,
+51 E2E, `pnpm check` green on the branch. (A stale local `m6-progress` branch is fully merged
+and can be deleted.)
 
 ## How the player works — read before starting anything
 
@@ -57,6 +62,8 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
 | `src/store/` | Zustand: `practice` (drives one exercise or a routine through the same screen), `exercises`, `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state). |
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
+| `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
+| `src/app/appearance.ts` | The Appearance setting → `<html data-theme>`: `resolveTheme`, `applyAppearance`, `useAppearance` (AppShell). `index.html`'s inline script does the same before first paint from a localStorage mirror. |
 
 ### The run model, briefly (doc 03 has it in full)
 
@@ -78,6 +85,11 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   Days split at local midnight; weeks start Monday.
 
 ## What works today
+
+- **Notebook, light and dark**: graph paper, white sheets, graphite, ballpoint blue,
+  highlighter yellow; Bricolage Grotesque and Figtree, self-hosted. **Appearance** in Settings →
+  Display: System (default, follows the computer live), Light or Dark — applied before first
+  paint on the next load. The exported HTML report is always light.
 
 - **Home**: a four-week heatmap, the streak and this week's time; then your routines,
   favorites pinned, with Start and Edit.
@@ -109,8 +121,8 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   - a settings dialog
   - tab size (`-` / `=`) and bar lines
   - the neck trimmed to the frets in use, or hidden.
-- **Settings**: tuning (standard, drop D, 7-string), sound, display, and Export / Import (merge
-  or replace, with a summary first).
+- **Settings**: tuning (standard, drop D, 7-string), sound, display (appearance, neck, tab size),
+  and Export / Import (merge or replace, with a summary first).
 - **Keys**:
   - Space: pause
   - Enter: play or start
@@ -124,7 +136,11 @@ M5 was deliberately built before M4. Everything is on `main`; there are no open 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: M7
+## Next: the restyle's review, then M7
+
+At the gate: the player reviews the restyle (doc 11 §7.3 and the questions below), then merge
+`restyle-notebook` into `main` (fast-forward), push, and check CI **and** the deploy.
+
 
 Doc 08 §M7: backing tracks (model, YouTube source with rate, control, track management and
 the 12×7 coverage grid), reference videos, `free-improv-target`, `ear-training`, and
@@ -133,6 +149,17 @@ tracks seed the shared pool beyond the first, whether reference videos matter be
 and which of the five ear-training drills come first.
 
 ## Open questions for the player
+
+From the restyle's gate:
+- The screens that were not mocked (doc 11 §4.5 and §As built): library, config, builder,
+  theory, routine overview and summary, report, explorer, settings — and the call to drop the
+  header rules on the paper everywhere.
+- Whether the tab reads comfortably at playing distance, in both themes; whether the yellow
+  playhead is findable at a glance without shouting.
+- Whether the graph paper helps or is noise (`--color-grid: transparent` drops it).
+- Meta text at 55–60% ink is 3.6–4.1:1 on white in light (below 4.5); raise it to the 64% muted?
+- In dark, the explorer's heaviest heat shades toward chalk; the white root dots there rely on
+  their ring.
 
 These need a guitar:
 - 35 bpm for one-note-per-string.
@@ -144,6 +171,11 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Start of the restyle** (doc 11 has all of it)
+- Notebook, in light and dark; an Appearance setting (System / Light / Dark, default System);
+  styling only otherwise, existing E2E tests untouched.
+- The exported report is always light. Errors use the destructive red, not the new blue.
 
 **M6 review**
 - The neck heat matches what was played; the report is useful; the mode prose stands for now;
@@ -197,13 +229,17 @@ These need a guitar:
 The dev server is `pnpm dev` on :5173; the player often has one running already. To look at
 something, write a short Playwright script in the session scratchpad, driving
 `http://localhost:5173` with `chromium` from `@playwright/test` and saving screenshots to read
-back:
+back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
 - Symlink the project's `node_modules` into the scratchpad so the import resolves.
 - Scripts must not live in the repo root, or lint picks them up.
 - A fresh browser has an empty IndexedDB, so navigate by exercise name through the library,
   not by stored ids.
 - Wait for the thing you want. `play()` awaits the audio engine, so the screen changes a
   moment after the click.
+- **Deterministic screenshots**, for before/after pixel diffs: `page.clock.setFixedTime(…)`
+  (rolls seed from `Date.now()`) and an init script making `crypto.randomUUID` a counter kept in
+  localStorage (exercise ids feed the seeds and the order). Then only where playback pauses
+  varies between runs. Compare in a page canvas — no image library needed.
 - **Seeding practice history:** against the dev server, `page.evaluate` can
   `await import('/src/data/index.ts')` and write reps through `createRepositories(db())` — the
   rollup and stats update as they would in use. A few weeks of plausible reps is enough to
@@ -211,6 +247,17 @@ back:
   (Shift+] repeatedly) and play one pass of Position shifting — about 40 s.
 
 ## Things that bit, and would bite again
+
+- **A stale `vite preview` on :4173 made E2E test yesterday's build.** Playwright reuses a
+  running server, and `vite preview` serves whatever is in `dist/`. Three restyle commits "passed"
+  E2E against M6 code before this was noticed. **Run `pnpm build` before `pnpm test:e2e`** if a
+  preview might be running (`lsof -iTCP:4173`).
+- **Tailwind orders utilities by their properties**, not by where they are declared. Adding a
+  `font-family` to `.kicker` sorted it ahead of `text-sm`, which then won on shadcn `Label`s. The
+  kicker's face is set in `@layer base` instead.
+- **shadcn's `accent` is not ours.** Its classes say `bg-accent` meaning a subtle tint; here that
+  is the brand color. Ghost/outline hovers and a Select's focused item are pointed back at the
+  tint by unlayered rules in `index.css`.
 
 - **Escape in a popover or drawer left the exercise.** Radix closes it during the keydown
   dispatch; React re-renders synchronously, the hotkey effect re-attaches its window listener,
@@ -229,7 +276,7 @@ back:
 - **ESLint flat config: the last matching block wins a rule outright.** That is why
   `test/eslint-boundaries.test.ts` exists.
 - **Tailwind layering.** A `@layer components` or `@layer base` rule loses to a utility.
-  `.kicker` is an `@utility`; the zero-radius `[data-slot]` rule is unlayered. The shared
+  `.kicker` is an `@utility`; the `data-slot` overrides in `index.css` are unlayered. The shared
   `Input`'s text size wins over a heading class — use a plain `<input>` for big inline fields.
 - **The shadcn CLI** reads the solution-style root `tsconfig.json`, and the components import
   `cn` from the `cn` package. Match that, don't "fix" it.

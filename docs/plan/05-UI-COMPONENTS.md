@@ -2,28 +2,40 @@
 
 ## Design approach
 
-The Modernist system from the design session is **reference, not contract**. We take its
-tokens and its structural conventions — those carry the identity and cost nothing — and get
-everything else from shadcn/ui.
+**Notebook** — a practice journal — since the restyle between M6 and M7 (doc 11 has the
+decisions, the token tables and the mockups). It replaced the Modernist look (warm grey, one
+red, square everything). Tokens and conventions carry the identity; everything else comes from
+shadcn/ui.
 
-**Keep** (cheap, high identity value):
+**Rules of use:**
 
-- Zero border radius everywhere. Note dots on the fretboard are the sole exception.
-- 2px rules between major sections, 1px between rows. Structure shown with rules, not
-  whitespace or shadows.
+- A graph-paper page (`bg-graph`), white **sheets** (`sheet`) for grouped content — one sheet
+  per group, never a card per row. Headers, briefs and kickers sit on the paper; 1px rules
+  (`border-rule`) sit inside sheets.
+- Graphite ink. Ballpoint blue for actions and targets. Highlighter yellow only for "you are
+  here" (the playhead) and "this changed" (a fresh axis value, `highlight`). Errors use
+  `--destructive` red, never the blue.
+- 8px controls (`--radius-control`), 12px panels (`--radius-panel`), pill toggles
+  (`rounded-toggle`). The floating transport is the only shadow.
+- Bricolage Grotesque for headings and names (`h1`/`h2`, `face-title`); Figtree for everything
+  else. Numbers read while playing use `num` (tabular). Small-caps section labels use
+  `.kicker`.
 - Everything flush left, including labels inside wide buttons.
-- Accent (`#ec3013`) used sparingly: primary action, active/selected state, small emphasis,
-  and one "poster" statement per screen.
-- Small-caps kicker labels above blocks (11px, letter-spacing .12em, uppercase, muted).
-- `font-variant-numeric: tabular-nums` on every timer, tempo and bar count.
-- Archivo, weights 400/600/800.
-- Grid panels with equal tracks and 1px cell dividers.
+- **Light and dark.** Every color is a token; see *Theme* below. Style through tokens — a
+  component must not know which theme is on.
 
-**Drop:** exact pixel measurements, the hand-authored layouts, the two-treatment split for the
-running view. Match the feel; don't chase the mockup.
+---
 
-Put a condensed version of the "Keep" list in `CLAUDE.md` so agents apply it without reading
-the handoff.
+## Theme
+
+Light and dark ship; doc 11 §5 has the whole mechanism. In short: the `@theme` blocks in
+`src/styles/theme.css` hold the light values, and `:root[data-theme="dark"]` (unlayered, after
+them) redefines the same tokens — nothing else. `<html>` always carries the **resolved** theme;
+the CSS never asks the system. `src/app/appearance.ts` resolves the Appearance setting (System
+/ Light / Dark) and follows the system live while it is System; an inline script in
+`index.html` stamps the theme before first paint from a `localStorage` mirror
+(`theorypad:appearance`). `dark:` is keyed on the stamp and used only for what a token cannot
+express — today, the playhead's blend mode.
 
 ---
 
@@ -47,12 +59,14 @@ Three things that were not obvious and cost time:
 
 - The CLI reads the **root** `tsconfig.json`, which is solution-style with no `paths`.
   Without the alias duplicated there it writes components into a literal `@/` directory.
-- `--radius` is 0, but `rounded-full` does not read it and `Badge` uses it. Squareness is
-  enforced by an **unlayered** `[data-slot] { border-radius: 0 }` rule — `data-slot` is the
-  attribute shadcn puts on every component, so a future `shadcn add` cannot reintroduce a
-  radius. It must stay unlayered: a rule in `@layer base` loses to a utility.
-- `.kicker` is declared with `@utility`, not in `@layer components`, for the same reason —
-  it kept losing to shadcn's own `text-sm`.
+- Global overrides of shadcn components are **unlayered** attribute rules in `index.css`,
+  keyed on `data-slot` / `data-variant` — a rule in `@layer base` loses to a utility. There are
+  three: the secondary button's paper-and-edge look (skipping a toggle that is on, keyed on
+  `.bg-toggle-on`), the tag badge's surface fill, and a fix for shadcn's `bg-accent` hovers,
+  which in this theme would be the brand blue rather than shadcn's subtle tint.
+- `.kicker` is declared with `@utility`, not in `@layer components` — it kept losing to
+  shadcn's own `text-sm`. Its font-family is set in `@layer base` instead: Tailwind orders
+  utilities by their properties, and a font-family would sort `.kicker` ahead of `text-sm`.
 
 ### `components/music/` — the bespoke, high-value components
 
@@ -75,8 +89,10 @@ interface FretboardProps {
 CSS grid: `grid-template-columns: <labelCol> repeat(nFrets, 1fr)`, with
 **`instrument.tuning.length` rows** — never a literal 6. String lines are row backgrounds;
 fret wires are `border-left` on each cell; the nut is a heavier left edge at fret 0. Note dots
-are circles containing their label. Roles map to fills: root = neutral-800, target = accent,
-other = neutral-300.
+are circles containing their label. Role fills come from the `--color-dot-*` tokens (root,
+target, chord, pass — each with an `-ink`); the board, frets, nut, strings and inlays from
+`--color-neck-*`; the notes-played heat from `--color-neck-heat` (graphite — blue stays for
+targets).
 
 **Rendering order is highest-to-lowest**: screen row 0 is `tuning[tuning.length - 1]`, the
 last screen row is `tuning[0]`. This inversion happens here and in `TabStaff`, and nowhere

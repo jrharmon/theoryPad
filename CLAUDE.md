@@ -37,16 +37,24 @@ decisions (notably its `cleanTempo` model, which we dropped).
 
 ## Style
 
-- Zero border radius (fretboard note dots excepted). 2px rules between sections, 1px between
-  rows. Everything flush left, including button labels. Accent `#ec3013` used sparingly —
-  primary action, active state, small emphasis. Tabular numerals on all timers, tempos and
-  counts (`.tabular`). Small-caps section labels use `.kicker`.
+- Notebook: a graph-paper page, white **sheets** for grouped content (one sheet per group,
+  never a card per row), graphite ink, ballpoint blue for actions and targets, highlighter
+  yellow only for "you are here" (playhead) and "this changed" (fresh axis). 8px controls,
+  12px panels, pill toggles; the floating transport is the only shadow. Bricolage Grotesque
+  for headings and titles (`face-title`), Figtree for everything else; numbers read while
+  playing use `num`. Small-caps section labels use `.kicker`.
+- **Light and dark.** Every color is a token with a light value in `@theme` and a dark value
+  under `:root[data-theme="dark"]` in `theme.css`. Style through tokens; a component must not
+  know which theme is on. `dark:` only for what a token cannot express. The Appearance
+  setting (System / Light / Dark) stamps `data-theme` on `<html>`; `index.html` does it before
+  first paint from a localStorage mirror.
 - Tailwind utilities + tokens from `src/styles/theme.css`. Don't hard-code a hex or a font.
 - UI is shadcn/ui, themed through the tokens in `theme.css`. **Never hand-edit a shadcn
   component's internals** — change the tokens. Our own primitives (`kicker`, `field`,
   `empty-state`) live alongside them in `src/components/ui/`.
 - Tailwind layering bites: a `@layer components` or `@layer base` rule loses to a utility.
-  `.kicker` is an `@utility`; the zero-radius `[data-slot]` rule is deliberately unlayered.
+  `.kicker` is an `@utility`; global overrides keyed on `data-slot` / `data-variant` are
+  deliberately unlayered.
 - Prefer composing `src/exercises/shared/` generators over new code. If a piece is missing,
   add it to `shared/` **with tests** — never inline it in an exercise.
 
@@ -55,7 +63,7 @@ decisions (notably its `cleanTempo` model, which we dropped).
 Several real bugs in this project were invisible to tests and obvious in a screenshot:
 inverted scale shapes, a brief naming one key while the axis strip named another, tab digits
 running together, rounded badges. When a change affects what something looks like, render it
-and look before saying it works.
+and look before saying it works — in both themes.
 
 ## Testing
 

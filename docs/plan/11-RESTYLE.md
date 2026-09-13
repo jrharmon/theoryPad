@@ -1,7 +1,7 @@
 # 11 — Restyle: Notebook, light and dark
 
-**Status:** decided 2026-09-13, not started. Build it as its own milestone (branch
-`restyle-notebook`) between M6 and M7. Everything needed to implement it from a fresh session is
+**Status:** built 2026-09-13 (R1–R6), at the gate — see *As built* below. Its own milestone
+(branch `restyle-notebook`) between M6 and M7. Everything needed to implement it from a fresh session is
 in this file; the mockups are `11-RESTYLE-mockups.html` next to it (open it in a browser, pick
 **C · Notebook**, press **D** for dark) and published at
 https://claude.ai/code/artifact/e3b03498-2fcf-4da8-901a-f8ebddb1544d.
@@ -26,9 +26,9 @@ https://claude.ai/code/artifact/e3b03498-2fcf-4da8-901a-f8ebddb1544d.
 - **Errors are red, not blue.** The accent used to double as the error color. Error text — the
   Settings import error and the theory ✗ mark — uses shadcn's `--destructive` (a `text-destructive`
   utility); ballpoint blue stays for actions and targets.
-- **Toggles win over the secondary-button rule.** Every toggle is a `secondary` Button with
-  `aria-pressed`, and an unlayered rule beats any utility — so §4.3's rule is scoped with
-  `:not([aria-pressed="true"])`, and every pressed state (not only the transport's) carries the
+- **Toggles win over the secondary-button rule.** Every toggle is a `secondary` Button, and an
+  unlayered rule beats any utility — so §4.3's rule skips a toggle that is on (as built, keyed on
+  `.bg-toggle-on`; see below), and every pressed state (not only the transport's) carries the
   toggle-on ring.
 - **Archivo is loaded today** (`@fontsource/archivo` in `main.tsx`, contrary to §3.2). R2 leaves
   it; R3 replaces the imports and removes the package.
@@ -37,9 +37,40 @@ https://claude.ai/code/artifact/e3b03498-2fcf-4da8-901a-f8ebddb1544d.
   `<button>`s, so the DOM is unchanged. `text-white` on accent fills → `text-on-accent`.
 - The explorer's neck heat stays graphite (the ink ramp, per M6); the ring that separates a dot
   from the shading uses the board's color, `ring-neck`.
-- Unit tests that assert the class `text-accent-700` follow the rename to `text-accent-text`. The
-  E2E tests are untouched.
+- Unit tests that assert the class `text-accent-700` follow the rename to `text-accent-text` (the
+  TabStaff ones; the Fretboard one stays, see below). The E2E tests are untouched.
 - R2's proof is a pixel comparison of the before and after screenshot sets.
+
+## As built — where the code differs from this spec, and why
+
+- **Toggle-on ring** is Tailwind's `inset-ring inset-ring-toggle-on-ring`, not `ring-1 ring-inset`:
+  `ring-inset` would turn the focus ring of a pressed toggle inward.
+- **`.kicker`'s font-family** is set in `@layer base`, not in the utility: Tailwind orders
+  utilities by their properties, and a font-family sorted `.kicker` ahead of `text-sm`, which then
+  won on shadcn `Label`s carrying `.kicker`. Kicker ink is 64% (the mockup's muted), not 55%.
+- **Tokens added:** `--color-fill-current` (the current routine segment; `bg-fill/60` in R3,
+  `accent-400` in R2 — a class change would have broken R2's match), `--color-neck-heat` (the
+  explorer's shading, graphite), `--color-toggle-off` (defined, for completeness).
+- **R2 left three things for R3** because they were not visually identical: `num` on the tab and
+  neck string labels and the dot labels (not tabular before), `text-on-accent` on theory fills
+  (they were `text-white`, not the bg color), and the time-by-day chart's empty bars
+  (`neutral-300` → `heat-0`).
+- **The emphasised fret number keeps `text-accent-700`**: `e2e/gallery.spec.ts` asserts the class,
+  and the existing E2E tests stay untouched. The ramp step equals `accent-text` in both themes.
+- **shadcn tokens:** `--background` and `--card`/`--popover` point at paper (dialogs, the drawer
+  and outline buttons are sheets); `--input` at the toggle edge, so fields match secondary buttons.
+- **More unlayered rules in `index.css`**, all keyed on `data-slot`: the secondary button (scoped
+  `:not(.bg-toggle-on)` — "Hide neck" is `aria-pressed` but drawn plain); the tag badge (surface
+  fill, so it reads on a sheet); ghost/outline hover and a Select's focused item (shadcn's
+  `bg-accent` is the brand blue here, not its subtle tint — they filled solid blue under ink
+  text, a latent M2 bug that was red before); and buttons' focus-visible outline (shadcn's 50%
+  halo nearly vanished around a filled blue button, and its `outline-none` hid the app's).
+- **Header rules on the paper are gone on every screen**, not only Home — the principle puts
+  rules inside sheets. Theory answer buttons are `rounded-control` secondary look; a table's
+  option chips are pills. The routine builder's name field uses the h1 variables.
+- **Placement without wrappers:** sheets were applied to existing elements (rule 1 forbids new
+  DOM), so on the config page Tempo and Settings are separate sheets, and What varies' prose sits
+  on the paper above its sheet.
 
 ## Contents
 

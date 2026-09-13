@@ -188,3 +188,13 @@
 [data-slot='badge'][data-variant='secondary'] {
   background: var(--color-surface);
 }
+
+/*
+ * Buttons take the app's focus outline too. shadcn's own is a 50% halo that
+ * all but vanishes around a filled blue button, and its `outline-none` hid
+ * ours — so on a sheet, the page or the floating bar focus was hard to find.
+ */
+[data-slot='button']:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

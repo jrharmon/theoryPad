@@ -362,7 +362,7 @@ didn't know?
 
 ---
 
-## Restyle — Notebook, light and dark
+## Restyle — Notebook, light and dark ✅ *built (2026-09-13), at the gate*
 
 The whole spec — decisions, rules, token values for both themes, per-file changes — is
 [`11-RESTYLE.md`](11-RESTYLE.md); the mockups are `11-RESTYLE-mockups.html` (pick **C ·
@@ -380,6 +380,22 @@ Notebook**, press **D** for dark). Branch `restyle-notebook`, a commit per task.
 **Agreed before building:** the design decisions in doc 11 §Decisions; the exported HTML report
 is always light; errors (the import error, the theory ✗) use `--destructive` red, not the
 ballpoint blue. Doc 11 §Decided at the start has the rest.
+
+**Outcome.** 723 unit tests, 51 E2E (the 46 existing untouched, plus `appearance.spec.ts`),
+`pnpm check` green. Things to carry forward:
+
+- **R2 was proven by pixels, not by eye:** 34 screenshots before and after, byte-identical on every
+  static screen. The screenshot script freezes time (`page.clock.setFixedTime`) and makes
+  `crypto.randomUUID` a counter — ids feed the roll seeds — so runs are deterministic apart from
+  where playback happens to pause.
+- **A theme is values only.** Components name roles (`bg-toggle-on`, `bg-dot-root`,
+  `text-accent-text`, `bg-paper`…); `theme.css` has one light block and one dark block. Doc 11
+  §As built lists where the code departs from the spec.
+- **`<html data-theme>` is always stamped**, by `index.html` before paint and by
+  `useAppearance` once settings load. The exported report reads the light values regardless.
+- **shadcn's `accent` is not ours.** Its `bg-accent` hovers and Select focus meant the brand color;
+  unlayered rules point them at the subtle tint.
+- **A stale `vite preview` on :4173 makes E2E test old code** — Playwright reuses it. Build first.
 
 **Deliverable:** the same app, every screen, in Notebook — light and dark, following the
 computer or chosen in Settings.
