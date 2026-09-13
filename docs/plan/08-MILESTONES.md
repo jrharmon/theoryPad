@@ -362,6 +362,33 @@ didn't know?
 
 ---
 
+## Restyle — Notebook, light and dark
+
+The whole spec — decisions, rules, token values for both themes, per-file changes — is
+[`11-RESTYLE.md`](11-RESTYLE.md); the mockups are `11-RESTYLE-mockups.html` (pick **C ·
+Notebook**, press **D** for dark). Branch `restyle-notebook`, a commit per task.
+
+| #   | Task                                                                                                  | Size |
+| --- | ----------------------------------------------------------------------------------------------------- | ---- |
+| R1  | Commit the spec and its mockups; add this section                                                     | S    |
+| R2  | Tokenize the look with today's values; fix the `dark:` variant. **No visual change** — screenshots match | M    |
+| R3  | Notebook, light: fonts, token values, component classes                                               | M    |
+| R4  | Dark token values; the theme stamped on `<html>` before first paint; follows the system                | M    |
+| R5  | The Appearance setting (System / Light / Dark, default System) in Settings → Display, and its tests    | S    |
+| R6  | CLAUDE.md, `05-UI-COMPONENTS.md`, `STATUS.md`, this Outcome; gate screenshots in both themes           | S    |
+
+**Agreed before building:** the design decisions in doc 11 §Decisions; the exported HTML report
+is always light; errors (the import error, the theory ✗) use `--destructive` red, not the
+ballpoint blue. Doc 11 §Decided at the start has the rest.
+
+**Deliverable:** the same app, every screen, in Notebook — light and dark, following the
+computer or chosen in Settings.
+
+**Verify:** does the tab read comfortably at playing distance in both themes? Is the yellow
+playhead findable without shouting? Does the graph paper help, or is it noise?
+
+---
+
 ## M7 — Audio richness: backing, ear training, improv
 
 | #   | Task                                                                                                                                                                                                                    | Size |

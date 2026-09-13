@@ -1,0 +1,694 @@
+<title>TheoryPad Restyle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* ---------- The page around the mockups (follows the viewer's theme) ---------- */
+:root {
+  --pg: #eeeeeb; --pg-panel: #f7f7f5; --pg-ink: #1b1b1d; --pg-muted: #5c5c61;
+  --pg-rule: #d2d2cd; --pg-strong: #1b1b1d; --pg-frame: #c9c9c4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pg: #131314; --pg-panel: #1b1b1d; --pg-ink: #ebebe8; --pg-muted: #a3a3a8;
+    --pg-rule: #333336; --pg-strong: #ebebe8; --pg-frame: #3a3a3e;
+  }
+}
+:root[data-theme="dark"] {
+  --pg: #131314; --pg-panel: #1b1b1d; --pg-ink: #ebebe8; --pg-muted: #a3a3a8;
+  --pg-rule: #333336; --pg-strong: #ebebe8; --pg-frame: #3a3a3e;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--pg); color: var(--pg-ink);
+  font-family: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px; line-height: 1.55;
+}
+.page { max-width: 1240px; margin: 0 auto; padding: 40px 28px 80px; }
+.eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--pg-muted); margin: 0 0 6px; }
+.page h1 { font-size: 40px; font-weight: 800; font-stretch: 112%; letter-spacing: -.02em; line-height: 1.05; margin: 0 0 12px; text-wrap: balance; }
+.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; align-items: end; padding-bottom: 28px; border-bottom: 2px solid var(--pg-strong); }
+.intro p { margin: 0; max-width: 64ch; color: var(--pg-muted); }
+.intro p + p { margin-top: 10px; }
+.intro strong { color: var(--pg-ink); font-weight: 600; }
+.aside { font-size: 13px; color: var(--pg-muted); border-left: 1px solid var(--pg-rule); padding-left: 16px; }
+.aside b { color: var(--pg-ink); font-weight: 600; }
+code { font-family: 'Martian Mono', ui-monospace, Menlo, monospace; font-size: .82em; font-stretch: 87.5%; }
+
+.picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 28px 0 36px; }
+.pick { all: unset; cursor: pointer; display: grid; gap: 10px; align-content: start; }
+.pick .mock { outline: 1px solid var(--pg-frame); }
+.pick[aria-pressed="true"] .mock { outline: 3px solid var(--pg-strong); outline-offset: 3px; }
+.pick:focus-visible .mock { outline: 3px solid var(--pg-strong); outline-offset: 6px; }
+.pick-name { display: flex; gap: 8px; align-items: baseline; font-weight: 700; font-size: 15px; }
+.pick-name kbd { font: 500 10px/1 'Martian Mono', monospace; color: var(--pg-muted); border: 1px solid var(--pg-rule); padding: 3px 5px; }
+.pick-line { font-size: 13px; color: var(--pg-muted); margin-top: -6px; }
+
+.dir-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 40px; margin-bottom: 28px; }
+.dir-head h2 { font-size: 30px; font-weight: 800; font-stretch: 112%; letter-spacing: -.015em; margin: 0 0 10px; line-height: 1.1; }
+.dir-head h2 span { color: var(--pg-muted); font-weight: 500; }
+.thesis { margin: 0; max-width: 62ch; }
+.risk { margin: 12px 0 0; font-size: 13px; color: var(--pg-muted); max-width: 62ch; }
+.risk b { color: var(--pg-ink); font-weight: 600; }
+.label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--pg-muted); margin: 0 0 8px; }
+.swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--pg-rule); border: 1px solid var(--pg-rule); margin-bottom: 18px; }
+.sw { background: var(--pg-panel); display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: center; padding: 8px; }
+.sw i { width: 26px; height: 26px; box-shadow: inset 0 0 0 1px rgba(128,128,128,.35); }
+.sw b { display: block; font-size: 12.5px; font-weight: 600; line-height: 1.2; }
+.sw small { font: 10.5px 'Martian Mono', monospace; font-stretch: 87.5%; color: var(--pg-muted); }
+.faces { display: grid; gap: 6px; }
+.face { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: baseline; border-top: 1px solid var(--pg-rule); padding-top: 6px; }
+.face small { font-size: 11px; color: var(--pg-muted); }
+.face span { font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.face em { display: block; font-style: normal; font-size: 11px; color: var(--pg-muted); font-family: 'Archivo', sans-serif; }
+
+.modebar { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 10px 0; border-top: 1px solid var(--pg-rule); border-bottom: 1px solid var(--pg-rule); }
+.modebar p { margin: 0; font-size: 13px; color: var(--pg-muted); }
+.modebar kbd { font: 500 10px/1 'Martian Mono', monospace; color: var(--pg-muted); border: 1px solid var(--pg-rule); padding: 3px 5px; }
+.seg { display: inline-flex; }
+.seg button { font: 600 13px/1 'Archivo', sans-serif; color: var(--pg-ink); background: transparent; border: 1px solid var(--pg-rule); padding: 8px 14px; cursor: pointer; }
+.seg button + button { margin-left: -1px; }
+.seg button[aria-pressed="true"] { background: var(--pg-strong); color: var(--pg); border-color: var(--pg-strong); }
+.seg button:disabled { cursor: not-allowed; color: var(--pg-muted); opacity: .5; }
+.seg button[aria-pressed="true"]:disabled { opacity: 1; color: var(--pg); }
+.seg button:focus-visible { outline: 2px solid var(--pg-strong); outline-offset: 2px; }
+.darknotes { border-top-width: 1px; margin-bottom: 24px; }
+.screen { margin-bottom: 28px; }
+.screen-cap { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--pg-muted); margin-bottom: 8px; }
+.screen-cap b { color: var(--pg-ink); font-weight: 600; }
+.mock { position: relative; overflow: hidden; background: var(--pg-panel); }
+.screen .mock { outline: 1px solid var(--pg-frame); }
+
+.changes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; margin-top: 8px; border-top: 2px solid var(--pg-strong); padding-top: 18px; }
+.changes h3 { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
+.changes ul { margin: 0; padding: 0; list-style: none; }
+.changes li { padding: 7px 0; border-bottom: 1px solid var(--pg-rule); font-size: 14px; }
+.changes li b { font-weight: 600; }
+.handoff { margin-top: 28px; padding: 16px 18px; background: var(--pg-panel); border: 1px solid var(--pg-rule); font-size: 14px; }
+.handoff a { color: inherit; font-weight: 600; }
+
+@media (max-width: 860px) {
+  .intro, .dir-head, .changes { grid-template-columns: 1fr; }
+  .picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page h1 { font-size: 32px; }
+}
+
+/* ---------- The mockups: one markup, restyled only through these variables ---------- */
+.tp {
+  /* Defaults are today's look; each direction overrides from JS. */
+  --bg: #f3f2f2; --paper: #f3f2f2; --ink: #201e1d;
+  --muted: rgba(32,30,29,.66); --faint: rgba(32,30,29,.45);
+  --rule: rgba(32,30,29,.4); --rule-sec: rgba(32,30,29,.4); --rule-sec-w: 2px;
+  --accent: #ec3013; --on-accent: #f3f2f2; --accent-text: #ae1800;
+  --font-ui: 'Archivo', system-ui, sans-serif; --font-display: 'Archivo', system-ui, sans-serif;
+  --font-h2: var(--font-display); --font-title: var(--font-display);
+  --font-num: 'Archivo', system-ui, sans-serif; --font-kicker: 'Archivo', system-ui, sans-serif;
+  --display-stretch: 100%; --display-weight: 800; --display-case: none; --display-track: -.015em;
+  --h1: 42px; --h2: 34px; --h2-weight: 800; --h2-stretch: 100%; --h2-track: -.015em;
+  --title-weight: 800; --title-stretch: 100%; --title-size: 18px;
+  --kicker-size: 11px; --kicker-track: .12em; --kicker-weight: 400;
+  --r-ctl: 0px; --r-panel: 0px; --r-toggle: 0px; --r-track: 0px;
+  --nav-bg: #f3f2f2; --nav-ink: #201e1d; --nav-active: #ae1800; --avatar-bg: #201e1d; --avatar-ink: #f3f2f2;
+  --chrome-bg: #201e1d; --chrome-ink: #f3f2f2; --track: rgba(243,242,242,.25); --fill: #ec3013; --fill-glow: none;
+  --btn2-bg: #eae9e9; --btn2-ink: #201e1d; --btn2-edge: transparent;
+  --tog-on-bg: #201e1d; --tog-on-ink: #f3f2f2; --tog-off-bg: #eae9e9; --tog-off-ink: rgba(32,30,29,.45); --tog-edge: transparent;
+  --transport-bg: #f3f2f2; --transport-ink: #201e1d; --transport-edge: rgba(32,30,29,.4);
+  --tab-line: rgba(32,30,29,.42); --tab-bar: rgba(32,30,29,.6); --tab-digit: #201e1d; --tab-size: 18px; --tab-weight: 800;
+  --playhead: rgba(236,48,19,.2); --playhead-edge: none;
+  --neck-bg: transparent; --neck-fret: rgba(32,30,29,.3); --neck-nut: rgba(32,30,29,.3); --neck-nut-w: 2px;
+  --neck-edge: rgba(32,30,29,.4); --neck-string: rgba(32,30,29,.4); --inlay: rgba(32,30,29,.15);
+  --dot-root: #444141; --dot-root-ink: #f3f2f2; --dot-target: #ec3013; --dot-target-ink: #f3f2f2;
+  --dot-pass: #eae7e7; --dot-pass-ink: rgba(32,30,29,.7); --dot-pass-edge: transparent;
+  --fresh-bg: #fff2ef; --fresh-ink: #7c1405; --fresh-edge: transparent;
+  --star: #ec3013; --heat-0: #eae7e7; --heat-1: #bab6b6; --heat-2: #7d7979; --heat-3: #201e1d; --heat-future: #d7d3d3; --heat-today: #ec3013;
+  --stat-font: var(--font-num);
+
+  position: absolute; top: 0; left: 0; width: 1280px; transform-origin: 0 0;
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui);
+  font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow: hidden;
+}
+.tp * { box-sizing: border-box; }
+.tp p { margin: 0; }
+.tp .nav { display: flex; align-items: center; gap: 24px; padding: 12px 24px; background: var(--nav-bg); color: var(--nav-ink); border-bottom: var(--rule-sec-w) solid var(--rule-sec); }
+.tp .brand { margin-right: auto; font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: -.01em; font-stretch: var(--display-stretch); }
+.tp .links { display: flex; gap: 20px; font-size: 14px; }
+.tp .links .on { color: var(--nav-active); font-weight: 600; }
+.tp .avatar { width: 28px; height: 28px; display: grid; place-items: center; background: var(--avatar-bg); color: var(--avatar-ink); font-size: 11px; font-weight: 800; }
+.tp .kicker { font-family: var(--font-kicker); font-size: var(--kicker-size); letter-spacing: var(--kicker-track); font-weight: var(--kicker-weight); text-transform: uppercase; color: var(--muted); }
+.tp .kicker.acc { color: var(--accent-text); }
+.tp h1, .tp h2 { margin: 0 0 8px; text-wrap: balance; }
+.tp h1 { font-family: var(--font-display); font-weight: var(--display-weight); font-stretch: var(--display-stretch); text-transform: var(--display-case); letter-spacing: var(--display-track); font-size: var(--h1); line-height: 1.06; }
+.tp h2 { font-family: var(--font-h2); font-weight: var(--h2-weight); font-stretch: var(--h2-stretch); letter-spacing: var(--h2-track); font-size: var(--h2); line-height: 1.1; max-width: 820px; }
+.tp .lede { max-width: 640px; color: var(--muted); }
+.tp .btn { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; font: 500 14px var(--font-ui); border-radius: var(--r-ctl); white-space: nowrap; }
+.tp .btn.lg { height: 40px; padding: 0 24px; }
+.tp .btn.sm { height: 32px; padding: 0 12px; font-size: 13.5px; }
+.tp .btn.xs { height: 24px; padding: 0 8px; font-size: 12px; }
+.tp .btn.icon { width: 32px; height: 32px; padding: 0; }
+.tp .btn.p { background: var(--accent); color: var(--on-accent); }
+.tp .btn.s { background: var(--btn2-bg); color: var(--btn2-ink); box-shadow: inset 0 0 0 1px var(--btn2-edge); }
+.tp .btn.dis { opacity: .45; }
+
+/* Home */
+.tp .head { display: flex; align-items: flex-end; justify-content: space-between; padding: 28px 32px; border-bottom: var(--rule-sec-w) solid var(--rule-sec); }
+.tp .strip { display: flex; align-items: center; gap: 40px; padding: 20px 32px; border-bottom: var(--rule-sec-w) solid var(--rule-sec); }
+.tp .heat { display: inline-grid; grid-template-columns: repeat(7, 13px); gap: 3px; }
+.tp .heat span { width: 13px; height: 13px; }
+.tp .heat .wd { font-size: 10px; line-height: 1; text-align: center; color: var(--faint); height: auto; }
+.tp .heat .h0 { background: var(--heat-0); } .tp .heat .h1 { background: var(--heat-1); }
+.tp .heat .h2 { background: var(--heat-2); } .tp .heat .h3 { background: var(--heat-3); }
+.tp .heat .fut { box-shadow: inset 0 0 0 1px var(--heat-future); }
+.tp .heat .today { outline: 2px solid var(--heat-today); outline-offset: 1px; }
+.tp .stat { font-family: var(--stat-font); font-variant-numeric: tabular-nums; font-size: 28px; line-height: 1.2; }
+.tp .list { padding: 24px 32px; }
+.tp .rows { list-style: none; margin: 0; padding: 0; background: var(--paper); border-radius: var(--r-panel); }
+.tp .row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.tp .fav { width: 24px; font-size: 18px; line-height: 1; color: var(--faint); opacity: .6; }
+.tp .fav.on { color: var(--star); opacity: 1; }
+.tp .row-main { flex: 1; min-width: 0; }
+.tp .row-title { font-family: var(--font-title); font-weight: var(--title-weight); font-stretch: var(--title-stretch); font-size: var(--title-size); line-height: 1.3; }
+.tp .row-meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Practice */
+.tp.player { height: 860px; }
+.tp .chrome { display: flex; align-items: center; gap: 16px; padding: 12px 24px; background: var(--chrome-bg); color: var(--chrome-ink); }
+.tp .chrome-name { font-size: 13px; font-weight: 600; }
+.tp .chrome-count { font-size: 13px; opacity: .75; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.tp .progress { flex: 1; height: 6px; background: var(--track); border-radius: var(--r-track); }
+.tp .progress i { display: block; height: 100%; width: 14%; background: var(--fill); box-shadow: var(--fill-glow); border-radius: inherit; }
+.tp .chrome-btn { border: 1px solid color-mix(in srgb, var(--chrome-ink) 40%, transparent); padding: 3px 12px; font-size: 13px; font-weight: 600; border-radius: var(--r-ctl); }
+.tp .brief { padding: 24px 32px; border-bottom: 1px solid var(--rule); }
+.tp .brief .lede { font-size: 14px; }
+.tp .axes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); }
+.tp .cell { padding: 12px 16px; border-left: 1px solid var(--rule); }
+.tp .cell:first-child { border-left: 0; }
+.tp .cell-v { font-family: var(--font-title); font-weight: var(--title-weight); font-stretch: var(--title-stretch); font-size: 19px; line-height: 1.35; }
+.tp .cell.fresh { background: var(--fresh-bg); color: var(--fresh-ink); box-shadow: inset 0 3px 0 var(--fresh-edge); }
+.tp .cell.fresh .kicker { color: inherit; }
+.tp .newmark { font-weight: 700; margin-left: 4px; color: var(--accent-text); }
+.tp .played { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; padding: 24px 32px; align-items: start; }
+.tp .panel { background: var(--paper); border-radius: var(--r-panel); }
+.tp .toolbar { display: flex; align-items: center; gap: 12px; }
+.tp .toolbar .size { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.tp .sys { position: relative; margin-top: 10px; }
+.tp .sys + .sys { margin-top: 26px; }
+.tp .grid { display: grid; grid-template-columns: 28px repeat(24, minmax(0, 1fr)); }
+.tp .tc { height: 30px; display: grid; place-items: center; background: linear-gradient(to bottom, transparent calc(50% - .65px), var(--tab-line) calc(50% - .65px) calc(50% + .65px), transparent calc(50% + .65px)); } /* 1px in the app; 1.3px here survives the mockup's downscale */
+.tp .sl { font-size: 11px; color: var(--faint); background: var(--paper); padding: 0 4px; font-family: var(--font-num); }
+.tp .dg { background: var(--paper); padding: 0 1px; font-family: var(--font-num); font-weight: var(--tab-weight); font-size: var(--tab-size); line-height: 1; color: var(--tab-digit); font-variant-numeric: tabular-nums; }
+.tp .dg.t { color: var(--accent-text); }
+.tp .bl { position: absolute; top: 15px; bottom: 15px; width: 1px; background: var(--tab-bar); }
+.tp .ph { position: absolute; top: -4px; bottom: -4px; background: var(--playhead); box-shadow: var(--playhead-edge); }
+.tp .barlabels { display: grid; grid-template-columns: 28px repeat(2, minmax(0, 1fr)); padding-top: 4px; }
+.tp .neck { display: grid; grid-template-columns: 16px repeat(13, minmax(0, 1fr)); border-top: 2px solid var(--neck-edge); border-bottom: 2px solid var(--neck-edge); margin-top: 10px; }
+.tp .nl { height: 26px; display: grid; place-items: center; font-size: 10px; color: var(--faint); font-family: var(--font-num); background: var(--paper); }
+.tp .nc { position: relative; height: 26px; display: grid; place-items: center; border-left: 1px solid var(--neck-fret); background: var(--neck-bg); }
+.tp .nc.nut { border-left: var(--neck-nut-w) solid var(--neck-nut); }
+.tp .nc::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--neck-string); }
+.tp .inl { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--inlay); }
+.tp .dot { position: relative; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font: 800 8px/1 var(--font-num); letter-spacing: -.02em; }
+.tp .dot.r { background: var(--dot-root); color: var(--dot-root-ink); }
+.tp .dot.t { background: var(--dot-target); color: var(--dot-target-ink); }
+.tp .dot.o { background: var(--dot-pass); color: var(--dot-pass-ink); box-shadow: inset 0 0 0 1px var(--dot-pass-edge); font-weight: 600; }
+.tp .frets { display: grid; grid-template-columns: 16px repeat(13, minmax(0, 1fr)); padding-top: 4px; font: 10px/1.2 var(--font-num); color: var(--faint); text-align: center; font-variant-numeric: tabular-nums; }
+.tp .frets .m { color: var(--ink); font-weight: 600; }
+.tp .transport { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 12px; padding: 12px 32px; background: var(--transport-bg); color: var(--transport-ink); border-top: var(--rule-sec-w) solid var(--transport-edge); }
+.tp .tempo { display: flex; align-items: center; gap: 4px; }
+.tp .tempo-v { width: 48px; text-align: center; font: 800 17px/1 var(--font-num); font-variant-numeric: tabular-nums; }
+.tp .target { font-size: 12px; opacity: .6; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.tp .toggles { display: flex; gap: 4px; }
+.tp .tog { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; font-size: 13.5px; font-weight: 500; border-radius: var(--r-toggle); background: var(--tog-off-bg); color: var(--tog-off-ink); box-shadow: inset 0 0 0 1px var(--tog-edge); }
+.tp .tog.on { background: var(--tog-on-bg); color: var(--tog-on-ink); box-shadow: none; }
+.tp .pos { font: 800 13px var(--font-num); font-variant-numeric: tabular-nums; }
+.tp .tr-right { margin-left: auto; display: flex; gap: 8px; }
+
+/* ---- A · Fiesta: sharpened Swiss ---- */
+.t-fiesta .brand { text-transform: uppercase; font-size: 16px; letter-spacing: .06em; font-stretch: 125%; }
+.t-fiesta .links .on { color: #fff; text-decoration: underline 3px #d93418; text-underline-offset: 9px; }
+.t-fiesta .chrome { border-top: 1px solid rgba(241,241,238,.12); }
+.t-fiesta .toggles, .t-fiesta .tempo { gap: 0; }
+.t-fiesta .tog + .tog { margin-left: -1px; }
+.t-fiesta .tempo-v { height: 32px; line-height: 32px; box-shadow: inset 0 -1px 0 var(--tog-edge), inset 0 1px 0 var(--tog-edge); width: 54px; font-weight: 600; font-size: 15px; }
+.t-fiesta .pos { font-weight: 500; font-size: 12px; }
+.t-fiesta .row-title { letter-spacing: -.005em; }
+
+/* ---- B · Tolex: amp room ---- */
+.t-tolex .brand { font-weight: 700; font-size: 20px; letter-spacing: .2em; }
+.t-tolex .transport { background: linear-gradient(180deg, #d8d5cd 0%, #c2bfb7 100%); box-shadow: inset 0 1px 0 #f1eee8, 0 -1px 0 #000; }
+.t-tolex .transport .btn.s { background: #1f1b17; color: #ece3cf; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.t-tolex .transport .btn.p { box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+.t-tolex .tog { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.t-tolex .tog::before { content: ""; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; background: #4a4239; }
+.t-tolex .tog.on::before { background: #ffb347; box-shadow: 0 0 6px 1px rgba(255,170,60,.85); }
+.t-tolex .tempo-v { background: #16130f; color: #f5b85a; height: 32px; line-height: 32px; width: 58px; margin: 0 4px; border-radius: 3px; box-shadow: inset 0 1px 4px rgba(0,0,0,.7); text-shadow: 0 0 7px rgba(242,169,59,.6); font-weight: 600; font-size: 19px; }
+.t-tolex .pos { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.t-tolex .kicker { font-family: 'Barlow Condensed', sans-serif; }
+.t-tolex .nl, .t-tolex .sl { font-family: 'Barlow Semi Condensed', sans-serif; }
+
+/* ---- C · Notebook: practice journal ---- */
+.t-notebook { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
+.t-notebook .brand { text-transform: lowercase; font-size: 22px; letter-spacing: -.035em; font-weight: 800; }
+.t-notebook .links { gap: 6px; }
+.t-notebook .links a { padding: 3px 11px; border-radius: 999px; }
+.t-notebook .links .on { background: var(--pill); }
+.t-notebook .avatar { border-radius: 50%; }
+.t-notebook .head, .t-notebook .strip { border-bottom: 0; }
+.t-notebook .strip { padding-top: 0; }
+.t-notebook .list { padding-top: 4px; }
+.t-notebook .rows { padding: 2px 20px; box-shadow: 0 0 0 1px var(--rule); }
+.t-notebook .row:last-child { border-bottom: 0; }
+.t-notebook .chrome { border-bottom: 1px solid var(--rule); }
+.t-notebook .chrome-btn { border-radius: 999px; border-color: var(--rule); }
+.t-notebook .brief { border-bottom: 0; padding-bottom: 16px; }
+.t-notebook .axes { gap: 10px; padding: 0 32px; border-bottom: 0; }
+.t-notebook .cell { background: var(--paper); border-left: 0; border-radius: 10px; box-shadow: 0 0 0 1px var(--rule); }
+.t-notebook .cell.fresh .cell-v span { background: linear-gradient(transparent 56%, var(--hl-stroke) 56%, var(--hl-stroke) 92%, transparent 92%); padding: 0 2px; }
+.t-notebook .panel { padding: 16px 20px 18px; box-shadow: 0 0 0 1px var(--rule); }
+.t-notebook .ph { border-radius: 5px; mix-blend-mode: var(--ph-blend); top: -2px; bottom: -2px; }
+.t-notebook .neck { border-width: 1px; }
+.t-notebook .transport { left: 16px; right: 16px; bottom: 14px; border-radius: 14px; border-top: 0; padding: 10px 18px; box-shadow: var(--float-shadow); }
+.t-notebook .tog.on { box-shadow: inset 0 0 0 1px var(--tog-on-ring); }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <div>
+      <p class="eyebrow">TheoryPad · visual refresh</p>
+      <h1>Three coats of paint for the same app</h1>
+      <p>Each mockup below is <strong>the same markup</strong> — the real home and practice screens rebuilt element for element — with only the stylesheet swapped. No control moves, no copy changes, no key changes. Pick a direction, and its spec is written so another agent can apply it without redesigning anything.</p>
+      <p><strong>Light and dark:</strong> the app is light only today. Fiesta and Notebook each have a dark variant (switch with <strong>D</strong>) that would follow the Mac’s appearance setting on its own; Tolex is dark only.</p>
+    </div>
+    <p class="aside"><b>Decided 2026-09-13:</b> Notebook, light and dark, with an Appearance setting (System / Light / Dark, default System) in Settings → Display. Implementation doc: <a href="11-RESTYLE.md" style="color:inherit;font-weight:600">docs/plan/11-RESTYLE.md</a>.<br><br><b>Found while looking:</b> the app names Archivo in its font stack but never loads it, so it only renders where Archivo happens to be installed; everyone else on the live site gets the system font. Every direction here self-hosts its faces with Fontsource, which also keeps the app working offline.</p>
+  </header>
+
+  <div class="picker" id="picker"></div>
+
+  <section id="dir"></section>
+</div>
+
+<script>
+const T = {
+  today: {
+    name: 'Today', tag: 'What ships now', key: '0',
+    line: 'Warm grey, one red, square everything.',
+    thesis: 'The current Modernist look, rebuilt here as the baseline so the three directions can be compared against it at the same size. Its bones are good — ruled structure, a single accent, tabular numbers — but every surface is the same grey, every button the same weight, and the numbers you read while playing have no voice of their own.',
+    risk: '',
+    swatches: [['Ground','#f3f2f2'],['Surface','#eae9e9'],['Ink','#201e1d'],['Accent','#ec3013'],['Accent text','#ae1800'],['Root dot','#444141']],
+    faces: [['Everything', "'Archivo'", 'Your routines · 70 bpm', 'Archivo, when installed']],
+    changes: null,
+    vars: {}
+  },
+  fiesta: {
+    name: 'Fiesta', tag: 'A · Sharpened Swiss', key: '1',
+    line: 'Same beliefs, finished. Lowest risk.',
+    thesis: 'Keeps everything TheoryPad already believes — square corners, ruled structure, one red — and gives it a voice. Headings use Archivo’s expanded width, every number you read while playing is set in Martian Mono, and the practice screen gets solid ink bands top and bottom so the music sits in a bright field between them. The name is the Fender finish the app’s red already resembles.',
+    risk: '<b>Trade-off:</b> the least change of the three. If “basic” meant the structure itself feels plain, this may not go far enough.',
+    swatches: [['Ground','#f1f1ee'],['Ink','#141416'],['Fiesta red','#d93418'],['Red text','#c02a10'],['Row rule','ink 16%'],['Open dot','#fbfbf9']],
+    faces: [['Display', "'Archivo'; font-stretch:125%; font-weight:800; text-transform:uppercase", 'YOUR ROUTINES', 'Archivo Expanded 800'], ['Body', "'Archivo'", 'Work up the neck, one shape at a time.', 'Archivo 400'], ['Numerals', "'Martian Mono'; font-weight:600", '6 5 3 · 70 · Bar 1', 'Martian Mono 400–600']],
+    changes: [
+      ['Type', 'Headings in <b>Archivo Expanded 800</b>, page titles uppercase; brief headlines expanded but sentence case. Kickers, tab digits, fret numbers, tempo and counts in <b>Martian Mono</b>.'],
+      ['Nav', 'Becomes a solid <b>ink band</b>; the active item gets a 3px red underline instead of red text.'],
+      ['Rules', 'Section rules turn solid ink (were ink at 40%); row rules drop to ink 16%, so hierarchy reads from weight.'],
+      ['Buttons', 'Secondary buttons become <b>outlined</b> (1px ink 30%) instead of grey-filled — today’s grey fill makes “Loop” look disabled.'],
+      ['Transport', 'Toggles and the tempo stepper join into <b>segmented groups</b>; the tempo sits in a ruled box.'],
+      ['Axis strip', 'A fresh axis gets a 3px red top edge instead of a pink fill.'],
+      ['Tab', 'Playhead gains a 2px red leading edge over a faint wash; bar lines solid ink.'],
+      ['Neck', 'Passing notes become <b>open circles</b>; a 4px ink nut; root solid ink, target red.']
+    ],
+    vars: {
+      '--bg':'#f1f1ee','--paper':'#f1f1ee','--ink':'#141416','--muted':'rgba(20,20,22,.64)','--faint':'rgba(20,20,22,.42)',
+      '--rule':'rgba(20,20,22,.16)','--rule-sec':'#141416','--rule-sec-w':'2px',
+      '--accent':'#d93418','--on-accent':'#ffffff','--accent-text':'#c02a10',
+      '--font-ui':"'Archivo', system-ui, sans-serif",'--font-display':"'Archivo', system-ui, sans-serif",
+      '--font-num':"'Martian Mono', ui-monospace, monospace",'--font-kicker':"'Martian Mono', ui-monospace, monospace",
+      '--display-stretch':'125%','--display-weight':'800','--display-case':'uppercase','--display-track':'-.01em',
+      '--h1':'46px','--h2':'30px','--h2-weight':'750','--h2-stretch':'112%','--h2-track':'-.01em',
+      '--title-weight':'700','--title-stretch':'112%','--title-size':'18px',
+      '--kicker-size':'10px','--kicker-track':'.06em','--kicker-weight':'500',
+      '--nav-bg':'#141416','--nav-ink':'#f1f1ee','--nav-active':'#ffffff','--avatar-bg':'#d93418','--avatar-ink':'#ffffff',
+      '--chrome-bg':'#141416','--chrome-ink':'#f1f1ee','--track':'rgba(241,241,238,.18)','--fill':'#d93418',
+      '--btn2-bg':'transparent','--btn2-ink':'#141416','--btn2-edge':'rgba(20,20,22,.3)',
+      '--tog-on-bg':'#141416','--tog-on-ink':'#ffffff','--tog-off-bg':'transparent','--tog-off-ink':'rgba(20,20,22,.52)','--tog-edge':'rgba(20,20,22,.3)',
+      '--transport-bg':'#f1f1ee','--transport-edge':'#141416',
+      '--tab-line':'rgba(20,20,22,.3)','--tab-bar':'#141416','--tab-digit':'#141416','--tab-size':'16px','--tab-weight':'600',
+      '--playhead':'rgba(217,52,24,.1)','--playhead-edge':'inset 2px 0 0 #d93418',
+      '--neck-fret':'rgba(20,20,22,.26)','--neck-nut':'#141416','--neck-nut-w':'4px','--neck-edge':'#141416','--neck-string':'rgba(20,20,22,.45)','--inlay':'rgba(20,20,22,.14)',
+      '--dot-root':'#141416','--dot-root-ink':'#ffffff','--dot-target':'#d93418','--dot-target-ink':'#ffffff',
+      '--dot-pass':'#fbfbf9','--dot-pass-ink':'rgba(20,20,22,.72)','--dot-pass-edge':'rgba(20,20,22,.35)',
+      '--fresh-bg':'transparent','--fresh-ink':'#141416','--fresh-edge':'#d93418',
+      '--star':'#d93418','--heat-0':'#e2e2de','--heat-1':'#b3b3ae','--heat-2':'#6e6e6b','--heat-3':'#141416','--heat-future':'#cfcfca','--heat-today':'#d93418'
+    }
+  },
+  tolex: {
+    name: 'Tolex', tag: 'B · Amp room', key: '2',
+    line: 'Dark, warm, built from an amplifier.',
+    thesis: 'A dark room for evening practice, made from an amp’s materials: black Tolex for the ground, knob-cream for type, and a jewel-amber pilot light for the one thing that is live. The transport becomes the amp’s control panel — an aluminum faceplate with an LCD tempo window and LED toggles — and the neck is rosewood with a bone nut and pearl inlays.',
+    risk: '<b>Trade-off:</b> dark only, by design — it is drawn from a black amp. A light Tolex would be a different design (a “blonde” cream-Tolex amp), not a palette swap. The faceplate is the one bold move; everything else is quiet so it can carry it.',
+    swatches: [['Tolex','#151310'],['Panel','#1d1a16'],['Knob cream','#ece3cf'],['Jewel amber','#f2a93b'],['Aluminum','#cbc8c0'],['Rosewood','#2b1e17']],
+    faces: [['Display', "'Barlow Condensed'; font-weight:600; text-transform:uppercase; letter-spacing:.01em", 'YOUR ROUTINES', 'Barlow Condensed 600'], ['Body', "'Barlow'", 'Work up the neck, one shape at a time.', 'Barlow 400'], ['Numerals', "'Barlow Semi Condensed'; font-weight:600", '6 5 3 · 70 · Bar 1', 'Barlow Semi Condensed 600']],
+    changes: [
+      ['Palette', 'Warm near-black ground, cream type, <b>amber</b> as the accent. Neutral and accent ramps are <b>inverted</b> so existing <code>bg-neutral-200</code>-style fills stay subtle on dark.'],
+      ['Type', 'Page titles in <b>Barlow Condensed</b> uppercase, like silkscreened panel lettering; body in Barlow; tab digits and counts in Barlow Semi Condensed, which keeps sixteenths from crowding.'],
+      ['Transport', 'An <b>aluminum faceplate</b>: dark “knob-cap” buttons, the tempo in a recessed amber LCD, toggles with an LED that lights when on.'],
+      ['Chrome', 'Progress fill glows amber; everything else in the bar stays flat.'],
+      ['Tab', 'Cream digits on a faint cream staff; amber targets; the playhead is an amber column with a soft glow.'],
+      ['Neck', '<b>Rosewood board</b>, 4px bone nut, nickel frets, pearl inlays, cream-bound edges. Root cream, target amber.'],
+      ['Shape', '4px radius on controls, 6px on panels and dialogs. Fret dots stay round.'],
+      ['Rules', 'Hairlines only (1px cream 11–18%): on dark, 2px rules shout.']
+    ],
+    vars: {
+      '--bg':'#151310','--paper':'#151310','--ink':'#ece3cf','--muted':'rgba(236,227,207,.64)','--faint':'rgba(236,227,207,.42)',
+      '--rule':'rgba(236,227,207,.11)','--rule-sec':'rgba(236,227,207,.18)','--rule-sec-w':'1px',
+      '--accent':'#f2a93b','--on-accent':'#1b1405','--accent-text':'#f4b454',
+      '--font-ui':"'Barlow', system-ui, sans-serif",'--font-display':"'Barlow Condensed', system-ui, sans-serif",
+      '--font-h2':"'Barlow Semi Condensed', system-ui, sans-serif",'--font-title':"'Barlow Semi Condensed', system-ui, sans-serif",
+      '--font-num':"'Barlow Semi Condensed', system-ui, sans-serif",'--font-kicker':"'Barlow Condensed', system-ui, sans-serif",
+      '--display-stretch':'100%','--display-weight':'600','--display-case':'uppercase','--display-track':'.01em',
+      '--h1':'54px','--h2':'36px','--h2-weight':'600','--h2-track':'-.005em',
+      '--title-weight':'600','--title-size':'20px',
+      '--kicker-size':'13px','--kicker-track':'.16em','--kicker-weight':'500',
+      '--r-ctl':'4px','--r-panel':'6px','--r-toggle':'4px','--r-track':'3px',
+      '--nav-bg':'#0f0d0b','--nav-ink':'#ece3cf','--nav-active':'#f4b454','--avatar-bg':'#2a2520','--avatar-ink':'#ece3cf',
+      '--chrome-bg':'#0f0d0b','--chrome-ink':'#ece3cf','--track':'rgba(236,227,207,.12)','--fill':'#f2a93b','--fill-glow':'0 0 10px rgba(242,169,59,.6)',
+      '--btn2-bg':'#2a2520','--btn2-ink':'#ece3cf','--btn2-edge':'rgba(236,227,207,.14)',
+      '--tog-on-bg':'#1f1b17','--tog-on-ink':'#f6efe0','--tog-off-bg':'#1f1b17','--tog-off-ink':'rgba(236,227,207,.55)','--tog-edge':'transparent',
+      '--transport-bg':'#c9c6be','--transport-ink':'#1a1714','--transport-edge':'#0a0908',
+      '--tab-line':'rgba(236,227,207,.2)','--tab-bar':'rgba(236,227,207,.42)','--tab-digit':'#ece3cf','--tab-size':'19px','--tab-weight':'600',
+      '--playhead':'rgba(242,169,59,.15)','--playhead-edge':'inset 0 0 0 1px rgba(242,169,59,.45), 0 0 14px rgba(242,169,59,.22)',
+      '--neck-bg':'#2b1e17','--neck-fret':'#8f887c','--neck-nut':'#e4d9bf','--neck-nut-w':'4px','--neck-edge':'#cbbf9f','--neck-string':'rgba(214,206,190,.55)','--inlay':'rgba(236,227,207,.34)',
+      '--dot-root':'#ece3cf','--dot-root-ink':'#1b1405','--dot-target':'#f2a93b','--dot-target-ink':'#1b1405',
+      '--dot-pass':'#3b2a21','--dot-pass-ink':'rgba(236,227,207,.8)','--dot-pass-edge':'rgba(236,227,207,.16)',
+      '--fresh-bg':'rgba(242,169,59,.09)','--fresh-ink':'#ece3cf','--fresh-edge':'#f2a93b',
+      '--star':'#f2a93b','--heat-0':'#221e1a','--heat-1':'#5a3f1c','--heat-2':'#a86f24','--heat-3':'#f2a93b','--heat-future':'rgba(236,227,207,.12)','--heat-today':'#ece3cf'
+    }
+  },
+  notebook: {
+    name: 'Notebook ✓', tag: 'C · Practice journal', key: '3',
+    line: 'Graph paper, ballpoint, highlighter.',
+    thesis: 'The practice journal on the music stand: graph paper for the ground, graphite for type, a blue ballpoint for actions and a yellow highlighter for where you are and what just changed. Rounded where the hand meets it — controls and panels — and the transport floats like a card clipped to the page. The friendliest of the three.',
+    risk: '<b>Trade-off:</b> the biggest departure from the square Modernist rules in CLAUDE.md; those rules would be rewritten, not tweaked. The graph-paper ground is subtle on purpose and can be dropped without losing the direction.',
+    swatches: [['Graph paper','#f5f6f8'],['Sheet','#ffffff'],['Graphite','#24262b'],['Ballpoint','#2347b5'],['Highlighter','#ffe14d'],['Rule','#e2e5eb']],
+    faces: [['Display', "'Bricolage Grotesque'; font-weight:700; letter-spacing:-.025em", 'Your routines', 'Bricolage Grotesque 700'], ['Body', "'Figtree'", 'Work up the neck, one shape at a time.', 'Figtree 400–600'], ['Numerals', "'Figtree'; font-weight:700; font-variant-numeric:tabular-nums", '6 5 3 · 70 · Bar 1', 'Figtree 700, tabular']],
+    changes: [
+      ['Type', '<b>Bricolage Grotesque</b> for headings and titles, <b>Figtree</b> for everything else; the wordmark renders lowercase through CSS alone.'],
+      ['Surfaces', 'White sheets on a faint 24px graph grid: the routine list, the tab and the neck each become one rounded panel — not a card per row.'],
+      ['Nav', 'White bar; the active item sits in a soft blue pill.'],
+      ['Axis strip', 'Four separate cells with a 10px gap; a fresh value is <b>highlighted</b> — a yellow marker stroke behind the text.'],
+      ['Tab', 'The playhead is a <b>highlighter swipe</b> (yellow, multiplied over the digits); blue targets.'],
+      ['Transport', '<b>Floats</b> 16px off the edges with a soft shadow — the one lifted object on the screen. Toggles are pills.'],
+      ['Shape', '8px controls, 12px panels, pill toggles; everything else stays flat.'],
+      ['Accent', 'Blue for actions and targets; yellow is reserved for “you are here” and “this changed”.']
+    ],
+    vars: {
+      '--bg':'#f5f6f8','--paper':'#ffffff','--ink':'#24262b','--muted':'rgba(36,38,43,.64)','--faint':'rgba(36,38,43,.42)',
+      '--rule':'#e2e5eb','--rule-sec':'#e2e5eb','--rule-sec-w':'1px',
+      '--accent':'#2347b5','--on-accent':'#ffffff','--accent-text':'#1f3fa3',
+      '--font-ui':"'Figtree', system-ui, sans-serif",'--font-display':"'Bricolage Grotesque', system-ui, sans-serif",
+      '--font-num':"'Figtree', system-ui, sans-serif",'--font-kicker':"'Figtree', system-ui, sans-serif",
+      '--display-weight':'700','--display-track':'-.025em','--h1':'44px','--h2':'32px','--h2-weight':'700','--h2-track':'-.02em',
+      '--title-weight':'700','--title-size':'19px',
+      '--kicker-size':'11.5px','--kicker-track':'.08em','--kicker-weight':'600',
+      '--r-ctl':'8px','--r-panel':'12px','--r-toggle':'999px','--r-track':'999px',
+      '--nav-bg':'#ffffff','--nav-ink':'#24262b','--nav-active':'#1f3fa3','--avatar-bg':'#e9eefc','--avatar-ink':'#1f3fa3',
+      '--chrome-bg':'#ffffff','--chrome-ink':'#24262b','--track':'#e8ebf0','--fill':'#2347b5',
+      '--btn2-bg':'#ffffff','--btn2-ink':'#24262b','--btn2-edge':'#d5d9e1',
+      '--tog-on-bg':'#e9eefc','--tog-on-ink':'#1f3fa3','--tog-off-bg':'#ffffff','--tog-off-ink':'rgba(36,38,43,.55)','--tog-edge':'#d5d9e1',
+      '--transport-bg':'#ffffff','--transport-edge':'#e2e5eb',
+      '--tab-line':'rgba(36,38,43,.28)','--tab-bar':'rgba(36,38,43,.55)','--tab-digit':'#24262b','--tab-size':'18px','--tab-weight':'700',
+      '--playhead':'rgba(255,225,77,.75)','--playhead-edge':'none',
+      '--neck-bg':'#ffffff','--neck-fret':'#cfd4dd','--neck-nut':'#24262b','--neck-nut-w':'3px','--neck-edge':'#cfd4dd','--neck-string':'rgba(36,38,43,.32)','--inlay':'#dfe3ea',
+      '--dot-root':'#24262b','--dot-root-ink':'#ffffff','--dot-target':'#2347b5','--dot-target-ink':'#ffffff',
+      '--dot-pass':'#eef1f6','--dot-pass-ink':'rgba(36,38,43,.75)','--dot-pass-edge':'transparent',
+      '--fresh-bg':'#ffffff','--fresh-ink':'#24262b','--fresh-edge':'transparent',
+      '--star':'#e2a400','--heat-0':'#eceff4','--heat-1':'#bccaf0','--heat-2':'#6f8ad8','--heat-3':'#2347b5','--heat-future':'#dfe3ea','--heat-today':'#24262b',
+      '--grid':'rgba(36,38,43,.045)','--pill':'#e9eefc','--hl-stroke':'#ffe14d','--ph-blend':'multiply',
+      '--float-shadow':'0 10px 30px rgba(28,36,56,.14), 0 0 0 1px #e2e5eb','--tog-on-ring':'rgba(35,71,181,.35)'
+    },
+    dark: {
+      line: 'Graph paper at night: slate sheets, a lighter ballpoint, a dimmed highlighter.',
+      swatches: [['Night paper','#15171c'],['Sheet','#1d2027'],['Chalk','#e4e7ee'],['Ballpoint','#4a6ae0'],['Ink on dark','#9db0ff'],['Highlighter','rgba(255,225,77,.3)']],
+      notes: [
+        ['Ground', 'Blue-slate <b>#15171c</b> with the same 24px grid at 3.5% chalk; sheets lift one step to <b>#1d2027</b> — lighter, not shadowed, is how depth reads on dark.'],
+        ['Blue', 'Fills move to <b>#4a6ae0</b> (white text 4.7:1); blue used as text moves to <b>#9db0ff</b> so it reads on slate.'],
+        ['Highlighter', 'Multiply does nothing on dark, so the playhead and fresh stroke switch to plain yellow at 26–34%: still a marker, never a glare.'],
+        ['Transport', 'Still floats, but lifts with a lighter panel (<b>#22262e</b>) and a deeper, wider shadow.']
+      ],
+      vars: {
+        '--bg':'#15171c','--paper':'#1d2027','--ink':'#e4e7ee','--muted':'rgba(228,231,238,.64)','--faint':'rgba(228,231,238,.42)',
+        '--rule':'#2c313b','--rule-sec':'#2c313b',
+        '--accent':'#4a6ae0','--on-accent':'#ffffff','--accent-text':'#9db0ff',
+        '--nav-bg':'#1d2027','--nav-ink':'#e4e7ee','--nav-active':'#b4c3ff','--avatar-bg':'rgba(123,149,255,.16)','--avatar-ink':'#b4c3ff',
+        '--chrome-bg':'#1d2027','--chrome-ink':'#e4e7ee','--track':'#2c313b','--fill':'#6d88f0',
+        '--btn2-bg':'#1d2027','--btn2-ink':'#e4e7ee','--btn2-edge':'#363c48',
+        '--tog-on-bg':'rgba(123,149,255,.16)','--tog-on-ink':'#b4c3ff','--tog-off-bg':'#1d2027','--tog-off-ink':'rgba(228,231,238,.55)','--tog-edge':'#363c48',
+        '--transport-bg':'#22262e','--transport-ink':'#e4e7ee','--transport-edge':'#2c313b',
+        '--tab-line':'rgba(228,231,238,.24)','--tab-bar':'rgba(228,231,238,.5)','--tab-digit':'#e4e7ee',
+        '--playhead':'rgba(255,225,77,.26)',
+        '--neck-bg':'#1d2027','--neck-fret':'#3a404c','--neck-nut':'#e4e7ee','--neck-edge':'#3a404c','--neck-string':'rgba(228,231,238,.3)','--inlay':'#343a45',
+        '--dot-root':'#e4e7ee','--dot-root-ink':'#15171c','--dot-target':'#4a6ae0','--dot-target-ink':'#ffffff',
+        '--dot-pass':'#2a2e37','--dot-pass-ink':'rgba(228,231,238,.78)',
+        '--fresh-bg':'#1d2027','--fresh-ink':'#e4e7ee','--star':'#f0b400',
+        '--heat-0':'#252932','--heat-1':'#2f3f78','--heat-2':'#4a6ae0','--heat-3':'#9db0ff','--heat-future':'#2c313b','--heat-today':'#e4e7ee',
+        '--grid':'rgba(228,231,238,.035)','--pill':'rgba(123,149,255,.16)','--hl-stroke':'rgba(255,225,77,.34)','--ph-blend':'normal',
+        '--float-shadow':'0 12px 36px rgba(0,0,0,.5), 0 0 0 1px #2c313b','--tog-on-ring':'rgba(157,176,255,.35)'
+      }
+    }
+  }
+};
+
+T.fiesta.dark = {
+  line: 'The same Swiss rules, printed in reverse.',
+  swatches: [['Ground','#161618'],['Band','#0b0b0c'],['Ink','#ecece8'],['Fiesta red','#d93418'],['Red on dark','#ff7358'],['Section rule','ink 62%']],
+  notes: [
+    ['Bands', 'The nav and practice header go <b>darker</b> than the ground (#0b0b0c on #161618), so they still read as bands.'],
+    ['Rules', 'Keeps its 2px section rules — they are this direction’s identity — but at 62% so they don’t glare.'],
+    ['Red', 'Fills stay <b>#d93418</b>; red as text lifts to <b>#ff7358</b>, because the fill red on dark text is only 3.8:1.'],
+    ['Ink', 'Toggles on, root notes and the heatmap’s top step flip to light ink, which keeps “on is ink, off is quiet”.']
+  ],
+  vars: {
+    '--bg':'#161618','--paper':'#161618','--ink':'#ecece8','--muted':'rgba(236,236,232,.64)','--faint':'rgba(236,236,232,.42)',
+    '--rule':'rgba(236,236,232,.14)','--rule-sec':'rgba(236,236,232,.62)',
+    '--accent':'#d93418','--on-accent':'#ffffff','--accent-text':'#ff7358',
+    '--nav-bg':'#0b0b0c','--nav-ink':'#ecece8','--nav-active':'#ffffff',
+    '--chrome-bg':'#0b0b0c','--chrome-ink':'#ecece8','--track':'rgba(236,236,232,.16)','--fill':'#d93418',
+    '--btn2-bg':'transparent','--btn2-ink':'#ecece8','--btn2-edge':'rgba(236,236,232,.3)',
+    '--tog-on-bg':'#ecece8','--tog-on-ink':'#161618','--tog-off-bg':'transparent','--tog-off-ink':'rgba(236,236,232,.5)','--tog-edge':'rgba(236,236,232,.3)',
+    '--transport-bg':'#161618','--transport-ink':'#ecece8','--transport-edge':'rgba(236,236,232,.62)',
+    '--tab-line':'rgba(236,236,232,.26)','--tab-bar':'rgba(236,236,232,.7)','--tab-digit':'#ecece8',
+    '--playhead':'rgba(217,52,24,.2)','--playhead-edge':'inset 2px 0 0 #d93418',
+    '--neck-fret':'rgba(236,236,232,.22)','--neck-nut':'#ecece8','--neck-edge':'rgba(236,236,232,.62)','--neck-string':'rgba(236,236,232,.38)','--inlay':'rgba(236,236,232,.16)',
+    '--dot-root':'#ecece8','--dot-root-ink':'#161618','--dot-target':'#d93418','--dot-target-ink':'#ffffff',
+    '--dot-pass':'#161618','--dot-pass-ink':'rgba(236,236,232,.75)','--dot-pass-edge':'rgba(236,236,232,.35)',
+    '--fresh-ink':'#ecece8','--fresh-edge':'#d93418','--star':'#d93418',
+    '--heat-0':'#242427','--heat-1':'#4b4b4f','--heat-2':'#8c8c90','--heat-3':'#ecece8','--heat-future':'rgba(236,236,232,.14)','--heat-today':'#d93418'
+  }
+};
+
+/* ---------- Screens (the same markup for every direction) ---------- */
+const nav = (active) => `<header class="nav"><span class="brand">THEORYPAD</span><nav class="links">${
+  ['Home','Exercises','Fretboard','Report','Settings'].map(l => `<a class="${l===active?'on':''}">${l}</a>`).join('')
+}</nav><span class="avatar">JH</span></header>`;
+
+function heatmap() {
+  // Four weeks, Monday first; today is Saturday of the last week.
+  const pattern = [1,2,0,1,3,0,1, 2,2,1,0,2,1,0, 0,1,3,2,2,0,1, 2,1,2,3,1,2,null];
+  let h = ['M','T','W','T','F','S','S'].map(d => `<span class="wd">${d}</span>`).join('');
+  pattern.forEach((v, i) => {
+    h += v === null ? '<span class="fut"></span>' : `<span class="h${v}${i === 26 ? ' today' : ''}"></span>`;
+  });
+  return `<div class="heat">${h}</div>`;
+}
+
+function homeHTML() {
+  const rows = [
+    [true, 'Morning warm-up', '4 exercises · about 14 min'],
+    [true, 'Modes, all seven', '3 exercises · about 11 min'],
+    [false, 'Theory quickfire', '2 exercises · about 6 min'],
+    [false, 'Position shifting at speed', '3 exercises · about 12 min'],
+    [false, 'New routine', 'No exercises yet', true]
+  ];
+  return `${nav('Home')}
+  <section>
+    <div class="head"><div>
+      <p class="kicker acc">Practice</p>
+      <h1>Your routines</h1>
+      <p class="lede">A routine plays several exercises straight through, each counted in at its own tempo — nothing to click once it starts.</p>
+    </div><span class="btn p">New routine</span></div>
+    <div class="strip">${heatmap()}
+      <div><p class="kicker">Streak</p><p class="stat">4 days</p></div>
+      <div><p class="kicker">This week</p><p class="stat">1h 12m</p></div>
+    </div>
+    <div class="list"><ul class="rows">${rows.map(([fav, name, meta, empty]) => `
+      <li class="row"><span class="fav${fav ? ' on' : ''}">${fav ? '★' : '☆'}</span>
+        <div class="row-main"><p class="row-title">${name}</p><p class="row-meta">${meta}</p></div>
+        <span class="btn s">Edit</span><span class="btn p${empty ? ' dis' : ''}">Start</span></li>`).join('')}
+    </ul></div>
+  </section>`;
+}
+
+function tabSystem(notes, labels, playCol) {
+  const cols = 24, lab = 28;
+  const at = new Map(notes.map(([c, r, f, t]) => [r + ':' + c, [f, t]]));
+  let cells = '';
+  for (let r = 0; r < 6; r++) {
+    cells += `<div class="tc"><span class="sl">${r + 1}</span></div>`;
+    for (let c = 0; c < cols; c++) {
+      const n = at.get(r + ':' + c);
+      cells += `<div class="tc">${n ? `<span class="dg${n[1] ? ' t' : ''}">${n[0]}</span>` : ''}</div>`;
+    }
+  }
+  const pos = (k) => `calc(${lab}px + (100% - ${lab}px) * ${k / cols})`;
+  const bars = [0, 12, 24].map((k, i) => `<div class="bl" style="left:${pos(k)}${i === 2 ? ';transform:translateX(-1px)' : ''}"></div>`).join('');
+  const ph = playCol === null ? '' : `<div class="ph" style="left:${pos(playCol)};width:calc((100% - ${lab}px) / ${cols})"></div>`;
+  return `<div class="sys"><div style="position:relative">${ph}${bars}<div class="grid">${cells}</div></div>
+    <div class="barlabels"><span></span>${labels.map(l => `<span class="kicker">${l}</span>`).join('')}</div></div>`;
+}
+
+function neckHTML() {
+  const open = [64, 59, 55, 50, 45, 40];            // high e at the top, as displayed
+  const deg = { 9: '1', 10: '♭2', 0: '♭3', 2: '4', 3: '♭5', 5: '♭6', 7: '♭7' }; // A Locrian
+  const markers = [3, 5, 7, 9];
+  let h = '';
+  open.forEach((m, row) => {
+    h += `<div class="nl">${row + 1}</div>`;
+    for (let f = 0; f <= 12; f++) {
+      const pc = (m + f) % 12, d = deg[pc];
+      const role = pc === 9 ? 'r' : pc === 3 ? 't' : 'o';
+      const inlay = !d && ((markers.includes(f) && row === 2) || (f === 12 && (row === 1 || row === 4)));
+      h += `<div class="nc${f === 0 ? ' nut' : ''}">${inlay ? '<span class="inl"></span>' : ''}${d ? `<span class="dot ${role}">${d}</span>` : ''}</div>`;
+    }
+  });
+  let frets = '<span></span>';
+  for (let f = 0; f <= 12; f++) frets += `<span class="${[3,5,7,9,12].includes(f) ? 'm' : ''}">${f}</span>`;
+  return `<div class="neck">${h}</div><div class="frets">${frets}</div>`;
+}
+
+function playerHTML() {
+  const sys1 = [[0,0,6],[2,0,5],[3,0,3],[5,1,6],[6,1,4,1],[8,1,3],[10,2,5],[11,2,3],[12,2,2],[14,3,5],[15,3,3],[17,3,1,1],[19,4,5],[21,4,3],[22,4,1],[23,5,5]];
+  const sys2 = [[0,5,3],[2,5,1],[12,0,8],[14,0,6],[15,0,5],[17,1,8],[18,1,6],[20,1,4,1],[22,2,7],[23,2,5]];
+  const axes = [['Key & mode', 'A Locrian', true], ['Direction', 'Descending'], ['Land on', '5'], ['Rhythm', 'Swung 8ths']];
+  return `${nav('Exercises')}
+  <div class="chrome"><span class="chrome-name">Modes up the neck</span><span class="chrome-count">3 passes</span>
+    <div class="progress"><i></i></div><span class="chrome-btn">Pause</span></div>
+  <div class="brief"><p class="kicker acc">This time you are playing</p>
+    <h2>All seven shapes in A Locrian, descending.</h2>
+    <p class="lede">Work up the neck, one shape at a time, landing each on the 5th (Eb).</p></div>
+  <div class="axes">${axes.map(([l, v, fresh]) => `<div class="cell${fresh ? ' fresh' : ''}">
+    <p class="kicker">${l}${fresh ? '<span class="newmark"> ▲ new</span>' : ''}</p><p class="cell-v"><span>${v}</span></p></div>`).join('')}</div>
+  <div class="played">
+    <div class="panel">
+      <div class="toolbar"><span class="kicker">Tab · generated for this variation</span>
+        <div class="size"><span class="kicker" style="margin-right:4px">Tab size</span><span class="btn s icon">−</span><span class="btn s icon">+</span></div>
+        <span class="btn s xs">Hide neck</span></div>
+      ${tabSystem(sys1, ['Fret 1 · degree 6', 'Bar 2'], 6)}
+      ${tabSystem(sys2, ['Bar 3', 'Fret 3 · degree 7'], null)}
+    </div>
+    <div class="panel"><span class="kicker">Shape on the neck</span>${neckHTML()}</div>
+  </div>
+  <div class="transport">
+    <span class="btn s lg">Pause</span>
+    <div class="tempo"><span class="btn s icon">−</span><span class="tempo-v">70</span><span class="btn s icon">+</span><span class="target">target 76</span></div>
+    <div class="toggles"><span class="tog on">Metronome</span><span class="tog on">Count-in</span><span class="tog">Loop</span></div>
+    <span class="pos">Bar 1 · beat 3</span>
+    <div class="tr-right"><span class="btn s sm">Settings</span><span class="btn s sm">Re-roll</span></div>
+  </div>`;
+}
+
+/* ---------- Mounting and scaling ---------- */
+let mode = 'light';
+try { if (localStorage.getItem('tp-restyle-mode') === 'dark') mode = 'dark'; } catch (e) {}
+const isDark = (id) => mode === 'dark' && !!T[id].dark;
+
+function mount(host, id, screen) {
+  const tp = document.createElement('div');
+  tp.className = `tp t-${id}${screen === 'player' ? ' player' : ''}`;
+  const vars = isDark(id) ? { ...T[id].vars, ...T[id].dark.vars } : T[id].vars;
+  for (const [k, v] of Object.entries(vars)) tp.style.setProperty(k, v);
+  tp.innerHTML = screen === 'player' ? playerHTML() : homeHTML();
+  tp.setAttribute('aria-hidden', 'true');
+  host.replaceChildren(tp);
+  fit(host);
+}
+function fit(host) {
+  const tp = host.firstElementChild; if (!tp) return;
+  const s = host.clientWidth / 1280;
+  tp.style.transform = `scale(${s})`;
+  host.style.height = `${tp.offsetHeight * s}px`;
+}
+const ro = new ResizeObserver(entries => entries.forEach(e => fit(e.target)));
+
+const picker = document.getElementById('picker');
+const order = ['today', 'fiesta', 'tolex', 'notebook'];
+order.forEach(id => {
+  const b = document.createElement('button');
+  b.className = 'pick'; b.dataset.id = id; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<div class="mock"></div><div class="pick-name">${T[id].name}<kbd>${T[id].key}</kbd></div><div class="pick-line">${T[id].tag} — ${T[id].line}</div>`;
+  b.addEventListener('click', () => show(id));
+  picker.appendChild(b);
+  ro.observe(b.querySelector('.mock'));
+});
+function renderThumbs() {
+  picker.querySelectorAll('.pick').forEach(b => mount(b.querySelector('.mock'), b.dataset.id, 'player'));
+}
+renderThumbs();
+
+const MODE_NOTE = {
+  today: 'Today’s app is light only.',
+  tolex: 'Dark only, by design.',
+  light: 'Light by default. The dark variant would follow the system appearance setting automatically — no new control, so it stays a styling change.',
+};
+const dir = document.getElementById('dir');
+let current = 'fiesta';
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  try { localStorage.setItem('tp-restyle-mode', m); } catch (e) {}
+  renderThumbs();
+  show(current);
+}
+function show(id) {
+  current = id;
+  const t = T[id];
+  const dark = isDark(id);
+  const swatches = dark ? t.dark.swatches : t.swatches;
+  const canLight = id !== 'tolex', canDark = id === 'tolex' || !!t.dark;
+  const shownMode = id === 'tolex' ? 'dark' : dark ? 'dark' : 'light';
+  const note = id === 'today' ? MODE_NOTE.today : id === 'tolex' ? MODE_NOTE.tolex : dark ? t.dark.line : MODE_NOTE.light;
+  try { localStorage.setItem('tp-restyle', id); } catch (e) {}
+  picker.querySelectorAll('.pick').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+  dir.innerHTML = `
+    <div class="dir-head">
+      <div><h2>${t.name} <span>· ${t.tag}</span></h2><p class="thesis">${t.thesis}</p>${t.risk ? `<p class="risk">${t.risk}</p>` : ''}</div>
+      <div><p class="label">Palette${dark ? ' · dark' : ''}</p><div class="swatches">${swatches.map(([n, hex]) => `<div class="sw"><i style="background:${/^(#|rgba)/.test(hex) ? hex : 'transparent'}"></i><div><b>${n}</b><small>${hex}</small></div></div>`).join('')}</div>
+        <p class="label">Type</p><div class="faces">${t.faces.map(([role, css, sample, name]) => `<div class="face"><small>${role}</small><span style="font-family:${css}">${sample}<em>${name}</em></span></div>`).join('')}</div></div>
+    </div>
+    <div class="modebar">
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" data-mode="light" aria-pressed="${shownMode === 'light'}" ${canLight ? '' : 'disabled'}>Light</button>
+        <button type="button" data-mode="dark" aria-pressed="${shownMode === 'dark'}" ${canDark ? '' : 'disabled'}>Dark</button>
+      </div>
+      <kbd>D</kbd>
+      <p>${note}</p>
+    </div>
+    <div class="screen"><div class="screen-cap"><b>Home</b><span>Routines, with M6’s four-week strip</span></div><div class="mock" id="m-home"></div></div>
+    <div class="screen"><div class="screen-cap"><b>Practice · playing</b><span>Modes up the neck, bar 1 beat 3, tempo nudged below target</span></div><div class="mock" id="m-player"></div></div>
+    ${dark ? `<div class="changes darknotes"><div><h3>In the dark</h3><ul>${t.dark.notes.slice(0, 2).map(([k, v]) => `<li><b>${k}.</b> ${v}</li>`).join('')}</ul></div><div><h3>&nbsp;</h3><ul>${t.dark.notes.slice(2).map(([k, v]) => `<li><b>${k}.</b> ${v}</li>`).join('')}</ul></div></div>` : ''}
+    ${t.changes ? `<div class="changes"><div><h3>What changes</h3><ul>${t.changes.slice(0, 4).map(([k, v]) => `<li><b>${k}.</b> ${v}</li>`).join('')}</ul></div><div><h3>&nbsp;</h3><ul>${t.changes.slice(4).map(([k, v]) => `<li><b>${k}.</b> ${v}</li>`).join('')}</ul></div></div>
+    <div class="handoff">${id === 'notebook'
+      ? 'Chosen. The implementation doc — Notebook in light and dark, the Appearance setting, tasks, tests and the gate — is <a href="11-RESTYLE.md">docs/plan/11-RESTYLE.md</a>.'
+      : 'Not chosen; kept for reference. The original three-direction spec is <a href="spec.md">spec.md</a> (artifact only); the chosen direction’s doc is <a href="11-RESTYLE.md">docs/plan/11-RESTYLE.md</a>.'}</div>` : ''}`;
+  ['home', 'player'].forEach(s => { const m = document.getElementById('m-' + s); ro.observe(m); mount(m, id, s); });
+  dir.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  if (e.key === 'd' || e.key === 'D') { setMode(mode === 'dark' ? 'light' : 'dark'); return; }
+  const id = order.find(k => T[k].key === e.key);
+  if (id) show(id);
+});
+let start = 'notebook';
+try { const s = localStorage.getItem('tp-restyle'); if (s && T[s]) start = s; } catch (e) {}
+show(start);
+if (document.fonts) document.fonts.ready.then(() => document.querySelectorAll('.mock').forEach(fit));
+</script>
