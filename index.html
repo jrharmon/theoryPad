@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TheoryPad</title>
+    <script>
+      // The resolved theme, before first paint. The Appearance setting is mirrored in
+      // localStorage for this; src/app/appearance.ts is the real logic. Keep the two in step.
+      (function () {
+        var pref = 'system';
+        try {
+          pref = localStorage.getItem('theorypad:appearance') || 'system';
+        } catch (e) {}
+        var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = pref === 'dark' || (pref === 'system' && systemDark);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

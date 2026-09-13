@@ -43,17 +43,29 @@ function Stat({ label, value, testId }: { label: string; value: string; testId: 
   );
 }
 
-/** The file's colors, from the same tokens the app is drawn with. */
+/**
+ * The file's colors, from the same tokens the app is drawn with — always the
+ * light ones, whatever is on screen: it is a document to print or share.
+ * Stamping light, reading and restoring is synchronous, so nothing paints.
+ */
 function themePalette(): Palette {
-  const style = getComputedStyle(document.documentElement);
-  const token = (name: string) => style.getPropertyValue(name).trim();
-  return {
-    ink: token('--color-ink'),
-    bg: token('--color-bg'),
-    rule: token('--color-neutral-300'),
-    muted: token('--color-neutral-600'),
-    accent: token('--color-accent'),
-  };
+  const root = document.documentElement;
+  const shown = root.dataset.theme;
+  root.dataset.theme = 'light';
+  try {
+    const style = getComputedStyle(root);
+    const token = (name: string) => style.getPropertyValue(name).trim();
+    return {
+      ink: token('--color-ink'),
+      bg: token('--color-bg'),
+      rule: token('--color-neutral-300'),
+      muted: token('--color-neutral-600'),
+      accent: token('--color-accent'),
+    };
+  } finally {
+    if (shown === undefined) delete root.dataset.theme;
+    else root.dataset.theme = shown;
+  }
 }
 
 /** What you practiced over a range: four numbers, time by day, and one table. */

@@ -1,7 +1,10 @@
 import { NavLink, Outlet } from 'react-router';
+import { useAppearance } from '@/app/appearance';
 import { NAV_ITEMS } from '@/app/nav';
 
 export function AppShell() {
+  useAppearance();
+
   return (
     <div className="min-h-screen bg-graph text-ink">
       <header className="flex items-center gap-6 border-b border-rule bg-nav px-6 py-3 text-nav-ink">

@@ -215,3 +215,105 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 }
+
+/*
+ * Dark: chalk on blue-slate. Tokens only, nothing else — every utility and
+ * shadcn variable reads through them. Unlayered, and after the @theme blocks,
+ * so it wins over their :root declarations. Sheets lift a step lighter rather
+ * than casting a shadow; blue as a fill brightens, blue as text lightens so it
+ * reads on slate; the highlighter goes translucent because multiply does
+ * nothing on a dark ground.
+ */
+:root[data-theme='dark'] {
+  --color-bg: #15171c;
+  --color-paper: #1d2027;
+  --color-surface: #252932;
+  --color-ink: #e4e7ee;
+  --color-grid: rgba(228, 231, 238, 0.035);
+  --color-highlight: rgba(255, 225, 77, 0.34);
+
+  --color-accent: #4a6ae0;
+  --color-accent-text: #9db0ff;
+  --color-accent-tint: rgba(123, 149, 255, 0.16);
+  --color-on-accent: #ffffff;
+
+  --color-divider: #2c313b;
+  --color-rule: #2c313b;
+
+  --color-nav: #1d2027;
+  --color-nav-ink: #e4e7ee;
+  --color-nav-active: #b4c3ff;
+  --color-avatar: rgba(123, 149, 255, 0.16);
+  --color-avatar-ink: #b4c3ff;
+  --color-chrome: #1d2027;
+  --color-chrome-ink: #e4e7ee;
+  --color-track: #2c313b;
+  --color-fill: #6d88f0;
+
+  --color-transport: #22262e;
+  --color-transport-ink: #e4e7ee;
+  --color-transport-edge: #2c313b;
+
+  --color-toggle-on: rgba(123, 149, 255, 0.16);
+  --color-toggle-on-ink: #b4c3ff;
+  --color-toggle-on-ring: rgba(157, 176, 255, 0.35);
+  --color-toggle-off: #1d2027;
+  --color-toggle-off-ink: rgba(228, 231, 238, 0.55);
+  --color-toggle-edge: #363c48;
+
+  --color-tab-line: rgba(228, 231, 238, 0.24);
+  --color-tab-bar: rgba(228, 231, 238, 0.5);
+  --color-tab-digit: #e4e7ee;
+  --color-playhead: rgba(255, 225, 77, 0.26);
+
+  --color-neck: #1d2027;
+  --color-neck-fret: #3a404c;
+  --color-neck-nut: #e4e7ee;
+  --color-neck-string: rgba(228, 231, 238, 0.3);
+  --color-neck-edge: #3a404c;
+  --color-neck-heat: #e4e7ee;
+  --color-inlay: #343a45;
+  --color-dot-root: #e4e7ee;
+  --color-dot-root-ink: #15171c;
+  --color-dot-target: #4a6ae0;
+  --color-dot-target-ink: #ffffff;
+  --color-dot-chord: #2f3f78;
+  --color-dot-chord-ink: #e4e7ee;
+  --color-dot-pass: #2a2e37;
+  --color-dot-pass-ink: rgba(228, 231, 238, 0.78);
+
+  --color-fresh: #1d2027;
+  --color-fresh-ink: #e4e7ee;
+  --color-star: #f0b400;
+
+  --color-heat-0: #252932;
+  --color-heat-1: #2f3f78;
+  --color-heat-2: #4a6ae0;
+  --color-heat-3: #9db0ff;
+  --color-heat-future: #2c313b;
+  --color-heat-today: #e4e7ee;
+
+  /* The ramps invert, so "a subtle fill" and "accent that reads" stay true. */
+  --color-neutral-100: #1d2027;
+  --color-neutral-200: #252932;
+  --color-neutral-300: #2c313b;
+  --color-neutral-400: #3a404c;
+  --color-neutral-500: #555c6a;
+  --color-neutral-600: #7a8190;
+  --color-neutral-700: #a3a9b6;
+  --color-neutral-800: #c9cdd6;
+  --color-neutral-900: #e4e7ee;
+
+  --color-accent-100: #182040;
+  --color-accent-200: #1f2b5a;
+  --color-accent-300: #2f3f78;
+  --color-accent-400: #3d56b0;
+  --color-accent-500: #4a6ae0;
+  --color-accent-600: #6d88f0;
+  --color-accent-700: #9db0ff;
+  --color-accent-800: #c1ceff;
+  --color-accent-900: #e3e9ff;
+
+  --destructive: #f97066;
+  --shadow-float: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
