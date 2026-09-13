@@ -296,7 +296,7 @@ genuinely usable, and the first point real usage will tell us things planning ca
 
 ---
 
-## M6 — Practice log, report & fretboard explorer ✅ *complete (2026-09-12)*
+## M6 — Practice log, report & fretboard explorer ✅ *complete (2026-09-12), reviewed*
 
 | #   | Task                                                                                                                                                                                                                  | Size |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |

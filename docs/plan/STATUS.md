@@ -1,8 +1,7 @@
 # Status — start here
 
-**Last updated:** 2026-09-12, end of M6 (built, awaiting review). Written as a hand-off: a
-fresh session should be able to pick up the M6 review — or, once it is merged, start M7 — from
-this file, `CLAUDE.md`, and the plan docs it points to.
+**Last updated:** 2026-09-13, M6 reviewed and merged. Written as a hand-off: a fresh session
+should be able to start M7 from this file, `CLAUDE.md`, and the plan docs it points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -15,14 +14,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M3 — Scale & mode family, and its practice-view follow-up | ✅ merged, live |
 | M5 — Routines, settings, export/import | ✅ merged, live |
 | M4 — Theory | ✅ merged, live |
-| **M6 — Practice log, report & fretboard explorer** | **built on `m6-progress`, awaiting the player's review** — not merged, not pushed |
-| M7 — Audio richness · M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
+| M6 — Practice log, report & fretboard explorer | ✅ merged, live |
+| **M7 — Audio richness: backing, ear training, improv** | **next** — doc 08 has the tasks |
+| M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. `main` holds M0–M5 and M4; M6 is one branch,
-`m6-progress`, a commit per task. 713 unit tests, 46 E2E, `pnpm check` green.
-
-**If the M6 review is done:** apply any changes on `m6-progress`, fast-forward `main` to it,
-push, check CI and the deploy, mark M6 reviewed in doc 08, and update this file. Then M7.
+M5 was deliberately built before M4. Everything is on `main`; there are no open branches.
+713 unit tests, 46 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -127,24 +124,7 @@ push, check CI and the deploy, mark M6 reviewed in doc 08, and update this file.
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## At the M6 gate — for the player
-
-Only you can judge these:
-- **Does the coverage match reality?** Play a few passes, then look at `/fretboard` with
-  Notes played on. The heat should sit exactly where you played. Counting starts with this
-  build; older passes have no notes recorded.
-- **Does the report tell you something you didn't know?** Tempos used against target is the
-  intended one.
-- **The mode prose** in `src/domain/music/modeCharacter.ts` is a draft for you to edit: what
-  each mode sounds like, its signature note, what to steer round, how it compares, and the
-  go-to progressions (stored as degrees, spelled in the key on screen).
-- Whether the Home strip earns its place above the routines.
-
-Built as agreed, plus: the policy editor links to the reference only when key and mode are
-both fixed or held (a rolled key has nothing to show yet). The heat is grey rather than red so
-the accent stays for the signature note.
-
-## Next after the review: M7
+## Next: M7
 
 Doc 08 §M7: backing tracks (model, YouTube source with rate, control, track management and
 the 12×7 coverage grid), reference videos, `free-improv-target`, `ear-training`, and
@@ -164,6 +144,10 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**M6 review**
+- The neck heat matches what was played; the report is useful; the mode prose stands for now;
+  the Home strip stays. Merged without changes.
 
 **Start of M6**
 - No personal bests for now; Home gets the heatmap, streak and week's time.
