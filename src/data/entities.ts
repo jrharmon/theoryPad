@@ -156,6 +156,9 @@ export interface ExerciseStats {
   updatedAt: number;
 }
 
+/** Light or dark. 'system' follows the computer, and changes when it does. */
+export type Appearance = 'system' | 'light' | 'dark';
+
 export interface Settings {
   key: 'settings';
   instrument: Instrument;
@@ -179,6 +182,8 @@ export interface Settings {
     showNeck: boolean;
     /** Tab size, in steps from the default: positive is bigger. Bars per line follow. */
     tabZoom: number;
+    /** Light or dark. 'system' follows the computer, and changes when it does. */
+    appearance: Appearance;
   };
   updatedAt: number;
 }

@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
+import type { Appearance } from '@/data';
 import { useSettings } from '@/store/settings';
 
-/** The Appearance setting. 'system' follows the computer, and changes when it does. */
-export type Appearance = 'system' | 'light' | 'dark';
+export type { Appearance };
+
 /** What is on screen: always one or the other, stamped on <html data-theme>. */
 export type Theme = 'light' | 'dark';
 
@@ -48,8 +49,7 @@ export function applyAppearance(appearance: Appearance): void {
 export function useAppearance(): void {
   const load = useSettings((s) => s.load);
   const loaded = useSettings((s) => s.loaded);
-  // The setting arrives with R5's Settings row; until then the app follows the system.
-  const appearance: Appearance = 'system';
+  const appearance = useSettings((s) => s.settings.ui.appearance);
 
   useEffect(() => {
     void load();

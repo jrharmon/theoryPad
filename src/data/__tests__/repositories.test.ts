@@ -397,4 +397,17 @@ describe('settings saved before a field existed', () => {
     expect(loaded.audio.loop).toBe(false);
     await database.delete();
   });
+
+  it('follow the system when they predate Appearance', async () => {
+    const database = new TheoryPadDB(`old-settings-${Math.random()}`);
+    const repos = createRepositories(database);
+    const current = await repos.settings.get();
+    const { appearance: _dropped, ...oldUi } = current.ui;
+    await database.settings.put({ ...current, ui: { ...oldUi, showNeck: false } as typeof current.ui });
+
+    const loaded = await repos.settings.get();
+    expect(loaded.ui.appearance).toBe('system');
+    expect(loaded.ui.showNeck).toBe(false);
+    await database.delete();
+  });
 });

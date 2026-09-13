@@ -134,7 +134,9 @@ export function Fretboard({
             data-testid={`fret-number-${fret}`}
             className={[
               'num text-center text-[10px]',
-              emphasis.has(fret) ? 'font-semibold text-accent-text' : 'text-ink/50',
+              // accent-700, not accent-text: the gallery E2E asserts this class, and the
+              // ramp step equals accent-text in both themes.
+              emphasis.has(fret) ? 'font-semibold text-accent-700' : 'text-ink/50',
             ].join(' ')}
           >
             {fret}

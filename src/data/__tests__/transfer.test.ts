@@ -134,6 +134,19 @@ describe('export and import', () => {
     expect(() => parseExport({ formatVersion: 2 })).toThrow(/formatVersion/);
   });
 
+  it('imports settings from before Appearance as following the system', async () => {
+    const { db } = await populated();
+    await createRepositories(db).settings.get();
+    const file = JSON.parse(JSON.stringify(await exportData(db))) as {
+      data: { settings: { ui: Record<string, unknown> } };
+    };
+    delete file.data.settings.ui.appearance;
+    const target = fresh();
+
+    await applyImport(target, parseExport(file), 'replace');
+    expect((await createRepositories(target).settings.get()).ui.appearance).toBe('system');
+  });
+
   it('accepts an export from before routines existed', async () => {
     const { db } = await populated();
     const file = JSON.parse(JSON.stringify(await exportData(db))) as { data: Record<string, unknown> };

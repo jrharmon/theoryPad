@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   applyImport,
+  type Appearance,
   db,
   exportData,
   parseExport,
@@ -124,6 +125,9 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Display">
+        <Row label="Appearance" hint="System follows your computer's light or dark setting.">
+          <AppearanceChoice value={ui.appearance} onChange={(appearance) => void save({ ui: { ...ui, appearance } })} />
+        </Row>
         <Row label="Neck diagram" hint="Beside the tab while practicing. Hide it to give the tab the room.">
           <OnOff on={ui.showNeck} label="Neck diagram" onChange={(on) => void save({ ui: { ...ui, showNeck: on } })} />
         </Row>
@@ -164,6 +168,37 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
         {hint && <p className="text-[12px] text-ink/55">{hint}</p>}
       </div>
       <div>{children}</div>
+    </div>
+  );
+}
+
+const APPEARANCES: { id: Appearance; label: string }[] = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
+
+/** System, Light or Dark, as one joined pill. The theme changes as soon as you choose. */
+function AppearanceChoice({ value, onChange }: { value: Appearance; onChange: (appearance: Appearance) => void }) {
+  return (
+    <div className="flex" role="group" aria-label="Appearance">
+      {APPEARANCES.map((option, i) => (
+        <Button
+          key={option.id}
+          size="sm"
+          variant="secondary"
+          aria-pressed={value === option.id}
+          className={[
+            'rounded-toggle',
+            i > 0 ? '-ml-px rounded-l-none' : '',
+            i < APPEARANCES.length - 1 ? 'rounded-r-none' : '',
+            value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink',
+          ].join(' ')}
+          onClick={() => onChange(option.id)}
+        >
+          {option.label}
+        </Button>
+      ))}
     </div>
   );
 }

@@ -242,6 +242,7 @@ export function defaultSettings(at: number): Settings {
       showDegreesOnFretboard: true,
       showNeck: true,
       tabZoom: 0,
+      appearance: 'system',
     },
     updatedAt: at,
   };
