@@ -25,7 +25,7 @@ export function PracticeBody() {
 
   return (
     <>
-      <div className="border-b border-rule px-8 py-6">
+      <div className="px-8 pt-6 pb-4">
         <Kicker accent>This time you are playing</Kicker>
         <h2 className="max-w-[820px]">{instance.brief.headline}</h2>
         <p className="max-w-[640px] text-[14px] text-ink/70">{instance.brief.instruction}</p>
@@ -77,7 +77,7 @@ function PlayedBody({
 
   return (
     <div className={`grid gap-6 px-8 py-6 ${showNeck ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
-      <div className="min-w-0">
+      <div className="sheet min-w-0 px-5 pt-4 pb-[18px]">
         <div className="flex items-center gap-3">
           <Kicker>Tab · generated for this variation</Kicker>
           <div className="ml-auto flex items-center gap-1.5" role="group" aria-label="Tab size">
@@ -131,7 +131,7 @@ function PlayedBody({
 
       {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
       {showNeck && (
-        <div className="lg:sticky lg:top-4 lg:self-start">
+        <div className="sheet px-5 pt-4 pb-[18px] lg:sticky lg:top-4 lg:self-start">
           <Kicker>Shape on the neck</Kicker>
           <div className="mt-2">
             <Fretboard

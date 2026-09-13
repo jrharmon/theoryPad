@@ -2,9 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 
-import '@fontsource/archivo/400.css';
-import '@fontsource/archivo/600.css';
-import '@fontsource/archivo/800.css';
+// Self-hosted: the app is local-first and must work offline.
+import '@fontsource-variable/bricolage-grotesque/standard.css'; // opsz + wdth + wght
+import '@fontsource-variable/figtree';
 import '@/styles/index.css';
 
 import { router } from '@/app/router';

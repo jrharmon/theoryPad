@@ -44,7 +44,7 @@ export function ExerciseDetail() {
 
   return (
     <section>
-      <div className="flex items-end justify-between border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="flex items-end justify-between px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
           <h1>{definition.name}</h1>
@@ -74,11 +74,11 @@ export function ExerciseDetail() {
       </div>
 
       <div
-        className={`grid gap-8 px-8 py-7 ${definition.kind === 'played' ? 'lg:grid-cols-[320px_1fr]' : ''}`}
+        className={`grid items-start gap-6 px-8 pt-1 pb-7 ${definition.kind === 'played' ? 'lg:grid-cols-[320px_1fr]' : ''}`}
       >
         {/* A theory exercise has no pulse, so nothing to set a tempo for. */}
         {definition.kind === 'played' && (
-          <div>
+          <div className="sheet px-5 py-4">
             <Kicker>Tempo</Kicker>
             <div className="mt-3 space-y-4">
               <Field
@@ -132,7 +132,7 @@ export function ExerciseDetail() {
 
         <div>
           {definition.params && (
-            <div className="mb-8">
+            <div className="sheet mb-8 px-5 py-4">
               <Kicker>Settings</Kicker>
               <div className="mt-3 max-w-[320px]">
                 <ParamsEditor
@@ -167,7 +167,7 @@ export function ExerciseDetail() {
         </div>
       </div>
 
-      <Separator className="border-t-(length:--rule-section-w) border-divider" />
+      <Separator className="invisible" />
     </section>
   );
 }

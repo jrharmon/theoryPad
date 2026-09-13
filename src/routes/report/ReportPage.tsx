@@ -122,7 +122,7 @@ export function ReportPage() {
 
   return (
     <section>
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="px-8 py-7">
         <Kicker accent>Practice</Kicker>
         <h1>Report</h1>
         <p className="text-[15px] text-ink/70" data-testid="report-range">
@@ -130,7 +130,7 @@ export function ReportPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 border-b border-rule px-8 py-4">
+      <div className="flex flex-wrap items-center gap-4 px-8 pb-5">
         <div className="flex gap-1" role="group" aria-label="Date range">
           {PRESETS.map((preset) => (
             <Button
@@ -138,7 +138,7 @@ export function ReportPage() {
               size="sm"
               variant="secondary"
               aria-pressed={choice === preset.id}
-              className={choice === preset.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
+              className={`rounded-toggle ${choice === preset.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
               onClick={() => {
                 if (preset.id === 'custom' && choice !== 'custom') setCustom(range);
                 setChoice(preset.id);
@@ -182,25 +182,25 @@ export function ReportPage() {
 
       {report && (
         <>
-          <div className="flex flex-wrap gap-12 border-b-(length:--rule-section-w) border-divider px-8 py-6">
+          <div className="sheet mx-8 mb-4 flex flex-wrap gap-12 px-5 py-4">
             <Stat label="Sessions" value={String(report.summary.sessions)} testId="stat-sessions" />
             <Stat label="Time" value={formatPracticeTime(report.summary.seconds)} testId="stat-time" />
             <Stat label="Variations" value={String(report.summary.variations)} testId="stat-variations" />
             <Stat label="Exercises" value={String(report.summary.exercises)} testId="stat-exercises" />
           </div>
 
-          <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
+          <div className="sheet mx-8 mb-4 px-5 py-4">
             <Kicker>Time by day</Kicker>
             <DayBarChart days={report.days} className="mt-3" />
           </div>
 
-          <div className="px-8 py-6">
+          <div className="px-8 pb-6">
             {rows.length === 0 ? (
               <EmptyState title="Nothing logged in this range">
                 Passes are logged as they end — play something, or pick a longer range.
               </EmptyState>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="sheet overflow-x-auto px-5 pb-1">
                 <table className="w-full border-collapse text-left text-[14px]" data-testid="report-table">
                   <thead>
                     <tr className="border-b-(length:--rule-section-w) border-divider">
@@ -234,7 +234,7 @@ export function ReportPage() {
                   </thead>
                   <tbody>
                     {rows.map((row) => (
-                      <tr key={row.exerciseId} className="border-b border-rule" data-testid="report-row">
+                      <tr key={row.exerciseId} className="border-b border-rule last:border-b-0" data-testid="report-row">
                         <td className="py-3 pr-6">{row.name}</td>
                         <td className="tabular py-3 pr-6">{row.played}</td>
                         <td className="tabular py-3 pr-6">{formatTempos(row)}</td>

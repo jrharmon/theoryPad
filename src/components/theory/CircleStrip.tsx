@@ -20,7 +20,7 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
   const cells = Array.from({ length: high - low + 1 }, (_, i) => wrapPosition(correct + low + i));
 
   return (
-    <div className="flex border border-rule" data-testid="circle-strip" role="img" aria-label="Circle of fifths">
+    <div className="flex overflow-hidden rounded-control border border-rule" data-testid="circle-strip" role="img" aria-label="Circle of fifths">
       {cells.map((position, i) => {
         const isCorrect = position === correct;
         const isPicked = picked !== undefined && position === wrapPosition(picked) && !isCorrect;
@@ -31,15 +31,15 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
             className={[
               'flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-2',
               i > 0 ? 'border-l border-rule' : '',
-              isCorrect ? 'bg-accent text-white' : '',
+              isCorrect ? 'bg-accent text-on-accent' : '',
               isPicked ? 'outline-2 -outline-offset-2 outline-ink' : '',
             ].join(' ')}
           >
             <span className="text-[15px] font-extrabold">{majorAt(position)}</span>
-            <span className={`text-[11px] ${isCorrect ? 'text-white/85' : 'text-ink/55'}`}>
+            <span className={`text-[11px] ${isCorrect ? 'text-on-accent/85' : 'text-ink/55'}`}>
               {minorAt(position)}m
             </span>
-            <span className={`text-[11px] tabular-nums ${isCorrect ? 'text-white/85' : 'text-ink/55'}`}>
+            <span className={`text-[11px] tabular-nums ${isCorrect ? 'text-on-accent/85' : 'text-ink/55'}`}>
               {count(position)}
             </span>
           </div>

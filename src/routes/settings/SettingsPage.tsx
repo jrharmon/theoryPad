@@ -51,7 +51,7 @@ export function SettingsPage() {
 
   return (
     <section className="pb-16">
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="px-8 py-7">
         <Kicker accent>Preferences</Kicker>
         <h1>Settings</h1>
       </div>
@@ -95,7 +95,7 @@ export function SettingsPage() {
                 size="sm"
                 variant="secondary"
                 aria-pressed={audio.countInBars === bars}
-                className={audio.countInBars === bars ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
+                className={`rounded-toggle ${audio.countInBars === bars ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
                 onClick={() => void save({ audio: { ...audio, countInBars: bars } })}
               >
                 {bars === 0 ? 'None' : bars === 1 ? '1 bar' : '2 bars'}
@@ -149,7 +149,7 @@ export function SettingsPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-rule px-8 py-6">
+    <div className="sheet mx-8 mb-4 px-6 py-5">
       <Kicker>{title}</Kicker>
       <div className="mt-3 max-w-[760px] space-y-4">{children}</div>
     </div>
@@ -175,7 +175,7 @@ function OnOff({ on, label, onChange }: { on: boolean; label: string; onChange: 
       variant="secondary"
       aria-label={label}
       aria-pressed={on}
-      className={on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}
+      className={`rounded-toggle ${on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}`}
       onClick={() => onChange(!on)}
     >
       {on ? 'On' : 'Off'}

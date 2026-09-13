@@ -67,7 +67,7 @@ export function RoutineBuilder() {
 
   return (
     <section className="pb-16">
-      <div className="flex items-end justify-between gap-6 border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="flex items-end justify-between gap-6 px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Routine</Kicker>
           <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export function RoutineBuilder() {
         </div>
       </div>
 
-      <div className="border-b border-rule px-8 py-6">
+      <div className="px-8 pt-1 pb-6">
         <Kicker>Key and mode</Kicker>
         <p className="mb-3 mt-1 text-[13px] text-ink/60">
           Rolled once when the routine starts, and shared by every exercise in it.
@@ -117,7 +117,7 @@ export function RoutineBuilder() {
         </div>
       </div>
 
-      <div className="max-w-[1100px] px-8 py-6">
+      <div className="max-w-[1100px] px-8 pt-2 pb-6">
         <div className="flex items-center justify-between">
           <Kicker>Exercises</Kicker>
           <Button size="sm" onClick={() => setAdding(true)}>
@@ -132,7 +132,7 @@ export function RoutineBuilder() {
         {routine.items.length === 0 ? (
           <EmptyState title="Nothing in it yet">Add an exercise to start.</EmptyState>
         ) : (
-          <ol className="border border-rule">
+          <ol className="sheet px-2">
             {routine.items.map((item, index) => (
               <ItemRow
                 key={item.id}
@@ -176,7 +176,7 @@ function NameField({ routine, onRename }: { routine: Routine; onRename: (name: s
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur();
       }}
-      className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-[42px] leading-tight [font-weight:var(--display-weight)] outline-none hover:border-rule focus:border-ink"
+      className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-(length:--h1-size) leading-tight tracking-(--display-tracking) [font-weight:var(--display-weight)] outline-none hover:border-rule focus:border-ink"
     />
   );
 }

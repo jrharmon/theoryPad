@@ -3,21 +3,21 @@ import { NAV_ITEMS } from '@/app/nav';
 
 export function AppShell() {
   return (
-    <div className="min-h-screen bg-bg text-ink">
-      <header className="flex items-center gap-6 border-b-(length:--rule-section-w) border-divider bg-nav px-6 py-3 text-nav-ink">
-        <NavLink to="/home" className="face-title mr-auto text-[18px] tracking-tight">
+    <div className="min-h-screen bg-graph text-ink">
+      <header className="flex items-center gap-6 border-b border-rule bg-nav px-6 py-3 text-nav-ink">
+        <NavLink to="/home" className="face-title mr-auto text-[22px] font-extrabold tracking-[-.035em] lowercase">
           THEORYPAD
         </NavLink>
 
-        <nav className="flex items-center gap-5">
+        <nav className="flex items-center gap-1.5">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 [
-                  'text-[14px] transition-colors',
-                  isActive ? 'font-semibold text-nav-active' : 'hover:text-nav-active',
+                  'rounded-full px-[11px] py-[3px] text-[14px] transition-colors',
+                  isActive ? 'bg-accent-tint font-semibold text-nav-active' : 'hover:text-nav-active',
                 ].join(' ')
               }
             >
@@ -28,7 +28,7 @@ export function AppShell() {
 
         <div
           aria-hidden
-          className="grid size-7 place-items-center bg-avatar text-[11px] font-extrabold text-avatar-ink"
+          className="grid size-7 place-items-center rounded-full bg-avatar text-[11px] font-extrabold text-avatar-ink"
         >
           JH
         </div>

@@ -51,7 +51,7 @@ function Toggle<T extends string>({
           size="sm"
           variant="secondary"
           aria-pressed={value === option.id}
-          className={value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
+          className={`rounded-toggle ${value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
           onClick={() => onChange(option.id)}
         >
           {option.label}
@@ -115,7 +115,7 @@ export function FretboardExplorer() {
 
   return (
     <section>
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="px-8 py-7">
         <Kicker accent>Explore</Kicker>
         <h1 data-testid="explorer-title">
           {keyMode.tonic} {title(keyMode.mode)}
@@ -126,7 +126,7 @@ export function FretboardExplorer() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-rule px-8 py-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 pb-3">
         <div className="flex items-center gap-2">
           <Select
             value={String(chroma(keyMode.tonic))}
@@ -180,13 +180,13 @@ export function FretboardExplorer() {
         />
       </div>
 
-      <div className="border-b border-rule px-8 py-4">
+      <div className="px-8 pb-4">
         <div className="flex flex-wrap gap-1" role="group" aria-label="Shape">
           <Button
             size="sm"
             variant="secondary"
             aria-pressed={shapeIndex === null}
-            className={shapeIndex === null ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
+            className={`rounded-toggle ${shapeIndex === null ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
             onClick={() => setShapeIndex(null)}
           >
             Whole neck
@@ -198,7 +198,7 @@ export function FretboardExplorer() {
               variant="secondary"
               aria-pressed={shapeIndex === i}
               aria-label={`Shape starting on ${degrees[s.startDegree - 1]!.label} at fret ${s.startFret}`}
-              className={shapeIndex === i ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}
+              className={`rounded-toggle ${shapeIndex === i ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
               onClick={() => setShapeIndex(i)}
             >
               <span className="tabular">{degrees[s.startDegree - 1]!.label}</span>
@@ -208,7 +208,7 @@ export function FretboardExplorer() {
         </div>
       </div>
 
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
+      <div className="sheet mx-8 px-5 py-5">
         <Fretboard
           instrument={instrument}
           overlay={overlay}
@@ -234,7 +234,7 @@ export function FretboardExplorer() {
                 className="h-3 w-24"
                 style={{
                   background:
-                    'linear-gradient(to right, color-mix(in srgb, var(--color-ink) 6%, transparent), color-mix(in srgb, var(--color-ink) 70%, transparent))',
+                    'linear-gradient(to right, color-mix(in srgb, var(--color-neck-heat) 6%, transparent), color-mix(in srgb, var(--color-neck-heat) 70%, transparent))',
                 }}
               />
               More notes played
@@ -243,8 +243,8 @@ export function FretboardExplorer() {
         </div>
       </div>
 
-      <div className="grid gap-10 px-8 py-6 lg:grid-cols-[auto_1fr]">
-        <div data-testid="coverage-panel">
+      <div className="grid items-start gap-10 px-8 py-6 lg:grid-cols-[auto_1fr]">
+        <div className="sheet px-5 py-4" data-testid="coverage-panel">
           <Kicker>{layer === 'recent' ? 'Last 30 days' : 'All time'}</Kicker>
           {loaded && (
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">

@@ -236,7 +236,7 @@ function TabSystem({
             data-column={playheadColumn}
             data-system={systemIndex}
             aria-hidden
-            className="pointer-events-none absolute -top-1 -bottom-1 bg-playhead"
+            className="pointer-events-none absolute -top-0.5 -bottom-0.5 rounded-[5px] bg-playhead mix-blend-multiply dark:mix-blend-normal"
             style={{
               // Positioned by CSS against the column count so it tracks the grid
               // at any width, and so playback need not re-render the tree.
@@ -394,7 +394,7 @@ function TabRow({
   return (
     <>
       <div
-        className="grid place-items-center bg-paper text-[11px] text-ink/50"
+        className="num grid place-items-center bg-paper text-[11px] text-ink/50"
         style={{ height: rowHeight, ...lineBackground }}
         data-testid={`tab-string-label-${stringIndex}`}
       >

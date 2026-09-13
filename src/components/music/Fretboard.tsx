@@ -99,7 +99,7 @@ export function Fretboard({
   return (
     <div className={className} data-testid="fretboard">
       <div
-        className="border-t-2 border-b-2 border-neck-edge"
+        className="border-y border-neck-edge"
         style={{ display: 'grid', gridTemplateColumns: gridColumns }}
         role="grid"
         aria-label={`${instrument.name} fretboard, frets ${low} to ${high}`}
@@ -174,7 +174,7 @@ function FretboardRow({
   return (
     <>
       <div
-        className="grid place-items-center text-[10px] text-ink/55"
+        className="num grid place-items-center text-[10px] text-ink/55"
         style={{ height: rowHeight }}
         data-testid={`string-label-${stringIndex}`}
       >
@@ -206,10 +206,10 @@ function FretboardRow({
                 data-testid={`note-${stringIndex}-${fret}`}
                 data-role={note.role}
                 className={[
-                  'relative grid place-items-center rounded-full font-extrabold',
+                  'num relative grid place-items-center rounded-full font-extrabold',
                   ROLE_CLASS[note.role],
                   // Over shading, a ring of the ground keeps each dot its own shape.
-                  heat ? 'ring-2 ring-bg' : '',
+                  heat ? 'ring-2 ring-neck' : '',
                 ].join(' ')}
                 style={{ width: dotSize, height: dotSize, fontSize: dotSize * 0.42 }}
               >

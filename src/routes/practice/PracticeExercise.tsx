@@ -67,14 +67,14 @@ export function PracticeExercise() {
   }
 
   return (
-    <section className="pb-24">
+    <section className="pb-28">
       <RunningChrome name={definition.name} />
 
       <PracticeBody />
 
       {/* Frozen at the bottom, so a long exercise never means scrolling back
           down to reach the controls. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink">
+      <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
         <TransportBar onOpenSettings={openSettings} />
       </div>
 

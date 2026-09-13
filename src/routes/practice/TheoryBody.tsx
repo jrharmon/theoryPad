@@ -24,11 +24,11 @@ export function TheoryBody({ instance }: { instance: TheoryInstance }) {
   if (snapshot.state !== 'playing') {
     const last = snapshot.lastSet;
     return (
-      <div className="px-8 py-8" data-testid="theory-ready">
+      <div className="sheet mx-8 mt-5 mb-2 max-w-[860px] px-6 py-6" data-testid="theory-ready">
         {last ? (
           <>
             <Kicker accent>Last set</Kicker>
-            <p className="text-[34px] font-extrabold tabular-nums" data-testid="theory-score">
+            <p className="num text-[34px] font-extrabold" data-testid="theory-score">
               {last.correct} of {last.total}
             </p>
             <p className="text-[14px] text-ink/60 tabular-nums">
@@ -160,7 +160,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
   }, [phase, question, activeRow, rows, next, submitTable, answerSingle, fill]);
 
   return (
-    <div className="max-w-[860px] px-8 py-6" data-testid="theory-question">
+    <div className="sheet mx-8 mt-5 mb-2 max-w-[860px] px-6 py-5" data-testid="theory-question">
       <div className="flex items-baseline justify-between">
         <Kicker>
           Question {index + 1} of {questions.length}
@@ -171,7 +171,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
           </span>
         )}
       </div>
-      <h3 className="mb-1 mt-1 text-[26px] font-extrabold">{question.prompt}</h3>
+      <h3 className="face-title mb-1 mt-1 text-[26px]">{question.prompt}</h3>
       {question.kind === 'table-fill' && question.note && (
         <p className="mb-3 text-[13px] text-ink/60">{question.note}</p>
       )}

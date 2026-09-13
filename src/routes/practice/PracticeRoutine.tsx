@@ -67,7 +67,7 @@ export function PracticeRoutine() {
   if (!routineSnapshot) return <p className="px-8 py-8 text-[13px] text-ink/55">Rolling…</p>;
 
   return (
-    <section className="pb-24">
+    <section className="pb-28">
       {routineSnapshot.phase === 'overview' && (
         <Overview routine={routine} snapshot={routineSnapshot} />
       )}
@@ -76,7 +76,7 @@ export function PracticeRoutine() {
         <>
           <RunningChrome name={routine.name} />
           <PracticeBody />
-          <div className="fixed inset-x-0 bottom-0 z-20 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink">
+          <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
             <TransportBar />
           </div>
         </>
@@ -98,7 +98,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
 
   return (
     <>
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="px-8 py-7">
         <Kicker accent>Routine · about {formatDuration(total)}</Kicker>
         <h1>{routine.name}</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
@@ -111,13 +111,13 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
         </p>
       </div>
 
-      <ol className="px-8 py-4">
+      <ol className="sheet mx-8 px-5">
         {snapshot.items.map((item, index) => {
           const definition = findExerciseDefinition(item.definitionId);
           return (
             <li
               key={item.id}
-              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4"
+              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4 last:border-b-0"
               data-testid="overview-item"
             >
               <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
@@ -135,7 +135,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
         })}
       </ol>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 flex flex-wrap items-center gap-3 border-t-(length:--rule-section-w) border-transport-edge bg-transport text-transport-ink px-8 py-3">
+      <div className="fixed inset-x-4 bottom-3.5 z-20 flex flex-wrap items-center gap-3 rounded-[14px] bg-transport px-[18px] py-2.5 text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
         <Button size="lg" onClick={() => void practice.play()} data-testid="start-routine">
           Start
         </Button>
@@ -160,9 +160,9 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
       <p className="mb-6 text-[14px] text-ink/70 tabular-nums">
         {formatDuration(seconds)} · every pass logged against its exercise.
       </p>
-      <ol className="mb-8 max-w-[640px]">
+      <ol className="sheet mb-8 max-w-[640px] px-5">
         {snapshot.items.map((item, index) => (
-          <li key={item.id} className="flex gap-3 border-b border-rule py-2 text-[14px]">
+          <li key={item.id} className="flex gap-3 border-b border-rule py-2.5 text-[14px] last:border-b-0">
             <span className="w-6 tabular-nums text-ink/45">{index + 1}</span>
             <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
             <span className="tabular-nums text-ink/60">

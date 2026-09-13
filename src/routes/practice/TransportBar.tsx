@@ -29,7 +29,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   const running = state === 'playing' || state === 'count-in';
 
   return (
-    <div className="flex flex-wrap items-center gap-3 px-8 py-3">
+    <div className="flex flex-wrap items-center gap-3 px-[18px] py-2.5">
       {state === 'brief' && (
         <Button size="lg" onClick={() => void practice.play()} data-testid="play">
           {theory ? (snapshot.lastSet ? 'Again' : 'Start') : 'Play'}
@@ -150,7 +150,7 @@ function Toggle({
       size="sm"
       variant="secondary"
       aria-pressed={on}
-      className={on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}
+      className={`rounded-toggle ${on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}`}
       onClick={() => onChange(!on)}
     >
       {label}

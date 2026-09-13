@@ -30,7 +30,7 @@ export function TableFill({
 
   return (
     <div>
-      <div className="border border-rule" role="table" aria-label={question.prompt}>
+      <div className="overflow-hidden rounded-control border border-rule" role="table" aria-label={question.prompt}>
         <div className="flex border-b border-rule bg-ink/5 px-3 py-1.5" role="row">
           {givenColumns.map((c) => (
             <span key={c.id} className="kicker w-20 shrink-0" role="columnheader">
@@ -79,12 +79,12 @@ export function TableFill({
                         onPick(r, option.id);
                       }}
                       className={[
-                        'min-w-12 border px-2.5 py-1 text-[14px] font-semibold',
+                        'min-w-12 rounded-full border px-2.5 py-1 text-[14px] font-semibold',
                         isPicked && !submitted ? 'border-toggle-on-ring bg-toggle-on text-toggle-on-ink' : '',
-                        isPicked && submitted && right ? 'border-accent bg-accent text-white' : '',
+                        isPicked && submitted && right ? 'border-accent bg-accent text-on-accent' : '',
                         isPicked && submitted && !right ? 'border-2 border-ink line-through' : '',
-                        showCorrect ? 'border-accent bg-accent text-white' : '',
-                        !isPicked && !showCorrect ? 'border-rule hover:border-ink disabled:text-ink/35 disabled:hover:border-rule' : '',
+                        showCorrect ? 'border-accent bg-accent text-on-accent' : '',
+                        !isPicked && !showCorrect ? 'border-toggle-edge bg-paper hover:border-ink disabled:text-ink/35 disabled:hover:border-toggle-edge' : '',
                       ].join(' ')}
                     >
                       {active && <span className="mr-1 text-[10px] text-ink/45">{i + 1}</span>}

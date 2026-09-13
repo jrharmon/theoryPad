@@ -1,197 +1,197 @@
-/* TheoryPad design tokens — derived from the Modernist system in the design handoff.
-   The look: flat, architectural, zero radius, strong rules, one accent used sparingly.
-   See docs/plan/05-UI-COMPONENTS.md for the rules of use. */
+/* TheoryPad design tokens — Notebook: a practice journal.
+   Graph paper, graphite ink, ballpoint blue for actions and targets, highlighter
+   yellow for "you are here" and "this changed"; white sheets for grouped content.
+   These are the light values; the dark ones are under :root[data-theme="dark"].
+   See docs/plan/05-UI-COMPONENTS.md for the rules of use, 11-RESTYLE.md for the tables. */
 
 @import 'tailwindcss';
 
 @theme {
   /* ---- Core roles ---- */
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
-  --color-ink: #201e1d;
-  --color-accent: #ec3013;
+  --color-bg: #f5f6f8; /* graph paper */
+  --color-surface: #eceff4;
+  --color-ink: #24262b; /* graphite */
+  --color-accent: #2347b5; /* ballpoint */
 
   /* ---- Neutral ramp ---- */
-  --color-neutral-100: #f8f4f4;
-  --color-neutral-200: #eae7e7;
-  --color-neutral-300: #d7d3d3;
-  --color-neutral-400: #bab6b6;
-  --color-neutral-500: #9b9797;
-  --color-neutral-600: #7d7979;
-  --color-neutral-700: #605d5d;
-  --color-neutral-800: #444141;
-  --color-neutral-900: #2d2b2b;
+  --color-neutral-100: #f7f8fa;
+  --color-neutral-200: #eceff4;
+  --color-neutral-300: #dfe3ea;
+  --color-neutral-400: #c3c9d4;
+  --color-neutral-500: #9aa1ae;
+  --color-neutral-600: #737a88;
+  --color-neutral-700: #535966;
+  --color-neutral-800: #3a3e46;
+  --color-neutral-900: #24262b;
 
   /* ---- Accent ramp ---- */
-  --color-accent-100: #fff2ef;
-  --color-accent-200: #ffe0d9;
-  --color-accent-300: #ffc4b8;
-  --color-accent-400: #ff9783;
-  --color-accent-500: #ff563c;
-  --color-accent-600: #dd2b0f;
-  --color-accent-700: #ae1800;
-  --color-accent-800: #7c1405;
-  --color-accent-900: #4d170e;
+  --color-accent-100: #eef2fd;
+  --color-accent-200: #dbe3fa;
+  --color-accent-300: #b7c6f3;
+  --color-accent-400: #8199e3;
+  --color-accent-500: #4d6bcf;
+  --color-accent-600: #2347b5;
+  --color-accent-700: #1f3fa3;
+  --color-accent-800: #1a3280;
+  --color-accent-900: #14244f;
 
   /* ---- Type ----
      UI text; h1/h2; names and titles (face-title); numbers read while playing (num); kickers. */
-  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-title: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-num: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-kicker: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-title: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-num: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-kicker: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
 
-  /* ---- Shape: nothing in this app has a rounded corner ---- */
+  /* ---- Shape: 8px controls, 12px panels, pill toggles ---- */
   --radius-none: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-control: 0px;
-  --radius-panel: 0px;
-  --radius-toggle: 0px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-toggle: 9999px;
 }
 
-/* Divider colour is used as a border everywhere; 2px between sections, 1px within. */
+/* Section rules and row rules. */
 @theme {
-  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-divider: #e2e5eb;
 }
 
 /*
  * Every role a color plays, named. Components use these, never a hex or a
- * `bg-ink text-bg` pair, so a theme is only a change of values. Where a value
- * reads `color-mix(in oklab, …)` it reproduces the opacity utility it replaced.
- * Static, so tokens read only through var() are always emitted.
+ * `bg-ink text-bg` pair, so a theme is only a change of values. Static, so
+ * tokens read only through var() are always emitted.
  */
 @theme static {
   /* Grounds: the page, a sheet on it, a ruled line inside a sheet. */
-  --color-paper: var(--color-bg);
-  --color-rule: color-mix(in srgb, #201e1d 40%, transparent);
-  --color-grid: transparent;
-  --color-highlight: transparent;
+  --color-paper: #ffffff;
+  --color-rule: #e2e5eb;
+  --color-grid: rgba(36, 38, 43, 0.045);
+  --color-highlight: #ffe14d;
 
   /* Accent in its other jobs. */
-  --color-accent-text: #ae1800;
-  --color-accent-tint: #fff2ef;
-  --color-on-accent: var(--color-bg);
+  --color-accent-text: #1f3fa3;
+  --color-accent-tint: #e9eefc;
+  --color-on-accent: #ffffff;
 
   /* App chrome: the nav header, the avatar, the running-exercise bar and its progress. */
-  --color-nav: var(--color-bg);
-  --color-nav-ink: var(--color-ink);
-  --color-nav-active: #ae1800;
-  --color-avatar: var(--color-ink);
-  --color-avatar-ink: var(--color-bg);
-  --color-chrome: var(--color-ink);
-  --color-chrome-ink: var(--color-bg);
-  --color-track: color-mix(in oklab, var(--color-bg) 25%, transparent);
-  --color-fill: var(--color-accent);
-  --color-fill-current: var(--color-accent-400);
+  --color-nav: #ffffff;
+  --color-nav-ink: #24262b;
+  --color-nav-active: #1f3fa3;
+  --color-avatar: #e9eefc;
+  --color-avatar-ink: #1f3fa3;
+  --color-chrome: #ffffff;
+  --color-chrome-ink: #24262b;
+  --color-track: #e8ebf0;
+  --color-fill: #2347b5;
+  --color-fill-current: color-mix(in oklab, var(--color-fill) 60%, transparent);
 
-  /* The transport bar fixed to the bottom of a practice screen. */
-  --color-transport: var(--color-bg);
-  --color-transport-ink: var(--color-ink);
-  --color-transport-edge: var(--color-divider);
+  /* The transport bar floating at the bottom of a practice screen. */
+  --color-transport: #ffffff;
+  --color-transport-ink: #24262b;
+  --color-transport-edge: #e2e5eb;
 
   /* Pressed and selected: every toggle, and a picked table cell. */
-  --color-toggle-on: var(--color-ink);
-  --color-toggle-on-ink: var(--color-bg);
-  --color-toggle-on-ring: transparent;
-  --color-toggle-off: var(--color-surface);
-  --color-toggle-off-ink: color-mix(in oklab, var(--color-ink) 45%, transparent);
-  --color-toggle-edge: transparent;
+  --color-toggle-on: #e9eefc;
+  --color-toggle-on-ink: #1f3fa3;
+  --color-toggle-on-ring: rgba(35, 71, 181, 0.35);
+  --color-toggle-off: #ffffff;
+  --color-toggle-off-ink: rgba(36, 38, 43, 0.55);
+  --color-toggle-edge: #d5d9e1;
 
-  /* Tab. */
-  --color-tab-line: rgba(32, 30, 29, 0.42);
-  --color-tab-bar: color-mix(in oklab, var(--color-ink) 60%, transparent);
-  --color-tab-digit: var(--color-ink);
-  --color-playhead: color-mix(in oklab, var(--color-accent) 20%, transparent);
+  /* Tab. The playhead is a highlighter swipe, multiplied over the digits. */
+  --color-tab-line: rgba(36, 38, 43, 0.28);
+  --color-tab-bar: rgba(36, 38, 43, 0.55);
+  --color-tab-digit: #24262b;
+  --color-playhead: rgba(255, 225, 77, 0.75);
 
-  /* The neck, and the dots on it by role. */
-  --color-neck: transparent;
-  --color-neck-fret: color-mix(in oklab, var(--color-ink) 30%, transparent);
-  --color-neck-nut: color-mix(in oklab, var(--color-ink) 30%, transparent);
-  --color-neck-string: color-mix(in oklab, var(--color-ink) 40%, transparent);
-  --color-neck-edge: var(--color-divider);
-  --color-neck-heat: var(--color-ink);
-  --color-inlay: color-mix(in oklab, var(--color-ink) 15%, transparent);
-  --color-dot-root: #444141;
-  --color-dot-root-ink: var(--color-bg);
-  --color-dot-target: var(--color-accent);
-  --color-dot-target-ink: var(--color-bg);
-  --color-dot-chord: #d7d3d3;
-  --color-dot-chord-ink: var(--color-ink);
-  --color-dot-pass: #eae7e7;
-  --color-dot-pass-ink: color-mix(in oklab, var(--color-ink) 70%, transparent);
+  /* The neck, and the dots on it by role. Heat stays graphite: blue is for targets. */
+  --color-neck: #ffffff;
+  --color-neck-fret: #cfd4dd;
+  --color-neck-nut: #24262b;
+  --color-neck-string: rgba(36, 38, 43, 0.32);
+  --color-neck-edge: #cfd4dd;
+  --color-neck-heat: #24262b;
+  --color-inlay: #dfe3ea;
+  --color-dot-root: #24262b;
+  --color-dot-root-ink: #ffffff;
+  --color-dot-target: #2347b5;
+  --color-dot-target-ink: #ffffff;
+  --color-dot-chord: #c9d3ee;
+  --color-dot-chord-ink: #24262b;
+  --color-dot-pass: #eef1f6;
+  --color-dot-pass-ink: rgba(36, 38, 43, 0.75);
 
   /* An axis that changed since the last roll; a favorite. */
-  --color-fresh: #fff2ef;
-  --color-fresh-ink: #7c1405;
-  --color-star: var(--color-accent);
+  --color-fresh: #ffffff;
+  --color-fresh-ink: #24262b;
+  --color-star: #e2a400;
 
   /* Heatmaps and the time-by-day chart, none to most. */
-  --color-heat-0: var(--color-neutral-200);
-  --color-heat-1: var(--color-neutral-400);
-  --color-heat-2: var(--color-neutral-600);
-  --color-heat-3: var(--color-ink);
-  --color-heat-future: var(--color-neutral-300);
-  --color-heat-today: var(--color-accent);
+  --color-heat-0: #eceff4;
+  --color-heat-1: #bccaf0;
+  --color-heat-2: #6f8ad8;
+  --color-heat-3: #2347b5;
+  --color-heat-future: #dfe3ea;
+  --color-heat-today: #24262b;
 }
 
 /**
- * shadcn/ui's semantic tokens, mapped onto the Modernist palette.
+ * shadcn/ui's semantic tokens, mapped onto the palette.
  *
- * This is the whole reason shadcn is affordable here: its components read from
- * these variables, so pointing them at our palette — and at a zero radius —
- * makes every generated component come out in the design without touching its
- * source. Radius is the important one: nothing in this app has a rounded
- * corner except a fretboard note dot.
+ * shadcn's components read from these variables, so pointing them at our
+ * tokens makes every generated component come out in the design without
+ * touching its source — and follow the theme, since the tokens do.
  */
 :root {
   /* Rules, type and depth that a theme may change along with its colors. */
-  --rule-section-w: 2px;
-  --display-weight: 800;
-  --display-tracking: -0.015em;
-  --h1-size: 42px;
-  --h2-size: 34px;
-  --h2-weight: 800;
-  --h2-tracking: -0.015em;
-  --title-weight: 800;
-  --kicker-size: 11px;
-  --kicker-tracking: 0.12em;
-  --kicker-weight: 400;
-  --tab-digit-weight: 800;
-  --neck-nut-w: 2px;
-  --shadow-float: 0 0 #0000;
+  --rule-section-w: 1px;
+  --display-weight: 700;
+  --display-tracking: -0.025em;
+  --h1-size: 44px;
+  --h2-size: 32px;
+  --h2-weight: 700;
+  --h2-tracking: -0.02em;
+  --title-weight: 700;
+  --kicker-size: 11.5px;
+  --kicker-tracking: 0.08em;
+  --kicker-weight: 600;
+  --tab-digit-weight: 700;
+  --neck-nut-w: 3px;
+  --shadow-float: 0 10px 30px rgba(28, 36, 56, 0.14);
 
-  --radius: 0px;
+  --radius: 8px;
 
-  --background: var(--color-bg);
+  --background: var(--color-paper);
   --foreground: var(--color-ink);
 
-  --card: var(--color-bg);
+  --card: var(--color-paper);
   --card-foreground: var(--color-ink);
-  --popover: var(--color-bg);
+  --popover: var(--color-paper);
   --popover-foreground: var(--color-ink);
 
   --primary: var(--color-accent);
   --primary-foreground: var(--color-on-accent);
 
-  --secondary: var(--color-surface);
+  --secondary: var(--color-paper);
   --secondary-foreground: var(--color-ink);
 
   --muted: var(--color-surface);
-  --muted-foreground: color-mix(in srgb, var(--color-ink) 60%, transparent);
+  --muted-foreground: color-mix(in srgb, var(--color-ink) 64%, transparent);
 
   --accent: color-mix(in srgb, var(--color-ink) 7%, transparent);
   --accent-foreground: var(--color-ink);
 
-  --destructive: var(--color-accent-700);
-  --destructive-foreground: var(--color-bg);
+  --destructive: #b42318;
+  --destructive-foreground: var(--color-on-accent);
 
   --border: var(--color-divider);
-  --input: var(--color-divider);
+  --input: var(--color-toggle-edge);
   --ring: var(--color-accent);
 }
 

@@ -42,7 +42,7 @@ function PracticeStrip() {
   if (!loaded) return null;
   return (
     <div
-      className="flex items-center gap-10 border-b-(length:--rule-section-w) border-divider px-8 py-5"
+      className="flex items-center gap-10 px-8 pt-0 pb-5"
       data-testid="practice-strip"
     >
       <HeatmapGrid cells={cells} today={today} cellSize={13} />
@@ -87,7 +87,7 @@ export function Home() {
 
   return (
     <section>
-      <div className="flex items-end justify-between border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="flex items-end justify-between px-8 py-7">
         <div>
           <Kicker accent>Practice</Kicker>
           <h1>Your routines</h1>
@@ -101,7 +101,7 @@ export function Home() {
 
       <PracticeStrip />
 
-      <div className="px-8 py-6">
+      <div className="px-8 pt-1 pb-6">
         {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
 
         {loaded && sorted.length === 0 && (
@@ -111,13 +111,13 @@ export function Home() {
           </EmptyState>
         )}
 
-        <ul>
+        <ul className="sheet px-5 empty:hidden">
           {sorted.map((routine) => {
             const count = routine.items.length;
             return (
               <li
                 key={routine.id}
-                className="flex items-center gap-4 border-b border-rule py-4"
+                className="flex items-center gap-4 border-b border-rule py-4 last:border-b-0"
                 data-testid="routine-row"
               >
                 <FavoriteToggle

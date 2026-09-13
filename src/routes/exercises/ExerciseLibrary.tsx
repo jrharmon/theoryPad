@@ -47,7 +47,7 @@ export function ExerciseLibrary() {
 
   return (
     <section>
-      <div className="border-b-(length:--rule-section-w) border-divider px-8 py-7">
+      <div className="px-8 py-7">
         <Kicker accent>Exercises</Kicker>
         <h1>Your library</h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
@@ -56,7 +56,7 @@ export function ExerciseLibrary() {
       </div>
 
       {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-rule px-8 py-3">
+        <div className="flex flex-wrap items-center gap-2 px-8 pb-1">
           <span className="kicker mr-1">Filter</span>
           <TagFilter label="All" active={tag === null} onClick={() => setTag(null)} />
           {tags.map((t) => (
@@ -70,16 +70,16 @@ export function ExerciseLibrary() {
         </div>
       )}
 
-      <div className="px-8 py-6">
+      <div className="px-8 pt-4 pb-6">
         {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
 
         {loaded && visible.length === 0 && (
           <EmptyState title="Nothing here yet">No exercises match that tag.</EmptyState>
         )}
 
-        <ul>
+        <ul className="sheet px-5 empty:hidden">
           {visible.map(({ exercise, definition }) => (
-            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-rule py-4">
+            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-rule py-4 last:border-b-0">
               <FavoriteToggle
                 on={exercise.favorite ?? false}
                 label={definition.name}
@@ -140,7 +140,7 @@ function TagFilter({
   onClick: () => void;
 }) {
   return (
-    <Button variant={active ? 'default' : 'secondary'} size="xs" onClick={onClick}>
+    <Button variant={active ? 'default' : 'secondary'} size="xs" className="rounded-full" onClick={onClick}>
       {label}
     </Button>
   );

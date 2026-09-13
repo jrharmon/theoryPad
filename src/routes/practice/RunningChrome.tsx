@@ -18,7 +18,7 @@ export function RunningChrome({ name }: { name: string }) {
     const next = findExerciseDefinition(items[index + 1]?.definitionId ?? '')?.name;
     return (
       <div
-        className="flex items-center gap-4 bg-chrome px-6 py-3 text-chrome-ink"
+        className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink"
         data-testid="routine-chrome"
       >
         <span className="num text-[16px] font-extrabold">
@@ -29,7 +29,7 @@ export function RunningChrome({ name }: { name: string }) {
           {items.map((item, i) => (
             <span
               key={item.id}
-              className={`h-1.5 flex-1 ${i < index ? 'bg-fill' : i === index ? 'bg-fill-current' : 'bg-track'}`}
+              className={`h-1.5 flex-1 rounded-full ${i < index ? 'bg-fill' : i === index ? 'bg-fill-current' : 'bg-track'}`}
             />
           ))}
         </div>
@@ -49,7 +49,7 @@ export function RunningChrome({ name }: { name: string }) {
   const progress = running && total > 0 ? Math.min(1, phraseTick / total) : 0;
 
   return (
-    <div className="flex items-center gap-4 bg-chrome px-6 py-3 text-chrome-ink">
+    <div className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink">
       <span className="text-[13px] font-semibold">{name}</span>
       <span className="num text-[13px] opacity-75" data-testid="passes">
         {theory
@@ -61,9 +61,9 @@ export function RunningChrome({ name }: { name: string }) {
             : `${passesPlayed} passes`}
       </span>
 
-      <div className={`h-1.5 flex-1 ${theory ? '' : 'bg-track'}`} aria-hidden>
+      <div className={`h-1.5 flex-1 overflow-hidden rounded-full ${theory ? '' : 'bg-track'}`} aria-hidden>
         {!theory && (
-          <div className="h-full bg-fill" style={{ width: `${progress * 100}%` }} />
+          <div className="h-full rounded-full bg-fill" style={{ width: `${progress * 100}%` }} />
         )}
       </div>
 
@@ -71,7 +71,7 @@ export function RunningChrome({ name }: { name: string }) {
         <button
           type="button"
           onClick={() => (paused ? practice.resume() : practice.pause())}
-          className="border border-chrome-ink/40 px-3 py-1 text-[13px] font-semibold hover:bg-chrome-ink/10"
+          className="rounded-full border border-rule px-3 py-1 text-[13px] font-semibold hover:bg-chrome-ink/10"
         >
           {paused ? 'Resume' : 'Pause'}
         </button>

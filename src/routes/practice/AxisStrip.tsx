@@ -39,34 +39,33 @@ export function AxisStrip() {
 
   return (
     <div
-      className="grid border-b border-rule"
+      className="grid gap-2.5 px-8"
       style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
       data-testid="axis-strip"
     >
-      {cells.map((cell, index) => (
+      {cells.map((cell) => (
         <div
           key={cell.key}
           data-testid={`axis-${cell.key}`}
           data-fresh={cell.fresh}
           className={[
-            'px-4 py-3',
-            index > 0 ? 'border-l border-rule' : '',
+            'sheet rounded-[10px] px-4 py-3',
             cell.fresh ? 'bg-fresh text-fresh-ink' : '',
           ].join(' ')}
         >
           <p className="kicker">
             {cell.label}
-            {cell.fresh && <span className="ml-1 font-bold"> ▲ new</span>}
+            {cell.fresh && <span className="ml-1 font-bold text-accent-text"> ▲ new</span>}
           </p>
           {cell.key === 'key' ? (
             <ReferenceTrigger
               keyMode={snapshot.keyMode}
-              className="face-title text-left text-[19px] underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current"
+              className={`face-title text-left text-[19px] underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current ${cell.fresh ? 'highlight' : ''}`}
             >
               {cell.value}
             </ReferenceTrigger>
           ) : (
-            <p className="face-title text-[19px]">{cell.value}</p>
+            <p className={`face-title text-[19px] ${cell.fresh ? 'w-fit highlight' : ''}`}>{cell.value}</p>
           )}
           {cell.note && <p className="text-[11px] text-ink/55 tabular-nums">{cell.note}</p>}
         </div>

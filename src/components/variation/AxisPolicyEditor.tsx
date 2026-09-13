@@ -48,7 +48,7 @@ export function AxisPolicyEditor({
       : null;
 
   return (
-    <div className="border border-rule">
+    <div className="sheet overflow-hidden empty:hidden">
       {axes.map((id, index) => (
         <AxisRow
           key={id}

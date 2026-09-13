@@ -101,7 +101,7 @@
   font-weight: var(--kicker-weight);
   letter-spacing: var(--kicker-tracking);
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  color: color-mix(in srgb, var(--color-ink) 64%, transparent);
 }
 
 @utility kicker-accent {
@@ -120,18 +120,65 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The notebook page: graph paper under everything. */
+@utility bg-graph {
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* A marker stroke behind short text: "this changed". */
+@utility highlight {
+  background-image: linear-gradient(
+    transparent 56%,
+    var(--color-highlight) 56%,
+    var(--color-highlight) 92%,
+    transparent 92%
+  );
+  padding-inline: 2px;
+}
+
+/* One white panel per group of content — never one per row. */
+@utility sheet {
+  background-color: var(--color-paper);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 0 0 1px var(--color-rule);
+}
+
 /*
- * Nothing in this app has a rounded corner.
+ * shadcn's secondary button, as Notebook draws it: paper with a pencil edge.
  *
- * The --radius tokens are 0, but `rounded-full` does not read them, and
- * shadcn's Badge uses it. Keying off data-slot — the attribute shadcn puts on
- * every component — means a future `shadcn add` cannot quietly reintroduce a
- * radius, and leaves the fretboard's note dots (the one deliberate exception)
- * alone.
- *
- * Deliberately unlayered: a rule in @layer base loses to a utility, which is
- * exactly how `rounded-full` won the first time this was attempted.
+ * Unlayered, so it beats the variant's utilities — which is also why it skips
+ * a toggle that is on: every toggle is a secondary button, and its toggle-on
+ * classes must win. (Keyed on the class, not aria-pressed: "Hide neck" is
+ * pressed but drawn as a plain button.) The box-shadow keeps shadcn's focus
+ * ring by composing the ring variables after the edge.
  */
-[data-slot] {
-  border-radius: 0;
+[data-slot='button'][data-variant='secondary']:not(.bg-toggle-on) {
+  background: var(--color-paper);
+  box-shadow:
+    inset 0 0 0 1px var(--color-toggle-edge),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000);
+}
+[data-slot='button'][data-variant='secondary']:not(.bg-toggle-on):not(:disabled):hover {
+  background: var(--color-surface);
+}
+
+/*
+ * shadcn names its subtle hover tint `accent`, and `bg-accent` here is the
+ * brand accent — so its ghost and outline buttons hovered, and a Select's
+ * focused item filled, in solid blue under ink text. Point them back at the tint.
+ */
+[data-slot='button']:is([data-variant='ghost'], [data-variant='outline']):not(:disabled):hover,
+[data-slot='select-item']:focus {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* A tag: a soft pill that reads on a sheet as well as on the page. */
+[data-slot='badge'][data-variant='secondary'] {
+  background: var(--color-surface);
 }
