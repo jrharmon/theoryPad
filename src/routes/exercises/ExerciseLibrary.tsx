@@ -71,7 +71,7 @@ export function ExerciseLibrary() {
       )}
 
       <div className="px-8 pt-4 pb-6">
-        {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
+        {!loaded && <p className="text-[13px] text-ink/64">Loading…</p>}
 
         {loaded && visible.length === 0 && (
           <EmptyState title="Nothing here yet">No exercises match that tag.</EmptyState>

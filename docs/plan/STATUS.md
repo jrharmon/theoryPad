@@ -86,7 +86,7 @@ and can be deleted.)
 
 ## What works today
 
-- **Notebook, light and dark**: graph paper, white sheets, graphite, ballpoint blue,
+- **Notebook, light and dark**: a plain page, white sheets, graphite, ballpoint blue,
   highlighter yellow; Bricolage Grotesque and Figtree, self-hosted. **Appearance** in Settings →
   Display: System (default, follows the computer live), Light or Dark — applied before first
   paint on the next load. The exported HTML report is always light.
@@ -150,16 +150,8 @@ and which of the five ear-training drills come first.
 
 ## Open questions for the player
 
-From the restyle's gate:
-- The screens that were not mocked (doc 11 §4.5 and §As built): library, config, builder,
-  theory, routine overview and summary, report, explorer, settings — and the call to drop the
-  header rules on the paper everywhere.
-- Whether the tab reads comfortably at playing distance, in both themes; whether the yellow
-  playhead is findable at a glance without shouting.
-- Whether the graph paper helps or is noise (`--color-grid: transparent` drops it).
-- Meta text at 55–60% ink is 3.6–4.1:1 on white in light (below 4.5); raise it to the 64% muted?
-- In dark, the explorer's heaviest heat shades toward chalk; the white root dots there rely on
-  their ring.
+Later, if it starts to matter: in dark, the explorer's heaviest heat shades toward chalk, and
+the white root dots there rely on their ring (fine for now, per the restyle review).
 
 These need a guitar:
 - 35 bpm for one-note-per-string.
@@ -171,6 +163,9 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Restyle review**
+- Unmocked screens, the tab and the playhead approved. Graph paper dropped. Muted text at 64%.
 
 **Start of the restyle** (doc 11 has all of it)
 - Notebook, in light and dark; an Appearance setting (System / Light / Dark, default System);

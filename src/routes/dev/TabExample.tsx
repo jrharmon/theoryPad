@@ -70,7 +70,7 @@ export function TabExample({
           Stop
         </button>
 
-        <span className="text-[12px] text-ink/55 tabular-nums">
+        <span className="text-[12px] text-ink/64 tabular-nums">
           {phrase.bars.length} bars
           {passes > 1 ? ` × ${passes}` : ''} · {seconds.toFixed(1)}s at {transport.bpm} bpm
         </span>

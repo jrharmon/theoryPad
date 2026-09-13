@@ -36,10 +36,10 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
             ].join(' ')}
           >
             <span className="text-[15px] font-extrabold">{majorAt(position)}</span>
-            <span className={`text-[11px] ${isCorrect ? 'text-on-accent/85' : 'text-ink/55'}`}>
+            <span className={`text-[11px] ${isCorrect ? 'text-on-accent/85' : 'text-ink/64'}`}>
               {minorAt(position)}m
             </span>
-            <span className={`text-[11px] tabular-nums ${isCorrect ? 'text-on-accent/85' : 'text-ink/55'}`}>
+            <span className={`text-[11px] tabular-nums ${isCorrect ? 'text-on-accent/85' : 'text-ink/64'}`}>
               {count(position)}
             </span>
           </div>

@@ -31,7 +31,7 @@ export function TheoryBody({ instance }: { instance: TheoryInstance }) {
             <p className="num text-[34px] font-extrabold" data-testid="theory-score">
               {last.correct} of {last.total}
             </p>
-            <p className="text-[14px] text-ink/60 tabular-nums">
+            <p className="text-[14px] text-ink/64 tabular-nums">
               {formatSeconds(last.seconds)} · a new set is ready — Enter to start it.
             </p>
           </>
@@ -173,7 +173,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
       </div>
       <h3 className="face-title mb-1 mt-1 text-[26px]">{question.prompt}</h3>
       {question.kind === 'table-fill' && question.note && (
-        <p className="mb-3 text-[13px] text-ink/60">{question.note}</p>
+        <p className="mb-3 text-[13px] text-ink/64">{question.note}</p>
       )}
 
       <div className="mt-4">

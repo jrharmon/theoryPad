@@ -52,7 +52,7 @@ export function PracticeRoutine() {
   const referenceOpen = useKeyModeView((s) => s.popover || s.sheet);
   useRunnerHotkeys({ onLeave: leave, enabled: !referenceOpen });
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/55">Loading…</p>;
+  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
   if (!routine) {
     return (
       <div className="px-8 py-8">
@@ -64,7 +64,7 @@ export function PracticeRoutine() {
       </div>
     );
   }
-  if (!routineSnapshot) return <p className="px-8 py-8 text-[13px] text-ink/55">Rolling…</p>;
+  if (!routineSnapshot) return <p className="px-8 py-8 text-[13px] text-ink/64">Rolling…</p>;
 
   return (
     <section className="pb-28">
@@ -165,7 +165,7 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
           <li key={item.id} className="flex gap-3 border-b border-rule py-2.5 text-[14px] last:border-b-0">
             <span className="w-6 tabular-nums text-ink/45">{index + 1}</span>
             <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
-            <span className="tabular-nums text-ink/60">
+            <span className="tabular-nums text-ink/64">
               {item.completed === 0 && item.skipped
                 ? 'skipped'
                 : `${item.completed === 1 ? '1 pass' : `${item.completed} passes`}${item.skipped ? ' · skipped' : ''}`}

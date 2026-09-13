@@ -29,7 +29,7 @@ export function ExerciseDetail() {
   const exercise = exercises.find((e) => e.id === exerciseId);
   const definition = exercise ? findExerciseDefinition(exercise.definitionId) : undefined;
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/55">Loading…</p>;
+  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
   if (!exercise || !definition) {
     return (
       <div className="px-8 py-8">
@@ -145,7 +145,7 @@ export function ExerciseDetail() {
           )}
 
           <Kicker>What varies</Kicker>
-          <p className="mb-3 max-w-[560px] text-[13px] text-ink/60">
+          <p className="mb-3 max-w-[560px] text-[13px] text-ink/64">
             <strong>Roll</strong> picks a new value each time you open it or re-roll. <strong>Fixed</strong> pins one.{' '}
             <strong>Hold</strong> keeps whatever came up last and stays there until you press
             re-roll — for working one key for a while without pinning it forever. When rolling,
@@ -160,7 +160,7 @@ export function ExerciseDetail() {
           />
 
           {definition.axes.length === 0 && (
-            <p className="text-[13px] text-ink/60">
+            <p className="text-[13px] text-ink/64">
               This exercise is the same every time — it varies nothing.
             </p>
           )}

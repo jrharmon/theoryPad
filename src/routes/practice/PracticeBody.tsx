@@ -20,7 +20,7 @@ export function PracticeBody() {
   const instance = usePractice((s) => s.instance);
 
   if (!instance || !snapshot) {
-    return <p className="px-8 py-8 text-[13px] text-ink/55">Rolling a variation…</p>;
+    return <p className="px-8 py-8 text-[13px] text-ink/64">Rolling a variation…</p>;
   }
 
   return (

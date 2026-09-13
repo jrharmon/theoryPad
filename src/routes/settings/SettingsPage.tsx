@@ -116,7 +116,7 @@ export function SettingsPage() {
               onChange={(e) => setVolume(Number(e.target.value))}
               className="w-[220px] accent-[var(--color-accent)]"
             />
-            <span className="w-14 text-[13px] tabular-nums text-ink/60">
+            <span className="w-14 text-[13px] tabular-nums text-ink/64">
               {audio.masterVolumeDb > 0 ? '+' : ''}
               {audio.masterVolumeDb} dB
             </span>
@@ -165,7 +165,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
     <div className="grid grid-cols-[180px_1fr] items-start gap-4">
       <div>
         <p className="text-[14px] font-semibold">{label}</p>
-        {hint && <p className="text-[12px] text-ink/55">{hint}</p>}
+        {hint && <p className="text-[12px] text-ink/64">{hint}</p>}
       </div>
       <div>{children}</div>
     </div>
@@ -263,7 +263,7 @@ function DataSection() {
 
   return (
     <Section title="Your data">
-      <p className="text-[13px] text-ink/60">
+      <p className="text-[13px] text-ink/64">
         Everything lives in this browser. Export to back it up or move it to another device.
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -297,11 +297,11 @@ function DataSection() {
             <div className="space-y-4 text-[13px]">
               <div>
                 <p className="font-semibold">Merge — keeps whichever copy was changed last</p>
-                <p className="text-ink/60" data-testid="merge-summary">{describe(pending.merge)}</p>
+                <p className="text-ink/64" data-testid="merge-summary">{describe(pending.merge)}</p>
               </div>
               <div>
                 <p className="font-semibold">Replace — this browser becomes exactly the file</p>
-                <p className="text-ink/60" data-testid="replace-summary">{describe(pending.replace)}</p>
+                <p className="text-ink/64" data-testid="replace-summary">{describe(pending.replace)}</p>
               </div>
             </div>
             <DialogFooter>

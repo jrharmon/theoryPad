@@ -248,11 +248,11 @@ export function FretboardExplorer() {
           <Kicker>{layer === 'recent' ? 'Last 30 days' : 'All time'}</Kicker>
           {loaded && (
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">
-              <dt className="text-ink/60">Spots played</dt>
+              <dt className="text-ink/64">Spots played</dt>
               <dd className="tabular" data-testid="spots-played">
                 {summary.touched} of {summary.total}
               </dd>
-              <dt className="text-ink/60">Frets never played</dt>
+              <dt className="text-ink/64">Frets never played</dt>
               <dd className="tabular" data-testid="frets-never">
                 {summary.untouchedFrets.length === 0
                   ? 'none'
@@ -260,7 +260,7 @@ export function FretboardExplorer() {
                     ? 'all of them, so far'
                     : fretRuns(summary.untouchedFrets)}
               </dd>
-              <dt className="text-ink/60">Keys and modes</dt>
+              <dt className="text-ink/64">Keys and modes</dt>
               <dd className="tabular">{keyModesPlayed} of 84</dd>
             </dl>
           )}

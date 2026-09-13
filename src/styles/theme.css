@@ -71,7 +71,8 @@
   /* Grounds: the page, a sheet on it, a ruled line inside a sheet. */
   --color-paper: #ffffff;
   --color-rule: #e2e5eb;
-  --color-grid: rgba(36, 38, 43, 0.045);
+  /* Graph paper, dropped at review: it added little. Its light value was rgba(36, 38, 43, 0.045). */
+  --color-grid: transparent;
   --color-highlight: #ffe14d;
 
   /* Accent in its other jobs. */
@@ -229,7 +230,7 @@
   --color-paper: #1d2027;
   --color-surface: #252932;
   --color-ink: #e4e7ee;
-  --color-grid: rgba(228, 231, 238, 0.035);
+  --color-grid: transparent; /* was rgba(228, 231, 238, 0.035) */
   --color-highlight: rgba(255, 225, 77, 0.34);
 
   --color-accent: #4a6ae0;

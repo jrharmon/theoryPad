@@ -37,7 +37,7 @@ export function KeyModeGrid({
       >
         <span />
         {columns.map((c) => (
-          <span key={c} className="text-center text-ink/55">
+          <span key={c} className="text-center text-ink/64">
             {preferredTonic(c, 'ionian')}
           </span>
         ))}

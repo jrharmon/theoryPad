@@ -52,7 +52,7 @@ export function RoutineBuilder() {
     [routine, instrument],
   );
 
-  if (!routines.loaded) return <p className="px-8 py-8 text-[13px] text-ink/55">Loading…</p>;
+  if (!routines.loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
   if (!routine) {
     return (
       <div className="px-8 py-8">
@@ -78,7 +78,7 @@ export function RoutineBuilder() {
             />
             <NameField routine={routine} onRename={(name) => void routines.rename(routine.id, name)} />
           </div>
-          <p className="mt-1 text-[13px] text-ink/60 tabular-nums">
+          <p className="mt-1 text-[13px] text-ink/64 tabular-nums">
             {routine.items.length === 0
               ? 'Add the exercises it plays, in order.'
               : `${routine.items.length} exercise${routine.items.length === 1 ? '' : 's'} · about ${formatDuration(total)}`}
@@ -103,7 +103,7 @@ export function RoutineBuilder() {
 
       <div className="px-8 pt-1 pb-6">
         <Kicker>Key and mode</Kicker>
-        <p className="mb-3 mt-1 text-[13px] text-ink/60">
+        <p className="mb-3 mt-1 text-[13px] text-ink/64">
           Rolled once when the routine starts, and shared by every exercise in it.
         </p>
         <div className="max-w-[900px]">
@@ -124,7 +124,7 @@ export function RoutineBuilder() {
             Add exercise
           </Button>
         </div>
-        <p className="mb-3 mt-1 max-w-[640px] text-[13px] text-ink/60">
+        <p className="mb-3 mt-1 max-w-[640px] text-[13px] text-ink/64">
           Each is its own copy: changing it here leaves the library alone, and the same exercise
           can go in more than once. Its passes still count toward that exercise’s history.
         </p>
@@ -199,7 +199,7 @@ function ItemRow({
 
   if (!definition) {
     return (
-      <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-[13px] text-ink/55">
+      <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-[13px] text-ink/64">
         An exercise that no longer exists ({item.definitionId}) — it will be left out.
         <Button variant="secondary" size="xs" onClick={() => void routines.removeItem(routine.id, item.id)}>
           Remove
@@ -222,7 +222,7 @@ function ItemRow({
       <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
       <div className="min-w-0">
         <p className="face-title text-[15px]">{definition.name}</p>
-        <p className="truncate text-[12px] text-ink/55">{described.join(' · ')}</p>
+        <p className="truncate text-[12px] text-ink/64">{described.join(' · ')}</p>
       </div>
 
       <div className="flex items-center gap-1">
@@ -336,7 +336,7 @@ function AddExerciseDialog({
                 <span className="w-4 text-star">{exercise.favorite ? '★' : ''}</span>
                 <span className="min-w-0 flex-1">
                   <span className="face-title block text-[15px]">{definition.name}</span>
-                  <span className="block text-[12px] text-ink/55">{definition.summary}</span>
+                  <span className="block text-[12px] text-ink/64">{definition.summary}</span>
                 </span>
               </button>
             </li>

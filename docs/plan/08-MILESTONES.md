@@ -397,6 +397,9 @@ ballpoint blue. Doc 11 §Decided at the start has the rest.
   unlayered rules point them at the subtle tint.
 - **A stale `vite preview` on :4173 makes E2E test old code** — Playwright reuses it. Build first.
 
+**Review.** Screens, tab and playhead approved as built. The graph paper was dropped (it added
+little) and muted text raised to 64% ink so it clears 4.5:1.
+
 **Deliverable:** the same app, every screen, in Notebook — light and dark, following the
 computer or chosen in Settings.
 

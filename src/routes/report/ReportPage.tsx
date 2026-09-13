@@ -170,7 +170,7 @@ export function ReportPage() {
               onChange={(e) => e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))}
               className="border border-rule bg-paper px-2 py-1"
             />
-            <span className="text-ink/55">to</span>
+            <span className="text-ink/64">to</span>
             <input
               type="date"
               aria-label="To"
@@ -233,7 +233,7 @@ export function ReportPage() {
                             className={
                               sort.column === column.id
                                 ? 'kicker text-ink'
-                                : 'kicker text-ink/55 hover:text-ink'
+                                : 'kicker text-ink/64 hover:text-ink'
                             }
                             onClick={() => sortBy(column.id)}
                           >

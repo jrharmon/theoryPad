@@ -37,12 +37,13 @@ decisions (notably its `cleanTempo` model, which we dropped).
 
 ## Style
 
-- Notebook: a graph-paper page, white **sheets** for grouped content (one sheet per group,
+- Notebook: a plain page, white **sheets** for grouped content (one sheet per group,
   never a card per row), graphite ink, ballpoint blue for actions and targets, highlighter
   yellow only for "you are here" (playhead) and "this changed" (fresh axis). 8px controls,
   12px panels, pill toggles; the floating transport is the only shadow. Bricolage Grotesque
   for headings and titles (`face-title`), Figtree for everything else; numbers read while
-  playing use `num`. Small-caps section labels use `.kicker`.
+  playing use `num`. Small-caps section labels use `.kicker`. Muted text is `text-ink/64`
+  (4.5:1 on white); anything fainter is only for hints.
 - **Light and dark.** Every color is a token with a light value in `@theme` and a dark value
   under `:root[data-theme="dark"]` in `theme.css`. Style through tokens; a component must not
   know which theme is on. `dark:` only for what a token cannot express. The Appearance

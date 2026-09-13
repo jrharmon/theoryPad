@@ -37,7 +37,7 @@ function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }
             <p className={cn('font-extrabold', size === 'full' ? 'text-[22px]' : 'text-[17px]', isSignature && 'text-accent')}>
               {note}
             </p>
-            <p className={cn('tabular text-[11px]', isSignature ? 'text-accent' : 'text-ink/55')}>
+            <p className={cn('tabular text-[11px]', isSignature ? 'text-accent' : 'text-ink/64')}>
               {degrees[i]!.label}
             </p>
           </div>
@@ -89,7 +89,7 @@ export function KeyModeView({
         <div className="grid grid-cols-7 border-b border-rule">
           {chords.map((chord, i) => (
             <div key={chord.root} className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-rule')}>
-              <p className="tabular text-[11px] text-ink/55">{romanNumeral(chord)}</p>
+              <p className="tabular text-[11px] text-ink/64">{romanNumeral(chord)}</p>
               <p className="text-[13px] font-bold">{chord.triadSymbol}</p>
             </div>
           ))}
@@ -120,7 +120,7 @@ export function KeyModeView({
           <thead>
             <tr className="border-b-(length:--rule-section-w) border-divider">
               {['', 'Triad', '7th', '9th', 'Function'].map((h) => (
-                <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink/55">
+                <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink/64">
                   {h}
                 </th>
               ))}
@@ -133,7 +133,7 @@ export function KeyModeView({
                 className={cn('border-b border-rule', chord.function !== 'other' && 'bg-neutral-200')}
                 data-function={chord.function}
               >
-                <td className="tabular py-1.5 pr-4 pl-1 text-ink/60">{romanNumeral(chord)}</td>
+                <td className="tabular py-1.5 pr-4 pl-1 text-ink/64">{romanNumeral(chord)}</td>
                 <td className="py-1.5 pr-4 font-bold">{chord.triadSymbol}</td>
                 <td className="py-1.5 pr-4">{chord.seventhSymbol}</td>
                 <td className="py-1.5 pr-4">{chord.ninthSymbol ?? '—'}</td>
@@ -152,7 +152,7 @@ export function KeyModeView({
               <span className="font-bold">
                 {progression.degrees.map((d) => romanNumeral(chordOnDegree(keyMode, d))).join(' – ')}
               </span>
-              <span className="ml-3 text-ink/60">
+              <span className="ml-3 text-ink/64">
                 {progression.degrees.map((d) => chordOnDegree(keyMode, d).triadSymbol).join(' – ')}
               </span>
             </p>

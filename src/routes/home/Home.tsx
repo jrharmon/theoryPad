@@ -102,7 +102,7 @@ export function Home() {
       <PracticeStrip />
 
       <div className="px-8 pt-1 pb-6">
-        {!loaded && <p className="text-[13px] text-ink/55">Loading…</p>}
+        {!loaded && <p className="text-[13px] text-ink/64">Loading…</p>}
 
         {loaded && sorted.length === 0 && (
           <EmptyState title="No routines yet">
@@ -132,7 +132,7 @@ export function Home() {
                   >
                     {routine.name}
                   </Link>
-                  <p className="text-[13px] text-ink/60 tabular-nums">
+                  <p className="text-[13px] text-ink/64 tabular-nums">
                     {count === 0
                       ? 'No exercises yet'
                       : `${count} exercise${count === 1 ? '' : 's'} · about ${formatDuration(durations.get(routine.id) ?? 0)}`}

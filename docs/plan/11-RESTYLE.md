@@ -41,6 +41,16 @@ https://claude.ai/code/artifact/e3b03498-2fcf-4da8-901a-f8ebddb1544d.
   TabStaff ones; the Fretboard one stays, see below). The E2E tests are untouched.
 - R2's proof is a pixel comparison of the before and after screenshot sets.
 
+## Gate review (2026-09-13)
+
+- The unmocked screens, the tab at playing distance and the playhead: approved as built.
+- **The graph paper is dropped** — it did not look bad but added little. `--color-grid` is
+  `transparent` in both themes (the old values are in comments in `theme.css`); the page is the
+  plain `--color-bg`, and sheets still read against it.
+- **Muted text is 64% ink.** Every `text-ink/55` and `/60` became `text-ink/64` (4.67:1 on white,
+  4.53 on the page in light). 50% and below stay, for hints.
+- The dark explorer heat, with white root dots ringed on the lightest cells: fine for now.
+
 ## As built — where the code differs from this spec, and why
 
 - **Toggle-on ring** is Tailwind's `inset-ring inset-ring-toggle-on-ring`, not `ring-1 ring-inset`:

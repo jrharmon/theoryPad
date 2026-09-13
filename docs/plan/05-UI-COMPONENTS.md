@@ -9,10 +9,11 @@ shadcn/ui.
 
 **Rules of use:**
 
-- A graph-paper page (`bg-graph`), white **sheets** (`sheet`) for grouped content — one sheet
-  per group, never a card per row. Headers, briefs and kickers sit on the paper; 1px rules
+- A plain page (`bg-graph` — its grid is off since the review; `--color-grid` turns it back
+  on), white **sheets** (`sheet`) for grouped content — one sheet per group, never a card per row. Headers, briefs and kickers sit on the paper; 1px rules
   (`border-rule`) sit inside sheets.
-- Graphite ink. Ballpoint blue for actions and targets. Highlighter yellow only for "you are
+- Graphite ink; muted text at `text-ink/64`, which clears 4.5:1 — fainter only for hints.
+  Ballpoint blue for actions and targets. Highlighter yellow only for "you are
   here" (the playhead) and "this changed" (a fresh axis value, `highlight`). Errors use
   `--destructive` red, never the blue.
 - 8px controls (`--radius-control`), 12px panels (`--radius-panel`), pill toggles

@@ -176,7 +176,7 @@ function FretboardRow({
   return (
     <>
       <div
-        className="num grid place-items-center text-[10px] text-ink/55"
+        className="num grid place-items-center text-[10px] text-ink/64"
         style={{ height: rowHeight }}
         data-testid={`string-label-${stringIndex}`}
       >

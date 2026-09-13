@@ -72,7 +72,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
             +
           </Button>
           {targetTempo !== null && currentTempo !== targetTempo && (
-            <span className="ml-1 text-[12px] text-ink/55 tabular-nums">target {targetTempo}</span>
+            <span className="ml-1 text-[12px] text-ink/64 tabular-nums">target {targetTempo}</span>
           )}
         </div>
       )}

@@ -53,7 +53,7 @@ export function PracticeExercise() {
     setSettingsOpen(true);
   };
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/55">Loading…</p>;
+  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
   if (!exercise || !definition) {
     return (
       <div className="px-8 py-8">

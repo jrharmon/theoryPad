@@ -178,7 +178,7 @@ function ArticulationLegend() {
       {marks.map(([glyph, meaning]) => (
         <div key={meaning} className="flex items-baseline gap-2">
           <dt className="font-extrabold text-accent-text">{glyph}</dt>
-          <dd className="text-[12px] text-ink/60">{meaning}</dd>
+          <dd className="text-[12px] text-ink/64">{meaning}</dd>
         </div>
       ))}
     </dl>
@@ -236,7 +236,7 @@ function Section({
     <section className="scroll-mt-14 border-b border-rule px-8 py-7">
       <div className="mb-4">
         <p className="kicker">{title}</p>
-        {note && <p className="text-[12px] text-ink/55">{note}</p>}
+        {note && <p className="text-[12px] text-ink/64">{note}</p>}
       </div>
       {children}
     </section>
@@ -285,8 +285,8 @@ function TheoryTable() {
             <td className="py-2 font-semibold">{chord.degree.label}</td>
             <td className="py-2 font-semibold">{chord.triadSymbol}</td>
             <td className="py-2">{chord.seventhSymbol}</td>
-            <td className="py-2 text-ink/60">{chord.ninthSymbol ?? '—'}</td>
-            <td className="py-2 text-ink/60">
+            <td className="py-2 text-ink/64">{chord.ninthSymbol ?? '—'}</td>
+            <td className="py-2 text-ink/64">
               {chord.function === 'other' ? '' : chord.function}
             </td>
           </tr>

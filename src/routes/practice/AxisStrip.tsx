@@ -67,7 +67,7 @@ export function AxisStrip() {
           ) : (
             <p className={`face-title text-[19px] ${cell.fresh ? 'w-fit highlight' : ''}`}>{cell.value}</p>
           )}
-          {cell.note && <p className="text-[11px] text-ink/55 tabular-nums">{cell.note}</p>}
+          {cell.note && <p className="text-[11px] text-ink/64 tabular-nums">{cell.note}</p>}
         </div>
       ))}
     </div>
