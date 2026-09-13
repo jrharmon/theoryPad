@@ -1,9 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-13, the Notebook restyle built and **at the gate** — on branch
-`restyle-notebook` (R1–R6), not yet merged or pushed. Written as a hand-off: a fresh session
-should be able to finish the restyle's review, then start M7, from this file, `CLAUDE.md`, and
-the plan docs it points to.
+**Last updated:** 2026-09-13, the Notebook restyle reviewed, merged and live. Written as a
+hand-off: a fresh session should be able to start M7 from this file, `CLAUDE.md`, and the plan
+docs it points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -17,14 +16,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M5 — Routines, settings, export/import | ✅ merged, live |
 | M4 — Theory | ✅ merged, live |
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
-| **Restyle — Notebook, light and dark** | **at the gate** — branch `restyle-notebook`; doc 11 |
-| M7 — Audio richness: backing, ear training, improv | after the restyle merges — doc 08 has the tasks |
+| Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
+| **M7 — Audio richness: backing, ear training, improv** | **next** — doc 08 has the tasks |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. `main` has M0–M6; `restyle-notebook` has the restyle
-(six commits, R1–R6) waiting for review, then a fast-forward merge and push. 723 unit tests,
-51 E2E, `pnpm check` green on the branch. (A stale local `m6-progress` branch is fully merged
-and can be deleted.)
+M5 was deliberately built before M4. Everything is on `main`; the merged local branches
+(`m6-progress`, `restyle-notebook`) can be deleted. 723 unit tests, 51 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -136,10 +133,7 @@ and can be deleted.)
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: the restyle's review, then M7
-
-At the gate: the player reviews the restyle (doc 11 §7.3 and the questions below), then merge
-`restyle-notebook` into `main` (fast-forward), push, and check CI **and** the deploy.
+## Next: M7
 
 
 Doc 08 §M7: backing tracks (model, YouTube source with rate, control, track management and

@@ -1,6 +1,6 @@
 # 11 — Restyle: Notebook, light and dark
 
-**Status:** built 2026-09-13 (R1–R6), at the gate — see *As built* below. Its own milestone
+**Status:** built, reviewed and merged 2026-09-13 — see *Gate review* and *As built* below. Its own milestone
 (branch `restyle-notebook`) between M6 and M7. Everything needed to implement it from a fresh session is
 in this file; the mockups are `11-RESTYLE-mockups.html` next to it (open it in a browser, pick
 **C · Notebook**, press **D** for dark) and published at

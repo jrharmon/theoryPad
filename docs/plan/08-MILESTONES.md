@@ -362,7 +362,7 @@ didn't know?
 
 ---
 
-## Restyle — Notebook, light and dark ✅ *built (2026-09-13), at the gate*
+## Restyle — Notebook, light and dark ✅ *complete (2026-09-13), reviewed*
 
 The whole spec — decisions, rules, token values for both themes, per-file changes — is
 [`11-RESTYLE.md`](11-RESTYLE.md); the mockups are `11-RESTYLE-mockups.html` (pick **C ·
