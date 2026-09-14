@@ -1,7 +1,7 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import type { TheoryPadDB } from '../db';
-import type { Exercise, Rep, Routine, Session, Settings, Uuid } from '../entities';
+import type { Exercise, Rep, Routine, Session, Settings, Uuid, Video } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import type {
@@ -9,6 +9,7 @@ import type {
   NewRep,
   NewRoutine,
   NewSession,
+  NewVideo,
   Repositories,
 } from './types';
 
@@ -216,6 +217,38 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
         const row: Settings = { ...settings, key: 'settings', updatedAt: stamp() };
         await database.settings.put(row);
         return row;
+      },
+    },
+
+    videos: {
+      async add(video: NewVideo): Promise<Video> {
+        const at = stamp();
+        const row: Video = { ...video, id: newId(), createdAt: at, updatedAt: at };
+        await database.videos.add(row);
+        return row;
+      },
+
+      async byId(id) {
+        const row = await database.videos.get(id);
+        return row?.deletedAt === undefined ? row : undefined;
+      },
+
+      async all() {
+        return live(await database.videos.toArray());
+      },
+
+      async update(id, changes) {
+        const existing = await database.videos.get(id);
+        if (!existing) throw new Error(`No video ${id}`);
+        const row: Video = { ...existing, ...changes, updatedAt: stamp() };
+        await database.videos.put(row);
+        return row;
+      },
+
+      async softDelete(id) {
+        const existing = await database.videos.get(id);
+        if (!existing) return;
+        await database.videos.put({ ...existing, deletedAt: stamp(), updatedAt: stamp() });
       },
     },
   };

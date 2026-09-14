@@ -1,7 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import type { PracticeDay } from '@/domain/progress';
 import { rollupDays } from '@/domain/progress';
-import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from './entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Video } from './entities';
+import { FIRST_RUN_VIDEOS } from './seed/videos';
 
 /**
  * The only place `dexie` is imported. Everything else goes through a
@@ -16,6 +17,7 @@ export class TheoryPadDB extends Dexie {
   exerciseStats!: Table<ExerciseStats, string>;
   settings!: Table<Settings, string>;
   practiceDays!: Table<PracticeDay, string>;
+  videos!: Table<Video, string>;
 
   constructor(name = 'theorypad') {
     super(name);
@@ -52,6 +54,17 @@ export class TheoryPadDB extends Dexie {
         const reps = await transaction.table<Rep>('reps').toArray();
         await transaction.table<PracticeDay>('practiceDays').bulkPut(rollupDays(reps));
       });
+
+    // Milestone 7: backing tracks and reference videos. Few enough to read
+    // whole and match in memory, so nothing beyond the id is indexed. The first
+    // track is added once — here for an existing database, on populate for a
+    // new one — and after that it is a row like any other.
+    this.version(5)
+      .stores({ videos: 'id, updatedAt' })
+      .upgrade((transaction) => transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]));
+    this.on('populate', (transaction) => {
+      void transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]);
+    });
   }
 }
 

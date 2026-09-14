@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { TheoryPadDB } from './db';
-import type { Exercise, Rep, Routine, Row, Session, Settings } from './entities';
+import type { Exercise, Rep, Routine, Row, Session, Settings, Video } from './entities';
 import { withDefaults } from './repositories/dexie';
 import { rebuildStats } from './stats';
 import { rollupDays } from '@/domain/progress';
@@ -26,13 +26,22 @@ export interface TheoryPadExport {
     sessions: Session[];
     reps: Rep[];
     settings: Settings | null;
+    /** Absent from files made before M7 — which then leave the stored videos alone. */
+    videos?: Video[];
   };
 }
 
 export async function exportData(database: TheoryPadDB, now = Date.now()): Promise<TheoryPadExport> {
   return database.transaction(
     'r',
-    [database.exercises, database.routines, database.sessions, database.reps, database.settings],
+    [
+      database.exercises,
+      database.routines,
+      database.sessions,
+      database.reps,
+      database.settings,
+      database.videos,
+    ],
     async () => ({
       formatVersion: EXPORT_FORMAT_VERSION,
       exportedAt: now,
@@ -43,6 +52,7 @@ export async function exportData(database: TheoryPadDB, now = Date.now()): Promi
         sessions: await database.sessions.toArray(),
         reps: await database.reps.toArray(),
         settings: (await database.settings.get('settings')) ?? null,
+        videos: await database.videos.toArray(),
       },
     }),
   );
@@ -81,6 +91,7 @@ const schema = z.object({
       }),
     ),
     settings: z.object({ key: z.literal('settings') }).passthrough().nullable(),
+    videos: z.array(row.extend({ videoId: z.string(), scope: z.object({ kind: z.string() }).passthrough() })).optional(),
   }),
 });
 
@@ -112,11 +123,14 @@ export interface ImportSummary {
   routines: TableSummary;
   sessions: TableSummary;
   reps: TableSummary;
+  videos: TableSummary;
   settings: 'kept' | 'replaced';
 }
 
-type Tables = Pick<TheoryPadDB, 'exercises' | 'routines' | 'sessions' | 'reps'>;
-const TABLES = ['exercises', 'routines', 'sessions', 'reps'] as const;
+type Tables = Pick<TheoryPadDB, 'exercises' | 'routines' | 'sessions' | 'reps' | 'videos'>;
+const TABLES = ['exercises', 'routines', 'sessions', 'reps', 'videos'] as const;
+
+const NO_CHANGE: TableSummary = { added: 0, updated: 0, removed: 0 };
 
 /** Merge keeps whichever copy of a row was changed last; replace takes the file's. */
 function summarize(existing: Row[], incoming: Row[], mode: ImportMode): TableSummary {
@@ -152,8 +166,13 @@ export async function planImport(
 ): Promise<ImportSummary> {
   const summary = { mode } as ImportSummary;
   for (const table of TABLES) {
+    const incoming = file.data[table];
+    if (!incoming) {
+      summary[table] = NO_CHANGE;
+      continue;
+    }
     const existing = (await (database as Tables)[table].toArray()) as Row[];
-    summary[table] = summarize(existing, file.data[table], mode);
+    summary[table] = summarize(existing, incoming, mode);
   }
   summary.settings = settingsOutcome(await database.settings.get('settings'), file.data.settings, mode);
   return summary;
@@ -177,6 +196,7 @@ export async function applyImport(
       database.routines,
       database.sessions,
       database.reps,
+      database.videos,
       database.settings,
       database.exerciseStats,
       database.practiceDays,
@@ -188,7 +208,8 @@ export async function applyImport(
           clear(): Promise<void>;
           bulkPut(rows: Row[]): Promise<unknown>;
         };
-        const incoming = file.data[table] as Row[];
+        const incoming = file.data[table] as Row[] | undefined;
+        if (!incoming) continue;
         if (mode === 'replace') {
           await store.clear();
           await store.bulkPut(incoming);

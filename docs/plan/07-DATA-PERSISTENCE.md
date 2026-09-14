@@ -38,7 +38,7 @@ class TheoryPadDB extends Dexie {
       routines: 'id, updatedAt, deletedAt',
       sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
       reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
-      videos: 'id, scopeExerciseId, [scopeExerciseId+trackKeyMode], trackKeyMode, updatedAt',
+      videos: 'id, updatedAt', // v5, M7
       exerciseStats: 'exerciseId, updatedAt',
       playerStats: 'key',
       settings: 'key',
@@ -64,13 +64,12 @@ That's the whole tax. It costs three fields and buys the ability to add a sync b
 as a **new adapter behind the repository interface**, rather than a schema migration and a
 rewrite of every call site.
 
-### A note on indexing the backing pool
+### A note on indexing the videos
 
-Dexie cannot index a nested object, so `Video` carries two flattened, derived columns
-maintained by its repository: `trackKeyMode` (`"D:dorian"`) and `scopeExerciseId` (the exercise
-id, or `""` for shared). The compound index `[scopeExerciseId+trackKeyMode]` makes both steps of
-the resolution order a direct lookup rather than a scan. Derived columns are written by the
-repository on every save, never by callers — the same rule as `updatedAt`.
+_As built (M7):_ the first spec gave the table two derived index columns (`trackKeyMode`,
+`scopeExerciseId`) so lookups could be direct. There will be tens of videos, not thousands, so
+the table is read whole and matched in memory (`src/data/videos.ts`), and only the id is
+indexed. Add derived columns if that ever changes — written by the repository, never by callers.
 
 ### Migrations
 

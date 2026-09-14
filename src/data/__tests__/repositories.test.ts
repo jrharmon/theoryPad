@@ -6,7 +6,8 @@ import { TheoryPadDB } from '../db';
 import { createRepositories } from '../repositories/dexie';
 import { createMemoryRepositories } from '../repositories/memory';
 import type { Repositories } from '../repositories/types';
-import type { NewExercise, NewRep, NewSession } from '../repositories/types';
+import type { NewExercise, NewRep, NewSession, NewVideo } from '../repositories/types';
+import { FIRST_RUN_VIDEOS } from '../seed/videos';
 
 const exerciseFixture: NewExercise = {
   definitionId: 'modes-through-key',
@@ -275,6 +276,34 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
       });
     });
 
+    describe('videos', () => {
+      const track: NewVideo = {
+        videoId: 'abcdefghijk',
+        title: 'D Dorian funk',
+        scope: { kind: 'shared' },
+        playAlong: true,
+        startSec: 12.5,
+        keyMode: { tonic: 'D' as never, mode: 'dorian' },
+        bpm: 96,
+        beatsPerBar: 4,
+        tags: ['funk'],
+      };
+
+      it('adds, updates and soft-deletes, and lists only live ones', async () => {
+        const before = (await repos.videos.all()).length;
+        const added = await repos.videos.add(track);
+        expect(await repos.videos.byId(added.id)).toEqual(added);
+
+        const updated = await repos.videos.update(added.id, { bpm: 98 });
+        expect(updated.bpm).toBe(98);
+        expect(updated.title).toBe('D Dorian funk');
+
+        await repos.videos.softDelete(added.id);
+        expect(await repos.videos.byId(added.id)).toBeUndefined();
+        expect(await repos.videos.all()).toHaveLength(before);
+      });
+    });
+
     describe('settings', () => {
       it('returns defaults on first read, and persists them', async () => {
         const first = await repos.settings.get();
@@ -361,6 +390,51 @@ describe('the v4 migration', () => {
     expect(await after.practiceDays.toArray()).toEqual([
       { date: '2026-09-10', seconds: 120, passes: 1, keyModes: { 'A aeolian': 1 }, frets: {} },
     ]);
+    await after.delete();
+  });
+});
+
+describe('the first-run track', () => {
+  it('is in a new database once, as an ordinary row', async () => {
+    const database = new TheoryPadDB(`first-run-${Math.random()}`);
+    const repos = createRepositories(database);
+    const videos = await repos.videos.all();
+    expect(videos).toEqual([...FIRST_RUN_VIDEOS]);
+    expect(videos[0]).not.toHaveProperty('builtIn');
+    await database.delete();
+  });
+
+  it('stays deleted when deleted', async () => {
+    const name = `first-run-deleted-${Math.random()}`;
+    const database = new TheoryPadDB(name);
+    const [first] = FIRST_RUN_VIDEOS;
+    await createRepositories(database).videos.softDelete(first!.id);
+    database.close();
+
+    const reopened = new TheoryPadDB(name);
+    expect(await createRepositories(reopened).videos.all()).toEqual([]);
+    await reopened.delete();
+  });
+
+  it('is added by the v5 migration to a database that predates it', async () => {
+    const name = `theorypad-migration-v5-${Date.now()}`;
+    const before = new Dexie(name);
+    before.version(4).stores({
+      exercises: 'id, definitionId, updatedAt, deletedAt',
+      sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
+      reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
+      exerciseStats: 'exerciseId, definitionId, updatedAt',
+      settings: 'key',
+      routines: 'id, updatedAt, deletedAt',
+      practiceDays: 'date',
+    });
+    await before.open();
+    await before.table('exercises').add({ ...exerciseFixture, id: 'kept', createdAt: 1, updatedAt: 1 });
+    before.close();
+
+    const after = new TheoryPadDB(name);
+    expect(await after.videos.toArray()).toEqual([...FIRST_RUN_VIDEOS]);
+    expect(await after.exercises.get('kept')).toBeDefined();
     await after.delete();
   });
 });

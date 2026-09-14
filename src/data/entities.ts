@@ -1,4 +1,4 @@
-import type { ModeName, PitchClass } from '@/domain/music';
+import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
@@ -20,12 +20,50 @@ export interface Row {
   deletedAt?: number;
 }
 
-export interface VideoRef {
-  provider: 'youtube';
+/**
+ * A YouTube video: a backing track, or a reference video.
+ *
+ * Shared ones are backing tracks any exercise or routine can play along to,
+ * offered where the session's key and mode match. An exercise's own are
+ * offered to that exercise alone — a custom backing track when `playAlong` is
+ * on, a lesson or demo to watch when it is off. Every video is equal: there is
+ * no built-in flag, and all of them are edited, deleted and exported alike.
+ */
+export interface Video extends Row {
+  /** The YouTube video id — not this row's id. */
   videoId: string;
-  startSec?: number;
+  title: string;
+  scope: VideoScope;
+  /** Off makes an exercise's own video a reference video. Shared ones are always on. */
+  playAlong: boolean;
+  /** Seconds into the video where bar 1 begins, after any intro. */
+  startSec: number;
+  /** Where a loop jumps back from; the end of the video if absent. */
   endSec?: number;
-  title?: string;
+  /** Required for a shared track. An exercise's own track without one fits any key. */
+  keyMode?: KeyMode;
+  /** The recording's own tempo. Required to play along. */
+  bpm?: number;
+  beatsPerBar: number;
+  /** For display: "modal vamp", "ii-V-i", "12-bar blues". */
+  progression?: string;
+  /** Free-form style: "rock", "funk", "drums only". */
+  tags: string[];
+}
+
+export type VideoScope = { kind: 'shared' } | { kind: 'exercise'; exerciseId: Uuid };
+
+/**
+ * What plays instead of the synth notes. Absent means nothing does: the synth
+ * plays the notes, with the metronome. Never chosen automatically.
+ */
+export type BackingChoice = { kind: 'drone' } | { kind: 'video'; id: Uuid };
+
+/** Narrows which shared tracks the backing menu offers. */
+export interface BackingCriteria {
+  /** Every one of these, compared without case. */
+  tags: string[];
+  bpm?: { min: number; max: number };
 }
 
 /**
@@ -48,7 +86,9 @@ export interface Exercise extends Row {
   defaultReps: number;
   /** Pinned to the top of the library. */
   favorite?: boolean;
-  video?: VideoRef;
+  /** The backing last chosen for it; absent is the synth notes. */
+  backing?: BackingChoice;
+  backingCriteria?: BackingCriteria;
   notes?: string;
 }
 
@@ -83,6 +123,9 @@ export interface Routine extends Row {
   /** Pinned to the top of the list. */
   favorite?: boolean;
   lastPlayedAt?: number;
+  /** One track (or the drone) through the whole routine; shared tracks only. */
+  backing?: BackingChoice;
+  backingCriteria?: BackingCriteria;
 }
 
 export interface Session extends Row {

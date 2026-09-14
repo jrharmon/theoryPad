@@ -1,10 +1,11 @@
 import type { DayKey, PracticeDay } from '@/domain/progress';
-import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Uuid } from '../entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Uuid, Video } from '../entities';
 
 export type NewExercise = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewRoutine = Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewSession = Omit<Session, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewRep = Omit<Rep, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewVideo = Omit<Video, 'id' | 'createdAt' | 'updatedAt'>;
 
 export interface ExerciseRepository {
   add(exercise: NewExercise): Promise<Exercise>;
@@ -55,6 +56,15 @@ export interface PracticeDayRepository {
   inRange(from: DayKey, to: DayKey): Promise<PracticeDay[]>;
 }
 
+/** Backing tracks and reference videos. `all` is every live one; callers match in memory. */
+export interface VideoRepository {
+  add(video: NewVideo): Promise<Video>;
+  byId(id: Uuid): Promise<Video | undefined>;
+  all(): Promise<Video[]>;
+  update(id: Uuid, changes: Partial<NewVideo>): Promise<Video>;
+  softDelete(id: Uuid): Promise<void>;
+}
+
 export interface SettingsRepository {
   get(): Promise<Settings>;
   save(settings: Omit<Settings, 'key' | 'updatedAt'>): Promise<Settings>;
@@ -68,4 +78,5 @@ export interface Repositories {
   stats: StatsRepository;
   days: PracticeDayRepository;
   settings: SettingsRepository;
+  videos: VideoRepository;
 }

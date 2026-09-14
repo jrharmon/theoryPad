@@ -147,6 +147,55 @@ describe('export and import', () => {
     expect((await createRepositories(target).settings.get()).ui.appearance).toBe('system');
   });
 
+  it('carries videos, deleted ones included', async () => {
+    const { db, repos } = await populated();
+    const own = await repos.videos.add({
+      videoId: 'abcdefghijk',
+      title: 'How to shift',
+      scope: { kind: 'exercise', exerciseId: 'ex-1' },
+      playAlong: false,
+      startSec: 40,
+      beatsPerBar: 4,
+      tags: [],
+    });
+    const gone = await repos.videos.add({ ...own, title: 'Old lesson' });
+    await repos.videos.softDelete(gone.id);
+
+    const file = parseExport(JSON.parse(JSON.stringify(await exportData(db))));
+    expect(file.data.videos).toHaveLength(3); // with the first-run track
+
+    const target = fresh();
+    await applyImport(target, file, 'replace');
+    expect((await createRepositories(target).videos.all()).map((v) => v.title).sort()).toEqual([
+      'A minor backing track',
+      'How to shift',
+    ]);
+  });
+
+  it('leaves videos alone when the file predates them, even replacing', async () => {
+    const { db } = await populated();
+    const file = JSON.parse(JSON.stringify(await exportData(db))) as { data: Record<string, unknown> };
+    delete file.data.videos;
+    const target = fresh();
+    const repos = createRepositories(target);
+    await repos.videos.add({
+      videoId: 'abcdefghijk',
+      title: 'Mine',
+      scope: { kind: 'shared' },
+      playAlong: true,
+      startSec: 0,
+      keyMode: { tonic: 'E' as never, mode: 'phrygian' },
+      bpm: 120,
+      beatsPerBar: 4,
+      tags: [],
+    });
+
+    const plan = await planImport(target, parseExport(file), 'replace');
+    expect(plan.videos).toEqual({ added: 0, updated: 0, removed: 0 });
+    await applyImport(target, parseExport(file), 'replace');
+    expect((await repos.videos.all()).map((v) => v.title)).toContain('Mine');
+  });
+
   it('accepts an export from before routines existed', async () => {
     const { db } = await populated();
     const file = JSON.parse(JSON.stringify(await exportData(db))) as { data: Record<string, unknown> };

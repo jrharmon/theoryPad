@@ -1,10 +1,10 @@
 import type { PracticeDay } from '@/domain/progress';
 import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
-import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings } from '../entities';
+import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Video } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import { defaultSettings } from './dexie';
-import type { NewExercise, NewRep, NewRoutine, NewSession, Repositories } from './types';
+import type { NewExercise, NewRep, NewRoutine, NewSession, NewVideo, Repositories } from './types';
 
 /**
  * An in-memory implementation of the same interfaces.
@@ -20,6 +20,7 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
   const reps = new Map<string, Rep>();
   const stats = new Map<string, ExerciseStats>();
   const days = new Map<string, PracticeDay>();
+  const videos = new Map<string, Video>();
   let settings: Settings | null = null;
 
   const stamp = () => now();
@@ -164,6 +165,32 @@ export function createMemoryRepositories(now = () => Date.now()): Repositories {
       save(next) {
         settings = { ...next, key: 'settings', updatedAt: stamp() };
         return Promise.resolve(settings);
+      },
+    },
+
+    videos: {
+      add(video: NewVideo) {
+        const at = stamp();
+        const row: Video = { ...video, id: newId(), createdAt: at, updatedAt: at };
+        videos.set(row.id, row);
+        return Promise.resolve(row);
+      },
+      byId(id) {
+        const row = videos.get(id);
+        return Promise.resolve(row?.deletedAt === undefined ? row : undefined);
+      },
+      all: () => Promise.resolve(live([...videos.values()])),
+      update(id, changes) {
+        const existing = videos.get(id);
+        if (!existing) return Promise.reject(new Error(`No video ${id}`));
+        const row: Video = { ...existing, ...changes, updatedAt: stamp() };
+        videos.set(id, row);
+        return Promise.resolve(row);
+      },
+      softDelete(id) {
+        const existing = videos.get(id);
+        if (existing) videos.set(id, { ...existing, deletedAt: stamp(), updatedAt: stamp() });
+        return Promise.resolve();
       },
     },
   };
