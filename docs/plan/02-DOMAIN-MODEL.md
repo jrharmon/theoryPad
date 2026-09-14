@@ -511,20 +511,19 @@ export interface Exercise {
   heldAxisValues: Partial<Record<AxisId, unknown>>;
   tempo: TempoConfig;
   defaultReps: number;           // 1-3
-  video?: VideoRef;              // reference material, not backing
-  /** Pin a specific backing track instead of looking one up by key+mode. Rare. */
-  pinnedBackingTrackId?: Uuid;
+  /** The backing chosen for this exercise (M7) — never picked automatically. */
+  backing?: BackingChoice;
+  /** Narrow which shared tracks the backing menu offers. */
+  backingCriteria?: { tags: string[]; bpm?: { min: number; max: number } };
   notes?: string;                // the player's own notes
   createdAt: number; updatedAt: number; deletedAt?: number;
 }
 
-export interface VideoRef {
-  provider: 'youtube';
-  videoId: string;
-  startSec?: number;
-  endSec?: number;
-  title?: string;
-}
+/** None (the synth plays the notes), the drone, or one video. Doc 06 has the rules. */
+export type BackingChoice = { kind: 'drone' } | { kind: 'video'; videoId: Uuid };
+
+// Videos — shared backing tracks, an exercise's own tracks and its reference videos — are
+// one table; the `Video` type is in doc 06.
 
 /**
  * One exercise in a routine, with its own copy of the settings.

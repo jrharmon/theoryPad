@@ -146,155 +146,142 @@ Phrase playback is **optional during practice** — the point is that _you_ play
 
 ---
 
-## Backing tracks
+## Videos: backing tracks and reference videos
 
-**A curated pool, looked up by key and mode.** Generated backing is the _fallback_, and it is
-deferred.
+_Decided at the start of M7 (2026-09-13), replacing the first spec's pool, `builtIn` flag and
+automatic lookup._
 
-This inverts what I originally specced, and it's the better shape: a real recording sounds
-enormously better than anything Tone.js will produce, and the key-mismatch problem that made
-me default to generation disappears once the pool is indexed by key and mode. You said you can
-find a track for every key/mode you need — so the app's job is to pick the right one, not to
-synthesise a worse one.
+**One table of YouTube videos, in two scopes.**
 
-### The track model
+- **Shared** — a backing track any exercise or routine can use. It always has a key, a mode and
+  a bpm, and is offered wherever the session's key and mode match it **exactly** (A minor and D
+  Dorian share every note, but a vamp establishes the tonal centre, so D Dorian over an A-minor
+  track just sounds like A minor).
+- **An exercise's own** — attached to one exercise and never offered anywhere else, including
+  routines. It has a **play along** switch:
+  - _on_ — a custom backing track for that exercise: choosing it runs the exercise with it.
+    Key and mode are optional; with them it is offered only when the session matches, without
+    them always.
+  - _off_ — a reference video: a lesson or a demo, watched once or twice while learning the
+    exercise. Playing it plays the video and nothing else — no pass, no clock.
+
+**Every video is equal.** There is no built-in flag: any video can be edited or deleted, and all
+of them go into the export. The first track (below) is added once, on first run, as an ordinary
+row with a fixed id. Later the player's collection moves into a **static data file** shipped
+with the app — data, not code, and not IndexedDB — merged with the stored rows by id, so the
+move is a copy with no duplicates.
+
+### The model
 
 ```ts
-export interface BackingTrack {
+export interface Video {
   id: Uuid;
-  source: 'youtube' | 'generated';
-  /** YouTube only. */
-  videoId?: string;
-  startSec?: number;
-  endSec?: number;
-  loop?: boolean;
-
+  /** YouTube video id. */
+  videoId: string;
   title: string;
-  /** The track's musical identity. Half the lookup key. */
-  keyMode: KeyMode;
-  /** The recording's own tempo. Playback rate scales it — see below. */
-  bpm: number | null;
+  scope: { kind: 'shared' } | { kind: 'exercise'; exerciseId: Uuid };
+  /** An exercise's own video only: false makes it a reference video. Shared are always true. */
+  playAlong: boolean;
+  /** Seconds into the video where bar 1 begins — after any intro. */
+  startSec: number;
+  /** Where to loop back from; the end of the video if absent. */
+  endSec?: number;
+  /** Required for shared tracks; optional for an exercise's own. */
+  keyMode?: KeyMode;
+  /** The recording's tempo. Required to play along. */
+  bpm?: number;
+  beatsPerBar: number; // 4 unless the track says otherwise
   /** For display: "modal vamp", "ii-V-i", "12-bar blues". */
   progression?: string;
-  /** Free-form: "jazz", "rock", "clean", "drums only". */
-  tags?: string[];
-
-  /** Shared pool, or attached to one exercise. The other half of the lookup key. */
-  scope: { kind: 'shared' } | { kind: 'exercise'; exerciseId: Uuid };
-  /** Shipped with the app, or added by you. */
-  builtIn: boolean;
+  /** Free-form style tags: "rock", "funk", "drums only". */
+  tags: string[];
+  createdAt: number; updatedAt: number; deletedAt?: number;
 }
 ```
 
-One table, two scopes — rather than a shared pool plus a separate per-exercise list. A track is
-the same thing wherever it lives, and one collection means one lookup function, one editor UI,
-and one place to fix a broken video id.
+The first track, and the fixture for building this: `WkIijba-HcU`, "A minor backing track",
+shared, A Aeolian, 100 bpm, bar 1 at 216 s.
 
-Built-in shared tracks ship as a seed table (`src/data/seed/backingTracks.ts`); everything else
-lives in Dexie. The first entry, and the fixture for building this:
+### Choosing backing — never automatic
 
-```ts
-{
-  source: 'youtube', videoId: 'WkIijba-HcU', startSec: 216, loop: true,
-  title: 'A minor backing track',
-  keyMode: { tonic: 'A', mode: 'aeolian' }, bpm: 100,
-  scope: { kind: 'shared' }, builtIn: true,
-}
-```
+Nothing is picked or rolled for you. **The default is what played before M7: the synth plays the
+notes, with the metronome.** The backing menu on the practice screen (and on a routine's
+overview) offers:
 
-### Lookup and resolution order
+- **None** — the default.
+- **Drone** — root and fifth of the session key, sustained. The metronome keeps going, since the
+  drone has no beat. Works in every key and mode, and offline.
+- **Tracks** — shared tracks in the session's key and mode, narrowed by the exercise's (or
+  routine's) saved criteria, plus the exercise's own play-along videos.
 
-An exercise's own tracks win. A generic modal vamp is a fine default, but an exercise built
-around a particular groove, form or feel deserves the track that actually fits it.
+Choosing a track or the drone **replaces the synth notes**. A track also mutes the metronome.
+The choice is remembered on the exercise (or routine); if a re-roll lands on a key the chosen
+track does not match, it goes back to None and says so.
 
-```ts
-findBackingTrack(
-  tracks: BackingTrack[],
-  km: KeyMode,
-  opts: { exerciseId: Uuid; preferBpm?: number; policy?: BackingPolicy },
-): BackingTrack | null
-```
+**Saved criteria** (optional, on an exercise or routine): tags a track must have, and a bpm
+range. New tracks that fit appear in the menu without anyone touching the exercise.
 
-Resolution order:
+**Routines** offer the drone and shared tracks only.
 
-1. **Pinned** — `Exercise.pinnedBackingTrackId`, if set. Used regardless of key, for the case
-   where the track _is_ the exercise ("play along with this solo").
-2. **Exercise-scoped tracks matching key + mode.**
-3. **Shared-pool tracks matching key + mode.**
-4. **Generated** (deferred — see below).
-5. **`null`** — the caller offers metronome-only or free time.
+### Tempo: the speed follows the exercise
 
-The exercise controls how far down that list it's willing to go:
-
-```ts
-type BackingPolicy = 'prefer-own' | 'own-only' | 'shared-only' | 'none';
-```
-
-`'prefer-own'` is the default and walks the whole list. `'own-only'` stops after step 2 — for
-an exercise where a generic vamp would be actively wrong. `'none'` never offers backing.
-
-Matching is **exact on both tonic and mode**, at every step. A minor and D Dorian share every
-note, but a vamp establishes the tonal centre, so D Dorian over an A-minor track just sounds
-like A minor. This is the one musical judgment in the audio layer worth being strict about.
-
-Among several matches, prefer the one whose achievable tempo (below) lands closest to
-`preferBpm`.
-
-### Tempo: playback rate, not a pinned bpm
-
-YouTube can slow a video down, and **it preserves pitch when it does** — the browser's
-`preservesPitch` is on by default, so 0.75× is the same key, just slower. That makes a
-recording far more useful than a fixed-tempo asset: one A-minor track at 100 bpm covers a
-range of practice tempos in the right key.
+YouTube slows a video without changing its pitch. Its player **accepts any rate from 0.25× to
+2× in 0.05 steps** — tested 2026-09-13: 0.85 played at 0.85, 0.62 was rounded to 0.6. (Its
+`getAvailablePlaybackRates()` still lists only the quarter steps; don't trust it as the full
+set.)
 
 ```
-effectiveTempo = track.bpm × playbackRate
+speed          = exercise tempo ÷ track bpm, rounded to 5%, within 25–200%
+effectiveTempo = track bpm × speed
 ```
 
-Two constraints to design around:
+An exercise at 76 over a 100 bpm track plays the track at 75%, 75 bpm. `currentTempo` follows
+the effective tempo; `[` `]` step the speed by 5%; `targetTempo` is untouched, as always. The
+control shows both numbers — `75% · 75 bpm` — and flags speeds below 50%, where the audio gets
+mushy.
 
-- **The rate is quantised, not continuous.** The IFrame API exposes
-  `getAvailablePlaybackRates()`, typically `[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]`. For a
-  100 bpm track that's 25 / 50 / 75 / 100 / 125 / 150 / 175 / 200 — coarse, and not a free
-  slider. Query the list at runtime rather than hard-coding it.
-- **Below about 0.5× the audio gets audibly mushy.** Offer the low rates, but don't pick one
-  automatically; default selection stays within 0.5×–1.5×.
+**In a routine** one track plays straight through, and its speed changes at each item's count-in
+to fit that item's tempo. A theory item pauses the track; the next played item starts again
+from bar 1 with a count-in.
 
-So the transport shows a **track speed control**, not a bpm field:
+### Timing: bar 1, the count-in, and following the video
 
-```
-Backing: A minor vamp · 100 bpm      Speed [0.75× ▾]  →  75 bpm
-```
+- **Bar 1** (`startSec`) is where the backing kicks in, after the intro. The track form sets it
+  by tapping along: the first tap, on a downbeat, marks bar 1, and the taps give the bpm. Nudges
+  of ±0.05 s and "play from bar 1" check it. Bar markers on a timeline (a tempo map) can come
+  later if a fixed bpm proves too rough.
+- **The count-in plays over the intro.** The video starts one bar (at the effective tempo)
+  before bar 1; the readout counts that bar as it does today, without clicks, and the tab starts
+  on bar 1. When there is less than a bar before bar 1, the track's first bar is the count-in.
+- **The clock follows the video**, not the other way round: its position comes from the video's
+  own current time. That absorbs the player's start delay, pauses and speed changes. What it
+  cannot correct is a wrong bpm.
+- **Loops** jump from `endSec` (or the end) back to bar 1. YouTube's jump is not seamless;
+  expect a hiccup, after which the clock locks on again.
 
-Default rate is the one whose effective tempo is nearest the exercise's `targetTempo` — target
-76 against a 100 bpm track picks 0.75× and lands on 75, which is close enough that nothing
-needs asking. Only when the nearest achievable tempo is still off by more than ~20% do we
-prompt: _"Closest this track gets is 125. Your target is 76. Play at 125, or drop the backing?"_
+### Where the player sits
 
-`currentTempo` follows the effective tempo, and the metronome (if on) runs at it too, so
-everything stays in agreement. `targetTempo` is untouched, as always.
-
-Generated backing has none of these constraints — arbitrary tempo, exact key. Worth remembering
-when weighing whether to build it.
+YouTube requires its player to be visible and at least 200×200. It sits in the practice
+screen's right column, which **stays visible while a video is on** — hiding the neck hides only
+the neck. Both kinds of video have an **enlarge** button, for watching fingerings up close.
 
 ### Coverage
 
-12 tonics × 7 modes = 84 combinations, and the shared pool will be sparse for a long time. A
-small grid in settings shows which are filled — the same idea as the fretboard explorer's coverage,
-and cheap to build. It tells you what to go looking for, and it tells the roller something
-useful too: an exercise that needs backing can bias its rolled key toward combinations the pool
-actually covers.
+12 tonics × 7 modes = 84 combinations, and the shared tracks will be sparse for a long time. A
+12×7 grid on Settings → Backing tracks shows which are filled, and clicking a cell lists its
+tracks or starts adding one there.
 
 ### The `backingProgression` axis
 
-Only meaningful for generated backing. When a pooled track is in use, the progression is
+Only meaningful for generated backing. When a track is in use, the progression is
 whatever the recording plays, and the axis resolves to the track's `progression` string for
 display rather than being rolled. Exercises should not assume they can control it.
 
 ### Generated backing — deferred
 
-Kept in the model (`source: 'generated'`) and specced here so the shape is settled, but **not
-built until the pool proves insufficient.**
+Specced here so the shape is settled, but **not built until the shared tracks prove
+insufficient.** The drone (M7) is its first and smallest piece: no rhythm, no chords, just the
+key's root and fifth, which is enough to practice modes over and works anywhere.
 
 ```ts
 export interface BackingPlan {
@@ -319,10 +306,10 @@ export interface BackingSource {
   start(atTick?: number): void;
   pause(): void;
   stop(): void;
-  /** The tempo actually coming out of the speakers. */
+  /** The tempo actually coming out of the speakers; null for the drone. */
   readonly effectiveBpm: number | null;
-  /** Rates this source can play at. YouTube: quantised. Generated: continuous. */
-  availableRates(): number[];
+  /** Speeds this source can play at; null when it has no tempo (the drone). */
+  readonly rates: { min: number; max: number; step: number } | null;
   setRate(rate: number): void;
   readonly ready: boolean;
 }
@@ -330,9 +317,8 @@ export interface BackingSource {
 
 `YouTubeBackingSource` and (later) `GeneratedBackingSource` both implement it. The runner holds
 a `BackingSource` and never asks which kind it has, so adding generation later touches nothing
-above this line. `availableRates()` is what lets one transport control serve both: YouTube
-returns its quantised list, a generated source returns a continuous range the UI renders as a
-slider.
+above this line. `rates` is what lets one transport control serve every source: YouTube
+gives 0.25–2 in 0.05 steps, a generated source any tempo, the drone none.
 
 ## YouTube integration
 
@@ -344,6 +330,8 @@ slider.
 3. Use `youtube-nocookie.com` as the host for the privacy-preserving default.
 4. `startSec`/`endSec` map to the player's `start`/`end` params, so an exercise can point at
    the exact 40 seconds of a lesson that matters.
+
+This is how reference videos play: in place, with an enlarge button, and nothing else happens.
 
 For a backing track we need programmatic control (play/pause/loop tied to the runner's pause),
 so that path uses the real iframe API behind `YouTubeBackingSource`, implementing the
@@ -358,10 +346,9 @@ backing, not of the metronome — so slowing a track to 0.5× to learn something
 up to 1× works in free time exactly as it does with a click. The runner shows the phrase
 statically, plays the track, and waits for you to say you're done.
 
-**Offline caveat:** YouTube does not work offline, and the backing pool is entirely YouTube
-until generation lands. The PWA must degrade gracefully: show the thumbnail placeholder, say
-plainly that backing needs a connection, and let the exercise run with the metronome or in
-free time instead. This is the strongest argument for eventually building the generated
+**Offline caveat:** YouTube does not work offline, and every track is YouTube. When the
+player cannot load, say plainly that backing needs a connection and go back to None; the drone
+still works. This is the strongest argument for eventually building the generated
 fallback — it is the only backing that works on a train.
 
 ---

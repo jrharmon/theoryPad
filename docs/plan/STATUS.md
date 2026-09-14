@@ -17,7 +17,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M4 — Theory | ✅ merged, live |
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
-| **M7 — Audio richness: backing, ear training, improv** | **next** — doc 08 has the tasks |
+| **M7a — Backing tracks, reference videos, free improv** | **in progress** on `m7-audio` — doc 08 |
+| M7b — Ear training and "hear it" | after M7a's review |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`; the merged local branches
@@ -157,6 +158,18 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Start of M7** (doc 06 has the design, doc 08 the tasks)
+- Split into M7a (backing, reference videos, free improv) and M7b (ear training, hear it).
+- One video table, two scopes: shared tracks (key, mode, bpm; matched exactly) and an
+  exercise's own videos, with a play-along switch — off makes it a reference video. No
+  built-in flag: every video is equal; later they move into a static data file, merged by id.
+- Nothing is chosen automatically. The default stays the synth notes with the metronome; a
+  track or the drone replaces the notes, a track mutes the metronome. The choice is remembered.
+- Speed follows the exercise's tempo in 5% steps (YouTube accepts 0.25–2 by 0.05 — tested).
+  Routines: one track through, its speed changing per item; theory items pause it.
+- Bar 1 is set by tapping along; the count-in plays over the intro; the clock follows the video.
+- The right column stays open while a video is on; videos can be enlarged.
 
 **Restyle review**
 - Unmocked screens, the tab and the playhead approved. Graph paper dropped. Muted text at 64%.

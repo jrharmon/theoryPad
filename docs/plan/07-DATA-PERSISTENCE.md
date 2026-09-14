@@ -26,7 +26,7 @@ class TheoryPadDB extends Dexie {
   routines!: Table<Routine, Uuid>;
   sessions!: Table<Session, Uuid>;
   reps!: Table<Rep, Uuid>;
-  backingTracks!: Table<BackingTrack, Uuid>;
+  videos!: Table<Video, Uuid>;
   exerciseStats!: Table<ExerciseStats, Uuid>;
   playerStats!: Table<PlayerStats, string>;
   settings!: Table<SettingsRow, string>;
@@ -38,8 +38,7 @@ class TheoryPadDB extends Dexie {
       routines: 'id, updatedAt, deletedAt',
       sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
       reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
-      backingTracks:
-        'id, scopeExerciseId, [scopeExerciseId+trackKeyMode], trackKeyMode, builtIn, updatedAt',
+      videos: 'id, scopeExerciseId, [scopeExerciseId+trackKeyMode], trackKeyMode, updatedAt',
       exerciseStats: 'exerciseId, updatedAt',
       playerStats: 'key',
       settings: 'key',
@@ -67,7 +66,7 @@ rewrite of every call site.
 
 ### A note on indexing the backing pool
 
-Dexie cannot index a nested object, so `BackingTrack` carries two flattened, derived columns
+Dexie cannot index a nested object, so `Video` carries two flattened, derived columns
 maintained by its repository: `trackKeyMode` (`"D:dorian"`) and `scopeExerciseId` (the exercise
 id, or `""` for shared). The compound index `[scopeExerciseId+trackKeyMode]` makes both steps of
 the resolution order a direct lookup rather than a scan. Derived columns are written by the
@@ -232,7 +231,7 @@ interface TheoryPadExport {
   data: {
     exercises: Exercise[];
     routines: Routine[];
-    backingTracks: BackingTrack[]; // user-added only; built-ins come from the seed table
+    videos: Video[]; // every video — there is no built-in flag (M7)
     sessions: Session[];
     reps: Rep[];
     settings: Settings;
@@ -251,7 +250,7 @@ interface TheoryPadExport {
 - A round-trip test (export → wipe → import → deep-equal) is part of the E2E suite.
 - _As built (M5):_ `src/data/transfer.ts`. The file carries `app: { name }` without a
   version — `formatVersion` is what import checks. Soft-deleted rows are exported, so a
-  merge cannot resurrect a deletion. Backing tracks join the file when they exist (M7).
+  merge cannot resurrect a deletion. Videos join the file in M7.
 
 Also worth having, cheaply: a "download my practice log as CSV" for the report, since that is
 the thing you might want in a spreadsheet.

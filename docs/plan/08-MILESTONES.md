@@ -410,23 +410,44 @@ playhead findable without shouting? Does the graph paper help, or is it noise?
 
 ## M7 — Audio richness: backing, ear training, improv
 
-| #   | Task                                                                                                                                                                                                                    | Size |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 7.1 | `BackingTrack` model with shared/exercise scopes, seed pool, Dexie table + derived index columns, `findBackingTrack` resolution order (pinned → own → shared), `BackingPolicy`. Unit tests for every step of the order. | M    |
-| 7.2 | `<VideoEmbed />` facade + reference-video config on the exercise detail page                                                                                                                                            | S    |
-| 7.3 | `BackingSource` interface + `YouTubeBackingSource`, including `availableRates`/`setRate`, effective-tempo derivation, and default-rate selection against `targetTempo`                                                  | M    |
-| 7.4 | `<BackingControl />` + track management UI (add/edit tracks, shared or scoped to an exercise) + the 12×7 shared-pool coverage grid                                                                                      | M    |
-| 7.5 | `free-improv-target` (proves the runner handles a played exercise with no phrase)                                                                                                                                       | M    |
-| 7.6 | `ear-training` (all five drills) + its custom renderer                                                                                                                                                                  | L    |
-| 7.7 | `PreviewPlayer` — "hear it" for a phrase, a chord, a scale                                                                                                                                                              | S    |
+Split into two gates at the start (2026-09-13). Doc 06 has the design as decided then: one
+video table in two scopes, nothing chosen automatically, the speed following the exercise.
+
+### M7a — Backing tracks, reference videos, free improv
+
+| #   | Task                                                                                                                                                   | Size |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| 7.1 | `Video` model (shared / an exercise's own, play along), Dexie table with derived index columns, first-run track, export/import; matching and criteria | M    |
+| 7.2 | YouTube player: facade loading, `YouTubeBackingSource` (bar 1, count-in over the intro, 5% speeds, loop), the clock following the video               | M    |
+| 7.3 | Settings → Backing tracks: list, add/edit form with tap-along for bar 1 and bpm, the 12×7 coverage grid                                                | M    |
+| 7.4 | Backing on the practice screen: None / Drone / tracks, speed from tempo, the right column held open, enlarge; the drone itself                         | M    |
+| 7.5 | Backing through a routine: one track, the speed changing at each item, paused for theory                                                              | M    |
+| 7.6 | Reference videos and an exercise's own tracks on the config page; saved criteria                                                                      | S    |
+| 7.7 | `free-improv-target` (proves the runner handles a played exercise with no phrase)                                                                    | M    |
+
+**Verify:** is 75% musically usable — does slowing a track down work for practice, or does it
+sound wrong enough that you'd rather have a click? Does the tab stay with the track after the
+count-in, through a pause, across routine items? Is tapping along a good enough way to set bar
+1 and the bpm? Does the drone help? That answer decides whether generated backing (deferred,
+specced in doc 06) is worth building.
+
+### M7b — Ear training and "hear it"
+
+| #   | Task                                                                                            | Size |
+| --- | ----------------------------------------------------------------------------------------------- | ---- |
+| 7.8 | `ear-training` — interval, scale degree and chord quality first — and its renderer              | L    |
+| 7.9 | `PreviewPlayer` — "hear it" for a phrase, a chord, a scale                                      | S    |
+
+Decided at the start: the drill is an axis (fixed, hold or roll); intervals rise by default,
+with falling and harmonic as settings; the answer grid shows every option in the level
+(level 1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3 is all twelve); a wrong answer offers "hear
+yours" and "hear the right one"; questions lean toward the ones you miss. Mode and progression
+drills follow once we know whether the synth is good enough.
+
+**Verify:** is maj7 against dom7 distinguishable on the synth, or is that the trigger for
+sampled instruments?
 
 **Deliverable:** exercises you can improvise over, and ear training.
-
-**Verify:** does the shared pool cover enough key/mode combinations to be useful, and does
-slowing a track down actually work for practice — is 0.75× musically usable, or does it sound
-wrong enough that you'd rather have a click? That
-answer decides whether generated backing (deferred, specced in doc 06) is worth building, and
-the same checkpoint tells us whether sampled instruments are needed for ear training.
 
 ---
 
