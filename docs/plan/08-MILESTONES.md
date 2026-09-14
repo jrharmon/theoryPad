@@ -431,6 +431,21 @@ count-in, through a pause, across routine items? Is tapping along a good enough 
 1 and the bpm? Does the drone help? That answer decides whether generated backing (deferred,
 specced in doc 06) is worth building.
 
+**Outcome (2026-09-13, at the gate):** built as planned, on `m7-audio`. One `videos` table
+(Dexie v5): shared tracks and an exercise's own videos, the first A minor track added on first
+run as an ordinary row. The backing menu offers None, the drone, or a track in the key; a track
+replaces the synth notes, silences the metronome, count-in included, and sets the tempo in 5%
+speed steps. The clock follows the video — measured in the browser at ±15 ms while playing,
+back inside 20 ms after a pause, and a few ms after a routine's theory set rebuilt the player.
+Routines run one track through, changing speed per item. Settings has the coverage grid, the
+list and a form with tap-along, nudges and **Check with a click** (the metronome following the
+video, to hear whether bar 1 and the bpm are right). The config page has the exercise's own
+videos (reference or play-along) and saved criteria; reference videos show in the practice
+column. `free-improv-target` ("Improvise to a target") counts phrases on a running clock and
+turns the target yellow on each phrase's last bar. Not built: a criteria editor for routines
+(the model has the field), reference videos on a theory exercise's practice screen, and a
+free-time toggle in the transport (free time itself still works through the runner).
+
 ### M7b — Ear training and "hear it"
 
 | #   | Task                                                                                            | Size |

@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-13, the Notebook restyle reviewed, merged and live. Written as a
-hand-off: a fresh session should be able to start M7 from this file, `CLAUDE.md`, and the plan
-docs it points to.
+**Last updated:** 2026-09-13, **M7a built on `m7-audio` and at the gate** — not merged, not
+pushed. Written as a hand-off: a fresh session should be able to take the M7a review, or start
+M7b after it, from this file, `CLAUDE.md`, and the plan docs it points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -17,12 +17,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M4 — Theory | ✅ merged, live |
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
-| **M7a — Backing tracks, reference videos, free improv** | **in progress** on `m7-audio` — doc 08 |
+| **M7a — Backing tracks, reference videos, free improv** | **at the gate** on `m7-audio` — review, then merge |
 | M7b — Ear training and "hear it" | after M7a's review |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. Everything is on `main`; the merged local branches
-(`m6-progress`, `restyle-notebook`) can be deleted. 723 unit tests, 51 E2E, `pnpm check` green.
+M5 was deliberately built before M4. `main` has everything to the restyle; M7a is ten commits
+on `m7-audio` (the plan, then 7.1–7.7, then its E2E). 785 unit tests, 56 E2E, `pnpm check` green.
+After the review: fast-forward `main` to `m7-audio`, push, check CI and the deploy.
 
 ## How the player works — read before starting anything
 
@@ -61,6 +62,11 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
+| `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
+| `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, youtube-nocookie), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
+| `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
+| `src/store/` (M7) | `videos` (the table), `backing` (the backing state's shape); `practice` holds the chosen backing and its live source. |
+| `src/components/media/` | `PlayerSlot` (mounts a player's node once — moving an iframe reloads it), `VideoEmbed` (thumbnail until clicked), `useEnlarge`/`EnlargeScrim`. |
 | `src/app/appearance.ts` | The Appearance setting → `<html data-theme>`: `resolveTheme`, `applyAppearance`, `useAppearance` (AppShell). `index.html`'s inline script does the same before first paint from a localStorage mirror. |
 
 ### The run model, briefly (doc 03 has it in full)
@@ -78,6 +84,12 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   key. A right answer moves on after a beat; a wrong one waits with the correction. Tables are
   submitted whole. The rep logs the score and each question's subject and result; the set is
   timed as a whole.
+- **Backing (M7a):** one `videos` table — shared tracks (key, mode, bpm; matched exactly) and
+  an exercise's own videos (play-along on: its own track; off: a reference video). Nothing is
+  chosen for you: None is the synth notes with the click. A track or the drone replaces the
+  notes; a track silences the metronome, count-in included, and owns the tempo (5% steps,
+  `targetTempo` untouched). Play starts the video first; the clock follows it (`TrackFollower`).
+  The choice is remembered on the exercise or routine. Doc 06 has it all.
 - **Progress:** the log is the truth; `practiceDays` is a cache over it. A finished played
   pass also logs `frets` — every note by string and fret — which feeds the explorer's heat.
   Days split at local midnight; weeks start Monday.
@@ -89,6 +101,15 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   Display: System (default, follows the computer live), Light or Dark — applied before first
   paint on the next load. The exported HTML report is always light.
 
+- **Backing** (M7a): a Backing menu in the transport — None, Drone, or tracks in the key (the
+  exercise's own first, then shared, narrowed by its saved criteria). A track shows in the right
+  column (held open; Enlarge; Escape shrinks) with its speed beside the tempo. Routines choose
+  one on the overview; it plays straight through, re-speeded per item, stopped by a theory set.
+- **Settings → Backing tracks**: the 12×7 coverage grid (a filled cell lists its tracks, an
+  empty one adds one there), the shared tracks, and the form: paste a link, tap along (T) for
+  bar 1 and the bpm, nudge ±0.05 s, **Check with a click**, a loop point, key, mode, tags.
+- **Exercise config page**: Videos (reference or play-along, only that exercise sees them) and
+  Backing tracks offered (tags, a bpm range). Reference videos also sit in the practice column.
 - **Home**: a four-week heatmap, the streak and this week's time; then your routines,
   favorites pinned, with Start and Edit.
 - **Report** (`/report`): Last 7 / 30 days, This month or Custom; sessions, time, variations,
@@ -114,6 +135,8 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   - *Position shifting*
   - *Key signature drill* (theory)
   - *Circle of fifths* (theory) — leans toward keys you miss or have seen least
+  - *Improvise to a target* (`free-improv-target`) — no tab: a phrase counter, the note to land
+    on (yellow on each phrase's last bar), the whole mode on the neck
 - **Practicing**:
   - Metronome, Count-in and Loop toggles
   - a settings dialog
@@ -124,7 +147,8 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
 - **Keys**:
   - Space: pause
   - Enter: play or start
-  - `[` `]`: tempo
+  - `[` `]`: tempo — under a track, one 5% speed step
+  - T: tap along, in the track form
   - R: re-roll
   - M: metronome
   - L: loop
@@ -134,16 +158,26 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: M7
+## Next: the M7a review, then M7b
 
-
-Doc 08 §M7: backing tracks (model, YouTube source with rate, control, track management and
-the 12×7 coverage grid), reference videos, `free-improv-target`, `ear-training`, and
-`PreviewPlayer`. Ask the player first, per the working agreement — likely questions: which
-tracks seed the shared pool beyond the first, whether reference videos matter before backing,
-and which of the five ear-training drills come first.
+Review M7a hands-on (the questions below), fold in what it says, merge, push, check CI. Then
+M7b — doc 08 has it, with the decisions already taken: `ear-training` (interval, scale degree,
+chord quality first; the drill is an axis; level 1/2/3 option sets; "hear yours" and "hear the
+right one"; lean toward misses) and `PreviewPlayer` ("hear it" for a phrase, a chord, a scale).
+Ask the player first about anything not already decided there.
 
 ## Open questions for the player
+
+**At the M7a gate** — only the player can judge these:
+- Is 75% (and lower) musically usable, or does it sound wrong enough to want a click instead?
+- Does the tab stay with the track after the count-in, through a pause, across routine items?
+  (Measured at ±15 ms in the browser; the ear is the real test.)
+- Is tapping along a good enough way to set bar 1 and the bpm? Does Check with a click prove it?
+- Does the drone help, and is it too loud or too dull?
+- Does "Improvise to a target" read from the guitar; is the last bar the right moment for yellow?
+- A theory set in a routine stops the track and the next item restarts it from bar 1 — right?
+- Not built, ask whether wanted: a criteria editor for routines; reference videos on theory
+  exercises' practice screen; a free-time toggle in the transport.
 
 Later, if it starts to matter: in dark, the explorer's heaviest heat shades toward chalk, and
 the white root dots there rely on their ring (fine for now, per the restyle review).
@@ -249,6 +283,22 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   (Shift+] repeatedly) and play one pass of Position shifting — about 40 s.
 
 ## Things that bit, and would bite again
+
+- **Moving an iframe in the DOM reloads it.** A YouTube player's node is mounted once
+  (`PlayerSlot`) and enlarged by restyling its panel in place. That is also why a routine can't
+  carry the overview's player into the running screen, and why a theory set rebuilds it.
+- **A runner emit re-enters the store.** `runner.setTempo` emits a snapshot synchronously, and
+  the practice store's subscriber refreshes the backing — which set the tempo. Commit state
+  before touching the runner (and `refreshBacking` has a re-entry guard). Likewise, never pause
+  a runner from inside its own emit: it is mid-`beginPass` and starts the clock after you.
+- **Probing the dev server's stores after an HMR edit.** Vite then serves a module as
+  `…/practice.ts?t=…`; importing the bare path gets a second, empty store. Import the URL from
+  `performance.getEntriesByType('resource')`.
+- **The router is a hash router**: screenshot `http://localhost:5173/#/settings`, not `/settings`.
+- **`erasableSyntaxOnly` and `exactOptionalPropertyTypes`**: no constructor parameter
+  properties; optional fields can't be set to `undefined` (fixtures build without the key).
+- **`FakeClock.advanceSeconds` rounds each step to whole ticks**, which swallows small tempo
+  nudges; the follower's tests carry the fraction.
 
 - **A stale `vite preview` on :4173 made E2E test yesterday's build.** Playwright reuses a
   running server, and `vite preview` serves whatever is in `dist/`. Three restyle commits "passed"

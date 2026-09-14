@@ -259,6 +259,15 @@ from bar 1 with a count-in.
 - **Loops** jump from `endSec` (or the end) back to bar 1. YouTube's jump is not seamless;
   expect a hiccup, after which the clock locks on again.
 
+_As built (M7a):_ `TrackFollower` (`src/audio/backing/`) polls the video every 40 ms and runs
+the clock up to 15% fast or slow to close the gap, with a half-second time constant — the
+clock never seeks, because a jump could step over a pass's end. `getCurrentTime()` is smooth
+(it moves every ~12 ms), and YouTube is already ~0.2 s in when it reports playing, which the
+count-in bar absorbs. The follower holds the clock while the video buffers, and loops on the
+last whole bar before the end. In a routine, a theory set drops the player (its column goes
+with the tab) and the next played item builds a fresh one; the clock is held at that item's
+start until the track sounds.
+
 ### Where the player sits
 
 YouTube requires its player to be visible and at least 200×200. It sits in the practice

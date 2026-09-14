@@ -433,6 +433,13 @@ key/mode, the exercise offers to re-roll toward a covered one rather than runnin
 
 **Milestone:** M7 (needs backing tracks).
 
+_As built (M7a):_ named "Improvise to a target". `timing: 'either'`, not free: the clock runs so
+the phrases can be counted, and the click can be muted. Backing is never automatic (doc 06), so
+there is no re-roll toward a covered key — without a track it plays with the click, or over the
+drone, which covers every key. `backingProgression` is not among its axes: it only means
+anything for generated backing. Phrases are labeled bars (`Phrase 1 · land on F`), which is how
+the screen counts them.
+
 ---
 
 ### D2. `fretboard-note-finding` — Know where the notes are
