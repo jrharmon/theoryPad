@@ -63,7 +63,9 @@ describe.each(PLAYED.map((d) => [d.id, d] as const))('%s', (_id, definition) => 
       const inKey = new Set(scaleNotes({ tonic: pitchClass('D'), mode: 'dorian' }).map(chroma));
       for (const seed of SEEDS) {
         const { phrase, brief } = generate(definition, seed, instrument);
-        expect(phrase.notes.length, `seed ${seed}`).toBeGreaterThan(0);
+        // An improvisation writes nothing; it still has bars to count.
+        if (definition.tags.includes('improv')) expect(phrase.totalTicks).toBeGreaterThan(0);
+        else expect(phrase.notes.length, `seed ${seed}`).toBeGreaterThan(0);
         expect(brief.headline).not.toMatch(/undefined|,\s*\.|\s\s/);
         for (const note of phrase.notes) {
           expect(isValidPosition(instrument, note), JSON.stringify(note)).toBe(true);
@@ -184,5 +186,44 @@ describe.each(THEORY.map((d) => [d.id, d] as const))('%s', (_id, definition) => 
 
   it('declares no tempo', () => {
     expect(definition.defaults.targetTempo).toBeNull();
+  });
+});
+
+describe('free-improv-target', () => {
+  const definition = exerciseDefinition('free-improv-target');
+
+  it('writes nothing, and counts phrases in labeled bars', () => {
+    const { phrase } = generate(definition, 7);
+    expect(phrase.notes).toEqual([]);
+    expect(phrase.bars).toHaveLength(32); // 8 phrases of 4 bars
+    const labeled = phrase.bars.filter((b) => b.label?.startsWith('Phrase'));
+    expect(labeled.map((b) => b.index)).toEqual([0, 4, 8, 12, 16, 20, 24, 28]);
+  });
+
+  it('marks the target degree on the neck, and names it in the brief', () => {
+    const policies: AxisPolicies = { ...D_DORIAN, targetScaleDegree: { mode: 'fixed', value: '6' } };
+    const { neck, brief } = generate(definition, 3, STANDARD_GUITAR, policies);
+    expect(brief.headline).toBe('Improvise in D Dorian, ending every phrase on B.');
+    expect(neck.notes.some((n) => n.role === 'target' && n.degree.number === 6)).toBe(true);
+    expect(neck.notes.every((n) => n.position.fret <= 15)).toBe(true);
+  });
+
+  it('keeps to the position only when asked', () => {
+    const policies: AxisPolicies = { ...D_DORIAN, neckPosition: { mode: 'fixed', value: '7' } };
+    const params = { phraseLengthBars: 2, phraseCount: 4, constrainToPosition: true, showTargetOnNeck: true };
+    const variation = rollVariation({ axes: definition.axes, seed: 1, instrument: STANDARD_GUITAR, policies });
+    const instance = definition.generate({
+      variation,
+      keyMode: { tonic: pitchClass('D'), mode: 'dorian' },
+      instrument: STANDARD_GUITAR,
+      params,
+      rng: mulberry32(1),
+      repIndex: 0,
+    }) as PlayedInstance;
+    const frets = instance.neck.notes.map((n) => n.position.fret);
+    expect(Math.min(...frets)).toBeGreaterThanOrEqual(7);
+    expect(Math.max(...frets)).toBeLessThanOrEqual(11);
+    expect(instance.phrase.bars).toHaveLength(8);
+    expect(instance.brief.instruction).toContain('in 7th position');
   });
 });

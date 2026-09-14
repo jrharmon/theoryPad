@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { Fretboard, TabStaff } from '@/components/music';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,8 @@ import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
-import { referenceVideos } from '@/data';
-import { useVideos } from '@/store/videos';
+import { ImprovBody } from './ImprovBody';
+import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
 
@@ -36,7 +35,13 @@ export function PracticeBody() {
 
       <AxisStrip />
 
-      {instance.kind === 'played' && <PlayedBody instance={instance} instrument={instrument} />}
+      {/* Nothing written — an improvisation — is counted, not read. */}
+      {instance.kind === 'played' &&
+        (instance.phrase.notes.length === 0 ? (
+          <ImprovBody instance={instance} instrument={instrument} />
+        ) : (
+          <PlayedBody instance={instance} instrument={instrument} />
+        ))}
       {instance.kind === 'theory' && <TheoryBody instance={instance} />}
     </>
   );
@@ -50,36 +55,18 @@ function PlayedBody({
   instrument: ReturnType<typeof useSettings.getState>['settings']['instrument'];
 }) {
   const state = usePractice((s) => s.snapshot?.state);
-  const [tick, setTick] = useState(0);
-  const frame = useRef<number | null>(null);
   const playing = state === 'playing';
+  const tick = usePhraseTick(playing);
   // Paused keeps the playhead where it stopped — losing your place is exactly
   // what you did not want when you paused.
   const showPlayhead = playing || state === 'paused' || state === 'count-in';
-
-  // Polled rather than pushed: the runner's clock is the source of truth, and
-  // reading it on rAF keeps the tab in step without the clock driving React.
-  useEffect(() => {
-    if (!playing) return;
-    const step = () => {
-      setTick(usePractice.getState().runner?.snapshot.phraseTick ?? 0);
-      frame.current = requestAnimationFrame(step);
-    };
-    frame.current = requestAnimationFrame(step);
-    return () => {
-      if (frame.current !== null) cancelAnimationFrame(frame.current);
-    };
-  }, [playing]);
 
   const ui = useSettings((s) => s.settings.ui);
   const save = useSettings((s) => s.save);
   const hasNeck = instance.neck.notes.length > 0;
   const showNeck = hasNeck && ui.showNeck;
-  // YouTube's player must stay visible, so a track holds the column open.
-  const hasTrack = usePractice((s) => s.backing.resolved.kind === 'video' || s.backing.error !== null);
-  const hasLessons = usePractice((s) => (s.routine ? null : s.exerciseId));
-  const lessonCount = useVideos((s) => (hasLessons ? referenceVideos(s.videos, hasLessons).length : 0));
-  const showSide = showNeck || hasTrack || lessonCount > 0;
+  const videoColumn = useVideoColumn();
+  const showSide = showNeck || videoColumn;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
 
