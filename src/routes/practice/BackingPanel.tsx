@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
 import { cn } from 'cn';
+import { ENLARGED, useEnlarge } from '@/components/media/useEnlarge';
+import { EnlargeScrim } from '@/components/media/EnlargeScrim';
 import { modeTitle } from '@/domain/music';
 import { speedPercent } from '@/domain/backing';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
 import { PlayerSlot } from '@/components/media/PlayerSlot';
 import { usePractice } from '@/store/practice';
+import { useVideos } from '@/store/videos';
+import { referenceVideos } from '@/data';
+import { VideoEmbed } from '@/components/media/VideoEmbed';
 
 /**
  * The playing track, in the right-hand column. YouTube requires its player to
@@ -15,35 +19,15 @@ import { usePractice } from '@/store/practice';
  */
 export function BackingPanel() {
   const backing = usePractice((s) => s.backing);
-  const [enlarged, setEnlarged] = useState(false);
-
-  // Escape shrinks the video rather than leaving the exercise.
-  useEffect(() => {
-    if (!enlarged) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      e.stopPropagation();
-      setEnlarged(false);
-    };
-    document.addEventListener('keydown', onKey, true);
-    return () => document.removeEventListener('keydown', onKey, true);
-  }, [enlarged]);
+  const [enlarged, setEnlarged] = useEnlarge();
 
   if (backing.resolved.kind !== 'video' && !backing.error) return null;
   const video = backing.resolved.kind === 'video' ? backing.resolved.video : null;
 
   return (
     <>
-      {enlarged && (
-        // The same scrim as a dialog's, dark in both themes.
-        <div className="fixed inset-0 z-30 bg-black/50" aria-hidden onClick={() => setEnlarged(false)} />
-      )}
-      <div
-        className={cn(
-          'sheet px-5 pt-4 pb-[18px]',
-          enlarged &&
-            'fixed top-1/2 left-1/2 z-40 w-[min(92vw,calc(78vh*16/9))] -translate-x-1/2 -translate-y-1/2',
-        )}
+      {enlarged && <EnlargeScrim onClose={() => setEnlarged(false)} />}
+      <div className={cn('sheet px-5 pt-4 pb-[18px]', enlarged && ENLARGED)}
         data-testid="backing-panel"
       >
         <div className="flex items-center gap-2">
@@ -85,6 +69,34 @@ export function BackingPanel() {
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * The exercise's reference videos, to watch while learning it. Practicing on
+ * its own only — a routine is for playing through, not for lessons.
+ */
+export function ReferencePanel() {
+  const exerciseId = usePractice((s) => (s.routine ? null : s.exerciseId));
+  const videos = useVideos((s) => s.videos);
+  if (!exerciseId) return null;
+  const lessons = referenceVideos(videos, exerciseId);
+  if (lessons.length === 0) return null;
+  return (
+    <div className="sheet px-5 pt-4 pb-[18px]" data-testid="reference-panel">
+      <Kicker>{lessons.length === 1 ? 'Reference video' : 'Reference videos'}</Kicker>
+      <div className="mt-2 space-y-4">
+        {lessons.map((video) => (
+          <VideoEmbed
+            key={video.id}
+            videoId={video.videoId}
+            title={video.title}
+            startSec={video.startSec}
+            endSec={video.endSec}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 

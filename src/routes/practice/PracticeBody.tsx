@@ -7,7 +7,9 @@ import { overlayFretRange } from '@/domain/neck';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
-import { BackingPanel } from './BackingPanel';
+import { BackingPanel, ReferencePanel } from './BackingPanel';
+import { referenceVideos } from '@/data';
+import { useVideos } from '@/store/videos';
 import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
 
@@ -75,7 +77,9 @@ function PlayedBody({
   const showNeck = hasNeck && ui.showNeck;
   // YouTube's player must stay visible, so a track holds the column open.
   const hasTrack = usePractice((s) => s.backing.resolved.kind === 'video' || s.backing.error !== null);
-  const showSide = showNeck || hasTrack;
+  const hasLessons = usePractice((s) => (s.routine ? null : s.exerciseId));
+  const lessonCount = useVideos((s) => (hasLessons ? referenceVideos(s.videos, hasLessons).length : 0));
+  const showSide = showNeck || hasTrack || lessonCount > 0;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
 
@@ -136,6 +140,7 @@ function PlayedBody({
       {showSide && (
         <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
           <BackingPanel />
+          <ReferencePanel />
           {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
           {showNeck && (
             <div className="sheet px-5 pt-4 pb-[18px]">

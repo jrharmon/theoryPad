@@ -114,15 +114,17 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
           </div>
         )}
 
-        {(shared || draft.playAlong) && (
+        {shared || draft.playAlong ? (
           <Timing draft={draft} change={change} player={player} />
+        ) : (
+          <WatchRange draft={draft} change={change} player={player} />
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Title" htmlFor="track-title">
             <Input id="track-title" value={draft.title} onChange={(e) => change({ title: e.target.value })} />
           </Field>
-          <KeyAndMode draft={draft} change={change} allowAny={!shared} />
+          {(shared || draft.playAlong) && <KeyAndMode draft={draft} change={change} allowAny={!shared} />}
         </div>
 
         {!shared && (
@@ -368,6 +370,42 @@ function Timing({
           </div>
         </Field>
       </div>
+    </div>
+  );
+}
+
+/** A reference video's part worth watching: where to start, and optionally stop. */
+function WatchRange({ draft, change, player }: { draft: TrackDraft; change: Change; player: YouTubePlayer | null }) {
+  const now = (field: 'start' | 'end') => player && change({ [field]: formatVideoTime(player.currentTime) });
+  return (
+    <div className="flex flex-wrap items-end gap-4 rounded-[8px] bg-ink/[0.03] p-4">
+      <Field label="Start at" htmlFor="watch-start">
+        <div className="flex gap-2">
+          <Input
+            id="watch-start"
+            value={draft.start}
+            className="w-[110px] tabular-nums"
+            onChange={(e) => change({ start: e.target.value })}
+          />
+          <Button variant="secondary" size="sm" disabled={!player} onClick={() => now('start')}>
+            Set to now
+          </Button>
+        </div>
+      </Field>
+      <Field label="Stop at" htmlFor="watch-end" hint="Optional.">
+        <div className="flex gap-2">
+          <Input
+            id="watch-end"
+            value={draft.end}
+            placeholder="the end"
+            className="w-[110px] tabular-nums"
+            onChange={(e) => change({ end: e.target.value })}
+          />
+          <Button variant="secondary" size="sm" disabled={!player} onClick={() => now('end')}>
+            Set to now
+          </Button>
+        </div>
+      </Field>
     </div>
   );
 }

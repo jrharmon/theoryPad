@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { Separator } from '@/components/ui/separator';
 import { ParamsEditor } from './ParamsEditor';
+import { BackingCriteriaEditor, ExerciseVideos } from './ExerciseVideos';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
@@ -73,62 +74,64 @@ export function ExerciseDetail() {
         </div>
       </div>
 
-      <div
-        className={`grid items-start gap-6 px-8 pt-1 pb-7 ${definition.kind === 'played' ? 'lg:grid-cols-[320px_1fr]' : ''}`}
-      >
-        {/* A theory exercise has no pulse, so nothing to set a tempo for. */}
-        {definition.kind === 'played' && (
-          <div className="sheet px-5 py-4">
-            <Kicker>Tempo</Kicker>
-            <div className="mt-3 space-y-4">
-              <Field
-                label="Target tempo"
-                htmlFor="target-tempo"
-                hint="The tempo you mean to play this at. Moving the tempo while practicing never changes it."
-              >
-                <Input
-                  id="target-tempo"
-                  type="number"
-                  min={30}
-                  max={300}
-                  className="tabular-nums"
-                  value={exercise.tempo.targetTempo ?? ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    void update(exercise.id, {
-                      tempo: {
-                        ...exercise.tempo,
-                        targetTempo: e.target.value === '' ? null : Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-              </Field>
+      <div className="grid items-start gap-6 px-8 pt-1 pb-7 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-6">
+          {/* A theory exercise has no pulse, so nothing to set a tempo for. */}
+          {definition.kind === 'played' && (
+            <div className="sheet px-5 py-4">
+              <Kicker>Tempo</Kicker>
+              <div className="mt-3 space-y-4">
+                <Field
+                  label="Target tempo"
+                  htmlFor="target-tempo"
+                  hint="The tempo you mean to play this at. Moving the tempo while practicing never changes it."
+                >
+                  <Input
+                    id="target-tempo"
+                    type="number"
+                    min={30}
+                    max={300}
+                    className="tabular-nums"
+                    value={exercise.tempo.targetTempo ?? ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      void update(exercise.id, {
+                        tempo: {
+                          ...exercise.tempo,
+                          targetTempo: e.target.value === '' ? null : Number(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                </Field>
 
-              <Field
-                label="Best ever"
-                htmlFor="best-tempo"
-                hint="Record keeping only. Nothing reads this."
-              >
-                <Input
-                  id="best-tempo"
-                  type="number"
-                  min={30}
-                  max={300}
-                  className="tabular-nums"
-                  value={exercise.tempo.maxTempo ?? ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    void update(exercise.id, {
-                      tempo: {
-                        ...exercise.tempo,
-                        maxTempo: e.target.value === '' ? null : Number(e.target.value),
-                      },
-                    })
-                  }
-                />
-              </Field>
+                <Field
+                  label="Best ever"
+                  htmlFor="best-tempo"
+                  hint="Record keeping only. Nothing reads this."
+                >
+                  <Input
+                    id="best-tempo"
+                    type="number"
+                    min={30}
+                    max={300}
+                    className="tabular-nums"
+                    value={exercise.tempo.maxTempo ?? ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      void update(exercise.id, {
+                        tempo: {
+                          ...exercise.tempo,
+                          maxTempo: e.target.value === '' ? null : Number(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                </Field>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          <ExerciseVideos exercise={exercise} played={definition.kind === 'played'} />
+          {definition.kind === 'played' && <BackingCriteriaEditor exercise={exercise} />}
+        </div>
 
         <div>
           {definition.params && (
