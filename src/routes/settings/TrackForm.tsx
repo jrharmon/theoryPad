@@ -25,6 +25,7 @@ import {
 import { PlayerSlot } from '@/components/media/PlayerSlot';
 import { useYouTubePlayer } from '@/components/media/useYouTubePlayer';
 import { useVideos } from '@/store/videos';
+import type { YouTubePlayer } from '@/audio/backing';
 import { draftFromVideo, draftToVideo, emptyDraft, respell, type TrackDraft } from './trackDraft';
 
 /** After this long without a tap, the next one starts a fresh run. */
@@ -198,9 +199,13 @@ function Timing({
 }: {
   draft: TrackDraft;
   change: Change;
-  player: { currentTime: number; playFrom(seconds: number): Promise<void> } | null;
+  player: YouTubePlayer | null;
 }) {
   const [taps, setTaps] = useState<number[]>([]);
+  const stopCheck = useRef<(() => void) | null>(null);
+  const [checking, setChecking] = useState(false);
+  // Leaving the form stops the check.
+  useEffect(() => () => stopCheck.current?.(), []);
   const lastTapAt = useRef(0);
   const result = tapTempo(taps);
 
@@ -231,6 +236,23 @@ function Timing({
   }, []);
 
   const start = parseVideoTime(draft.start);
+  const bpm = Number(draft.bpm);
+  const beats = Number(draft.beats);
+  const canCheck = player !== null && start !== null && bpm > 0 && Number.isInteger(beats) && beats >= 1;
+
+  const check = async () => {
+    if (checking) {
+      stopCheck.current?.();
+      stopCheck.current = null;
+      setChecking(false);
+      return;
+    }
+    if (!player || start === null) return;
+    setChecking(true);
+    const [{ getAudioEngine }, { clickAlong }] = await Promise.all([import('@/audio'), import('@/audio/backing')]);
+    stopCheck.current = await clickAlong(getAudioEngine(), player, { startSec: start, bpm, beatsPerBar: beats });
+  };
+
   const nudge = (by: number) => {
     if (start !== null) change({ start: formatVideoTime(Math.max(0, start + by)) });
   };
@@ -267,6 +289,16 @@ function Timing({
           onClick={() => player && start !== null && void player.playFrom(start)}
         >
           Play from bar 1
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!canCheck && !checking}
+          aria-pressed={checking}
+          title="Plays from a bar before bar 1 with a click following the track. If bar 1 and the tempo are right, the accent lands on the downbeat."
+          onClick={() => void check()}
+        >
+          {checking ? 'Stop the click' : 'Check with a click'}
         </Button>
       </div>
 

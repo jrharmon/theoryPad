@@ -121,7 +121,7 @@ export function resolveBacking(
   videos: readonly Video[],
   query: BackingQuery,
 ): ResolvedBacking {
-  if (!choice) return { kind: 'none', dropped: false };
+  if (!choice || choice.kind === 'none') return { kind: 'none', dropped: false };
   if (choice.kind === 'drone') return { kind: 'drone' };
   const video = backingTracks(videos, query).find((v) => v.id === choice.id);
   return video ? { kind: 'video', video } : { kind: 'none', dropped: true };

@@ -30,6 +30,20 @@ describe('Metronome', () => {
     expect(clicks).toHaveLength(5);
   });
 
+  it('makes no sound at all when silenced — under a track, the recording counts in', () => {
+    const clock = new FakeClock();
+    const { s, clicks } = sink();
+    const metronome = new Metronome(clock, s, { countInBars: 1, subdivision: 2 });
+    const beats: BeatEvent[] = [];
+    metronome.onBeat((b) => beats.push(b));
+    metronome.setSilenced(true);
+    metronome.start();
+    clock.start();
+    clock.advanceTicks(QUARTER * 7);
+    expect(clicks).toHaveLength(0);
+    expect(beats).toHaveLength(8);
+  });
+
   it('clicks a count-in in the middle of the clock even when muted', () => {
     // Between a routine's items: the count-in is the only warning of what is next.
     const clock = new FakeClock();

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { PPQ } from '../../phrase';
+import { pitchClass } from '../../music';
 import {
   alignTrack,
+  droneNotes,
   effectiveTempo,
   followFactor,
   formatVideoTime,
@@ -156,5 +158,17 @@ describe('tapping along', () => {
 
   it('gives up on a missed or doubled tap', () => {
     expect(tapTempo([0, 0.6, 1.2, 2.4, 3.0])).toBeNull();
+  });
+});
+
+describe('the drone', () => {
+  it('sounds root, fifth and octave, low in the guitar’s range', () => {
+    expect(droneNotes({ tonic: pitchClass('A'), mode: 'aeolian' })).toEqual(['A2', 'E3', 'A3']);
+    expect(droneNotes({ tonic: pitchClass('E'), mode: 'phrygian' })).toEqual(['E2', 'B2', 'E3']);
+    expect(droneNotes({ tonic: pitchClass('D#'), mode: 'dorian' }).map((n) => n.slice(-1))).toEqual([
+      '3',
+      '3',
+      '4',
+    ]);
   });
 });

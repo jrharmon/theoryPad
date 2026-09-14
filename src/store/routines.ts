@@ -1,5 +1,13 @@
 import { create } from 'zustand';
-import { createRepositories, db, newId, type Exercise, type Routine, type RoutineItem } from '@/data';
+import {
+  createRepositories,
+  db,
+  newId,
+  type BackingChoice,
+  type Exercise,
+  type Routine,
+  type RoutineItem,
+} from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 
 /**
@@ -56,6 +64,7 @@ interface RoutinesState {
   moveItem: (id: string, itemId: string, delta: -1 | 1) => Promise<void>;
   removeItem: (id: string, itemId: string) => Promise<void>;
   markPlayed: (id: string, at: number) => Promise<void>;
+  setBacking: (id: string, backing: BackingChoice) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -115,6 +124,7 @@ export const useRoutines = create<RoutinesState>((set, get) => {
     removeItem: (id, itemId) =>
       mutate(id, (r) => ({ items: r.items.filter((item) => item.id !== itemId) })),
     markPlayed: (id, at) => mutate(id, () => ({ lastPlayedAt: at })),
+    setBacking: (id, backing) => mutate(id, () => ({ backing })),
 
     async remove(id) {
       const repos = createRepositories(db());

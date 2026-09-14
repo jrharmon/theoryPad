@@ -7,8 +7,32 @@ import type { YouTubePlayer } from '@/audio/backing';
  * there: moving an iframe reloads it, so anything that enlarges the video
  * restyles this slot instead.
  */
-export function PlayerSlot({ player, className }: { player: YouTubePlayer | null; className?: string }) {
+export function PlayerSlot({
+  player,
+  className,
+  keepKeys = false,
+}: {
+  player: YouTubePlayer | null;
+  className?: string;
+  /**
+   * Hand the keyboard straight back after a click on the video. A focused
+   * iframe swallows every key, and Space should still pause the exercise.
+   */
+  keepKeys?: boolean;
+}) {
   const host = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!keepKeys) return;
+    // Focus moving into the iframe blurs the window; the click still lands.
+    const onBlur = () =>
+      setTimeout(() => {
+        const active = document.activeElement;
+        if (active instanceof HTMLIFrameElement && host.current?.contains(active)) active.blur();
+      }, 0);
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, [keepKeys]);
 
   useEffect(() => {
     const node = host.current;

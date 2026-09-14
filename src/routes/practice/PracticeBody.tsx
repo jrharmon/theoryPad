@@ -7,6 +7,7 @@ import { overlayFretRange } from '@/domain/neck';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
+import { BackingPanel } from './BackingPanel';
 import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
 
@@ -72,11 +73,14 @@ function PlayedBody({
   const save = useSettings((s) => s.save);
   const hasNeck = instance.neck.notes.length > 0;
   const showNeck = hasNeck && ui.showNeck;
+  // YouTube's player must stay visible, so a track holds the column open.
+  const hasTrack = usePractice((s) => s.backing.resolved.kind === 'video' || s.backing.error !== null);
+  const showSide = showNeck || hasTrack;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
 
   return (
-    <div className={`grid gap-6 px-8 py-6 ${showNeck ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
+    <div className={`grid gap-6 px-8 py-6 ${showSide ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
       <div className="sheet min-w-0 px-5 pt-4 pb-[18px]">
         <div className="flex items-center gap-3">
           <Kicker>Tab · generated for this variation</Kicker>
@@ -129,17 +133,22 @@ function PlayedBody({
         </div>
       </div>
 
-      {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
-      {showNeck && (
-        <div className="sheet px-5 pt-4 pb-[18px] lg:sticky lg:top-4 lg:self-start">
-          <Kicker>Shape on the neck</Kicker>
-          <div className="mt-2">
-            <Fretboard
-              instrument={instrument}
-              overlay={instance.neck}
-              fretRange={overlayFretRange(instance.neck, instrument)}
-            />
-          </div>
+      {showSide && (
+        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+          <BackingPanel />
+          {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
+          {showNeck && (
+            <div className="sheet px-5 pt-4 pb-[18px]">
+              <Kicker>Shape on the neck</Kicker>
+              <div className="mt-2">
+                <Fretboard
+                  instrument={instrument}
+                  overlay={instance.neck}
+                  fretRange={overlayFretRange(instance.neck, instrument)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

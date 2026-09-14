@@ -54,10 +54,10 @@ export interface Video extends Row {
 export type VideoScope = { kind: 'shared' } | { kind: 'exercise'; exerciseId: Uuid };
 
 /**
- * What plays instead of the synth notes. Absent means nothing does: the synth
- * plays the notes, with the metronome. Never chosen automatically.
+ * What plays instead of the synth notes. None (or absent) is the synth playing
+ * the notes, with the metronome. Never chosen automatically.
  */
-export type BackingChoice = { kind: 'drone' } | { kind: 'video'; id: Uuid };
+export type BackingChoice = { kind: 'none' } | { kind: 'drone' } | { kind: 'video'; id: Uuid };
 
 /** Narrows which shared tracks the backing menu offers. */
 export interface BackingCriteria {

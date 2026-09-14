@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { tickToBarBeat } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
+import { BackingMenu, TrackSpeed } from './BackingMenu';
+import { BackingDroppedNote } from './BackingPanel';
 
 /**
  * The controls, frozen to the bottom of the screen.
@@ -71,6 +73,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           >
             +
           </Button>
+          <TrackSpeed />
           {targetTempo !== null && currentTempo !== targetTempo && (
             <span className="ml-1 text-[12px] text-ink/64 tabular-nums">target {targetTempo}</span>
           )}
@@ -78,6 +81,8 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       )}
 
       {!theory && <PlaybackToggles />}
+      {!theory && <BackingMenu />}
+      {!theory && state === 'brief' && <BackingDroppedNote />}
 
       {state === 'count-in' && (
         <span className="text-[13px] font-extrabold tabular-nums">Counting in…</span>
@@ -113,11 +118,15 @@ export function PlaybackToggles() {
   const practice = usePractice();
   const audio = useSettings((s) => s.settings.audio);
   const inRoutine = usePractice((s) => s.routine !== null);
+  // A track is the click: the metronome waits it out, and says why.
+  const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
   return (
     <div className="flex items-center gap-1" role="group" aria-label="Playback">
       <Toggle
         label="Metronome"
-        on={audio.metronomeEnabled}
+        on={audio.metronomeEnabled && !underTrack}
+        disabled={underTrack}
+        title={underTrack ? 'Muted under a backing track' : undefined}
         onChange={(on) => void practice.setMetronome(on)}
       />
       <Toggle
@@ -140,16 +149,22 @@ function Toggle({
   label,
   on,
   onChange,
+  disabled = false,
+  title,
 }: {
   label: string;
   on: boolean;
   onChange: (on: boolean) => void;
+  disabled?: boolean;
+  title?: string | undefined;
 }) {
   return (
     <Button
       size="sm"
       variant="secondary"
       aria-pressed={on}
+      disabled={disabled}
+      title={title}
       className={`rounded-toggle ${on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}`}
       onClick={() => onChange(!on)}
     >

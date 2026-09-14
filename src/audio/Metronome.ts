@@ -41,6 +41,7 @@ export class Metronome {
   private listeners = new Set<BeatListener>();
   private running = false;
   private muted = false;
+  private silenced = false;
   /** A count-in in the middle of the clock — a routine's next item. */
   private extraCountIn: { from: number; to: number } | null = null;
 
@@ -92,7 +93,7 @@ export class Metronome {
 
         // Muting silences the click but never the count-in: with the click
         // off, the count-in is still how you know when to start.
-        if (!this.muted || isCountIn) {
+        if (!this.silenced && (!this.muted || isCountIn)) {
           this.sink?.click(
             audioTime,
             isDownbeat && this.options.accentFirstBeat ? 'accent' : 'beat',
@@ -109,7 +110,7 @@ export class Metronome {
       this.handles.push(
         this.clock.scheduleRepeat((audioTime, tick) => {
           // The beat itself is already clicked above.
-          if (tick % perBeat === 0) return;
+          if (tick % perBeat === 0 || this.silenced) return;
           if (this.muted && tick >= countIn && !this.inExtraCountIn(tick)) return;
           this.sink?.click(audioTime, 'subdivision');
         }, step),
@@ -130,6 +131,14 @@ export class Metronome {
    */
   setMuted(muted: boolean): void {
     this.muted = muted;
+  }
+
+  /**
+   * No clicks at all, count-in included: under a backing track the recording
+   * is the count-in. Beat listeners still fire.
+   */
+  setSilenced(silenced: boolean): void {
+    this.silenced = silenced;
   }
 
   /**
