@@ -26,7 +26,7 @@ import { Kicker } from '@/components/ui/kicker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProgress } from '@/store/progress';
 import { useSettings } from '@/store/settings';
-import { KeyModeGrid } from './KeyModeGrid';
+import { KeyModeGrid } from '@/components/music/KeyModeGrid';
 
 type Layer = 'off' | 'all' | 'recent';
 

@@ -1,5 +1,5 @@
-import { chroma, sameChroma } from '@/domain/music';
-import type { KeyMode } from '@/domain/music';
+import { MODE_NAMES, chroma, sameChroma } from '@/domain/music';
+import type { KeyMode, ModeName } from '@/domain/music';
 import type { BackingChoice, BackingCriteria, Uuid, Video } from './entities';
 import type { NewVideo } from './repositories/types';
 
@@ -79,20 +79,22 @@ export function sharedTracks(videos: readonly Video[]): Video[] {
   return videos.filter((v) => v.scope.kind === 'shared').sort(byTitle);
 }
 
-/** One cell of the 12×7 coverage grid, spelling-blind: A♯ and B♭ are one cell. */
-export function coverageKey(keyMode: KeyMode): string {
-  return `${chroma(keyMode.tonic)}:${keyMode.mode}`;
-}
-
-/** How many shared tracks fill each key-and-mode cell. */
-export function coverage(videos: readonly Video[]): Map<string, number> {
-  const counts = new Map<string, number>();
+/**
+ * How many shared tracks fill each cell of the 12×7 grid: per mode, twelve
+ * counts by chroma — spelling-blind, so A♯ and B♭ Dorian are one cell.
+ */
+export function coverage(videos: readonly Video[]): Record<ModeName, number[]> {
+  const grid = Object.fromEntries(MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)])) as Record<
+    ModeName,
+    number[]
+  >;
   for (const video of sharedTracks(videos)) {
     if (!video.keyMode) continue;
-    const key = coverageKey(video.keyMode);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const row = grid[video.keyMode.mode];
+    const cell = chroma(video.keyMode.tonic);
+    row[cell] = (row[cell] ?? 0) + 1;
   }
-  return counts;
+  return grid;
 }
 
 /** Every tag in use, for suggestions — spelled as first seen, sorted. */

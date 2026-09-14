@@ -33,6 +33,7 @@ import {
 import { useSettings } from '@/store/settings';
 import { downloadFile } from '@/lib/download';
 import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
+import { BackingTracksSection } from './BackingTracksSection';
 
 export function SettingsPage() {
   const { settings, load, save } = useSettings();
@@ -145,6 +146,8 @@ export function SettingsPage() {
           </div>
         </Row>
       </Section>
+
+      <BackingTracksSection />
 
       <DataSection />
     </section>

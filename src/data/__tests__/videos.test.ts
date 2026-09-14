@@ -6,7 +6,6 @@ import type { NewVideo } from '../repositories/types';
 import {
   backingTracks,
   coverage,
-  coverageKey,
   referenceVideos,
   resolveBacking,
   tagsInUse,
@@ -135,9 +134,9 @@ describe('reference videos, coverage and tags', () => {
       video({ keyMode: km('A#', 'dorian') }),
       video({ scope: own('ex-1'), keyMode: km('C', 'ionian') }),
     ]);
-    expect(counts.get(coverageKey(km('A', 'aeolian')))).toBe(2);
-    expect(counts.get(coverageKey(km('Bb', 'dorian')))).toBe(2);
-    expect(counts.has(coverageKey(km('C', 'ionian')))).toBe(false);
+    expect(counts.aeolian[9]).toBe(2);
+    expect(counts.dorian[10]).toBe(2);
+    expect(counts.ionian.every((n) => n === 0)).toBe(true);
   });
 
   it('suggests each tag once, spelled as first seen', () => {
