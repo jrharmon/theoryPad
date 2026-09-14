@@ -87,7 +87,7 @@ describe('following the video', () => {
     const halfBeat = PPQ / 2; // 0.3 s at 100 bpm
     expect(followFactor(0, halfBeat, 100)).toBeCloseTo(1.15);
     expect(followFactor(halfBeat, 0, 100)).toBeCloseTo(0.85);
-    expect(followFactor(0, PPQ / 20, 100)).toBeCloseTo(1.03);
+    expect(followFactor(0, PPQ / 20, 100)).toBeCloseTo(1.06);
   });
 });
 

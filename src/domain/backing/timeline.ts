@@ -75,8 +75,9 @@ export function tickAtVideoTime(
 export const FOLLOW_DEADBAND_SEC = 0.008;
 /** How far the clock may run fast or slow to catch up. Nothing audible rides on it. */
 export const FOLLOW_MAX_NUDGE = 0.15;
-/** Fraction of the gap closed per second — a one-second time constant. */
-const FOLLOW_GAIN = 1;
+/** Fraction of the gap closed per second: a half-second time constant, so YouTube's
+ * start delay is gone well inside a count-in bar. */
+const FOLLOW_GAIN = 2;
 
 /**
  * How much faster (above 1) or slower the clock should run to close its gap to
