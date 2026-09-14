@@ -20,6 +20,10 @@ export interface BackingState {
   tempoBefore: number | null;
   /** YouTube could not be reached, or could not play the video. */
   error: string | null;
+  /** Waiting for YouTube to start before the clock goes. */
+  starting: boolean;
+  /** Sounding (or paused mid-pass) — as opposed to loaded and waiting. */
+  started: boolean;
 }
 
 export const NO_BACKING: BackingState = {
@@ -31,6 +35,8 @@ export const NO_BACKING: BackingState = {
   speed: 1,
   tempoBefore: null,
   error: null,
+  starting: false,
+  started: false,
 };
 
 export interface BackingContext {

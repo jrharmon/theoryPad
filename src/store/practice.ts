@@ -168,8 +168,6 @@ function soundFor(
 }
 
 let audio: AudioModule | null = null;
-/** A second press of Play while YouTube is still starting must not start twice. */
-let starting = false;
 
 function rollSessionKeyMode(): KeyMode {
   // Standalone practice has no routine to inherit a key from, so the exercise's
@@ -213,7 +211,7 @@ export const usePractice = create<PracticeState>((set, get) => {
     }
 
     backing.source?.dispose();
-    next = { ...next, source: null, player: null, error: null };
+    next = { ...next, source: null, player: null, error: null, started: false };
     const snapshot = runner?.snapshot;
     let tempo: number | null = null;
     // Leaving a track: back to the tempo from before it took over.
@@ -242,9 +240,11 @@ export const usePractice = create<PracticeState>((set, get) => {
           set({ backing: { ...get().backing, error: (e as Error).message } });
         }
       });
-      // The track takes the tempo over, at the speed nearest the one you had.
-      const before =
-        next.tempoBefore ?? snapshot?.currentTempo ?? snapshot?.targetTempo ?? bpm;
+      // The track takes the tempo over, at the speed nearest the one you had —
+      // in a routine, the current item's own.
+      const before = routine
+        ? (snapshot?.targetTempo ?? snapshot?.currentTempo ?? bpm)
+        : (next.tempoBefore ?? snapshot?.currentTempo ?? snapshot?.targetTempo ?? bpm);
       const speed = speedFor(before, bpm);
       source.setRate(speed);
       tempo = effectiveTempo(bpm, speed);
@@ -263,24 +263,66 @@ export const usePractice = create<PracticeState>((set, get) => {
     set({ backing: { ...backing, speed } });
   };
 
-  /** Start the backing ahead of the clock. A track that will not start is dropped, said so. */
+  /**
+   * Start the backing ahead of the clock, settling once it sounds. A track
+   * that will not start is dropped, and says so, and the notes play instead.
+   */
   const startBacking = async (countInTicks: number) => {
     const { backing } = get();
-    if (!backing.source) return;
+    if (!backing.source || backing.starting) return;
+    set({ backing: { ...backing, starting: true } });
     try {
       await backing.source.start(countInTicks);
+      set({ backing: { ...get().backing, starting: false, started: true } });
     } catch (e) {
       backing.source.dispose();
       set({
         backing: {
-          ...backing,
+          ...get().backing,
           source: null,
           player: null,
           resolved: { kind: 'none', dropped: false },
           error: (e as Error).message,
+          starting: false,
+          started: false,
         },
       });
     }
+  };
+
+  const stopBacking = () => {
+    const { backing } = get();
+    if (!backing.source || (!backing.started && !backing.starting)) return;
+    backing.source.stop();
+    set({ backing: { ...backing, started: false } });
+  };
+
+  /**
+   * A routine's played item has started its clock with the track not yet
+   * going — the first item, or the first after a theory set. Hold the clock,
+   * start the track a count-in ahead of bar 1, and let the clock go again.
+   */
+  const catchUpBacking = async (runner: ExerciseRunner) => {
+    const { backing } = get();
+    if (!audio || backing.starting) return;
+    const snapshot = runner.snapshot;
+    if (snapshot.freeTime) {
+      await startBacking(0);
+      return;
+    }
+    runner.pause();
+    const countInEnd = snapshot.countInRemaining + audio.getAudioEngine().clock.ticks;
+    await startBacking(countInEnd);
+    runner.resume();
+  };
+
+  /** Each routine item has its own tempo: the track's speed changes to fit it. */
+  const fitSpeedTo = (runner: ExerciseRunner) => {
+    const { backing } = get();
+    if (backing.resolved.kind !== 'video' || !backing.resolved.video.bpm) return;
+    const tempo = runner.snapshot.targetTempo ?? runner.snapshot.currentTempo;
+    if (tempo === null) return;
+    applySpeed(speedFor(tempo, backing.resolved.video.bpm));
   };
 
   return {
@@ -359,7 +401,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         if (snapshot.state === 'brief' || snapshot.state === 'done') {
           engine.metronome.stop();
           engine.phrase.clear();
-          get().backing.source?.stop();
+          stopBacking();
         }
         // A re-roll can move the key out from under a track.
         if (snapshot.state === 'brief' && get().runner === runner) refreshBacking();
@@ -390,6 +432,7 @@ export const usePractice = create<PracticeState>((set, get) => {
       const repos = createRepositories(db());
       audio = await import('@/audio');
       const engine = audio.getAudioEngine();
+      if (!useVideos.getState().loaded) await useVideos.getState().load();
       const settings = useSettings.getState().settings;
       const { useRoutines } = await import('./routines');
 
@@ -435,6 +478,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         },
       });
 
+      let lastItem: ExerciseRunner | null = null;
       runner.subscribe((snapshot) => {
         const current = runner.current;
         set({
@@ -446,6 +490,32 @@ export const usePractice = create<PracticeState>((set, get) => {
         if (snapshot.phase === 'done' || snapshot.current?.state === 'brief') {
           engine.metronome.stop();
           engine.phrase.clear();
+          stopBacking();
+        }
+        if (snapshot.phase === 'overview') refreshBacking();
+        if (snapshot.phase !== 'running' || !current) return;
+
+        // One track through the routine, at each item's own tempo.
+        if (current !== lastItem) {
+          lastItem = current;
+          fitSpeedTo(current);
+        }
+        const { backing } = get();
+        const state = snapshot.current?.state;
+        const going = state === 'count-in' || state === 'playing';
+        if (current.currentInstance?.kind === 'theory') {
+          // A theory set pauses the track. Its player goes with the tab it sat
+          // beside, so the next played item builds a fresh one.
+          if (going && backing.source && backing.resolved.kind === 'video') {
+            backing.source.dispose();
+            set({ backing: { ...backing, source: null, player: null, started: false } });
+          }
+          return;
+        }
+        if (going && !backing.started && !backing.starting && backing.resolved.kind !== 'none') {
+          if (!backing.source) refreshBacking();
+          // After the runner has finished starting its clock, not inside it.
+          queueMicrotask(() => void catchUpBacking(current));
         }
       });
 
@@ -457,7 +527,12 @@ export const usePractice = create<PracticeState>((set, get) => {
         exerciseId: null,
         audioReady: false,
         error: null,
+        backingFor: {
+          choice: routine.backing ?? { kind: 'none' },
+          query: routine.backingCriteria ? { criteria: routine.backingCriteria } : {},
+        },
       });
+      refreshBacking();
     },
 
     async play() {
@@ -480,7 +555,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         routine.play();
         return;
       }
-      if (!runner || starting) return;
+      if (!runner || get().backing.starting) return;
       const phrase = runner.currentPhrase;
       const snapshot = runner.snapshot;
       // The backing starts first and the clock follows it: YouTube takes a few
@@ -489,24 +564,20 @@ export const usePractice = create<PracticeState>((set, get) => {
         snapshot.freeTime || !phrase
           ? 0
           : ticksPerBar(phrase.timeSignature) * useSettings.getState().settings.audio.countInBars;
-      starting = true;
-      try {
-        await startBacking(countIn);
-      } finally {
-        starting = false;
-      }
+      await startBacking(countIn);
       runner.begin();
     },
 
     pause: () => {
       const { runner, backing } = get();
+      if (backing.starting) return;
       if (runner?.snapshot.state !== 'playing' && runner?.snapshot.state !== 'count-in') return;
       runner.pause();
       backing.source?.pause();
     },
     resume: () => {
       const { runner, backing } = get();
-      if (runner?.snapshot.state !== 'paused') return;
+      if (runner?.snapshot.state !== 'paused' || backing.starting) return;
       void (async () => {
         await backing.source?.resume().catch(() => undefined);
         runner.resume();

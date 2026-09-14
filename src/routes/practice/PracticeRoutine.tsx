@@ -13,6 +13,7 @@ import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
 import { RunningChrome } from './RunningChrome';
 import { PlaybackToggles, TransportBar } from './TransportBar';
+import { BackingMenu } from './BackingMenu';
 import { useKeyModeView } from '@/store/keyModeView';
 import { ReferenceTrigger } from './ReferenceTrigger';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
@@ -140,6 +141,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
           Start
         </Button>
         <PlaybackToggles />
+        <BackingMenu />
         <div className="ml-auto">
           <Button variant="secondary" size="sm" onClick={() => practice.rerollAll()}>
             Re-roll all

@@ -20,6 +20,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   const instance = usePractice((s) => s.instance);
   const practice = usePractice();
   const inRoutine = usePractice((s) => s.routine !== null);
+  const startingTrack = usePractice((s) => s.backing.starting);
 
   if (!snapshot) return null;
 
@@ -32,13 +33,19 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
 
   return (
     <div className="flex flex-wrap items-center gap-3 px-[18px] py-2.5">
-      {state === 'brief' && (
+      {state === 'brief' && !startingTrack && (
         <Button size="lg" onClick={() => void practice.play()} data-testid="play">
           {theory ? (snapshot.lastSet ? 'Again' : 'Start') : 'Play'}
         </Button>
       )}
 
-      {!theory && (running || state === 'paused') && (
+      {startingTrack && (
+        <Button size="lg" variant="secondary" disabled data-testid="starting-track">
+          Starting the track…
+        </Button>
+      )}
+
+      {!theory && !startingTrack && (running || state === 'paused') && (
         <Button
           size="lg"
           variant={state === 'paused' ? 'default' : 'secondary'}
