@@ -70,7 +70,14 @@ export function ExerciseVideos({ exercise, played }: { exercise: Exercise; playe
  * Narrow the shared tracks the backing menu offers this exercise: tags a track
  * must have, and a bpm range. New tracks that fit appear on their own.
  */
-export function BackingCriteriaEditor({ exercise }: { exercise: Exercise }) {
+export function BackingCriteriaEditor({
+  exercise,
+  requiredTags = [],
+}: {
+  exercise: Exercise;
+  /** Tags the exercise itself asks for, on top of these. Not editable here. */
+  requiredTags?: readonly string[] | undefined;
+}) {
   const update = useExercises((s) => s.update);
   const criteria: BackingCriteria = exercise.backingCriteria ?? { tags: [] };
   const [tags, setTags] = useState(criteria.tags.join(', '));
@@ -95,6 +102,18 @@ export function BackingCriteriaEditor({ exercise }: { exercise: Exercise }) {
         are always offered.
       </p>
       <div className="mt-3 space-y-3">
+        {requiredTags.length > 0 && (
+          <p className="text-[13px]" data-testid="required-tags">
+            <span className="text-ink/64">This exercise always asks for </span>
+            {requiredTags.map((tag, i) => (
+              <span key={tag}>
+                {i > 0 && ', '}
+                <span className="font-semibold">{tag}</span>
+              </span>
+            ))}
+            <span className="text-ink/64">.</span>
+          </p>
+        )}
         <Field label="With these tags" htmlFor="criteria-tags" hint="Separated by commas. Empty offers every track.">
           <Input
             id="criteria-tags"

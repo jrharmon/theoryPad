@@ -24,6 +24,22 @@ export function meetsCriteria(video: Video, criteria: BackingCriteria | undefine
   return true;
 }
 
+/**
+ * The player's criteria with the exercise's required tags added — what a
+ * shared track must meet to be offered. Undefined when there is nothing to ask.
+ */
+export function withRequiredTags(
+  criteria: BackingCriteria | undefined,
+  required: readonly string[] | undefined,
+): BackingCriteria | undefined {
+  if (!required || required.length === 0) return criteria;
+  const tags = [...(criteria?.tags ?? [])];
+  for (const tag of required) {
+    if (!tags.some((t) => t.toLowerCase() === tag.toLowerCase())) tags.push(tag);
+  }
+  return { ...criteria, tags };
+}
+
 const byTitle = (a: Video, b: Video) => a.title.localeCompare(b.title);
 
 export interface BackingQuery {

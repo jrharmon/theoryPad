@@ -5,7 +5,9 @@ import {
   coverageCounts,
   createRepositories,
   db,
+  withRequiredTags,
   type BackingChoice,
+  type BackingCriteria,
   type BackingQuery,
   type Exercise,
   type Routine,
@@ -17,7 +19,7 @@ import type { Instrument } from '@/domain/instrument';
 import type { AudioEngine } from '@/audio';
 import type * as AudioModuleNs from '@/audio';
 type AudioModule = typeof AudioModuleNs;
-import type { CoverageCounts } from '@/domain/variation';
+import type { AxisValueKeys, CoverageCounts } from '@/domain/variation';
 import { AXIS_IDS } from '@/domain/variation';
 import { answerWeights } from '@/domain/progress';
 import type { ExerciseInstance } from '@/exercises/types';
@@ -33,7 +35,7 @@ import {
   type RoutineSnapshot,
   type RunnerSnapshot,
 } from '@/exercises/runner';
-import { ticksPerBar } from '@/domain/phrase';
+import { countInTicks } from '@/domain/phrase';
 import { newId } from '@/data';
 import { useSettings } from './settings';
 import { useVideos } from './videos';
@@ -74,6 +76,10 @@ interface PracticeState {
   play: () => Promise<void>;
   pause: () => void;
   resume: () => void;
+  /** Standalone: back to the top, ready to play the same material again. */
+  stop: () => void;
+  /** Standalone: from the top straight away, counted in. Must be called from a click or keypress. */
+  restart: () => Promise<void>;
   setTempo: (bpm: number) => void;
   nudgeTempo: (delta: number) => void;
   completeRep: () => void;
@@ -97,6 +103,11 @@ interface PracticeState {
   setLoop: (on: boolean) => Promise<void>;
   /** None, the drone, or a track — remembered on the exercise or routine. */
   chooseBacking: (choice: BackingChoice) => Promise<void>;
+}
+
+/** The player's app-wide "never roll these", as the roller takes them. */
+function blockedValues(settings: Settings): AxisValueKeys {
+  return { key: settings.practice.blockedKeys ?? [], mode: settings.practice.blockedModes ?? [] };
 }
 
 async function saveAudio(changes: Partial<Settings['audio']>) {
@@ -153,14 +164,7 @@ function soundFor(
     // The metronome always runs, muted or not: the count-in clicks either way,
     // and switching it mid-bar must not shift the beat.
     const audio = useSettings.getState().settings.audio;
-    if (phrase) {
-      const perBar = ticksPerBar(phrase.timeSignature);
-      engine.configureMetronome({
-        timeSignature: phrase.timeSignature,
-        // The runner only ever counts in whole bars, from the 0–2 setting.
-        countInBars: (perBar > 0 ? Math.round(countInTicks / perBar) : 0) as 0 | 1 | 2,
-      });
-    }
+    if (phrase) engine.configureMetronome({ timeSignature: phrase.timeSignature, countInTicks });
     engine.metronome.setMuted(!audio.metronomeEnabled);
     engine.metronome.start();
     // The phrase goes after the count-in, not at zero.
@@ -169,6 +173,8 @@ function soundFor(
 }
 
 let audio: AudioModule | null = null;
+
+const criteriaQuery = (criteria: BackingCriteria | undefined) => (criteria ? { criteria } : {});
 
 function rollSessionKeyMode(): KeyMode {
   // Standalone practice has no routine to inherit a key from, so the exercise's
@@ -384,6 +390,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         countInBars: settings.audio.countInBars,
         heldAxisValues: exercise.heldAxisValues,
         axisPolicies: exercise.axisPolicies,
+        blocked: blockedValues(settings),
         coverage: await loadCoverage(exercise.id),
         ...(definition.kind === 'theory'
           ? { subjectWeights: await loadSubjectWeights(exercise.id) }
@@ -426,7 +433,9 @@ export const usePractice = create<PracticeState>((set, get) => {
           choice: exercise.backing ?? { kind: 'none' },
           query: {
             exerciseId: exercise.id,
-            ...(exercise.backingCriteria ? { criteria: exercise.backingCriteria } : {}),
+            ...criteriaQuery(
+              withRequiredTags(exercise.backingCriteria, definition.backing?.requiredTags),
+            ),
           },
         },
       });
@@ -470,6 +479,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         sessionId: session.id,
         items,
         sessionAxisPolicies: routine.sessionAxisPolicies,
+        blocked: blockedValues(settings),
         countInBars: settings.audio.countInBars,
         loop: settings.audio.loop,
         now: () => Date.now(),
@@ -535,7 +545,13 @@ export const usePractice = create<PracticeState>((set, get) => {
         error: null,
         backingFor: {
           choice: routine.backing ?? { kind: 'none' },
-          query: routine.backingCriteria ? { criteria: routine.backingCriteria } : {},
+          // One track plays through, so it must suit every played item.
+          query: criteriaQuery(
+            withRequiredTags(
+              routine.backingCriteria,
+              items.flatMap((item) => item.definition.backing?.requiredTags ?? []),
+            ),
+          ),
         },
       });
       refreshBacking();
@@ -555,7 +571,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         const countIn =
           runner.snapshot.freeTime || !phrase
             ? 0
-            : ticksPerBar(phrase.timeSignature) * useSettings.getState().settings.audio.countInBars;
+            : countInTicks(phrase.timeSignature, useSettings.getState().settings.audio.countInBars);
         backingStart = startBacking(countIn);
       }
 
@@ -595,6 +611,18 @@ export const usePractice = create<PracticeState>((set, get) => {
         if (get().backing.needsClick) set({ backing: { ...get().backing, needsClick: false } });
         runner.resume();
       })();
+    },
+    stop: () => {
+      const { runner, routine, backing } = get();
+      if (routine || !runner || backing.starting) return;
+      // Back to brief: the runner's subscriber stops the click, the notes and the track.
+      runner.stop();
+    },
+    async restart() {
+      const { runner, routine, backing } = get();
+      if (routine || !runner || backing.starting) return;
+      runner.stop();
+      await get().play();
     },
     setTempo: (bpm) => {
       const { backing, runner } = get();
@@ -642,7 +670,7 @@ export const usePractice = create<PracticeState>((set, get) => {
     },
 
     async setCountIn(on) {
-      const bars = on ? 1 : 0;
+      const bars = on ? (useSettings.getState().settings.audio.countInWhenOn ?? 1) : 0;
       const { routine, runner } = get();
       if (routine) routine.setCountInBars(bars);
       else runner?.setCountInBars(bars);

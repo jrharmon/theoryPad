@@ -261,6 +261,7 @@ export function defaultSettings(at: number): Settings {
     audio: {
       metronomeEnabled: true,
       countInBars: 1,
+      countInWhenOn: 1,
       loop: false,
       voice: 'synth',
       masterVolumeDb: 0,
@@ -269,11 +270,14 @@ export function defaultSettings(at: number): Settings {
       defaultInterExerciseGapSec: 8,
       revealBriefBeforeRep: true,
       defaultFretRange: { low: 0, high: 15 },
+      blockedKeys: [],
+      blockedModes: [],
     },
     ui: {
       showFingerings: false,
       showDegreesOnFretboard: true,
       showNeck: true,
+      showCircle: true,
       tabZoom: 0,
       appearance: 'system',
     },

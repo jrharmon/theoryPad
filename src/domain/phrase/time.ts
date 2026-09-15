@@ -10,6 +10,19 @@ export function ticksPerBar(timeSignature: TimeSignature): number {
   return ticksPerBeat(timeSignature) * timeSignature.beats;
 }
 
+/**
+ * How long a count-in lasts, in bars. Half a bar is for slow tempos, where a
+ * whole bar is a long wait; it rounds up to whole beats, so 3/4 counts two.
+ */
+export type CountInBars = 0 | 0.5 | 1 | 2;
+
+export const COUNT_IN_CHOICES: readonly CountInBars[] = [0, 0.5, 1, 2];
+
+/** A count-in's length in ticks: always whole beats, so the click stays on the beat. */
+export function countInTicks(timeSignature: TimeSignature, bars: number): number {
+  return ticksPerBeat(timeSignature) * Math.ceil(timeSignature.beats * bars);
+}
+
 export interface BarBeat {
   /** 0-based bar index. */
   bar: number;

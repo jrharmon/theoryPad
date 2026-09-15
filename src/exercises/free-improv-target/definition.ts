@@ -54,7 +54,6 @@ export const freeImprovTarget: ExerciseDefinition<FreeImprovTargetParams> = {
     targetTempo: 90,
     reps: 1,
     params: { phraseLengthBars: 4, phraseCount: 8, constrainToPosition: false, showTargetOnNeck: true },
-    axisPolicies: { stringSet: { mode: 'fixed', value: 'all' } },
   },
   // The clock counts the phrases, so it runs — the click can be muted.
   timing: 'either',

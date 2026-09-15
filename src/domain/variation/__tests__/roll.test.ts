@@ -405,3 +405,82 @@ describe('toggleSubset', () => {
     expect(toggleSubset(all, ['b'], 'b')).toEqual({ mode: 'roll', from: ['b'] });
   });
 });
+
+describe('axis defaults, allowed values and blocked values', () => {
+  const keysOver = (options: Partial<Parameters<typeof rollVariation>[0]>, axes: AxisId[] = ['mode', 'key']) => {
+    const seen = new Set<string>();
+    for (let seed = 0; seed < 200; seed += 1) {
+      const rolled = rollVariation({ ...base, seed, axes, ...options });
+      seen.add(`${rolled.axes.key?.key ?? ''} ${rolled.axes.mode?.key ?? ''} ${rolled.axes.stringSet?.key ?? ''}`.trim());
+    }
+    return seen;
+  };
+
+  it('plays every string unless told otherwise', () => {
+    for (let seed = 0; seed < 30; seed += 1) {
+      const rolled = rollVariation({ ...base, seed, axes: ['stringSet'] });
+      expect(rolled.axes.stringSet!.key).toBe('all');
+      expect(rolled.axes.stringSet!.source).toBe('fixed');
+    }
+  });
+
+  it('still rolls string sets when asked to', () => {
+    expect(keysOver({ policies: { stringSet: { mode: 'roll' } } }, ['stringSet']).size).toBeGreaterThan(3);
+  });
+
+  it('never leaves what the exercise allows, even when pinned outside it', () => {
+    const allowed = { stringSet: ['adj-3-3', 'adj-3-2'] };
+    expect(keysOver({ allowed, policies: { stringSet: { mode: 'roll' } } }, ['stringSet'])).toEqual(
+      new Set(['adj-3-3', 'adj-3-2']),
+    );
+    // The axis default (all strings) is outside it, and so is a stale pin.
+    expect(keysOver({ allowed }, ['stringSet'])).toEqual(new Set(['adj-3-3', 'adj-3-2']));
+    const pinned = rollVariation({ ...base, axes: ['stringSet'], allowed, policies: { stringSet: { mode: 'fixed', value: 'all' } } });
+    expect(allowed.stringSet).toContain(pinned.axes.stringSet!.key);
+    const inside = rollVariation({ ...base, axes: ['stringSet'], allowed, policies: { stringSet: { mode: 'fixed', value: 'adj-3-2' } } });
+    expect(inside.axes.stringSet!.key).toBe('adj-3-2');
+  });
+
+  it('never rolls a blocked mode or key', () => {
+    const seen = keysOver({ blocked: { mode: ['locrian', 'phrygian'], key: ['Db', 'F#'] } });
+    for (const entry of seen) {
+      const [key, mode] = entry.split(' ');
+      expect(['locrian', 'phrygian']).not.toContain(mode);
+      // By pitch: blocking Db blocks C# too, and F# blocks Gb.
+      expect(['Db', 'C#', 'F#', 'Gb']).not.toContain(key);
+    }
+    expect(seen.size).toBeGreaterThan(20);
+  });
+
+  it('plays a blocked key that is pinned or held on purpose', () => {
+    const blocked = { key: ['Eb'] };
+    const pinned = rollVariation({ ...base, axes: ['mode', 'key'], blocked, policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'fixed', value: 'Eb' } } });
+    expect(pinned.axes.key!.key).toBe('Eb');
+    const held = rollVariation({ ...base, axes: ['key'], blocked, policies: { key: { mode: 'hold' } }, held: { key: 'Eb' } });
+    expect(held.axes.key!.key).toBe('Eb');
+  });
+
+  it('lets a subset beat the blocked list when nothing else is left in it', () => {
+    const seen = keysOver({
+      blocked: { key: ['C', 'G'] },
+      policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'roll', from: ['C', 'G', 'D'] } },
+    });
+    expect(seen).toEqual(new Set(['D ionian']));
+    const only = keysOver({
+      blocked: { key: ['C', 'G'] },
+      policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'roll', from: ['C', 'G'] } },
+    });
+    expect(only).toEqual(new Set(['C ionian', 'G ionian']));
+  });
+
+  it('matches a key subset by pitch, whatever the mode spells it as', () => {
+    // The editor offers Db; phrygian spells that key C#.
+    const seen = keysOver({ policies: { mode: { mode: 'fixed', value: 'phrygian' }, key: { mode: 'roll', from: ['Db', 'E'] } } });
+    expect(seen).toEqual(new Set(['C# phrygian', 'E phrygian']));
+  });
+
+  it('rolls from everything rather than nothing when every value is blocked', () => {
+    const everything = Array.from({ length: 12 }, (_, i) => ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][i]!);
+    expect(keysOver({ blocked: { key: everything } }).size).toBeGreaterThan(20);
+  });
+});

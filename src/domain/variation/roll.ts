@@ -7,12 +7,14 @@ import type {
   AxisId,
   AxisPolicies,
   AxisPolicy,
+  AxisValueKeys,
   CoverageCounts,
   ResolvedAxis,
   ResolvedKeys,
   RolledVariation,
 } from './types';
 import { SESSION_AXIS_ORDER, axisDefinition, axisPreferenceWeight } from './axes';
+import { includesValue, policyFor } from './policies';
 
 export interface RollOptions {
   /** The axes the exercise declares. An empty list is a static exercise. */
@@ -27,6 +29,17 @@ export interface RollOptions {
   coverage?: CoverageCounts;
   /** Session key and mode, when they were rolled elsewhere (a routine). */
   sessionKeyMode?: KeyMode;
+  /**
+   * The exercise's own limits: values outside these never come up, not even
+   * pinned. A triad drill offers three-string sets and nothing else.
+   */
+  allowed?: AxisValueKeys;
+  /**
+   * The player's app-wide "never roll these". Only a roll avoids them — a key
+   * pinned or held on purpose still plays — and when a roll's subset holds
+   * nothing else, the subset wins: the more specific choice does.
+   */
+  blocked?: AxisValueKeys;
 }
 
 /**
@@ -54,8 +67,11 @@ function resolveOne(
   rng: Rng,
   heldKey: string | undefined,
   coverage: Record<string, number>,
+  limits: { allowed?: readonly string[] | undefined; blocked?: readonly string[] | undefined },
 ): ResolvedAxis {
   const definition = axisDefinition(id);
+  const allowedKey = (key: string) =>
+    !limits.allowed || limits.allowed.length === 0 || includesValue(id, limits.allowed, key);
 
   const make = (value: unknown, source: ResolvedAxis['source']): ResolvedAxis => {
     const key = definition.key(value);
@@ -76,23 +92,34 @@ function resolveOne(
     if (value === null) {
       throw new Error(`Axis ${id} cannot be fixed to unknown value "${policy.value}"`);
     }
-    return make(value, 'fixed');
+    // Pinned to something the exercise does not offer — a policy from before
+    // it said so — rolls within what it does.
+    if (allowedKey(definition.key(value))) return make(value, 'fixed');
   }
 
   if (policy.mode === 'hold' && heldKey !== undefined) {
     const value = definition.parse(heldKey, context);
-    if (value !== null) return make(value, 'hold');
+    if (value !== null && allowedKey(definition.key(value))) return make(value, 'hold');
     // The held value is no longer valid — a tuning change can do that — so
     // fall through and roll rather than failing.
   }
 
   let candidates = definition.candidates(context);
+  if (limits.allowed && limits.allowed.length > 0) {
+    const narrowed = candidates.filter((c) => allowedKey(definition.key(c)));
+    if (narrowed.length > 0) candidates = narrowed;
+  }
   if (policy.mode === 'roll' && policy.from && policy.from.length > 0) {
-    const allowed = new Set(policy.from);
-    const narrowed = candidates.filter((c) => allowed.has(definition.key(c)));
+    // By identity: the editor offers keys spelled as majors, and Db is written
+    // C# in phrygian.
+    const narrowed = candidates.filter((c) => includesValue(id, policy.from, definition.key(c)));
     // An empty subset means the restriction no longer matches anything; rolling
     // from everything beats throwing in the middle of a practice session.
     if (narrowed.length > 0) candidates = narrowed;
+  }
+  if (limits.blocked && limits.blocked.length > 0) {
+    const open = candidates.filter((c) => !includesValue(id, limits.blocked, definition.key(c)));
+    if (open.length > 0) candidates = open;
   }
 
   if (candidates.length === 0) {
@@ -135,11 +162,12 @@ export function rollVariation(options: RollOptions): RolledVariation {
 
     const axis = resolveOne(
       id,
-      policies[id] ?? { mode: 'roll' },
+      policyFor(policies, id),
       context,
       rng,
       held[id],
       coverage[id] ?? {},
+      { allowed: options.allowed?.[id], blocked: options.blocked?.[id] },
     );
 
     out[id] = axis;

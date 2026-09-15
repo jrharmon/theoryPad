@@ -198,6 +198,66 @@ describe('count-in', () => {
     clock.advanceTicks(QUARTER);
     expect(runner.snapshot.state).toBe('brief');
   });
+
+  it('counts in for half a bar, on the beat', () => {
+    const { runner, clock } = makeRunner({ countInBars: 0.5 });
+    runner.start();
+    runner.begin();
+    expect(runner.snapshot.countInRemaining).toBe(QUARTER * 2);
+    clock.advanceTicks(QUARTER * 2);
+    expect(runner.snapshot.state).toBe('playing');
+  });
+});
+
+describe('stop', () => {
+  it('goes back to the top with the same variation, logging the pass as abandoned', () => {
+    const { runner, clock } = makeRunner({ countInBars: 1 });
+    runner.start();
+    const seed = runner.snapshot.variation!.seed;
+    runner.begin();
+    clock.advanceTicks(QUARTER * 6);
+    runner.stop();
+
+    expect(runner.snapshot.state).toBe('brief');
+    expect(runner.snapshot.variation!.seed).toBe(seed);
+    expect(runner.completedReps.map((r) => r.status)).toEqual(['abandoned']);
+    // Nothing left scheduled: the pass does not finish on its own later.
+    clock.advanceTicks(QUARTER * 400);
+    expect(runner.completedReps).toHaveLength(1);
+
+    // And Play starts from the top again, counted in.
+    runner.begin();
+    expect(runner.snapshot.state).toBe('count-in');
+    expect(runner.snapshot.phraseTick).toBe(0);
+  });
+
+  it('logs nothing when stopped inside the count-in', () => {
+    const { runner, clock } = makeRunner({ countInBars: 1 });
+    runner.start();
+    runner.begin();
+    clock.advanceTicks(QUARTER);
+    runner.stop();
+    runner.begin();
+    clock.advanceTicks(QUARTER);
+    runner.pause();
+    runner.stop();
+    expect(runner.snapshot.state).toBe('brief');
+    expect(runner.completedReps).toHaveLength(0);
+    expect(runner.snapshot.passesPlayed).toBe(0);
+  });
+
+  it('stops from pause too, and does nothing from the brief', () => {
+    const { runner, clock } = makeRunner();
+    runner.start();
+    runner.stop();
+    expect(runner.completedReps).toHaveLength(0);
+    runner.begin();
+    clock.advanceTicks(QUARTER);
+    runner.pause();
+    runner.stop();
+    expect(runner.snapshot.state).toBe('brief');
+    expect(runner.completedReps).toHaveLength(1);
+  });
 });
 
 describe('pause', () => {

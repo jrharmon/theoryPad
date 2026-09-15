@@ -1,5 +1,6 @@
 import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
+import type { CountInBars } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import type { FretTally } from '@/domain/progress';
@@ -207,7 +208,9 @@ export interface Settings {
   instrument: Instrument;
   audio: {
     metronomeEnabled: boolean;
-    countInBars: 0 | 1 | 2;
+    countInBars: CountInBars;
+    /** What the transport's Count-in toggle turns back on to: the length last chosen. */
+    countInWhenOn: Exclude<CountInBars, 0>;
     /** Keep playing the same material pass after pass. */
     loop: boolean;
     voice: 'synth' | 'sampled';
@@ -217,12 +220,20 @@ export interface Settings {
     defaultInterExerciseGapSec: number;
     revealBriefBeforeRep: boolean;
     defaultFretRange: { low: number; high: number };
+    /**
+     * Never rolled, anywhere: keys by pitch (spelled as majors, so Db covers
+     * C#) and modes. A key or mode pinned or held on purpose still plays.
+     */
+    blockedKeys: string[];
+    blockedModes: ModeName[];
   };
   ui: {
     showFingerings: boolean;
     showDegreesOnFretboard: boolean;
     /** The neck diagram beside a running exercise. Hiding it gives the tab the room. */
     showNeck: boolean;
+    /** The circle of fifths under the neck while practicing, marking the key. */
+    showCircle: boolean;
     /** Tab size, in steps from the default: positive is bigger. Bars per line follow. */
     tabZoom: number;
     /** Light or dark. 'system' follows the computer, and changes when it does. */

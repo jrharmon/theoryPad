@@ -1,5 +1,5 @@
-import type { PitchClass } from '@/domain/music';
-import { pitchClass } from '@/domain/music';
+import type { KeyMode, KeySignature, ModeName, PitchClass } from '@/domain/music';
+import { circlePosition, keySignature, pitchClass, relativeMajor, scaleNotes } from '@/domain/music';
 
 /**
  * The circle of fifths as the twelve major keys, by position: C is 0, each
@@ -51,4 +51,71 @@ export function signatureLabel(position: number): string {
   const count = Math.abs(position);
   const kind = position > 0 ? 'sharp' : 'flat';
   return `${count} ${kind}${count === 1 ? '' : 's'}`;
+}
+
+export type CircleRing = 'major' | 'minor' | 'diminished';
+
+export type ChordRole = 'I' | 'ii' | 'iii' | 'IV' | 'V' | 'vi' | 'vii°';
+
+/** One chord of a key, placed on the circle. */
+export interface CircleCell {
+  ring: CircleRing;
+  /** Wrapped onto the twelve positions, C = 0. */
+  position: number;
+  /** The chord's root, spelled from the key — Cb in Gb major, not B. */
+  root: PitchClass;
+  role: ChordRole;
+}
+
+export interface KeyOnCircle {
+  /** Where the parent major sits. */
+  position: number;
+  signature: KeySignature;
+  /** The seven chords the key shares with its parent major: a wedge of the circle. */
+  cells: CircleCell[];
+  /** The chord the mode is built on — D minor for D dorian. */
+  tonic: CircleCell;
+}
+
+/** Which of the parent major's chords each mode starts on. */
+const MODE_ROLE: Record<ModeName, ChordRole> = {
+  ionian: 'I',
+  dorian: 'ii',
+  phrygian: 'iii',
+  lydian: 'IV',
+  mixolydian: 'V',
+  aeolian: 'vi',
+  locrian: 'vii°',
+};
+
+/**
+ * A key and mode on the circle of fifths: the wedge its parent major's chords
+ * make — IV I V round the outside, ii vi iii inside, vii° in the middle — and
+ * the one the mode calls home.
+ */
+export function keyOnCircle(keyMode: KeyMode): KeyOnCircle {
+  const major = relativeMajor(keyMode);
+  const notes = scaleNotes({ tonic: major, mode: 'ionian' });
+  const p = wrapPosition(circlePosition(keyMode));
+  const cell = (role: ChordRole, ring: CircleRing, offset: number, degree: number): CircleCell => ({
+    role,
+    ring,
+    position: wrapPosition(p + offset),
+    root: notes[degree]!,
+  });
+  const cells = [
+    cell('IV', 'major', -1, 3),
+    cell('I', 'major', 0, 0),
+    cell('V', 'major', 1, 4),
+    cell('ii', 'minor', -1, 1),
+    cell('vi', 'minor', 0, 5),
+    cell('iii', 'minor', 1, 2),
+    cell('vii°', 'diminished', 0, 6),
+  ];
+  return {
+    position: p,
+    signature: keySignature(keyMode),
+    cells,
+    tonic: cells.find((c) => c.role === MODE_ROLE[keyMode.mode])!,
+  };
 }

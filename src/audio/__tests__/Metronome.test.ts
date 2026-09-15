@@ -13,7 +13,7 @@ describe('Metronome', () => {
   it('goes silent when muted, but still counts in and still reports beats', () => {
     const clock = new FakeClock();
     const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s, { countInBars: 1 });
+    const metronome = new Metronome(clock, s, { countInTicks: 1920 });
     const beats: BeatEvent[] = [];
     metronome.onBeat((b) => beats.push(b));
     metronome.setMuted(true);
@@ -33,7 +33,7 @@ describe('Metronome', () => {
   it('makes no sound at all when silenced — under a track, the recording counts in', () => {
     const clock = new FakeClock();
     const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s, { countInBars: 1, subdivision: 2 });
+    const metronome = new Metronome(clock, s, { countInTicks: 1920, subdivision: 2 });
     const beats: BeatEvent[] = [];
     metronome.onBeat((b) => beats.push(b));
     metronome.setSilenced(true);
@@ -135,7 +135,7 @@ describe('Metronome', () => {
   it('marks count-in beats and starts musical bar 0 after them', () => {
     const clock = new FakeClock();
     const beats: BeatEvent[] = [];
-    const metronome = new Metronome(clock, null, { countInBars: 1 });
+    const metronome = new Metronome(clock, null, { countInTicks: 1920 });
     metronome.onBeat((e) => beats.push(e));
     metronome.start();
 

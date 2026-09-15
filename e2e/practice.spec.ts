@@ -300,6 +300,47 @@ test('re-rolling stops, and waits with a fresh variation', async ({ page }) => {
   expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned']);
 });
 
+test('stop goes back to the top, and restart plays it again from the count-in', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  const headline = await page.getByRole('heading', { level: 2 }).textContent();
+  await page.getByTestId('play').click();
+  // Past the count-in, so there is a pass to cut short.
+  await expect(page.getByTestId('position')).toBeVisible({ timeout: 10_000 });
+
+  await page.getByTestId('stop').click();
+  await expect(page.getByTestId('play')).toBeVisible();
+  // The same material, not a re-roll.
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText(headline!);
+  expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned']);
+
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('position')).toBeVisible({ timeout: 10_000 });
+  // Enter, mid-pass: from the top again, counted in.
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Counting in…')).toBeVisible();
+  await expect(page.getByTestId('restart')).toBeVisible();
+  // Backspace stops; inside the count-in, nothing was played to log.
+  await page.keyboard.press('Backspace');
+  await expect(page.getByTestId('play')).toBeVisible();
+  expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned', 'abandoned']);
+});
+
+test('the circle of fifths marks the key being played', async ({ page }) => {
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByRole('combobox', { name: 'Key policy' }).click();
+  await page.getByRole('option', { name: 'Fixed' }).click();
+  await page.getByRole('combobox', { name: 'Mode policy' }).click();
+  await page.getByRole('option', { name: 'Fixed' }).click();
+  // Fixed to the first of each: C, and Ionian.
+  await page.getByRole('link', { name: 'Practice this' }).click();
+
+  const circle = page.getByTestId('circle-of-fifths');
+  await expect(circle).toBeVisible();
+  await expect(circle.getByTestId('circle-tonic')).toHaveText('C');
+  // C major's seven chords: the tonic and six more.
+  await expect(circle.getByTestId('circle-in-key')).toHaveCount(6);
+});
+
 test('a roll can leave values out, and the run honours it', async ({ page }) => {
   await page.getByRole('link', { name: EXERCISE }).click();
   const keys = page.getByRole('group', { name: 'Key rolls from' });

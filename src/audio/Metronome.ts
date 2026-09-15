@@ -7,7 +7,8 @@ export interface MetronomeOptions {
   accentFirstBeat?: boolean;
   /** Extra clicks per beat, quieter. 1 is off. */
   subdivision?: 1 | 2 | 4;
-  countInBars?: 0 | 1 | 2;
+  /** Ticks of count-in before bar 1 — whole beats, from `countInTicks`. */
+  countInTicks?: number;
 }
 
 export interface BeatEvent {
@@ -52,7 +53,7 @@ export class Metronome {
       timeSignature: options.timeSignature ?? FOUR_FOUR,
       accentFirstBeat: options.accentFirstBeat ?? true,
       subdivision: options.subdivision ?? 1,
-      countInBars: options.countInBars ?? 0,
+      countInTicks: options.countInTicks ?? 0,
     };
   }
 
@@ -65,7 +66,7 @@ export class Metronome {
   }
 
   get countInTicks(): number {
-    return ticksPerBar(this.options.timeSignature) * this.options.countInBars;
+    return this.options.countInTicks;
   }
 
   onBeat(listener: BeatListener): () => void {

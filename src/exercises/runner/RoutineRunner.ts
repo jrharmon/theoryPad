@@ -2,7 +2,8 @@ import type { KeyMode } from '@/domain/music';
 import { pitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { Clock } from '@/domain/time';
-import type { AxisPolicies, RolledVariation } from '@/domain/variation';
+import type { CountInBars } from '@/domain/phrase';
+import type { AxisPolicies, AxisValueKeys, RolledVariation } from '@/domain/variation';
 import { SESSION_AXIS_ORDER, hashSeed, rollVariation, variationKeyMode } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import { resolveParams } from '../params';
@@ -31,8 +32,10 @@ export interface RoutineRunnerConfig {
   items: RoutineRunItem[];
   /** Key and mode, rolled once for the whole run. */
   sessionAxisPolicies?: AxisPolicies;
+  /** The player's app-wide "never roll these": the routine's key and mode avoid them. */
+  blocked?: AxisValueKeys;
   /** Before the first item. Between items there is always at least one bar. */
-  countInBars?: 0 | 1 | 2;
+  countInBars?: CountInBars;
   loop?: boolean;
   now: () => number;
   onRepStart?: (info: RepStartInfo) => void;
@@ -169,6 +172,7 @@ export class RoutineRunner {
       seed: hashSeed(sessionId, 'routine', 0, this.rollAttempt),
       instrument,
       ...(sessionAxisPolicies ? { policies: sessionAxisPolicies } : {}),
+      ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
     });
     this.keyMode = variationKeyMode(session) ?? this.keyMode;
     const shared: AxisPolicies = {
@@ -276,7 +280,7 @@ export class RoutineRunner {
     for (const runner of this.runners) runner.setLoop(loop);
   }
 
-  setCountInBars(bars: 0 | 1 | 2): void {
+  setCountInBars(bars: CountInBars): void {
     this.config.countInBars = bars;
     for (const runner of this.runners) runner.setCountInBars(bars);
   }

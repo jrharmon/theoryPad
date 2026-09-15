@@ -87,8 +87,10 @@ interface Metronome {
 Two `MembraneSynth`/`MetalSynth` voices — a higher accent click on beat 1, a lower click
 elsewhere. Optional subdivision clicks at lower volume.
 
-Count-in is 1 or 2 bars of clicks before the phrase starts, with a visible bar/beat readout so
-you know when to come in. Default 1 bar. Skipped entirely in free-time runs.
+Count-in is half a bar, 1 or 2 bars of clicks before the phrase starts, with a visible bar/beat
+readout so you know when to come in. Default 1 bar. Half a bar is for slow tempos; it rounds up
+to whole beats (`countInTicks`), so 4/4 counts 3, 4 and 3/4 counts two. The transport's toggle
+turns the length last chosen in Settings on and off. Skipped entirely in free-time runs.
 
 ---
 
@@ -227,6 +229,10 @@ track does not match, it goes back to None and says so.
 
 **Saved criteria** (optional, on an exercise or routine): tags a track must have, and a bpm
 range. New tracks that fit appear in the menu without anyone touching the exercise.
+
+**Required tags** (in an exercise's definition, `backing.requiredTags`): added to the saved
+criteria — a one-chord exercise can ask for `single-chord`. The config page lists them. A
+routine asks for every played item's, since one track plays through.
 
 **Routines** offer the drone and shared tracks only.
 

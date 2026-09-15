@@ -9,6 +9,7 @@ import {
   degreeName,
   diatonicQuestions,
   enharmonics,
+  keyOnCircle,
   majorAt,
   minorAt,
   nameChords,
@@ -228,6 +229,40 @@ describe('the circle', () => {
   it('leaves out mode questions when asked to', () => {
     const set = circleQuestions({ rng: mulberry32(1), types: ['mode-signature', 'key-to-signature'], count: 10, includeModes: false });
     expect(set.every((q) => !q.subject.startsWith('mode:'))).toBe(true);
+  });
+});
+
+describe('a key on the circle', () => {
+  const roots = (k: KeyMode) =>
+    Object.fromEntries(keyOnCircle(k).cells.map((c) => [c.role, `${c.root}@${c.position}`]));
+
+  it('lights up the parent major’s wedge, and the mode’s home chord in it', () => {
+    const circle = keyOnCircle(D_DORIAN);
+    expect(circle.position).toBe(0);
+    expect(roots(D_DORIAN)).toEqual({
+      IV: 'F@-1', I: 'C@0', V: 'G@1', ii: 'D@-1', vi: 'A@0', iii: 'E@1', 'vii°': 'B@0',
+    });
+    expect(circle.tonic).toMatchObject({ role: 'ii', ring: 'minor', root: 'D' });
+  });
+
+  it('puts every mode’s tonic on the ring its chord belongs to', () => {
+    const expected: Record<ModeName, [string, string]> = {
+      ionian: ['I', 'major'], dorian: ['ii', 'minor'], phrygian: ['iii', 'minor'], lydian: ['IV', 'major'],
+      mixolydian: ['V', 'major'], aeolian: ['vi', 'minor'], locrian: ['vii°', 'diminished'],
+    };
+    for (const [mode, [role, ring]] of Object.entries(expected) as [ModeName, [string, string]][]) {
+      const tonic = keyOnCircle(km('A', mode)).tonic;
+      expect([tonic.role, tonic.ring, tonic.root]).toEqual([role, ring, 'A']);
+    }
+  });
+
+  it('spells the wedge from the key, and wraps it round the six-accidental seam', () => {
+    const ebMinor = km('Eb', 'aeolian');
+    const circle = keyOnCircle(ebMinor);
+    expect(circle.signature.flats).toBe(6);
+    expect(circle.position).toBe(6);
+    // Cb, not B; and IV and V sit either side of the seam.
+    expect(roots(ebMinor)).toMatchObject({ IV: 'Cb@5', I: 'Gb@6', V: 'Db@-5', vi: 'Eb@6' });
   });
 });
 

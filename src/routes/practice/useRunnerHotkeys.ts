@@ -67,6 +67,11 @@ export function useRunnerHotkeys({
           event.preventDefault();
           if (state === 'brief') void practice.play();
           else if (practice.snapshot?.freeTime) practice.completeRep();
+          // Standalone, mid-pass: again from the top.
+          else void practice.restart();
+          break;
+        case 'Backspace':
+          practice.stop();
           break;
         case '[':
           practice.nudgeTempo(event.shiftKey ? -5 : -1);

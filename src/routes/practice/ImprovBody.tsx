@@ -10,7 +10,9 @@ import { Fretboard } from '@/components/music';
 import { Kicker } from '@/components/ui/kicker';
 import { cn } from 'cn';
 import { usePractice } from '@/store/practice';
+import { useSettings } from '@/store/settings';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
+import { CircleSheet } from './CircleSheet';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 
 /** Where each phrase begins, from the labels on its first bar. */
@@ -33,6 +35,8 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
   const state = snapshot?.state;
   const tick = usePhraseTick(state === 'playing');
   const videoColumn = useVideoColumn();
+  const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
+  const side = videoColumn || showCircle;
   if (!snapshot) return null;
 
   const { count, length } = phraseShape(instance);
@@ -47,7 +51,7 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
   const target = degree === undefined ? null : noteAtDegree(snapshot.keyMode, degree);
 
   return (
-    <div className={cn('grid gap-6 px-8 py-6', videoColumn && 'lg:grid-cols-[1fr_320px]')}>
+    <div className={cn('grid gap-6 px-8 py-6', side && 'lg:grid-cols-[1fr_320px]')}>
       <div className="min-w-0 space-y-6">
         <div className="sheet grid gap-6 px-6 py-5 sm:grid-cols-2" data-testid="phrase-counter">
           <div>
@@ -91,10 +95,11 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
         </div>
       </div>
 
-      {videoColumn && (
+      {side && (
         <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
           <BackingPanel />
           <ReferencePanel />
+          {showCircle && <CircleSheet keyMode={snapshot.keyMode} />}
         </div>
       )}
     </div>

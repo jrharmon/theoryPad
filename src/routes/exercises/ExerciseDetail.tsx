@@ -130,7 +130,7 @@ export function ExerciseDetail() {
             </div>
           )}
           <ExerciseVideos exercise={exercise} played={definition.kind === 'played'} />
-          {definition.kind === 'played' && <BackingCriteriaEditor exercise={exercise} />}
+          {definition.kind === 'played' && <BackingCriteriaEditor exercise={exercise} requiredTags={definition.backing?.requiredTags} />}
         </div>
 
         <div>
@@ -159,6 +159,7 @@ export function ExerciseDetail() {
             policies={exercise.axisPolicies}
             held={exercise.heldAxisValues}
             instrument={instrument}
+            allowed={definition.allowedValues}
             onChange={(axis, policy) => void setAxisPolicy(exercise.id, axis, policy)}
           />
 

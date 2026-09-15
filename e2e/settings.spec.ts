@@ -56,6 +56,56 @@ test('settings are kept, and change what the exercises use', async ({ page }) =>
   expect(labels).toBe(7);
 });
 
+test('keys and modes struck out in Settings never come up', async ({ page }) => {
+  await page.goto('/#/settings');
+  const keys = page.getByRole('group', { name: 'Keys' });
+  const modes = page.getByRole('group', { name: 'Modes' });
+  for (const key of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'Bb', 'B']) {
+    await keys.getByRole('button', { name: key, exact: true }).click();
+  }
+  for (const mode of ['Ionian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian']) {
+    await modes.getByRole('button', { name: mode, exact: true }).click();
+  }
+  // The last one in can't be struck out.
+  await expect(keys.getByRole('button', { name: 'A', exact: true })).toBeDisabled();
+  await expect(modes.getByRole('button', { name: 'Dorian', exact: true })).toBeDisabled();
+
+  await page.goto('/#/exercises');
+  await page
+    .locator('li', { hasText: 'Modes up the neck' })
+    .getByRole('link', { name: 'Practice', exact: true })
+    .click();
+  await expect(page.getByTestId('axis-key')).toContainText('A Dorian');
+
+  // The practice dialog says why they are struck out.
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByTestId('blocked-note')).toBeVisible();
+  await expect(
+    page.getByRole('group', { name: 'Key rolls from' }).getByRole('button', { name: 'C', exact: true }),
+  ).toBeDisabled();
+});
+
+test('the transport’s count-in turns back on to half a bar once chosen', async ({ page }) => {
+  await page.goto('/#/settings');
+  await page.getByRole('button', { name: '½ bar' }).click();
+  await page.goto('/#/exercises');
+  await page
+    .locator('li', { hasText: 'Modes up the neck' })
+    .getByRole('link', { name: 'Practice', exact: true })
+    .click();
+  const countIn = page.getByRole('button', { name: 'Count-in', exact: true });
+  await countIn.click();
+  await expect(countIn).toHaveAttribute('aria-pressed', 'false');
+  await countIn.click();
+  await expect(countIn).toHaveAttribute('aria-pressed', 'true');
+  await expect
+    .poll(async () => {
+      const rows = await snapshot(page);
+      return (rows.settings?.[0] as { audio?: { countInBars?: number } } | undefined)?.audio?.countInBars;
+    })
+    .toBe(0.5);
+});
+
 test('an export, wiped and imported again, comes back exactly', async ({ page }, testInfo) => {
   // Something worth keeping: a routine, and a logged pass.
   await page.goto('/#/exercises');

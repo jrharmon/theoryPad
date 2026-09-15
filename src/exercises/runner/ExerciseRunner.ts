@@ -1,13 +1,14 @@
 import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
-import type { Phrase } from '@/domain/phrase';
-import { ticksPerBar } from '@/domain/phrase';
+import type { CountInBars, Phrase } from '@/domain/phrase';
+import { countInTicks } from '@/domain/phrase';
 import { fretTally } from '@/domain/progress';
 import type { Clock } from '@/domain/time';
-import type { AxisPolicies, CoverageCounts, RolledVariation } from '@/domain/variation';
+import type { AxisPolicies, AxisValueKeys, CoverageCounts, RolledVariation } from '@/domain/variation';
 import {
   hashSeed,
   mulberry32,
+  policyFor,
   rollVariation,
   variationKeyMode,
   variationKeys,
@@ -44,10 +45,12 @@ export interface RunnerConfig {
   /** Go to `done` once the passes are played, instead of back to ready. For routines. */
   endWhenFinished?: boolean;
   freeTime?: boolean;
-  countInBars?: 0 | 1 | 2;
+  countInBars?: CountInBars;
   /** Previous axis values, for `hold` policies and freshness. */
   heldAxisValues?: Record<string, string>;
   axisPolicies?: AxisPolicies;
+  /** The player's app-wide "never roll these" — keys and modes. */
+  blocked?: AxisValueKeys;
   coverage?: CoverageCounts;
   /** Theory: lean toward subjects missed or seen least. */
   subjectWeights?: Readonly<Record<string, number>>;
@@ -269,7 +272,7 @@ export class ExerciseRunner {
 
     const phrase = this.currentPhrase;
     const from = clock.ticks;
-    this.countInEndTick = from + (phrase ? ticksPerBar(phrase.timeSignature) : 0) * countInBars;
+    this.countInEndTick = from + (phrase ? countInTicks(phrase.timeSignature, countInBars) : 0);
     this.passStartTick = this.countInEndTick;
 
     if (this.countInEndTick > from) {
@@ -377,7 +380,7 @@ export class ExerciseRunner {
       const changed = new Set<string>();
 
       for (const id of this.config.definition.axes) {
-        if (JSON.stringify(before[id] ?? { mode: 'roll' }) !== JSON.stringify(after[id] ?? { mode: 'roll' })) {
+        if (JSON.stringify(policyFor(before, id)) !== JSON.stringify(policyFor(after, id))) {
           changed.add(id);
           const policy = after[id];
           if (policy) policies[id] = policy;
@@ -407,6 +410,24 @@ export class ExerciseRunner {
     this.setState('brief');
   }
 
+  /**
+   * Stop where you are and go back to the top, ready to play again — the same
+   * variation. A pass in progress is logged as abandoned, as leaving would;
+   * stopped inside the count-in, nothing was played and nothing is logged, so
+   * restarting a few times before settling leaves no trail.
+   */
+  stop(): void {
+    if (this.state !== 'playing' && this.state !== 'paused' && this.state !== 'count-in') return;
+    const played = this.isFreeTime || this.isTheory || this.config.clock.ticks >= this.countInEndTick;
+    if (played) {
+      this.stopPass();
+    } else {
+      this.clearScheduled();
+      this.config.clock.stop();
+    }
+    this.setState('brief');
+  }
+
   /** Leave the exercise. Any pass in progress is logged as abandoned. */
   end(): void {
     if (this.state === 'done') return;
@@ -421,7 +442,7 @@ export class ExerciseRunner {
   }
 
   /** Takes effect the next time Play is pressed. */
-  setCountInBars(bars: 0 | 1 | 2): void {
+  setCountInBars(bars: CountInBars): void {
     this.config.countInBars = bars;
     this.emit();
   }
@@ -474,6 +495,8 @@ export class ExerciseRunner {
       ...(policies ? { policies } : {}),
       held,
       ...(this.config.coverage ? { coverage: this.config.coverage } : {}),
+      ...(definition.allowedValues ? { allowed: definition.allowedValues } : {}),
+      ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
       sessionKeyMode,
     });
     this.generate();
@@ -532,8 +555,9 @@ export class ExerciseRunner {
     if (this.currentTempo !== null) clock.setBpm(this.currentTempo);
 
     const phrase = this.currentPhrase;
-    const bars = phrase ? ticksPerBar(phrase.timeSignature) : 0;
-    this.countInEndTick = bars * (options.countInBars ?? this.config.countInBars ?? 0);
+    this.countInEndTick = phrase
+      ? countInTicks(phrase.timeSignature, options.countInBars ?? this.config.countInBars ?? 0)
+      : 0;
     this.passStartTick = this.countInEndTick;
 
     if (this.countInEndTick > 0) {

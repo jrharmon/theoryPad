@@ -1,4 +1,4 @@
-import { axisDefinition } from '@/domain/variation';
+import { axisDefinition, policyFor } from '@/domain/variation';
 import type { AxisId, AxisPolicies } from '@/domain/variation';
 import type { Instrument } from '@/domain/instrument';
 
@@ -17,9 +17,9 @@ export function describePolicies(
   const out: string[] = [];
 
   for (const id of axes) {
-    const policy = policies[id];
-    if (!policy || policy.mode === 'roll') {
-      if (policy?.mode === 'roll' && policy.from && policy.from.length > 0) {
+    const policy = policyFor(policies, id);
+    if (policy.mode === 'roll') {
+      if (policy.from && policy.from.length > 0) {
         const definition = axisDefinition(id);
         const labels = definition
           .candidates({ instrument, resolved: {} })

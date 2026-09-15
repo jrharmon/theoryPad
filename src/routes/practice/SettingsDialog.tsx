@@ -155,6 +155,7 @@ function Draft({
                 policies={policies}
                 held={held}
                 instrument={instrument}
+                allowed={definition.allowedValues}
                 onChange={(axis, policy) => setPolicies({ ...policies, [axis]: policy })}
               />
             </div>

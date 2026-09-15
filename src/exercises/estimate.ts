@@ -23,6 +23,7 @@ export function estimateItemSeconds(
     seed: 1,
     instrument,
     policies: item.axisPolicies,
+    ...(definition.allowedValues ? { allowed: definition.allowedValues } : {}),
   });
   const instance = definition.generate({
     variation,

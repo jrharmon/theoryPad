@@ -6,7 +6,7 @@ import type { NeckOverlay } from '@/domain/neck';
 import type { Phrase } from '@/domain/phrase';
 import type { TheoryQuestion } from '@/domain/theory';
 import type { TempoPlan } from '@/domain/tempo';
-import type { AxisId, AxisPolicies, Rng, RolledVariation } from '@/domain/variation';
+import type { AxisId, AxisPolicies, AxisValueKeys, Rng, RolledVariation } from '@/domain/variation';
 
 export const KNOWN_TAGS = [
   // Musical content
@@ -106,6 +106,21 @@ export interface ExerciseDefinition<P = void> {
    * is a static exercise, and every other part of the system treats it the same.
    */
   axes: AxisId[];
+
+  /**
+   * The values this exercise can use at all, per axis, by value key — a triad
+   * drill offers three-string sets and nothing else. Neither the player's
+   * settings nor a routine can reach outside them. Omitted means every value.
+   * Which of them it starts on belongs in `defaults.axisPolicies`.
+   */
+  allowedValues?: AxisValueKeys;
+
+  /**
+   * What a shared backing track must be tagged with to be offered here — a
+   * single-chord vamp for an exercise that stays on one chord. Added to the
+   * player's own criteria; the exercise's own videos are never filtered.
+   */
+  backing?: { requiredTags: readonly string[] };
 
   /** Per-instance configuration. A Zod schema gives typed params and a form. */
   params?: z.ZodType<P>;

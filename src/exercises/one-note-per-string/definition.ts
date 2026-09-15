@@ -42,8 +42,7 @@ export const oneNotePerString: ExerciseDefinition<OneNotePerStringParams> = {
     targetTempo: 35,
     reps: 2,
     params: { stopCondition: 'return-to-root', cycles: 4, step: 'next-scale-degree' },
-    // All six strings unless you choose otherwise; a set is still a choice.
-    axisPolicies: { stringSet: { mode: 'fixed', value: 'all' } },
+    // String set: every string, the axis's own default. A set is still a choice.
   },
   timing: 'either',
 

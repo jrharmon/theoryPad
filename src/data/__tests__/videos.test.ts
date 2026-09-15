@@ -10,6 +10,7 @@ import {
   resolveBacking,
   tagsInUse,
   videoProblems,
+  withRequiredTags,
 } from '../videos';
 
 /** Fixtures can say `keyMode: undefined` to mean "without one". */
@@ -90,6 +91,25 @@ describe('the backing menu', () => {
     const mine = video({ scope: own('ex-1'), tags: [] });
     const query = { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1', criteria: { tags: ['funk'] } };
     expect(backingTracks([mine], query)).toEqual([mine]);
+  });
+});
+
+describe('tags an exercise requires', () => {
+  it('adds them to the player’s criteria, without doubling one already there', () => {
+    expect(withRequiredTags(undefined, undefined)).toBeUndefined();
+    expect(withRequiredTags(undefined, ['single-chord'])).toEqual({ tags: ['single-chord'] });
+    expect(withRequiredTags({ tags: ['Single-Chord', 'funk'], bpm: { min: 60, max: 90 } }, ['single-chord'])).toEqual({
+      tags: ['Single-Chord', 'funk'],
+      bpm: { min: 60, max: 90 },
+    });
+  });
+
+  it('filters shared tracks but never the exercise’s own', () => {
+    const vamp = video({ tags: ['single-chord'] });
+    const changes = video({ tags: ['ii-V-I'] });
+    const mine = video({ scope: own('ex-1') });
+    const query = { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1', criteria: withRequiredTags(undefined, ['single-chord'])! };
+    expect(backingTracks([vamp, changes, mine], query)).toEqual([mine, vamp]);
   });
 });
 

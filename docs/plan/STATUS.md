@@ -1,7 +1,9 @@
 # Status — start here
 
-**Last updated:** 2026-09-15, **M7a reviewed, merged and live — then paused** while the player
-lives with the app. Written as a hand-off: a fresh session should be able to pick up from this
+**Last updated:** 2026-09-15, **M7a merged and live; the first round of feedback from living
+with it is built on `feedback-after-m7a`, waiting for review** (see "Feedback round 1").
+Earlier the same day, M7a was reviewed and merged and work paused while the player lived with
+the app. Written as a hand-off: a fresh session should be able to pick up from this
 file, `CLAUDE.md`, and the plan docs it points to. Start with "Paused" and "Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
@@ -18,6 +20,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
+| Feedback round 1 — after living with M7a | **built on `feedback-after-m7a`, at the gate** |
 | M7b — Ear training and "hear it" | **paused** — next when work resumes; see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -145,7 +148,8 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   and Export / Import (merge or replace, with a summary first).
 - **Keys**:
   - Space: pause
-  - Enter: play or start
+  - Enter: play or start; mid-pass, restart from the top
+  - Backspace: stop, back to the top
   - `[` `]`: tempo — under a track, one 5% speed step
   - T: tap along, in the track form
   - R: re-roll
@@ -156,6 +160,37 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Feedback round 1 — at the gate (2026-09-15)
+
+The player came back with a list after living with the app. Built on `feedback-after-m7a`
+(not merged, not pushed), `pnpm check` green, 804 unit tests, 61 E2E:
+- **Circle of fifths** in the practice screen's right column, under the neck (improv too): the
+  parent major's seven chords tinted as a wedge, spelled from the key, the mode's home chord in
+  blue, the signature in the middle. Settings → Display can hide it. `keyOnCircle` in
+  `domain/theory/circle.ts`; `components/music/CircleOfFifths.tsx`.
+- **Keys and modes struck out app-wide** (Settings → Keys and modes, `practice.blockedKeys` /
+  `blockedModes`). Only a roll avoids them; pinned or held still plays; a roll's subset beats
+  the list if nothing else is left. The policy editor shows them struck out and says why.
+- **String set defaults to all strings** for every exercise, as the axis's own default
+  (`AxisDefinition.defaultPolicy`, read through `policyFor`). **`allowedValues`** on a
+  definition limits an axis outright — for triads (8.5): three-string sets, default 1-2-3.
+- **Half-bar count-in** (Settings → Sound; `countInTicks` rounds to whole beats). The
+  transport's toggle turns the last chosen length back on (`audio.countInWhenOn`).
+- **Required backing tags** in a definition (`backing.requiredTags`), added to the saved
+  criteria; routines ask for every item's. No exercise uses it yet.
+- **Stop and Restart** in the transport, standalone only (Backspace, and Enter mid-pass).
+  Stopped past the count-in logs the pass as abandoned; inside it, nothing.
+- **Key above mode** in the policy editor (the roller still resolves mode first, for spelling).
+- Also fixed on the way: a key subset now matches by pitch, so a subset holding Db still
+  offers phrygian's C#.
+
+**Not built — asked instead** (the answers decide what comes next):
+- *Heat map of keys/modes*: `/fretboard`'s coverage panel already has a key × mode grid shaded
+  by passes. Missed, or wanted somewhere else (Home, Report, on the circle)?
+- *The drone keeping the notes*: already so since b574730 (the evening of 2026-09-14). If they
+  still went silent, or "drone track" meant a drone video, that changes the answer.
+- *Stop/Restart in a routine*: left out — routines run hands-off. Wanted?
 
 ## Paused — living with it (since 2026-09-15)
 
@@ -225,6 +260,12 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Feedback round 1** (see above for what was built)
+- A struck-out key or mode only stops a roll; anything chosen on purpose still plays.
+- String sets are all strings unless an exercise or the player says otherwise; an exercise can
+  limit an axis outright with `allowedValues`.
+- Stop inside the count-in logs nothing: restarting a few times leaves no trail.
 
 **M7a review, second pass**
 - 75% fine; timing good enough for now — **sync markers** to align the playhead come later.

@@ -34,6 +34,17 @@ export interface ExerciseDefinition<P = void> {
    */
   axes: AxisId[];
 
+  /**
+   * The values the exercise can use at all, per axis, by value key — a triad drill offers
+   * three-string sets and nothing else. Nothing reaches outside them: not the player's
+   * policies, not a routine, not a stale pin (which rolls within them instead). The policy
+   * editor offers only these. Omitted means every value.
+   */
+  allowedValues?: Partial<Record<AxisId, readonly string[]>>;
+
+  /** Tags a shared backing track must carry to be offered, on top of the player's criteria. */
+  backing?: { requiredTags: readonly string[] };
+
   /** Per-instance configuration, if any. Zod schema → typed params + a generated form. */
   params?: z.ZodType<P>;
 
@@ -44,7 +55,10 @@ export interface ExerciseDefinition<P = void> {
     reps: number;
     tempoPlan?: TempoPlan;
     params?: P;
-    /** Per-axis policy overrides. Anything omitted defaults to { mode: 'roll' }. */
+    /**
+     * Per-axis policy overrides. Anything omitted takes the axis's own default: roll, except
+     * `stringSet`, which is fixed to all strings (a set is a deliberate choice).
+     */
     axisPolicies?: Partial<Record<AxisId, AxisPolicy>>;
   };
 
@@ -210,6 +224,14 @@ shared generators, return.** If a new exercise needs more than ~50 lines of `gen
 is a signal the shared library is missing a piece — extract it rather than writing it inline.
 
 ---
+
+### What the player can take off the table
+
+Settings → Keys and modes strikes out keys (by pitch: Db covers C#) and modes app-wide. A roll
+never picks them, in any exercise or routine; a key pinned or held on purpose still plays, and a
+roll's own subset beats the list if nothing else is left in it — the more specific choice wins.
+The roller takes them as `blocked`, beside the exercise's `allowed`. Theory drills with no key
+axis (Circle of fifths) still ask about every key.
 
 ## Tags, not categories
 

@@ -7,6 +7,7 @@ import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
+import { CircleSheet } from './CircleSheet';
 import { ImprovBody } from './ImprovBody';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
@@ -66,7 +67,9 @@ function PlayedBody({
   const hasNeck = instance.neck.notes.length > 0;
   const showNeck = hasNeck && ui.showNeck;
   const videoColumn = useVideoColumn();
-  const showSide = showNeck || videoColumn;
+  const keyMode = usePractice((s) => s.snapshot?.keyMode);
+  const showCircle = ui.showCircle !== false && keyMode !== undefined;
+  const showSide = showNeck || videoColumn || showCircle;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
 
@@ -141,6 +144,7 @@ function PlayedBody({
               </div>
             </div>
           )}
+          {showCircle && <CircleSheet keyMode={keyMode} />}
         </div>
       )}
     </div>

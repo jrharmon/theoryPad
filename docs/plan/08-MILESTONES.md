@@ -474,7 +474,7 @@ sampled instruments?
 | 8.2 | `speed-picking`                                                                       | S    |
 | 8.3 | `legato`                                                                              | S    |
 | 8.4 | `remapToStringSet` + `string-skipping`                                                | M    |
-| 8.5 | Triad shape tables + chord-relative overlay labels + `triads-arpeggios`               | M    |
+| 8.5 | Triad shape tables + chord-relative overlay labels + `triads-arpeggios` (string sets: `allowedValues` three-string sets, default 1-2-3) | M    |
 | 8.6 | Interactive `FretboardInput` + `fretboard-note-finding`                               | M    |
 | 8.7 | CAGED/positional shape tables + `shapeSystem` axis offering both                      | M    |
 

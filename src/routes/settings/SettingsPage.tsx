@@ -11,6 +11,9 @@ import {
   type TheoryPadExport,
 } from '@/data';
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
+import type { Chroma, ModeName } from '@/domain/music';
+import { MODE_NAMES, modeTitle, preferredTonic } from '@/domain/music';
+import { COUNT_IN_CHOICES } from '@/domain/phrase';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,7 +45,7 @@ export function SettingsPage() {
     void load();
   }, [load]);
 
-  const { audio, ui, instrument } = settings;
+  const { audio, ui, instrument, practice } = settings;
 
   const setVolume = (db: number) => {
     void save({ audio: { ...audio, masterVolumeDb: db } });
@@ -89,18 +92,25 @@ export function SettingsPage() {
         <Row label="Metronome" hint="On when you open an exercise. The transport can switch it any time.">
           <OnOff on={audio.metronomeEnabled} label="Metronome" onChange={(on) => void save({ audio: { ...audio, metronomeEnabled: on } })} />
         </Row>
-        <Row label="Count-in" hint="Before the first pass. Between a routine's exercises there is always at least a bar.">
+        <Row
+          label="Count-in"
+          hint="Before the first pass. Half a bar suits slow tempos. Between a routine's exercises there is always at least a bar."
+        >
           <div className="flex gap-1" role="group" aria-label="Count-in bars">
-            {([0, 1, 2] as const).map((bars) => (
+            {COUNT_IN_CHOICES.map((bars) => (
               <Button
                 key={bars}
                 size="sm"
                 variant="secondary"
                 aria-pressed={audio.countInBars === bars}
                 className={`rounded-toggle ${audio.countInBars === bars ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
-                onClick={() => void save({ audio: { ...audio, countInBars: bars } })}
+                onClick={() =>
+                  void save({
+                    audio: { ...audio, countInBars: bars, ...(bars > 0 ? { countInWhenOn: bars as 0.5 | 1 | 2 } : {}) },
+                  })
+                }
               >
-                {bars === 0 ? 'None' : bars === 1 ? '1 bar' : '2 bars'}
+                {bars === 0 ? 'None' : bars === 0.5 ? '½ bar' : bars === 1 ? '1 bar' : '2 bars'}
               </Button>
             ))}
           </div>
@@ -125,12 +135,38 @@ export function SettingsPage() {
         </Row>
       </Section>
 
+      <Section title="Keys and modes">
+        <p className="text-[13px] text-ink/64">
+          Strike out any you don&rsquo;t want to practice. They never come up when a key or mode is
+          rolled, in any exercise or routine. One you pin or hold on purpose still plays.
+        </p>
+        <Row label="Keys" hint="By pitch: striking out Db strikes out C# too.">
+          <Blockable
+            label="Keys"
+            options={KEYS.map((k) => ({ id: k, label: k }))}
+            blocked={practice.blockedKeys ?? []}
+            onChange={(blockedKeys) => void save({ practice: { ...practice, blockedKeys } })}
+          />
+        </Row>
+        <Row label="Modes">
+          <Blockable
+            label="Modes"
+            options={MODE_NAMES.map((m) => ({ id: m, label: modeTitle(m) }))}
+            blocked={practice.blockedModes ?? []}
+            onChange={(blocked) => void save({ practice: { ...practice, blockedModes: blocked as ModeName[] } })}
+          />
+        </Row>
+      </Section>
+
       <Section title="Display">
         <Row label="Appearance" hint="System follows your computer's light or dark setting.">
           <AppearanceChoice value={ui.appearance} onChange={(appearance) => void save({ ui: { ...ui, appearance } })} />
         </Row>
         <Row label="Neck diagram" hint="Beside the tab while practicing. Hide it to give the tab the room.">
           <OnOff on={ui.showNeck} label="Neck diagram" onChange={(on) => void save({ ui: { ...ui, showNeck: on } })} />
+        </Row>
+        <Row label="Circle of fifths" hint="Under the neck while practicing, marking the key and its chords.">
+          <OnOff on={ui.showCircle ?? true} label="Circle of fifths" onChange={(on) => void save({ ui: { ...ui, showCircle: on } })} />
         </Row>
         <Row label="Tab size" hint="Also - and = while practicing.">
           <div className="flex items-center gap-2">
@@ -202,6 +238,47 @@ function AppearanceChoice({ value, onChange }: { value: Appearance; onChange: (a
           {option.label}
         </Button>
       ))}
+    </div>
+  );
+}
+
+/** The twelve keys, spelled as majors — how the policy editor offers them too. */
+const KEYS = Array.from({ length: 12 }, (_, c) => preferredTonic(c as Chroma, 'ionian'));
+
+/**
+ * A row of chips, each in or struck out. The last one in can't be struck out:
+ * rolling from nothing is not a roll.
+ */
+function Blockable({
+  label,
+  options,
+  blocked,
+  onChange,
+}: {
+  label: string;
+  options: { id: string; label: string }[];
+  blocked: readonly string[];
+  onChange: (blocked: string[]) => void;
+}) {
+  const open = options.filter((o) => !blocked.includes(o.id)).length;
+  return (
+    <div className="flex flex-wrap gap-1" role="group" aria-label={label}>
+      {options.map((o) => {
+        const on = !blocked.includes(o.id);
+        return (
+          <Button
+            key={o.id}
+            size="xs"
+            variant={on ? 'secondary' : 'ghost'}
+            className={on ? '' : 'text-ink/35 line-through'}
+            aria-pressed={on}
+            disabled={on && open === 1}
+            onClick={() => onChange(on ? [...blocked, o.id] : blocked.filter((b) => b !== o.id))}
+          >
+            {o.label}
+          </Button>
+        );
+      })}
     </div>
   );
 }

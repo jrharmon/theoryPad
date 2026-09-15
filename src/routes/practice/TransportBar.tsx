@@ -12,8 +12,9 @@ import { BackingDroppedNote } from './BackingPanel';
  * end to press start and back to the top to read it was the wrong shape.
  *
  * There is no End: leaving the screen is how you finish, and every pass is
- * logged as it ends, so there is nothing to remember to press. Skip appears
- * only in a routine, where there is a next exercise to skip to.
+ * logged as it ends, so there is nothing to remember to press. Stop and
+ * Restart go back to the top of the same material; skip appears only in a
+ * routine, where there is a next exercise to skip to.
  */
 export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }) {
   const snapshot = usePractice((s) => s.snapshot);
@@ -55,6 +56,30 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         >
           {state === 'paused' ? 'Resume' : 'Pause'}
         </Button>
+      )}
+
+      {/* A routine runs hands-off; standalone, you can go back to the top. */}
+      {!theory && !inRoutine && !startingTrack && (running || state === 'paused') && (
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void practice.restart()}
+            title="From the top, counted in  ( Enter )"
+            data-testid="restart"
+          >
+            Restart
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => practice.stop()}
+            title="Back to the top  ( Backspace )"
+            data-testid="stop"
+          >
+            Stop
+          </Button>
+        </div>
       )}
 
       {!theory && currentTempo !== null && (

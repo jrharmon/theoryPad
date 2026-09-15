@@ -98,6 +98,7 @@ const keyAxis: AxisDefinition<PitchClass> = {
     const mode = (context.resolved.mode ?? 'ionian') as ModeName;
     return preferredTonic(chroma(pitchClass(key)), mode);
   },
+  identity: (key) => (/^[A-G](#|b)?$/.test(key) ? String(chroma(pitchClass(key))) : key),
 };
 
 const neckPositionAxis: AxisDefinition<NeckPosition> = {
@@ -119,6 +120,9 @@ const stringSetAxis: AxisDefinition<StringSet> = {
   key: (set) => set.id,
   format: (set) => set.name,
   parse: (key, context) => defaultStringSets(context.instrument).find((s) => s.id === key) ?? null,
+  // Every string unless an exercise or the player says otherwise: a set is a
+  // deliberate choice, not something to be surprised by.
+  defaultPolicy: { mode: 'fixed', value: 'all' },
 };
 
 /**

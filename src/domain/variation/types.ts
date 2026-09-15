@@ -63,7 +63,18 @@ export interface AxisDefinition<T = unknown> {
   format(value: T): string;
   /** Rebuild a value from its key. Needed for `fixed` policies. */
   parse(key: string, context: AxisContext): T | null;
+  /**
+   * What two keys have to share to count as one value, when that is less than
+   * the whole key: a key is its pitch, so blocking Db blocks C# too. Absent
+   * means the key itself.
+   */
+  identity?: (key: string) => string;
+  /** The policy when neither the exercise nor the player set one. Absent means roll. */
+  defaultPolicy?: AxisPolicy;
 }
+
+/** Value keys per axis — an exercise's allowed values, or the player's blocked ones. */
+export type AxisValueKeys = Partial<Record<AxisId, readonly string[]>>;
 
 export interface ResolvedAxis {
   id: AxisId;

@@ -12,6 +12,7 @@ import {
 } from '../types';
 import {
   barBeatToTick,
+  countInTicks,
   makeBars,
   phraseSeconds,
   requiredSubdivision,
@@ -175,5 +176,19 @@ describe('requiredSubdivision', () => {
       .build();
     expect(phrase.notes.map((n) => n.startTick)).toEqual([0, 120, 320]);
     expect(requiredSubdivision(phrase)).toBe(12);
+  });
+});
+
+describe('countInTicks', () => {
+  it('counts whole bars as they are', () => {
+    expect(countInTicks(FOUR_FOUR, 1)).toBe(4 * QUARTER);
+    expect(countInTicks(FOUR_FOUR, 2)).toBe(8 * QUARTER);
+    expect(countInTicks(FOUR_FOUR, 0)).toBe(0);
+  });
+
+  it('counts half a bar in whole beats, rounding up', () => {
+    expect(countInTicks(FOUR_FOUR, 0.5)).toBe(2 * QUARTER);
+    expect(countInTicks(THREE_FOUR, 0.5)).toBe(2 * QUARTER);
+    expect(countInTicks(SIX_EIGHT, 0.5)).toBe(3 * EIGHTH);
   });
 });
