@@ -124,9 +124,14 @@ describe('reading a YouTube link', () => {
 });
 
 describe('video times', () => {
-  it('writes them as YouTube does, with a tenth when there is one', () => {
+  it('writes them as YouTube does, to the hundredth when there is one', () => {
     expect(formatVideoTime(216)).toBe('3:36');
-    expect(formatVideoTime(216.54)).toBe('3:36.5');
+    expect(formatVideoTime(216.5)).toBe('3:36.5');
+    expect(formatVideoTime(216.54)).toBe('3:36.54');
+    expect(formatVideoTime(216.05)).toBe('3:36.05');
+    // Nudging by a twentieth always shows, both ways, with no float residue.
+    expect(formatVideoTime(216.15 + 0.05)).toBe('3:36.2');
+    expect(formatVideoTime(215.95)).toBe('3:35.95');
     expect(formatVideoTime(3723)).toBe('1:02:03');
     expect(formatVideoTime(5)).toBe('0:05');
   });

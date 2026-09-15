@@ -25,7 +25,7 @@ import {
 import { PlayerSlot } from '@/components/media/PlayerSlot';
 import { useYouTubePlayer } from '@/components/media/useYouTubePlayer';
 import { useVideos } from '@/store/videos';
-import type { YouTubePlayer } from '@/audio/backing';
+import { YT_STATE, type YouTubePlayer } from '@/audio/backing';
 import type * as AudioNs from '@/audio';
 import type * as BackingNs from '@/audio/backing';
 import { draftFromVideo, draftToVideo, emptyDraft, respell, type TrackDraft } from './trackDraft';
@@ -50,7 +50,13 @@ export function TrackForm({ target, onClose }: { target: TrackFormTarget | null;
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       {target && (
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[760px]">
+        <DialogContent
+          className="max-h-[92vh] overflow-y-auto sm:max-w-[760px]"
+          // Editing, nothing is typed first — leave the keyboard free for T.
+          onOpenAutoFocus={(e) => {
+            if (target.video) e.preventDefault();
+          }}
+        >
           <FormBody target={target} onClose={onClose} />
         </DialogContent>
       )}
@@ -96,8 +102,16 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
         <Field label="YouTube link" htmlFor="track-link">
           <Input
             id="track-link"
+            data-typing
             value={draft.link}
             placeholder="https://www.youtube.com/watch?v=…"
+            // A pasted link is done with: hand the keyboard back for T.
+            onPaste={(e) => {
+              const input = e.currentTarget;
+              setTimeout(() => {
+                if (parseYouTubeLink(input.value)) input.blur();
+              }, 0);
+            }}
             onChange={(e) => {
               const parsed = parseYouTubeLink(e.target.value);
               const start =
@@ -111,7 +125,7 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
 
         {link && (
           <div className="space-y-1">
-            <PlayerSlot player={player} className="max-w-[560px]" />
+            <PlayerSlot player={player} className="max-w-[560px]" keepKeys />
             {playerError && <p className="text-[13px] text-destructive">{playerError}</p>}
           </div>
         )}
@@ -124,7 +138,12 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Title" htmlFor="track-title">
-            <Input id="track-title" value={draft.title} onChange={(e) => change({ title: e.target.value })} />
+            <Input
+              id="track-title"
+              data-typing
+              value={draft.title}
+              onChange={(e) => change({ title: e.target.value })}
+            />
           </Field>
           {(shared || draft.playAlong) && <KeyAndMode draft={draft} change={change} allowAny={!shared} />}
         </div>
@@ -146,12 +165,18 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
             <Field label="Progression" htmlFor="track-progression" hint="For display: modal vamp, ii-V-i, 12-bar blues.">
               <Input
                 id="track-progression"
+                data-typing
                 value={draft.progression}
                 onChange={(e) => change({ progression: e.target.value })}
               />
             </Field>
             <Field label="Tags" htmlFor="track-tags" hint="Separated by commas: rock, funk, drums only.">
-              <Input id="track-tags" value={draft.tags} onChange={(e) => change({ tags: e.target.value })} />
+              <Input
+                id="track-tags"
+                data-typing
+                value={draft.tags}
+                onChange={(e) => change({ tags: e.target.value })}
+              />
               <TagSuggestions suggestions={suggestions} draft={draft} change={change} />
             </Field>
           </div>
@@ -220,8 +245,23 @@ function Timing({
   const lastTapAt = useRef(0);
   const result = tapTempo(taps);
 
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => {
+    if (!player) return;
+    const off = player.onState((state) => setPlaying(state === YT_STATE.playing));
+    return () => {
+      off();
+    };
+  }, [player]);
+
   const tap = () => {
     if (!player) return;
+    // The first press starts the video; the taps are the presses after it.
+    if (player.state !== YT_STATE.playing) {
+      setTaps([]);
+      void player.resume().catch(() => undefined);
+      return;
+    }
     const now = performance.now() / 1000;
     const time = player.currentTime;
     const fresh = now - lastTapAt.current > TAP_RESET_SEC;
@@ -229,7 +269,7 @@ function Timing({
     setTaps((current) => (fresh ? [time] : [...current, time]));
   };
 
-  // T taps, so eyes can stay on the video. Not while typing in a field.
+  // T taps, so eyes can stay on the video — anywhere but a field that takes a t.
   const tapRef = useRef(tap);
   useEffect(() => {
     tapRef.current = tap;
@@ -238,7 +278,7 @@ function Timing({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 't' || e.repeat) return;
       const target = e.target as HTMLElement | null;
-      if (target?.closest('input, textarea, [role="combobox"]')) return;
+      if (target?.closest('[data-typing], textarea')) return;
       e.preventDefault();
       tapRef.current();
     };
@@ -314,12 +354,14 @@ function Timing({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button disabled={!player} onClick={tap} className="min-w-[88px]">
-          Tap (T)
+        <Button disabled={!player} onClick={tap} className="min-w-[88px]" data-testid="tap">
+          {playing ? 'Tap (T)' : 'Start the video (T)'}
         </Button>
         <p className="text-[13px] text-ink/64" data-testid="tap-readout">
           {taps.length === 0
-            ? 'Play the video and tap every beat, starting on the first beat of bar 1.'
+            ? playing
+              ? 'Now tap every beat, starting on the first beat of bar 1.'
+              : 'Press T (or the button) to start the video, then tap every beat from the first beat of bar 1.'
             : result
               ? `${taps.length} taps · ${result.bpm} bpm · bar 1 at ${formatVideoTime(result.bar1Sec)}`
               : taps.length < MIN_TAPS
@@ -336,6 +378,11 @@ function Timing({
             }}
           >
             Use these
+          </Button>
+        )}
+        {taps.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setTaps([])}>
+            Start over
           </Button>
         )}
       </div>

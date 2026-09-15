@@ -193,6 +193,13 @@ These need a guitar:
 
 ## Decisions, newest first
 
+**M7a review, second pass**
+- 75% fine; timing good enough for now — **sync markers** to align the playhead come later.
+- Tapping works well but was awkward: the first press (or T) now starts the video, T works
+  without clicking first, and there is Start over. Times show to the hundredth, so ±0.05 s
+  nudges exactly (they had rounded to tenths: −0.05 did nothing, +0.05 jumped 0.1).
+- The drone's level is right. A theory set stopping a routine's track is right.
+
 **M7a review, first pass**
 - 75% works fine; the drone helps — and should keep the synth notes, so it plays under them.
 - Play with a track sat on "Starting the track…" and fell back to the notes in the player's

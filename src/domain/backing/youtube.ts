@@ -51,14 +51,20 @@ export function parseYouTubeLink(input: string): YouTubeLink | null {
   return startSec === undefined ? { videoId } : { videoId, startSec };
 }
 
-/** 216.5 → "3:36.5"; whole seconds drop the tenth. */
+/**
+ * 216.05 → "3:36.05", 216.5 → "3:36.5", 216 → "3:36". To the hundredth: bar 1
+ * is nudged in twentieths, and a coarser display rounds a nudge away.
+ */
 export function formatVideoTime(seconds: number): string {
-  const tenths = Math.round(seconds * 10);
-  const whole = Math.floor(tenths / 10);
+  const hundredths = Math.round(seconds * 100);
+  const whole = Math.floor(hundredths / 100);
   const h = Math.floor(whole / 3600);
   const m = Math.floor((whole % 3600) / 60);
   const s = whole % 60;
-  const ss = String(s).padStart(2, '0') + (tenths % 10 ? `.${tenths % 10}` : '');
+  const fraction = hundredths % 100;
+  const ss =
+    String(s).padStart(2, '0') +
+    (fraction ? `.${String(fraction).padStart(2, '0').replace(/0$/, '')}` : '');
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
