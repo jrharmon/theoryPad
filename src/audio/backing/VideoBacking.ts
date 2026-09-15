@@ -1,8 +1,9 @@
 import type { Clock } from '@/domain/time';
 import type { TrackTiming } from '@/domain/backing';
+import type { TrackAlignment } from '@/domain/backing';
 import { SPEED_MAX, SPEED_MIN, SPEED_STEP, alignTrack, effectiveTempo } from '@/domain/backing';
 import { TrackFollower } from './TrackFollower';
-import { YT_STATE, YouTubePlayer } from './YouTubePlayer';
+import { YT_STATE, YouTubePlayer, type PlayOptions } from './YouTubePlayer';
 import type { BackingSource } from './types';
 
 export interface VideoTrack extends TrackTiming {
@@ -41,13 +42,17 @@ export class VideoBacking implements BackingSource {
     return this.player.ready;
   }
 
-  async start(countInTicks: number): Promise<void> {
+  /** Loaded, the play goes out before this returns — inside the click, where browsers want it. */
+  start(countInTicks: number, options: PlayOptions = {}): Promise<void> {
     this.follower?.stop();
-    await this.player.ready;
+    if (!this.player.isReady) return this.player.ready.then(() => this.start(countInTicks, options));
     const duration = this.player.duration;
     const alignment = alignTrack(this.track, countInTicks, duration > 0 ? duration : undefined);
     this.player.setRate(this.speed);
-    await this.player.playFrom(alignment.playFromSec);
+    return this.player.playFrom(alignment.playFromSec, options).then(() => this.follow(alignment));
+  }
+
+  private follow(alignment: TrackAlignment): void {
     const player = this.player;
     this.follower = new TrackFollower(
       this.clock,
@@ -72,8 +77,8 @@ export class VideoBacking implements BackingSource {
     this.player.pause();
   }
 
-  async resume(): Promise<void> {
-    await this.player.resume();
+  async resume(options: PlayOptions = {}): Promise<void> {
+    await this.player.resume(options);
     this.follower?.start();
   }
 

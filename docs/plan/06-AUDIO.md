@@ -209,12 +209,19 @@ notes, with the metronome.** The backing menu on the practice screen (and on a r
 overview) offers:
 
 - **None** — the default.
-- **Drone** — root and fifth of the session key, sustained. The metronome keeps going, since the
-  drone has no beat. Works in every key and mode, and offline.
+- **Drone** — root and fifth of the session key, sustained, under the synth notes and the
+  metronome (the notes stay: changed at the M7a review). Works in every key and mode, and
+  offline.
 - **Tracks** — shared tracks in the session's key and mode, narrowed by the exercise's (or
   routine's) saved criteria, plus the exercise's own play-along videos.
 
-Choosing a track or the drone **replaces the synth notes**. A track also mutes the metronome.
+Choosing a track **replaces the synth notes** and mutes the metronome; the drone adds to them.
+
+**Starting a track needs the click.** Safari and Firefox only let a video with sound start
+inside the click that asked for it — an await in between loses it. So Play sends the play to
+YouTube before anything else awaits; if the browser still holds it back, after 2.5 s the screen
+asks for a press of the video's own play button, and lines the track up from there. That first
+play inside the frame is permission for the rest.
 The choice is remembered on the exercise (or routine); if a re-roll lands on a key the chosen
 track does not match, it goes back to None and says so.
 

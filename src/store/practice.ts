@@ -133,9 +133,10 @@ function soundFor(
   backing: () => BackingState['resolved']['kind'],
 ) {
   return ({ phrase, countInTicks, freeTime, continuation, countInFrom }: RepStartInfo) => {
-    // A track or the drone plays instead of the notes. Under a track the
-    // recording is the click and the count-in, so the metronome says nothing.
-    const notes = backing() === 'none' ? phrase : null;
+    // A track plays instead of the notes; the drone plays under them. Under a
+    // track the recording is the click and the count-in, so the metronome says
+    // nothing.
+    const notes = backing() === 'video' ? null : phrase;
     engine.metronome.setSilenced(backing() === 'video');
     if (continuation) {
       // Straight on from the last pass or item: the clock and the click never
@@ -267,13 +268,17 @@ export const usePractice = create<PracticeState>((set, get) => {
    * Start the backing ahead of the clock, settling once it sounds. A track
    * that will not start is dropped, and says so, and the notes play instead.
    */
+  /** The browser held a video back: say so, and wait for the click on it. */
+  const askForClick = { onBlocked: () => set({ backing: { ...get().backing, needsClick: true } }) };
+
   const startBacking = async (countInTicks: number) => {
     const { backing } = get();
     if (!backing.source || backing.starting) return;
     set({ backing: { ...backing, starting: true } });
     try {
-      await backing.source.start(countInTicks);
-      set({ backing: { ...get().backing, starting: false, started: true } });
+      // The play goes out before this awaits — inside the click, if there was one.
+      await backing.source.start(countInTicks, askForClick);
+      set({ backing: { ...get().backing, starting: false, started: true, needsClick: false } });
     } catch (e) {
       backing.source.dispose();
       set({
@@ -285,6 +290,7 @@ export const usePractice = create<PracticeState>((set, get) => {
           error: (e as Error).message,
           starting: false,
           started: false,
+          needsClick: false,
         },
       });
     }
@@ -539,11 +545,23 @@ export const usePractice = create<PracticeState>((set, get) => {
       const { runner, routine, routineId } = get();
       if (!runner && !routine) return;
 
-      // This call is inside the click handler's task, which is what lets the
-      // AudioContext start. Getting that wrong is the classic silent-app bug.
+      // Everything that needs the click starts before anything awaits: the
+      // AudioContext (the classic silent-app bug), and a backing track, which
+      // some browsers only let start from the click itself.
+      const starting = audio?.getAudioEngine().init();
+      let backingStart: Promise<void> | null = null;
+      if (!routine && runner && !get().backing.starting) {
+        const phrase = runner.currentPhrase;
+        const countIn =
+          runner.snapshot.freeTime || !phrase
+            ? 0
+            : ticksPerBar(phrase.timeSignature) * useSettings.getState().settings.audio.countInBars;
+        backingStart = startBacking(countIn);
+      }
+
       const { getAudioEngine } = await import('@/audio');
       const engine = getAudioEngine();
-      await engine.init();
+      await (starting ?? engine.init());
       engine.setMasterVolume(useSettings.getState().settings.audio.masterVolumeDb);
       set({ audioReady: true });
 
@@ -555,16 +573,10 @@ export const usePractice = create<PracticeState>((set, get) => {
         routine.play();
         return;
       }
-      if (!runner || get().backing.starting) return;
-      const phrase = runner.currentPhrase;
-      const snapshot = runner.snapshot;
-      // The backing starts first and the clock follows it: YouTube takes a few
-      // hundred milliseconds to get going, and nothing should count from the click.
-      const countIn =
-        snapshot.freeTime || !phrase
-          ? 0
-          : ticksPerBar(phrase.timeSignature) * useSettings.getState().settings.audio.countInBars;
-      await startBacking(countIn);
+      if (!runner || !backingStart) return;
+      // The clock follows the backing: YouTube takes a few hundred milliseconds
+      // to get going, and nothing should count from the click.
+      await backingStart;
       runner.begin();
     },
 
@@ -579,7 +591,8 @@ export const usePractice = create<PracticeState>((set, get) => {
       const { runner, backing } = get();
       if (runner?.snapshot.state !== 'paused' || backing.starting) return;
       void (async () => {
-        await backing.source?.resume().catch(() => undefined);
+        await backing.source?.resume(askForClick).catch(() => undefined);
+        if (get().backing.needsClick) set({ backing: { ...get().backing, needsClick: false } });
         runner.resume();
       })();
     },

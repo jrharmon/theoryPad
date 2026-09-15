@@ -86,8 +86,8 @@ After the review: fast-forward `main` to `m7-audio`, push, check CI and the depl
   timed as a whole.
 - **Backing (M7a):** one `videos` table — shared tracks (key, mode, bpm; matched exactly) and
   an exercise's own videos (play-along on: its own track; off: a reference video). Nothing is
-  chosen for you: None is the synth notes with the click. A track or the drone replaces the
-  notes; a track silences the metronome, count-in included, and owns the tempo (5% steps,
+  chosen for you: None is the synth notes with the click. A track replaces the notes, the
+  drone plays under them; a track silences the metronome, count-in included, and owns the tempo (5% steps,
   `targetTempo` untouched). Play starts the video first; the clock follows it (`TrackFollower`).
   The choice is remembered on the exercise or routine. Doc 06 has it all.
 - **Progress:** the log is the truth; `practiceDays` is a cache over it. A finished played
@@ -193,6 +193,12 @@ These need a guitar:
 
 ## Decisions, newest first
 
+**M7a review, first pass**
+- 75% works fine; the drone helps — and should keep the synth notes, so it plays under them.
+- Play with a track sat on "Starting the track…" and fell back to the notes in the player's
+  browser: the video's play went out after awaits, outside the click. Now it goes out inside
+  it, and a browser that still holds it back gets asked for one press of the video's play.
+
 **Start of M7** (doc 06 has the design, doc 08 the tasks)
 - Split into M7a (backing, reference videos, free improv) and M7b (ear training, hear it).
 - One video table, two scopes: shared tracks (key, mode, bpm; matched exactly) and an
@@ -283,6 +289,11 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   (Shift+] repeatedly) and play one pass of Position shifting — about 40 s.
 
 ## Things that bit, and would bite again
+
+- **Autoplay passed every test and failed in the player's browser.** The screenshots ran
+  Chromium with `--autoplay-policy=no-user-gesture-required`, which hid that Safari and
+  Firefox only start a video with sound inside the click. Never pass that flag when checking
+  playback; the E2E fake YouTube has a `blocking` mode for the strict case.
 
 - **Moving an iframe in the DOM reloads it.** A YouTube player's node is mounted once
   (`PlayerSlot`) and enlarged by restyling its panel in place. That is also why a routine can't

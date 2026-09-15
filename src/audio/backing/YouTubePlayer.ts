@@ -53,6 +53,19 @@ export class YouTubeUnavailableError extends Error {
   }
 }
 
+/** Told to play, the browser may hold a video with sound back until it is clicked. */
+export interface PlayOptions {
+  /** It has not started after a moment: the browser wants a click on the video itself. */
+  onBlocked?: () => void;
+}
+
+/** How long a play gets before it counts as held back. */
+const BLOCKED_AFTER_MS = 2_500;
+/** How long to wait for the click on the video, once asked for, before giving up. */
+const CLICK_WAIT_MS = 180_000;
+/** Without anyone to ask, how long before giving up. */
+const PLAY_TIMEOUT_MS = 10_000;
+
 let loading: Promise<YTNamespace> | null = null;
 
 function loadApi(timeoutMs = 15_000): Promise<YTNamespace> {
@@ -94,7 +107,10 @@ export class YouTubePlayer {
 
   private api: YTPlayerApi | null = null;
   private readonly listeners = new Set<(state: number) => void>();
+  /** Waits for playback that closing the player must end. */
+  private readonly cancels = new Set<(error: Error) => void>();
   private destroyed = false;
+  private loaded = false;
 
   constructor(videoId: string, options: { startSec?: number; controls?: boolean } = {}) {
     this.element = document.createElement('div');
@@ -121,7 +137,10 @@ export class YouTubePlayer {
               controls: options.controls === false ? 0 : 1,
             },
             events: {
-              onReady: () => resolve(),
+              onReady: () => {
+                this.loaded = true;
+                resolve();
+              },
               onStateChange: (event) => {
                 for (const listener of this.listeners) listener(event.data);
               },
@@ -130,6 +149,11 @@ export class YouTubePlayer {
           });
         }),
     );
+  }
+
+  /** Loaded, so a play can go out straight away rather than after an await. */
+  get isReady(): boolean {
+    return this.loaded && this.api !== null;
   }
 
   get currentTime(): number {
@@ -167,41 +191,61 @@ export class YouTubePlayer {
   }
 
   /**
-   * Play from a point, settling once sound is actually coming out. YouTube
-   * takes a few hundred milliseconds to seek and start; nothing should count
-   * from the click.
+   * Play from a point, settling once sound is actually coming out — YouTube
+   * takes a few hundred milliseconds, and nothing should count from the click.
+   *
+   * Loaded, the play goes out before this returns. Some browsers (Safari,
+   * Firefox) only let a video with sound start inside the click that asked for
+   * it, and an await in between loses the click. If it is held back anyway,
+   * `onBlocked` asks for a click on the video; when that starts it, from
+   * wherever it was, it is put back where it should be.
    */
-  async playFrom(seconds: number, timeoutMs = 10_000): Promise<void> {
-    await this.ready;
+  playFrom(seconds: number, options: PlayOptions = {}): Promise<void> {
+    if (!this.isReady) return this.ready.then(() => this.playFrom(seconds, options));
     this.seekTo(seconds);
-    await this.playAndWait(timeoutMs);
+    return this.playAndWait(options, () => this.seekTo(seconds));
   }
 
   /** Carry on from where it is, settling once it is playing. */
-  async resume(timeoutMs = 10_000): Promise<void> {
-    await this.ready;
-    await this.playAndWait(timeoutMs);
+  resume(options: PlayOptions = {}): Promise<void> {
+    if (!this.isReady) return this.ready.then(() => this.resume(options));
+    return this.playAndWait(options, null);
   }
 
-  private playAndWait(timeoutMs: number): Promise<void> {
+  private playAndWait(options: PlayOptions, realign: (() => void) | null): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const done = (ok: boolean) => {
-        clearTimeout(timer);
+      let blocked = false;
+      const finish = (error?: Error) => {
+        clearTimeout(blockTimer);
+        clearTimeout(giveUp);
         stop();
-        if (ok) resolve();
-        else reject(new YouTubeUnavailableError());
+        this.cancels.delete(finish);
+        if (error) reject(error);
+        else resolve();
       };
       const stop = this.onState((state) => {
-        if (state === YT_STATE.playing) done(true);
+        if (state !== YT_STATE.playing) return;
+        if (blocked) realign?.();
+        finish();
       });
-      const timer = setTimeout(() => done(false), timeoutMs);
+      const blockTimer = setTimeout(() => {
+        blocked = true;
+        options.onBlocked?.();
+      }, BLOCKED_AFTER_MS);
+      const giveUp = setTimeout(
+        () =>
+          finish(blocked && options.onBlocked ? new Error('The video was never started.') : new YouTubeUnavailableError()),
+        options.onBlocked ? CLICK_WAIT_MS : PLAY_TIMEOUT_MS,
+      );
+      this.cancels.add(finish);
       this.play();
-      if (this.state === YT_STATE.playing) done(true);
+      if (this.state === YT_STATE.playing) finish();
     });
   }
 
   destroy(): void {
     this.destroyed = true;
+    for (const cancel of [...this.cancels]) cancel(new Error('The player was closed.'));
     this.listeners.clear();
     this.api?.destroy();
     this.api = null;

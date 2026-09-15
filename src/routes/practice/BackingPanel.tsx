@@ -27,7 +27,12 @@ export function BackingPanel() {
   return (
     <>
       {enlarged && <EnlargeScrim onClose={() => setEnlarged(false)} />}
-      <div className={cn('sheet px-5 pt-4 pb-[18px]', enlarged && ENLARGED)}
+      <div
+        className={cn(
+          'sheet px-5 pt-4 pb-[18px]',
+          backing.needsClick && 'ring-2 ring-accent',
+          enlarged && ENLARGED,
+        )}
         data-testid="backing-panel"
       >
         <div className="flex items-center gap-2">
@@ -57,6 +62,12 @@ export function BackingPanel() {
                 .filter(Boolean)
                 .join(' · ')}
             </p>
+            {backing.needsClick && (
+              <p className="mt-2 text-[13px] font-semibold text-accent-text" data-testid="needs-click">
+                Your browser wants the first play to come from the video itself. Press its play
+                button — the app lines the track up from there.
+              </p>
+            )}
             <div className="mt-2">
               <PlayerSlot player={backing.player} keepKeys />
             </div>

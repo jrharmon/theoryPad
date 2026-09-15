@@ -6,14 +6,16 @@ import { open } from './helpers';
  * It keeps time as a video would — from when it starts playing, at its rate —
  * and says it is playing a moment after being asked, as YouTube does.
  */
-async function fakeYouTube(page: Page) {
-  await page.addInitScript(() => {
+async function fakeYouTube(page: Page, { blocking = false } = {}) {
+  await page.addInitScript((blocking: boolean) => {
     type Events = { onReady: () => void; onStateChange: (e: { data: number }) => void };
     class Player {
       private state = -1;
       private rate = 1;
       private base: number;
       private startedAt: number | null = null;
+      /** A strict browser: nothing plays until the video itself is clicked once. */
+      private allowed = !blocking;
       private readonly events: Events;
       constructor(element: HTMLElement, options: { playerVars: { start?: number }; events: Events }) {
         this.events = options.events;
@@ -21,6 +23,10 @@ async function fakeYouTube(page: Page) {
         const stand = document.createElement('div');
         stand.dataset.testid = 'fake-youtube';
         stand.style.cssText = 'width:100%;height:100%;background:#222';
+        stand.addEventListener('click', () => {
+          this.allowed = true;
+          this.playVideo();
+        });
         element.replaceWith(stand);
         setTimeout(() => this.events.onReady(), 0);
       }
@@ -32,7 +38,7 @@ async function fakeYouTube(page: Page) {
         this.events.onStateChange({ data: state });
       }
       playVideo() {
-        if (this.state === 1) return;
+        if (this.state === 1 || !this.allowed) return;
         setTimeout(() => {
           this.startedAt = performance.now();
           this.set(1);
@@ -64,7 +70,7 @@ async function fakeYouTube(page: Page) {
       destroy() {}
     }
     (window as unknown as { YT: unknown }).YT = { Player };
-  });
+  }, blocking);
 }
 
 /** Pin an exercise to A Aeolian — the key the first-run track is in — and open it. */
@@ -84,8 +90,8 @@ async function inAMinor(page: Page, name: string) {
   await page.getByRole('link', { name: 'Practice this' }).click();
 }
 
-test.beforeEach(async ({ page }) => {
-  await fakeYouTube(page);
+test.beforeEach(async ({ page }, testInfo) => {
+  await fakeYouTube(page, { blocking: testInfo.title.includes('holds the video back') });
 });
 
 test('a backing track takes the tempo over, and the metronome waits it out', async ({ page }) => {
@@ -114,7 +120,7 @@ test('a backing track takes the tempo over, and the metronome waits it out', asy
   await expect(page.getByTestId('backing-menu')).toContainText('A minor backing track');
 });
 
-test('the drone plays instead of the notes, and the metronome keeps the beat', async ({ page }) => {
+test('the drone plays under the notes, and the metronome keeps the beat', async ({ page }) => {
   await inAMinor(page, 'Modes up the neck');
   await page.getByTestId('backing-menu').click();
   await page.getByRole('option', { name: /Drone/ }).click();
@@ -166,4 +172,18 @@ test('improvising counts phrases and names the note to land on', async ({ page }
   await page.getByTestId('play').click();
   await expect(page.getByTestId('phrase-counter')).toContainText('1 of 8', { timeout: 10_000 });
   await expect(page.getByTestId('phrase-counter')).toContainText('Bar 1 of 4');
+});
+
+test('a browser that holds the video back asks for a click on it, then plays', async ({ page }) => {
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /A minor backing track/ }).click();
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('starting-track')).toHaveText('Press play on the video');
+  await expect(page.getByTestId('needs-click')).toBeVisible();
+
+  await page.getByTestId('fake-youtube').click();
+  await expect(page.getByTestId('pause')).toBeVisible();
+  await expect(page.getByTestId('needs-click')).toHaveCount(0);
+  await expect(page.getByTestId('backing-error')).toHaveCount(0);
 });

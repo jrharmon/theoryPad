@@ -24,6 +24,8 @@ export interface BackingState {
   starting: boolean;
   /** Sounding (or paused mid-pass) — as opposed to loaded and waiting. */
   started: boolean;
+  /** The browser held the video back: it wants a click on the video itself. */
+  needsClick: boolean;
 }
 
 export const NO_BACKING: BackingState = {
@@ -37,6 +39,7 @@ export const NO_BACKING: BackingState = {
   error: null,
   starting: false,
   started: false,
+  needsClick: false,
 };
 
 export interface BackingContext {

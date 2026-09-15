@@ -26,6 +26,8 @@ import { PlayerSlot } from '@/components/media/PlayerSlot';
 import { useYouTubePlayer } from '@/components/media/useYouTubePlayer';
 import { useVideos } from '@/store/videos';
 import type { YouTubePlayer } from '@/audio/backing';
+import type * as AudioNs from '@/audio';
+import type * as BackingNs from '@/audio/backing';
 import { draftFromVideo, draftToVideo, emptyDraft, respell, type TrackDraft } from './trackDraft';
 
 /** After this long without a tap, the next one starts a fresh run. */
@@ -208,6 +210,13 @@ function Timing({
   const [checking, setChecking] = useState(false);
   // Leaving the form stops the check.
   useEffect(() => () => stopCheck.current?.(), []);
+  // Loaded ahead, so the click can start the video without awaiting anything.
+  const audioModules = useRef<[typeof AudioNs, typeof BackingNs] | null>(null);
+  useEffect(() => {
+    void Promise.all([import('@/audio'), import('@/audio/backing')]).then((m) => {
+      audioModules.current = m;
+    });
+  }, []);
   const lastTapAt = useRef(0);
   const result = tapTempo(taps);
 
@@ -249,9 +258,9 @@ function Timing({
       setChecking(false);
       return;
     }
-    if (!player || start === null) return;
+    if (!player || start === null || !audioModules.current) return;
     setChecking(true);
-    const [{ getAudioEngine }, { clickAlong }] = await Promise.all([import('@/audio'), import('@/audio/backing')]);
+    const [{ getAudioEngine }, { clickAlong }] = audioModules.current;
     stopCheck.current = await clickAlong(getAudioEngine(), player, { startSec: start, bpm, beatsPerBar: beats });
   };
 

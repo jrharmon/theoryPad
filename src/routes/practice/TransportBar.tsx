@@ -21,6 +21,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   const practice = usePractice();
   const inRoutine = usePractice((s) => s.routine !== null);
   const startingTrack = usePractice((s) => s.backing.starting);
+  const needsClick = usePractice((s) => s.backing.needsClick);
 
   if (!snapshot) return null;
 
@@ -41,7 +42,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
 
       {startingTrack && (
         <Button size="lg" variant="secondary" disabled data-testid="starting-track">
-          Starting the track…
+          {needsClick ? 'Press play on the video' : 'Starting the track…'}
         </Button>
       )}
 

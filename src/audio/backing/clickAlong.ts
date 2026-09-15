@@ -15,9 +15,17 @@ export async function clickAlong(
   player: YouTubePlayer,
   track: TrackTiming,
 ): Promise<() => void> {
-  await engine.init();
-  const { clock, metronome } = engine;
+  // Both go out before anything awaits: some browsers only start sound, and
+  // a video with sound, inside the click that asked for it.
+  const starting = engine.init();
   const bar = track.beatsPerBar * PPQ;
+  const duration = player.duration;
+  const alignment = alignTrack(track, bar, duration > 0 ? duration : undefined);
+  player.setRate(1);
+  const playing = player.playFrom(alignment.playFromSec);
+
+  await starting;
+  const { clock, metronome } = engine;
   metronome.stop();
   clock.stop();
   clock.seek(0);
@@ -25,11 +33,7 @@ export async function clickAlong(
   engine.configureMetronome({ timeSignature: { beats: track.beatsPerBar, unit: 4 }, countInBars: 0 });
   metronome.setMuted(false);
   metronome.setSilenced(false);
-
-  const duration = player.duration;
-  const alignment = alignTrack(track, bar, duration > 0 ? duration : undefined);
-  player.setRate(1);
-  await player.playFrom(alignment.playFromSec);
+  await playing;
   metronome.start();
   clock.start();
   const follower = new TrackFollower(

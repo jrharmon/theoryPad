@@ -1,6 +1,8 @@
+import type { PlayOptions } from './YouTubePlayer';
+
 /**
- * Something that plays under the exercise instead of the synth notes: a
- * YouTube track, or the drone. The practice store holds one and does not ask
+ * Something that plays under the exercise: a YouTube track, which replaces the
+ * synth notes, or the drone, which plays beneath them. The practice store holds one and does not ask
  * which kind for anything but display. A generated source, if it is ever
  * built, is a third implementation and touches nothing above this line.
  */
@@ -15,9 +17,9 @@ export interface BackingSource {
    * Start sounding, settling once it is. A track starts a count-in ahead of
    * its bar 1. Start the clock after this, not before.
    */
-  start(countInTicks: number): Promise<void>;
+  start(countInTicks: number, options?: PlayOptions): Promise<void>;
   pause(): void;
-  resume(): Promise<void>;
+  resume(options?: PlayOptions): Promise<void>;
   stop(): void;
   setRate(speed: number): void;
   dispose(): void;

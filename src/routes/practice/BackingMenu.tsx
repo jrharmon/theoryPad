@@ -59,7 +59,7 @@ export function BackingMenu() {
           <Option
             selected={backing.resolved.kind === 'drone'}
             title="Drone"
-            detail={`Root and fifth of ${key}, held. The metronome keeps the beat.`}
+            detail={`Root and fifth of ${key}, held under the notes and the metronome.`}
             onPick={() => pick({ kind: 'drone' })}
           />
           {backing.options.map((video) => (
