@@ -413,7 +413,7 @@ playhead findable without shouting? Does the graph paper help, or is it noise?
 Split into two gates at the start (2026-09-13). Doc 06 has the design as decided then: one
 video table in two scopes, nothing chosen automatically, the speed following the exercise.
 
-### M7a — Backing tracks, reference videos, free improv
+### M7a — Backing tracks, reference videos, free improv ✅ *complete (2026-09-15), reviewed*
 
 | #   | Task                                                                                                                                                   | Size |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |

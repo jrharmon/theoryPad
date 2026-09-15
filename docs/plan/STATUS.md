@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-13, **M7a built on `m7-audio` and at the gate** — not merged, not
-pushed. Written as a hand-off: a fresh session should be able to take the M7a review, or start
-M7b after it, from this file, `CLAUDE.md`, and the plan docs it points to.
+**Last updated:** 2026-09-15, **M7a reviewed, merged and live.** Written as a hand-off: a
+fresh session should be able to start M7b from this file, `CLAUDE.md`, and the plan docs it
+points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -17,13 +17,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M4 — Theory | ✅ merged, live |
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
-| **M7a — Backing tracks, reference videos, free improv** | **at the gate** on `m7-audio` — review, then merge |
-| M7b — Ear training and "hear it" | after M7a's review |
+| M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
+| **M7b — Ear training and "hear it"** | **next** — doc 08 has the tasks and the decisions |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. `main` has everything to the restyle; M7a is ten commits
-on `m7-audio` (the plan, then 7.1–7.7, then its E2E). 785 unit tests, 56 E2E, `pnpm check` green.
-After the review: fast-forward `main` to `m7-audio`, push, check CI and the deploy.
+M5 was deliberately built before M4. Everything is on `main`; the merged local branch
+`m7-audio` can be deleted. 785 unit tests, 57 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -158,9 +157,8 @@ After the review: fast-forward `main` to `m7-audio`, push, check CI and the depl
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: the M7a review, then M7b
+## Next: M7b
 
-Review M7a hands-on (the questions below), fold in what it says, merge, push, check CI. Then
 M7b — doc 08 has it, with the decisions already taken: `ear-training` (interval, scale degree,
 chord quality first; the drill is an axis; level 1/2/3 option sets; "hear yours" and "hear the
 right one"; lean toward misses) and `PreviewPlayer` ("hear it" for a phrase, a chord, a scale).
@@ -168,14 +166,11 @@ Ask the player first about anything not already decided there.
 
 ## Open questions for the player
 
-**At the M7a gate** — only the player can judge these:
-- Is 75% (and lower) musically usable, or does it sound wrong enough to want a click instead?
-- Does the tab stay with the track after the count-in, through a pause, across routine items?
-  (Measured at ±15 ms in the browser; the ear is the real test.)
-- Is tapping along a good enough way to set bar 1 and the bpm? Does Check with a click prove it?
-- Does the drone help, and is it too loud or too dull?
-- Does "Improvise to a target" read from the guitar; is the last bar the right moment for yellow?
-- A theory set in a routine stops the track and the next item restarts it from bar 1 — right?
+**Left from M7a** (answered at review or noted there):
+- "Set to now" was reported flaky; it could not be reproduced after the time display moved to
+  hundredths. If it recurs, get the browser and what was done just before.
+- "Improvise to a target" had not been tried at the gate.
+- Sync markers (a tempo map) to align the playhead — wanted eventually, not yet.
 - Not built, ask whether wanted: a criteria editor for routines; reference videos on theory
   exercises' practice screen; a free-time toggle in the transport.
 
