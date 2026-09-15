@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-15, **M7a reviewed, merged and live.** Written as a hand-off: a
-fresh session should be able to start M7b from this file, `CLAUDE.md`, and the plan docs it
-points to.
+**Last updated:** 2026-09-15, **M7a reviewed, merged and live — then paused** while the player
+lives with the app. Written as a hand-off: a fresh session should be able to pick up from this
+file, `CLAUDE.md`, and the plan docs it points to. Start with "Paused" and "Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -18,7 +18,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
-| **M7b — Ear training and "hear it"** | **next** — doc 08 has the tasks and the decisions |
+| M7b — Ear training and "hear it" | **paused** — next when work resumes; see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`; the merged local branch
@@ -157,22 +157,60 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Next: M7b
+## Paused — living with it (since 2026-09-15)
 
-M7b — doc 08 has it, with the decisions already taken: `ear-training` (interval, scale degree,
-chord quality first; the drill is an axis; level 1/2/3 option sets; "hear yours" and "hear the
-right one"; lean toward misses) and `PreviewPlayer` ("hear it" for a phrase, a chord, a scale).
-Ask the player first about anything not already decided there.
+After M7a the player chose to stop and use the app for a while before adding anything.
+**Do not start M7b, or anything else, until the player asks.** When they come back, the first
+job is to go through "Remaining work" below with them — they want to review it afresh, and
+their priorities may have moved after living with the app. Take any bugs or friction they
+found first; those are the most valuable input a pause produces.
+
+## Remaining work
+
+Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
+
+**M7b — Ear training and "hear it"** (next when work resumes)
+- 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
+  drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
+  settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
+  all twelve); a wrong answer offers "hear yours" and "hear the right one"; lean toward misses.
+- 7.9 `PreviewPlayer` (S) — "hear it" for a phrase, a chord, a scale.
+- Mode and progression drills follow, once the gate answers whether maj7 vs dom7 is audible on
+  the synth — the trigger for sampled instruments.
+
+**M8 — The rest of the catalog** (all thirteen exercises)
+- 8.1 ladder tempo plans, pick-stroke marks, articulation audio (M) · 8.2 speed picking (S) ·
+  8.3 legato (S) · 8.4 `remapToStringSet` + string skipping (M) · 8.5 triad shapes, R/3/5/7
+  labels, triads & arpeggios (M) · 8.6 clickable `FretboardInput` + note finding (M) · 8.7
+  CAGED/positional shapes as a `shapeSystem` option (M).
+- Ask first: the player plays 3nps, not CAGED — is 8.7 wanted at all?
+
+**M9 — Polish**
+- 9.1 PWA: offline, icons, install, backing saying plainly it needs a connection (M) · 9.2
+  post-session summary with "adopt as target" (M) · 9.3 "roll a routine from my gaps" (M) ·
+  9.4 tablet layout, type for reading at distance (M) · 9.5 empty states, first-run starter
+  routine, error boundaries (M) · 9.6 accessibility and keyboard audit (S) · 9.7 tuning
+  presets (DADGAD…), capo, left-handed (M).
+
+**M10 — Optional sync** — only if wanted after living with export/import (doc 07).
+
+**Parked — in no milestone yet**
+- Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
+- Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
+- Generated backing — deferred past M9; 75% on a real track was fine, so likely unneeded.
+- Sampled instruments — decided by the M7b gate.
+- M7a leftovers, ask whether wanted: a criteria editor for routines; reference videos on a theory
+  exercise's practice screen; a free-time toggle in the transport; one video player kept alive
+  through a whole routine (only if Safari's "Press play on the video" prompt gets tiresome).
 
 ## Open questions for the player
 
-**Left from M7a** (answered at review or noted there):
+**Left from M7a:**
+- "Improvise to a target" had not been tried when M7a merged — ask how it went.
 - "Set to now" was reported flaky; it could not be reproduced after the time display moved to
   hundredths. If it recurs, get the browser and what was done just before.
-- "Improvise to a target" had not been tried at the gate.
-- Sync markers (a tempo map) to align the playhead — wanted eventually, not yet.
-- Not built, ask whether wanted: a criteria editor for routines; reference videos on theory
-  exercises' practice screen; a free-time toggle in the transport.
+- Which browser the player uses — Safari may still ask for a press of the video's play button
+  once per exercise, and at a routine's start and after each theory set.
 
 Later, if it starts to matter: in dark, the explorer's heaviest heat shades toward chalk, and
 the white root dots there rely on their ring (fine for now, per the restyle review).
