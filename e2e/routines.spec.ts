@@ -88,3 +88,22 @@ test('a routine shows its overview, then runs and logs against its exercises', a
   const exerciseIds = new Set(reps.map((r) => r.exerciseId));
   expect(exerciseIds.size).toBe(2);
 });
+
+test('a routine item can be stopped and played again, staying where it is', async ({ page }) => {
+  await newRoutine(page, 'Stop', ['Modes up the neck', 'Interval sequences']);
+  await page.getByRole('link', { name: 'Start' }).click();
+  await expect(page.getByTestId('overview-item')).toHaveCount(2);
+  await page.getByTestId('start-routine').click();
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  await expect(page.getByTestId('position')).toBeVisible({ timeout: 10_000 });
+
+  await page.getByTestId('stop').click();
+  // Still the first item, waiting rather than moved on.
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  await expect(page.getByTestId('play')).toBeVisible();
+  expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned']);
+
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('pause')).toBeVisible();
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+});

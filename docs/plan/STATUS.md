@@ -1,7 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-15, **M7a merged and live; the first round of feedback from living
-with it is built on `feedback-after-m7a`, waiting for review** (see "Feedback round 1").
+**Last updated:** 2026-09-16, **M7a merged and live; two rounds of feedback from living with
+it are built on `feedback-after-m7a`, waiting for review** (see "Feedback round 1" and
+"round 2").
 Earlier the same day, M7a was reviewed and merged and work paused while the player lived with
 the app. Written as a hand-off: a fresh session should be able to pick up from this
 file, `CLAUDE.md`, and the plan docs it points to. Start with "Paused" and "Remaining work".
@@ -148,7 +149,7 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   and Export / Import (merge or replace, with a summary first).
 - **Keys**:
   - Space: pause
-  - Enter: play or start; mid-pass, restart from the top
+  - Enter: play or start; mid-pass, restart from the top (in a routine too)
   - Backspace: stop, back to the top
   - `[` `]`: tempo — under a track, one 5% speed step
   - T: tap along, in the track form
@@ -185,12 +186,30 @@ The player came back with a list after living with the app. Built on `feedback-a
 - Also fixed on the way: a key subset now matches by pitch, so a subset holding Db still
   offers phrygian's C#.
 
-**Not built — asked instead** (the answers decide what comes next):
-- *Heat map of keys/modes*: `/fretboard`'s coverage panel already has a key × mode grid shaded
-  by passes. Missed, or wanted somewhere else (Home, Report, on the circle)?
-- *The drone keeping the notes*: already so since b574730 (the evening of 2026-09-14). If they
-  still went silent, or "drone track" meant a drone video, that changes the answer.
-- *Stop/Restart in a routine*: left out — routines run hands-off. Wanted?
+**Answered at the gate (2026-09-16):** the key × mode heat map on `/fretboard` was simply
+missed and is fine as it is; the drone was an old note, already fixed; stop and restart were
+wanted in routines too. Half a bar is enough count-in at a slow tempo, and the circle "gives
+the perfect view of related chords".
+
+## Feedback round 2 — at the gate (2026-09-16)
+
+The rest of the same review, on the same branch:
+- **The count-in belongs to the exercise**, not to Settings: a Count-in menu in the transport
+  beside Backing (None, ½ bar, 1 bar, 2 bars), saved to the exercise — or, in a routine, to the
+  item being played, which each carry their own. Between items it is still never less than a
+  bar. `Settings → Sound` no longer has it; `audio.countInBars` survives only as the fallback
+  for rows made before the move.
+- **Stop and Restart work in a routine**, on the current item: it waits where it is rather than
+  moving on. `RoutineRunner.stop()`.
+- **The right column scrolls clear of the transport**: sticky, and `overflow-y-auto` inside a
+  `max-h` once it is taller than the window. (`calc(100dvh_-_7.5rem)` — the underscores matter,
+  a `calc` without spaces round the minus is invalid CSS and silently does nothing.)
+- **The neck and the circle minimize** from a button at each panel's top right, and shrink to
+  their titles rather than vanishing, so they come back from where they went; the column
+  narrows and the tab takes the room. `SidePanel`. The tab header's own "Hide neck" went — one
+  control for one thing.
+- **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
+  back. Theory keeps its worded Start / Again.
 
 ## Paused — living with it (since 2026-09-15)
 
@@ -260,6 +279,11 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Feedback round 2**
+- The count-in is per exercise (and per routine item), set from the transport, not app-wide.
+- A minimized side panel shrinks to its title in place; it never disappears on you.
+- Transport verbs are icons; only theory's Start / Again keeps its words.
 
 **Feedback round 1** (see above for what was built)
 - A struck-out key or mode only stops a roll; anything chosen on purpose still plays.

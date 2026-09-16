@@ -1,8 +1,10 @@
+import { PauseIcon, PlayIcon, RotateCcwIcon, SquareIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { tickToBarBeat } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { BackingMenu, TrackSpeed } from './BackingMenu';
+import { CountInMenu } from './CountInMenu';
 import { BackingDroppedNote } from './BackingPanel';
 
 /**
@@ -35,11 +37,24 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
 
   return (
     <div className="flex flex-wrap items-center gap-3 px-[18px] py-2.5">
-      {state === 'brief' && !startingTrack && (
-        <Button size="lg" onClick={() => void practice.play()} data-testid="play">
-          {theory ? (snapshot.lastSet ? 'Again' : 'Start') : 'Play'}
-        </Button>
-      )}
+      {/* Icons, not words: the transport is read at a glance from behind a guitar. */}
+      {state === 'brief' &&
+        !startingTrack &&
+        (theory ? (
+          <Button size="lg" onClick={() => void practice.play()} data-testid="play">
+            {snapshot.lastSet ? 'Again' : 'Start'}
+          </Button>
+        ) : (
+          <Button
+            size="icon-lg"
+            onClick={() => void practice.play()}
+            aria-label="Play"
+            title="Play  ( Enter )"
+            data-testid="play"
+          >
+            <PlayIcon className="size-5 fill-current" />
+          </Button>
+        ))}
 
       {startingTrack && (
         <Button size="lg" variant="secondary" disabled data-testid="starting-track">
@@ -48,36 +63,41 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       )}
 
       {!theory && !startingTrack && (running || state === 'paused') && (
-        <Button
-          size="lg"
-          variant={state === 'paused' ? 'default' : 'secondary'}
-          onClick={() => (state === 'paused' ? practice.resume() : practice.pause())}
-          data-testid="pause"
-        >
-          {state === 'paused' ? 'Resume' : 'Pause'}
-        </Button>
-      )}
-
-      {/* A routine runs hands-off; standalone, you can go back to the top. */}
-      {!theory && !inRoutine && !startingTrack && (running || state === 'paused') && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <Button
-            size="sm"
+            size="icon-lg"
+            variant={state === 'paused' ? 'default' : 'secondary'}
+            onClick={() => (state === 'paused' ? practice.resume() : practice.pause())}
+            aria-label={state === 'paused' ? 'Resume' : 'Pause'}
+            title={`${state === 'paused' ? 'Resume' : 'Pause'}  ( Space )`}
+            data-testid="pause"
+          >
+            {state === 'paused' ? (
+              <PlayIcon className="size-5 fill-current" />
+            ) : (
+              <PauseIcon className="size-5 fill-current" />
+            )}
+          </Button>
+          {/* A routine runs hands-off, but a pass that fell apart can still go again. */}
+          <Button
+            size="icon-sm"
             variant="secondary"
             onClick={() => void practice.restart()}
+            aria-label="Restart"
             title="From the top, counted in  ( Enter )"
             data-testid="restart"
           >
-            Restart
+            <RotateCcwIcon className="size-4" />
           </Button>
           <Button
-            size="sm"
+            size="icon-sm"
             variant="secondary"
             onClick={() => practice.stop()}
+            aria-label="Stop"
             title="Back to the top  ( Backspace )"
             data-testid="stop"
           >
-            Stop
+            <SquareIcon className="size-3.5 fill-current" />
           </Button>
         </div>
       )}
@@ -114,6 +134,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       )}
 
       {!theory && <PlaybackToggles />}
+      {!theory && <CountInMenu />}
       {!theory && <BackingMenu />}
       {!theory && state === 'brief' && <BackingDroppedNote />}
 
@@ -146,7 +167,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   );
 }
 
-/** Metronome, count-in and loop. Remembered app-wide, and applied straight away. */
+/** Metronome and loop. Remembered app-wide, and applied straight away. */
 export function PlaybackToggles() {
   const practice = usePractice();
   const audio = useSettings((s) => s.settings.audio);
@@ -161,11 +182,6 @@ export function PlaybackToggles() {
         disabled={underTrack}
         title={underTrack ? 'Muted under a backing track' : undefined}
         onChange={(on) => void practice.setMetronome(on)}
-      />
-      <Toggle
-        label="Count-in"
-        on={audio.countInBars > 0}
-        onChange={(on) => void practice.setCountIn(on)}
       />
       <Toggle
         // In a routine, looping holds you on the current exercise.

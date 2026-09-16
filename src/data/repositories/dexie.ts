@@ -261,7 +261,6 @@ export function defaultSettings(at: number): Settings {
     audio: {
       metronomeEnabled: true,
       countInBars: 1,
-      countInWhenOn: 1,
       loop: false,
       voice: 'synth',
       masterVolumeDb: 0,

@@ -8,6 +8,7 @@ import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
 import { CircleSheet } from './CircleSheet';
+import { SidePanel } from './SidePanel';
 import { ImprovBody } from './ImprovBody';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
@@ -68,13 +69,21 @@ function PlayedBody({
   const showNeck = hasNeck && ui.showNeck;
   const videoColumn = useVideoColumn();
   const keyMode = usePractice((s) => s.snapshot?.keyMode);
-  const showCircle = ui.showCircle !== false && keyMode !== undefined;
-  const showSide = showNeck || videoColumn || showCircle;
+  const hasCircle = keyMode !== undefined;
+  const showCircle = ui.showCircle !== false && hasCircle;
+  // The column is there for the panels themselves; minimized, they shrink to
+  // their titles rather than vanishing, so they can be brought back from here.
+  const showSide = hasNeck || videoColumn || hasCircle;
+  const wide = videoColumn || showNeck || showCircle;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
 
   return (
-    <div className={`grid gap-6 px-8 py-6 ${showSide ? 'lg:grid-cols-[1fr_320px]' : ''}`}>
+    <div
+      className={`grid gap-6 px-8 py-6 ${
+        showSide ? (wide ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-[1fr_auto]') : ''
+      }`}
+    >
       <div className="sheet min-w-0 px-5 pt-4 pb-[18px]">
         <div className="flex items-center gap-3">
           <Kicker>Tab · generated for this variation</Kicker>
@@ -104,16 +113,6 @@ function PlayedBody({
               +
             </Button>
           </div>
-          {hasNeck && (
-            <Button
-              variant="secondary"
-              size="xs"
-              aria-pressed={ui.showNeck}
-              onClick={() => void save({ ui: { ...ui, showNeck: !ui.showNeck } })}
-            >
-              {ui.showNeck ? 'Hide neck' : 'Show neck'}
-            </Button>
-          )}
         </div>
         <div className="mt-2">
           <TabStaff
@@ -128,23 +127,24 @@ function PlayedBody({
       </div>
 
       {showSide && (
-        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+        <div className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh_-_7.5rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
           <BackingPanel />
           <ReferencePanel />
           {/* A note-finding exercise leaves the neck empty — drawing it would give the answers away. */}
-          {showNeck && (
-            <div className="sheet px-5 pt-4 pb-[18px]">
-              <Kicker>Shape on the neck</Kicker>
-              <div className="mt-2">
-                <Fretboard
-                  instrument={instrument}
-                  overlay={instance.neck}
-                  fretRange={overlayFretRange(instance.neck, instrument)}
-                />
-              </div>
-            </div>
+          {hasNeck && (
+            <SidePanel
+              title="Shape on the neck"
+              open={showNeck}
+              onToggle={(open) => void save({ ui: { ...ui, showNeck: open } })}
+            >
+              <Fretboard
+                instrument={instrument}
+                overlay={instance.neck}
+                fretRange={overlayFretRange(instance.neck, instrument)}
+              />
+            </SidePanel>
           )}
-          {showCircle && <CircleSheet keyMode={keyMode} />}
+          {hasCircle && <CircleSheet keyMode={keyMode} />}
         </div>
       )}
     </div>

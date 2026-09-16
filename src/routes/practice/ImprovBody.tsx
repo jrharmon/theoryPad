@@ -36,7 +36,6 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
   const tick = usePhraseTick(state === 'playing');
   const videoColumn = useVideoColumn();
   const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
-  const side = videoColumn || showCircle;
   if (!snapshot) return null;
 
   const { count, length } = phraseShape(instance);
@@ -51,7 +50,12 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
   const target = degree === undefined ? null : noteAtDegree(snapshot.keyMode, degree);
 
   return (
-    <div className={cn('grid gap-6 px-8 py-6', side && 'lg:grid-cols-[1fr_320px]')}>
+    <div
+      className={cn(
+        'grid gap-6 px-8 py-6',
+        videoColumn || showCircle ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-[1fr_auto]',
+      )}
+    >
       <div className="min-w-0 space-y-6">
         <div className="sheet grid gap-6 px-6 py-5 sm:grid-cols-2" data-testid="phrase-counter">
           <div>
@@ -95,13 +99,12 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
         </div>
       </div>
 
-      {side && (
-        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
-          <BackingPanel />
-          <ReferencePanel />
-          {showCircle && <CircleSheet keyMode={snapshot.keyMode} />}
-        </div>
-      )}
+      {/* Minimized, the circle shrinks to its title rather than leaving the column. */}
+      <div className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh_-_7.5rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
+        <BackingPanel />
+        <ReferencePanel />
+        <CircleSheet keyMode={snapshot.keyMode} />
+      </div>
     </div>
   );
 }

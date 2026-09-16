@@ -23,6 +23,7 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     reps: Math.max(1, exercise.defaultReps),
     params: structuredClone(exercise.params),
     tempo: { ...exercise.tempo },
+    countInBars: exercise.countInBars ?? 1,
     // Key and mode belong to the routine, so the item does not carry them.
     axisPolicies: Object.fromEntries(
       Object.entries(exercise.axisPolicies).filter(([axis]) => axis !== 'key' && axis !== 'mode'),

@@ -214,3 +214,49 @@ describe('RoutineRunner', () => {
     expect(clock.state).toBe('started');
   });
 });
+
+describe('stopping and each item\u2019s own count-in', () => {
+  it('stops the current item and waits on it, ready to play again', () => {
+    const { routine, clock } = makeRoutine([item('a'), item('b')]);
+    routine.play();
+    clock.advanceTicks(QUARTER);
+    routine.stop();
+
+    const after = routine.snapshot;
+    expect(after.phase).toBe('running');
+    // Still on the same item, not moved on, with the pass logged as abandoned.
+    expect(after.index).toBe(0);
+    expect(after.current?.state).toBe('brief');
+    expect(after.current?.phraseTick).toBe(0);
+
+    routine.play();
+    expect(routine.snapshot.current?.state).toBe('playing');
+    expect(routine.snapshot.index).toBe(0);
+  });
+
+  it('counts each item in with its own setting, never less than a bar between items', () => {
+    const perBar = QUARTER * 4;
+    const { routine, clock } = makeRoutine(
+      [item('a', { countInBars: 0.5 }), item('b', { countInBars: 0 })],
+      { countInBars: 2 },
+    );
+    routine.play();
+    // The first item's own half bar, not the config's two bars.
+    expect(routine.snapshot.current?.countInRemaining).toBe(QUARTER * 2);
+
+    playPass(routine, clock);
+    // The second asks for none; between items it still gets a bar.
+    expect(routine.snapshot.index).toBe(1);
+    expect(routine.snapshot.current?.countInRemaining).toBe(perBar);
+  });
+
+  it('changes only the current item\u2019s count-in', () => {
+    const { routine } = makeRoutine([item('a'), item('b')]);
+    routine.play();
+    routine.setCountInBars(2);
+    expect(routine.snapshot.current?.countInBars).toBe(2);
+    routine.skip();
+    expect(routine.snapshot.index).toBe(1);
+    expect(routine.snapshot.current?.countInBars).toBe(0);
+  });
+});

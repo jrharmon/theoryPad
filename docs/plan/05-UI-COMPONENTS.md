@@ -181,11 +181,20 @@ Small, pure, presentational. The heatmap (practice intensity over 28 days) and d
 `RunningChrome` (the persistent dark bar: position in routine, segmented progress, time
 remaining, pause), `VariationBrief` (kicker + headline + instruction), `AxisStrip` (the
 equal-column grid of resolved axes, fresh ones accent-tinted; renders nothing when an exercise
-declares no axes), `TransportBar` (play/pause, tempo, Metronome / Count-in / Loop toggles
-remembered app-wide, Settings dialog, Re-roll — no Skip, no End; tab zoom and a neck show/hide
-sit above the tab, and the neck shows only the frets in use; bar·beat readout, free-time
-toggle, tags for backing/count-in), `CountdownGap` (the inter-exercise announcement),
+declares no axes), `TransportBar` (play, pause, restart and stop as icons —
+the words took more room than the transport had; tempo; Metronome and Loop toggles remembered
+app-wide; the Count-in and Backing menus, each the exercise's own and saved to it; Settings
+dialog; Re-roll — no End; tab zoom sits above the tab, and the neck shows only the frets in
+use; bar·beat readout, free-time toggle), `CountdownGap` (the inter-exercise announcement),
 `TheorySinglePick`, `TheoryTableFill`, `TheoryFeedback`.
+
+#### `<SidePanel />`
+
+The right-hand column's sheets — the neck, the circle of fifths — each with a minimize button
+at its top right. Minimized, a panel shrinks to its title rather than disappearing, so it comes
+back from where it went, and the column narrows to fit. The column is sticky and scrolls inside
+itself when it is taller than the window, so its last panel is never stranded under the
+transport.
 
 #### `<BackingControl />`
 
@@ -287,7 +296,7 @@ Hash router. `/` redirects to `/home`.
 | `/practice/routine/:id`  | Routine: overview (re-roll one or all) → hands-off run (Skip, "Stay on this") → summary                          | 1b/1c/3a-3c  | M5        |
 | `/fretboard`             | A key and mode across the neck, one 3nps shape at a time; notes-played heat; key × mode grid; the full key/mode view | 1d           | M6        |
 | `/report`                | Practice summary over a date range — a table, not a document                                                     | 1e           | M6        |
-| `/settings`              | Tuning, sound (metronome, count-in, volume), display (neck, tab size), export/import                            | —            | M5        |
+| `/settings`              | Tuning, sound (metronome, volume), keys and modes struck out, display (neck, circle, tab size), export/import      | —            | M5        |
 
 `/exercises` and `/exercises/:id` are **not in the mockups** but are load-bearing: they are how
 you configure an exercise (the tempo model needs a home) and how standalone practice starts.

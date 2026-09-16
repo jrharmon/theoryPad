@@ -83,6 +83,8 @@ export interface Exercise extends Row {
   /** Remembered values for axes set to `hold`. */
   heldAxisValues: Record<string, string>;
   tempo: TempoConfig;
+  /** How long it counts in for. Its own: a slow exercise wants less warning than a fast one. */
+  countInBars?: CountInBars;
   /** Passes it starts with when added to a routine. Standalone practice has no reps. */
   defaultReps: number;
   /** Pinned to the top of the library. */
@@ -112,6 +114,8 @@ export interface RoutineItem {
   reps: number;
   params: unknown;
   tempo: TempoConfig;
+  /** Copied from the exercise, and its own afterwards. At least a bar between items. */
+  countInBars?: CountInBars;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
 }
@@ -208,9 +212,11 @@ export interface Settings {
   instrument: Instrument;
   audio: {
     metronomeEnabled: boolean;
+    /**
+     * The count-in for an exercise that has none of its own — rows made before
+     * the count-in moved onto the exercise. Not shown in Settings any more.
+     */
     countInBars: CountInBars;
-    /** What the transport's Count-in toggle turns back on to: the length last chosen. */
-    countInWhenOn: Exclude<CountInBars, 0>;
     /** Keep playing the same material pass after pass. */
     loop: boolean;
     voice: 'synth' | 'sampled';

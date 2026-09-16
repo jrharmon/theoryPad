@@ -53,6 +53,8 @@ export interface ExerciseDefinition<P = void> {
     targetTempo: number | null;
     /** Passes it plays in a routine. Standalone practice has no reps. */
     reps: number;
+    /** Bars of count-in the exercise starts life with. 1 unless it wants less, or none. */
+    countInBars?: CountInBars;
     tempoPlan?: TempoPlan;
     params?: P;
     /**

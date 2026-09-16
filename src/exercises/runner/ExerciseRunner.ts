@@ -160,6 +160,7 @@ export class ExerciseRunner {
       variation: this.variation,
       phraseTick: Math.max(0, raw - this.passStartTick),
       countInRemaining: Math.max(0, this.countInEndTick - raw),
+      countInBars: this.config.countInBars ?? 0,
       currentTempo: this.currentTempo,
       targetTempo: this.config.tempo.targetTempo,
       freeTime: this.isFreeTime,

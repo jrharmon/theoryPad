@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
 import type { KeyMode } from '@/domain/music';
+import type { CountInBars } from '@/domain/phrase';
 import type { Instrument } from '@/domain/instrument';
 import type { NeckOverlay } from '@/domain/neck';
 import type { Phrase } from '@/domain/phrase';
@@ -83,6 +84,8 @@ export interface ExerciseDefaults<P> {
    * has no reps: you play it as often as you like.
    */
   reps: number;
+  /** Bars of count-in before the first pass. One unless the exercise wants less, or none. */
+  countInBars?: CountInBars;
   tempoPlan?: TempoPlan;
   params?: P;
   /** Per-axis overrides. Anything omitted rolls freely. */

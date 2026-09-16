@@ -19,6 +19,8 @@ export interface RoutineRunItem {
   reps: number;
   params: unknown;
   tempo: TempoConfig;
+  /** The item's own count-in. Between items it is never less than a bar. */
+  countInBars?: CountInBars;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
   /** Theory: lean toward subjects missed or seen least. */
@@ -34,7 +36,7 @@ export interface RoutineRunnerConfig {
   sessionAxisPolicies?: AxisPolicies;
   /** The player's app-wide "never roll these": the routine's key and mode avoid them. */
   blocked?: AxisValueKeys;
-  /** Before the first item. Between items there is always at least one bar. */
+  /** For an item that carries none of its own. Between items there is always at least one bar. */
   countInBars?: CountInBars;
   loop?: boolean;
   now: () => number;
@@ -194,7 +196,7 @@ export class RoutineRunner {
         passes: item.reps,
         endWhenFinished: true,
         loop: this.config.loop ?? false,
-        countInBars: this.config.countInBars ?? 0,
+        countInBars: item.countInBars ?? this.config.countInBars ?? 0,
         heldAxisValues: item.heldAxisValues,
         ...(item.subjectWeights ? { subjectWeights: item.subjectWeights } : {}),
         // Key and mode belong to the routine, whatever the item's own policy.
@@ -280,9 +282,24 @@ export class RoutineRunner {
     for (const runner of this.runners) runner.setLoop(loop);
   }
 
+  /** The current item's count-in — each item has its own, as it has its own tempo. */
   setCountInBars(bars: CountInBars): void {
-    this.config.countInBars = bars;
-    for (const runner of this.runners) runner.setCountInBars(bars);
+    const item = this.config.items[this.index];
+    if (item) item.countInBars = bars;
+    this.current?.setCountInBars(bars);
+    this.emit();
+  }
+
+  /**
+   * Stop the current item and wait on it, ready to play it again from the top.
+   * A routine runs hands-off, but a pass that fell apart should not have to be
+   * played out or skipped.
+   */
+  stop(): void {
+    if (this.phase !== 'running' || !this.current) return;
+    this.current.stop();
+    this.config.clock.stop();
+    this.emit();
   }
 
   /** Re-roll the current item's own axes. Key and mode stay the routine's. */
@@ -323,7 +340,9 @@ export class RoutineRunner {
     if (start) {
       // Always at least a bar: straight into a new tempo with no warning is
       // unplayable, and the count-in is the only pause there is.
-      this.current?.beginNext(Math.max(1, this.config.countInBars ?? 1));
+      // Always at least a bar between items, whatever the next one counts in with.
+      const next = this.config.items[this.index];
+      this.current?.beginNext(Math.max(1, next?.countInBars ?? this.config.countInBars ?? 1));
     }
     this.emit();
   }

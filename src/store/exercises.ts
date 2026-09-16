@@ -50,6 +50,7 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
     axisPolicies: definition.defaults.axisPolicies ?? {},
     heldAxisValues: {},
     tempo: { targetTempo: definition.defaults.targetTempo, maxTempo: null },
+    countInBars: definition.defaults.countInBars ?? 1,
     defaultReps: definition.defaults.reps,
   };
 }

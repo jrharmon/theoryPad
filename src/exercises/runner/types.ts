@@ -1,5 +1,6 @@
 import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
+import type { CountInBars } from '@/domain/phrase';
 import type { RolledVariation } from '@/domain/variation';
 import type { FretTally } from '@/domain/progress';
 
@@ -56,6 +57,8 @@ export interface RunnerSnapshot {
   phraseTick: number;
   /** Ticks of count-in remaining, or 0. */
   countInRemaining: number;
+  /** How long this exercise counts in for — its own setting, not the app's. */
+  countInBars: CountInBars;
   currentTempo: number | null;
   targetTempo: number | null;
   freeTime: boolean;

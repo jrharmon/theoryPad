@@ -35,6 +35,7 @@ import {
   type RoutineSnapshot,
   type RunnerSnapshot,
 } from '@/exercises/runner';
+import type { CountInBars } from '@/domain/phrase';
 import { countInTicks } from '@/domain/phrase';
 import { newId } from '@/data';
 import { useSettings } from './settings';
@@ -76,9 +77,9 @@ interface PracticeState {
   play: () => Promise<void>;
   pause: () => void;
   resume: () => void;
-  /** Standalone: back to the top, ready to play the same material again. */
+  /** Back to the top of what is playing, ready to go again. In a routine, of this item. */
   stop: () => void;
-  /** Standalone: from the top straight away, counted in. Must be called from a click or keypress. */
+  /** From the top straight away, counted in. Must be called from a click or keypress. */
   restart: () => Promise<void>;
   setTempo: (bpm: number) => void;
   nudgeTempo: (delta: number) => void;
@@ -99,7 +100,8 @@ interface PracticeState {
   setFreeTime: (freeTime: boolean) => void;
   /** The transport's toggles. Remembered app-wide, and applied straight away. */
   setMetronome: (on: boolean) => Promise<void>;
-  setCountIn: (on: boolean) => Promise<void>;
+  /** The count-in for this exercise — or, in a routine, this item. Saved to it. */
+  setCountIn: (bars: CountInBars) => Promise<void>;
   setLoop: (on: boolean) => Promise<void>;
   /** None, the drone, or a track — remembered on the exercise or routine. */
   chooseBacking: (choice: BackingChoice) => Promise<void>;
@@ -387,7 +389,8 @@ export const usePractice = create<PracticeState>((set, get) => {
         ...(definition.defaults.tempoPlan ? { tempoPlan: definition.defaults.tempoPlan } : {}),
         passes: 1,
         loop: settings.audio.loop,
-        countInBars: settings.audio.countInBars,
+        // The exercise's own; older rows that have none fall back to the setting.
+        countInBars: exercise.countInBars ?? settings.audio.countInBars,
         heldAxisValues: exercise.heldAxisValues,
         axisPolicies: exercise.axisPolicies,
         blocked: blockedValues(settings),
@@ -571,7 +574,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         const countIn =
           runner.snapshot.freeTime || !phrase
             ? 0
-            : countInTicks(phrase.timeSignature, useSettings.getState().settings.audio.countInBars);
+            : countInTicks(phrase.timeSignature, runner.snapshot.countInBars);
         backingStart = startBacking(countIn);
       }
 
@@ -614,14 +617,15 @@ export const usePractice = create<PracticeState>((set, get) => {
     },
     stop: () => {
       const { runner, routine, backing } = get();
-      if (routine || !runner || backing.starting) return;
+      if (backing.starting || (!runner && !routine)) return;
       // Back to brief: the runner's subscriber stops the click, the notes and the track.
-      runner.stop();
+      if (routine) routine.stop();
+      else runner?.stop();
     },
     async restart() {
-      const { runner, routine, backing } = get();
-      if (routine || !runner || backing.starting) return;
-      runner.stop();
+      const { backing } = get();
+      if (backing.starting) return;
+      get().stop();
       await get().play();
     },
     setTempo: (bpm) => {
@@ -669,12 +673,22 @@ export const usePractice = create<PracticeState>((set, get) => {
       await saveAudio({ metronomeEnabled: on });
     },
 
-    async setCountIn(on) {
-      const bars = on ? (useSettings.getState().settings.audio.countInWhenOn ?? 1) : 0;
-      const { routine, runner } = get();
-      if (routine) routine.setCountInBars(bars);
-      else runner?.setCountInBars(bars);
-      await saveAudio({ countInBars: bars });
+    async setCountIn(bars) {
+      const { routine, routineId, routineSnapshot, exerciseId } = get();
+      if (routine) {
+        routine.setCountInBars(bars);
+        const item = routineSnapshot?.items[routineSnapshot.index];
+        if (routineId && item) {
+          const { useRoutines } = await import('./routines');
+          await useRoutines.getState().updateItem(routineId, item.id, { countInBars: bars });
+        }
+        return;
+      }
+      get().runner?.setCountInBars(bars);
+      if (exerciseId) {
+        const { useExercises } = await import('./exercises');
+        await useExercises.getState().update(exerciseId, { countInBars: bars });
+      }
     },
 
     async setLoop(on) {

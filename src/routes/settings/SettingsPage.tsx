@@ -13,7 +13,6 @@ import {
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
 import type { Chroma, ModeName } from '@/domain/music';
 import { MODE_NAMES, modeTitle, preferredTonic } from '@/domain/music';
-import { COUNT_IN_CHOICES } from '@/domain/phrase';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -92,29 +91,7 @@ export function SettingsPage() {
         <Row label="Metronome" hint="On when you open an exercise. The transport can switch it any time.">
           <OnOff on={audio.metronomeEnabled} label="Metronome" onChange={(on) => void save({ audio: { ...audio, metronomeEnabled: on } })} />
         </Row>
-        <Row
-          label="Count-in"
-          hint="Before the first pass. Half a bar suits slow tempos. Between a routine's exercises there is always at least a bar."
-        >
-          <div className="flex gap-1" role="group" aria-label="Count-in bars">
-            {COUNT_IN_CHOICES.map((bars) => (
-              <Button
-                key={bars}
-                size="sm"
-                variant="secondary"
-                aria-pressed={audio.countInBars === bars}
-                className={`rounded-toggle ${audio.countInBars === bars ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
-                onClick={() =>
-                  void save({
-                    audio: { ...audio, countInBars: bars, ...(bars > 0 ? { countInWhenOn: bars as 0.5 | 1 | 2 } : {}) },
-                  })
-                }
-              >
-                {bars === 0 ? 'None' : bars === 0.5 ? '½ bar' : bars === 1 ? '1 bar' : '2 bars'}
-              </Button>
-            ))}
-          </div>
-        </Row>
+        {/* The count-in belongs to each exercise now, and is set from its transport. */}
         <Row label="Volume" hint="The notes and the click together.">
           <div className="flex items-center gap-3">
             <input
@@ -162,10 +139,10 @@ export function SettingsPage() {
         <Row label="Appearance" hint="System follows your computer's light or dark setting.">
           <AppearanceChoice value={ui.appearance} onChange={(appearance) => void save({ ui: { ...ui, appearance } })} />
         </Row>
-        <Row label="Neck diagram" hint="Beside the tab while practicing. Hide it to give the tab the room.">
+        <Row label="Neck diagram" hint="Beside the tab while practicing. Minimize it there, or here, to give the tab the room.">
           <OnOff on={ui.showNeck} label="Neck diagram" onChange={(on) => void save({ ui: { ...ui, showNeck: on } })} />
         </Row>
-        <Row label="Circle of fifths" hint="Under the neck while practicing, marking the key and its chords.">
+        <Row label="Circle of fifths" hint="Under the neck while practicing, marking the key and its chords. Minimize it there, or here.">
           <OnOff on={ui.showCircle ?? true} label="Circle of fifths" onChange={(on) => void save({ ui: { ...ui, showCircle: on } })} />
         </Row>
         <Row label="Tab size" hint="Also - and = while practicing.">

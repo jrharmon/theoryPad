@@ -32,18 +32,16 @@ test('settings are kept, and change what the exercises use', async ({ page }) =>
   await page.getByRole('combobox', { name: 'Tuning' }).click();
   await page.getByRole('option', { name: 'Guitar — 7 string' }).click();
   await expect(page.getByRole('combobox', { name: 'Tuning' })).toHaveText('Guitar — 7 string');
-  await page.getByRole('button', { name: '2 bars' }).click();
   // Reload only once the write has landed; a reload mid-write loses it anywhere.
   await expect
     .poll(async () => {
       const rows = await snapshot(page);
-      return (rows.settings?.[0] as { audio?: { countInBars?: number } } | undefined)?.audio?.countInBars;
+      return (rows.settings?.[0] as { instrument?: { id?: string } } | undefined)?.instrument?.id;
     })
-    .toBe(2);
+    .toBe('guitar-7-string');
 
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Tuning' })).toHaveText('Guitar — 7 string');
-  await expect(page.getByRole('button', { name: '2 bars' })).toHaveAttribute('aria-pressed', 'true');
 
   // A seven-string tab has seven lines.
   await page.goto('/#/exercises');
@@ -85,23 +83,32 @@ test('keys and modes struck out in Settings never come up', async ({ page }) => 
   ).toBeDisabled();
 });
 
-test('the transport’s count-in turns back on to half a bar once chosen', async ({ page }) => {
-  await page.goto('/#/settings');
-  await page.getByRole('button', { name: '½ bar' }).click();
-  await page.goto('/#/exercises');
-  await page
-    .locator('li', { hasText: 'Modes up the neck' })
-    .getByRole('link', { name: 'Practice', exact: true })
-    .click();
-  const countIn = page.getByRole('button', { name: 'Count-in', exact: true });
-  await countIn.click();
-  await expect(countIn).toHaveAttribute('aria-pressed', 'false');
-  await countIn.click();
-  await expect(countIn).toHaveAttribute('aria-pressed', 'true');
+test('the count-in is the exercise’s own, chosen from its transport', async ({ page }) => {
+  const practice = async (name: string) => {
+    await page.goto('/#/exercises');
+    await page
+      .locator('li', { hasText: name })
+      .getByRole('link', { name: 'Practice', exact: true })
+      .click();
+  };
+
+  await practice('Modes up the neck');
+  const menu = page.getByTestId('count-in-menu');
+  await expect(menu).toContainText('1 bar');
+  await menu.click();
+  await page.getByRole('option', { name: '½ bar' }).click();
+  await expect(menu).toContainText('½ bar');
+
+  // Kept on that exercise, and only that one.
+  await practice('Position shifting');
+  await expect(page.getByTestId('count-in-menu')).toContainText('1 bar');
+  await practice('Modes up the neck');
+  await expect(page.getByTestId('count-in-menu')).toContainText('½ bar');
+
   await expect
     .poll(async () => {
-      const rows = await snapshot(page);
-      return (rows.settings?.[0] as { audio?: { countInBars?: number } } | undefined)?.audio?.countInBars;
+      const rows = (await snapshot(page)).exercises as { definitionId: string; countInBars?: number }[];
+      return rows.find((e) => e.definitionId === 'modes-through-key')?.countInBars;
     })
     .toBe(0.5);
 });

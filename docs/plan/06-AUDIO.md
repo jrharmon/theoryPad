@@ -87,10 +87,15 @@ interface Metronome {
 Two `MembraneSynth`/`MetalSynth` voices — a higher accent click on beat 1, a lower click
 elsewhere. Optional subdivision clicks at lower volume.
 
-Count-in is half a bar, 1 or 2 bars of clicks before the phrase starts, with a visible bar/beat
-readout so you know when to come in. Default 1 bar. Half a bar is for slow tempos; it rounds up
-to whole beats (`countInTicks`), so 4/4 counts 3, 4 and 3/4 counts two. The transport's toggle
-turns the length last chosen in Settings on and off. Skipped entirely in free-time runs.
+Count-in is none, half a bar, 1 or 2 bars of clicks before the phrase starts, with a visible
+bar/beat readout so you know when to come in. Half a bar is for slow tempos; it rounds up to
+whole beats (`countInTicks`), so 4/4 counts 3, 4 and 3/4 counts two.
+
+**It belongs to the exercise, not the app** — a drill at 35 bpm wants less warning than one at
+160 — and is chosen from the Count-in menu in the transport, beside Backing, which saves it
+back to the exercise. Default 1 bar. In a routine it belongs to the item being played, and
+between items it is never less than a bar whatever the item says. Skipped entirely in free-time
+runs.
 
 ---
 

@@ -275,13 +275,13 @@ test('space pauses and resumes, with a guitar in your hands', async ({ page }) =
 
   // Enter starts it.
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('pause')).toHaveText('Pause');
+  await expect(page.getByTestId('pause')).toHaveAttribute('aria-label', 'Pause');
 
   await page.keyboard.press(' ');
-  await expect(page.getByTestId('pause')).toHaveText('Resume');
+  await expect(page.getByTestId('pause')).toHaveAttribute('aria-label', 'Resume');
 
   await page.keyboard.press(' ');
-  await expect(page.getByTestId('pause')).toHaveText('Pause');
+  await expect(page.getByTestId('pause')).toHaveAttribute('aria-label', 'Pause');
 
   // Bracket keys move the tempo.
   await page.keyboard.press(']');
