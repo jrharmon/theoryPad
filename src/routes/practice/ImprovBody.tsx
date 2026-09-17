@@ -13,6 +13,7 @@ import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
 import { CircleSheet } from './CircleSheet';
+import { InfoColumnToggle } from './SidePanel';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 
 /** Where each phrase begins, from the labels on its first bar. */
@@ -36,6 +37,7 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
   const tick = usePhraseTick(state === 'playing');
   const videoColumn = useVideoColumn();
   const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
+  const side = useSettings((s) => s.settings.ui.showInfoColumn !== false);
   if (!snapshot) return null;
 
   const { count, length } = phraseShape(instance);
@@ -53,7 +55,8 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
     <div
       className={cn(
         'grid gap-6 px-8 py-6',
-        videoColumn || showCircle ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-[1fr_auto]',
+        side && (videoColumn || showCircle) ? 'lg:grid-cols-[1fr_320px]' : '',
+        side && !videoColumn && !showCircle ? 'lg:grid-cols-[1fr_auto]' : '',
       )}
     >
       <div className="min-w-0 space-y-6">
@@ -88,7 +91,12 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
         </div>
 
         <div className="sheet px-5 pt-4 pb-[18px]">
-          <Kicker>The mode on the neck</Kicker>
+          <div className="flex items-center gap-3">
+            <Kicker>The mode on the neck</Kicker>
+            <span className="ml-auto">
+              <InfoColumnToggle />
+            </span>
+          </div>
           <div className="mt-2">
             <Fretboard
               instrument={instrument}
@@ -100,11 +108,13 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
       </div>
 
       {/* Minimized, the circle shrinks to its title rather than leaving the column. */}
-      <div className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh_-_7.5rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
-        <BackingPanel />
-        <ReferencePanel />
-        <CircleSheet keyMode={snapshot.keyMode} />
-      </div>
+      {side && (
+        <div className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh_-_7.5rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
+          <BackingPanel />
+          <ReferencePanel />
+          <CircleSheet keyMode={snapshot.keyMode} />
+        </div>
+      )}
     </div>
   );
 }

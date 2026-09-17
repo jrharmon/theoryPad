@@ -86,7 +86,7 @@ describe('RoutineRunner', () => {
   it('plays through every item without being touched', () => {
     const onRepEnd = vi.fn();
     const { routine, clock } = makeRoutine(
-      [item('a', { reps: 2 }), item('b'), item('c')],
+      [item('a', { reps: 2 }), item('b', { countInBars: 1 }), item('c')],
       { onRepEnd },
     );
     routine.play();
@@ -110,10 +110,10 @@ describe('RoutineRunner', () => {
     expect(reps.every((r) => r.status === 'completed')).toBe(true);
   });
 
-  it('counts in a full bar between items even with count-in off, at the next item’s tempo', () => {
+  it('counts the next item in with its own count-in, at its own tempo', () => {
     const onRepStart = vi.fn();
     const { routine, clock } = makeRoutine(
-      [item('a'), item('b', { tempo: { targetTempo: 100, maxTempo: null } })],
+      [item('a'), item('b', { countInBars: 1, tempo: { targetTempo: 100, maxTempo: null } })],
       { onRepStart },
     );
     routine.play();
@@ -127,7 +127,7 @@ describe('RoutineRunner', () => {
 
   it('skips to the next item, counting it in if something was playing', () => {
     const onRepEnd = vi.fn();
-    const { routine, clock } = makeRoutine([item('a'), item('b')], { onRepEnd });
+    const { routine, clock } = makeRoutine([item('a'), item('b', { countInBars: 1 })], { onRepEnd });
     routine.play();
     clock.advanceTicks(QUARTER);
     routine.skip();
@@ -201,7 +201,7 @@ describe('RoutineRunner', () => {
     const { routine, clock } = makeRoutine(
       [
         item('quiz', { definition: circleOfFifths, params: undefined, tempo: { targetTempo: null, maxTempo: null } }),
-        item('play'),
+        item('play', { countInBars: 1 }),
       ],
       { onRepStart },
     );
@@ -234,20 +234,24 @@ describe('stopping and each item\u2019s own count-in', () => {
     expect(routine.snapshot.index).toBe(0);
   });
 
-  it('counts each item in with its own setting, never less than a bar between items', () => {
-    const perBar = QUARTER * 4;
+  it('counts each item in with its own setting, between items as well', () => {
     const { routine, clock } = makeRoutine(
-      [item('a', { countInBars: 0.5 }), item('b', { countInBars: 0 })],
-      { countInBars: 2 },
+      [item('a', { countInBars: 0.5 }), item('b', { countInBars: 2 }), item('c', { countInBars: 0 })],
+      { countInBars: 1 },
     );
     routine.play();
-    // The first item's own half bar, not the config's two bars.
+    // The first item's own half bar, not the config's one.
     expect(routine.snapshot.current?.countInRemaining).toBe(QUARTER * 2);
 
     playPass(routine, clock);
-    // The second asks for none; between items it still gets a bar.
     expect(routine.snapshot.index).toBe(1);
-    expect(routine.snapshot.current?.countInRemaining).toBe(perBar);
+    expect(routine.snapshot.current?.countInRemaining).toBe(QUARTER * 8);
+
+    playPass(routine, clock);
+    // None means none: the next exercise starts on the beat after the last.
+    expect(routine.snapshot.index).toBe(2);
+    expect(routine.snapshot.current?.countInRemaining).toBe(0);
+    expect(routine.snapshot.current?.state).toBe('playing');
   });
 
   it('changes only the current item\u2019s count-in', () => {

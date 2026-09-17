@@ -277,6 +277,7 @@ export function defaultSettings(at: number): Settings {
       showDegreesOnFretboard: true,
       showNeck: true,
       showCircle: true,
+      showInfoColumn: true,
       tabZoom: 0,
       appearance: 'system',
     },

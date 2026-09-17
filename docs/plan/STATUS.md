@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-16, **M7a merged and live; two rounds of feedback from living with
-it are built on `feedback-after-m7a`, waiting for review** (see "Feedback round 1" and
-"round 2").
+**Last updated:** 2026-09-16, **two rounds of feedback from living with M7a reviewed, merged
+and live** (see "Feedback rounds 1–3"). Nothing is in progress: the next thing is whatever the
+player asks for, starting from "Remaining work".
 Earlier the same day, M7a was reviewed and merged and work paused while the player lived with
 the app. Written as a hand-off: a fresh session should be able to pick up from this
 file, `CLAUDE.md`, and the plan docs it points to. Start with "Paused" and "Remaining work".
@@ -21,7 +21,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M6 — Practice log, report & fretboard explorer | ✅ merged, live |
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
-| Feedback round 1 — after living with M7a | **built on `feedback-after-m7a`, at the gate** |
+| Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | M7b — Ear training and "hear it" | **paused** — next when work resumes; see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -80,8 +80,8 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
 - **No reps standalone.** Play runs the material once; Loop repeats it on a running clock;
   every pass is logged as it ends, and leaving mid-pass logs it as abandoned. No End, no Skip.
 - **Routines:** each item is its **own copy** of an exercise's settings. Passes play back to
-  back; the next item counts in on the same clock at its own tempo, with at least a bar and no
-  other gap. Key and mode are the routine's. Passes are logged against the source exercise.
+  back; the next item counts itself in on the same clock, at its own tempo and with its own
+  count-in, and that is the only gap. Key and mode are the routine's. Passes are logged against the source exercise.
   Nothing ever writes `maxTempo`.
 - **Theory:** a set of questions is a pass, with no clock. Each pass is a fresh set on the same
   key. A right answer moves on after a beat; a wrong one waits with the correction. Tables are
@@ -162,10 +162,12 @@ M5 was deliberately built before M4. Everything is on `main`; the merged local b
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Feedback round 1 — at the gate (2026-09-15)
+## Feedback rounds 1–3 — merged (2026-09-16)
 
-The player came back with a list after living with the app. Built on `feedback-after-m7a`
-(not merged, not pushed), `pnpm check` green, 804 unit tests, 61 E2E:
+The player came back with a list after living with the app, and reviewed it twice more. All of
+it is on `main` and live; `pnpm check` green, 807 unit tests, 63 E2E.
+
+### Round 1
 - **Circle of fifths** in the practice screen's right column, under the neck (improv too): the
   parent major's seven chords tinted as a wedge, spelled from the key, the mode's home chord in
   blue, the signature in the middle. Settings → Display can hide it. `keyOnCircle` in
@@ -191,14 +193,13 @@ missed and is fine as it is; the drone was an old note, already fixed; stop and 
 wanted in routines too. Half a bar is enough count-in at a slow tempo, and the circle "gives
 the perfect view of related chords".
 
-## Feedback round 2 — at the gate (2026-09-16)
-
-The rest of the same review, on the same branch:
+### Round 2
 - **The count-in belongs to the exercise**, not to Settings: a Count-in menu in the transport
   beside Backing (None, ½ bar, 1 bar, 2 bars), saved to the exercise — or, in a routine, to the
-  item being played, which each carry their own. Between items it is still never less than a
-  bar. `Settings → Sound` no longer has it; `audio.countInBars` survives only as the fallback
-  for rows made before the move.
+  item being played, which each carry their own and count that item in wherever it falls (the
+  old "at least a bar between items" rule is gone — asked for at the gate). `Settings → Sound`
+  no longer has it; `audio.countInBars` survives only as the fallback for rows made before the
+  move.
 - **Stop and Restart work in a routine**, on the current item: it waits where it is rather than
   moving on. `RoutineRunner.stop()`.
 - **The right column scrolls clear of the transport**: sticky, and `overflow-y-auto` inside a
@@ -206,8 +207,17 @@ The rest of the same review, on the same branch:
   a `calc` without spaces round the minus is invalid CSS and silently does nothing.)
 - **The neck and the circle minimize** from a button at each panel's top right, and shrink to
   their titles rather than vanishing, so they come back from where they went; the column
-  narrows and the tab takes the room. `SidePanel`. The tab header's own "Hide neck" went — one
-  control for one thing.
+  narrows and the tab takes the room. `SidePanel`. Beside the tab size, **Hide Info / Show
+  Info** puts the whole column away (`ui.showInfoColumn`) — that is what the old "Hide neck"
+  button became.
+### Round 3
+
+- **Starting a track shows nothing special**: the transport simply looks like it is playing.
+  Only a browser holding the video back still says so, since that needs a press.
+- **Between routine items, the count-in is the next exercise's own** — none means none. The
+  "always at least a bar" rule is gone, at the player's request.
+- **Hide Info / Show Info** beside the tab size puts the whole right column away and brings it
+  back (`ui.showInfoColumn`); the panels' own minimize buttons stay for one at a time.
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
@@ -279,6 +289,11 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Feedback round 3**
+- Between routine items the count-in is the next item's own, however short — no floor.
+- A loading state for a starting track is noise; the transport just looks like it is playing.
+- One button hides the whole info column; the per-panel minimizes handle one at a time.
 
 **Feedback round 2**
 - The count-in is per exercise (and per routine item), set from the transport, not app-wide.
@@ -433,6 +448,11 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   dialog or popover — don't rely on `enabled` alone for that.
 - **`Date.now()` in render fails lint** (`react-hooks/purity`). Stores keep a `today` set on
   load; screens read it.
+
+- **Two E2E tests flake under parallel load** (seen 2026-09-16, twice in ~6 full runs):
+  `appearance.spec` "stays dark from the first paint after a reload" and `gallery.spec`
+  "returns to Play when a phrase reaches its end". Both reload or wait on audio timing; both
+  pass on their own and on a re-run. If CI is red on one of these, re-run before digging.
 
 - **CI was red for three pushes and nobody looked.** The ESLint-boundaries test builds a
   TypeScript program and took over 5 s on the CI runner. It now has a 30 s timeout. After a

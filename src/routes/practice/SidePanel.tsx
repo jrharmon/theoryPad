@@ -1,6 +1,29 @@
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
+import { useSettings } from '@/store/settings';
+
+/**
+ * Hide the whole right-hand column — the neck, the circle, whatever is
+ * playing — and give the tab the width. Kept app-wide, like the panels' own
+ * minimize buttons.
+ */
+export function InfoColumnToggle() {
+  const ui = useSettings((s) => s.settings.ui);
+  const save = useSettings((s) => s.save);
+  const shown = ui.showInfoColumn !== false;
+  return (
+    <Button
+      variant="secondary"
+      size="xs"
+      aria-pressed={shown}
+      onClick={() => void save({ ui: { ...ui, showInfoColumn: !shown } })}
+      data-testid="info-column-toggle"
+    >
+      {shown ? 'Hide Info' : 'Show Info'}
+    </Button>
+  );
+}
 
 /**
  * A sheet in the right-hand column that can be shrunk to its title, so the

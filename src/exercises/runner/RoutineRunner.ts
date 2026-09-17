@@ -19,7 +19,7 @@ export interface RoutineRunItem {
   reps: number;
   params: unknown;
   tempo: TempoConfig;
-  /** The item's own count-in. Between items it is never less than a bar. */
+  /** The item's own count-in — it counts this item in wherever it falls in the routine. */
   countInBars?: CountInBars;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
@@ -36,7 +36,7 @@ export interface RoutineRunnerConfig {
   sessionAxisPolicies?: AxisPolicies;
   /** The player's app-wide "never roll these": the routine's key and mode avoid them. */
   blocked?: AxisValueKeys;
-  /** For an item that carries none of its own. Between items there is always at least one bar. */
+  /** For an item that carries none of its own. */
   countInBars?: CountInBars;
   loop?: boolean;
   now: () => number;
@@ -338,11 +338,11 @@ export class RoutineRunner {
       return;
     }
     if (start) {
-      // Always at least a bar: straight into a new tempo with no warning is
-      // unplayable, and the count-in is the only pause there is.
-      // Always at least a bar between items, whatever the next one counts in with.
+      // The next item counts itself in exactly as it would standalone: the
+      // count-in is the only pause between items, and how long it wants is
+      // that exercise's business.
       const next = this.config.items[this.index];
-      this.current?.beginNext(Math.max(1, next?.countInBars ?? this.config.countInBars ?? 1));
+      this.current?.beginNext(next?.countInBars ?? this.config.countInBars ?? 0);
     }
     this.emit();
   }

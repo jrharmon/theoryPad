@@ -17,8 +17,8 @@ const DETAIL: Record<number, string> = {
 
 /**
  * How long this exercise counts in for — its own setting, like its tempo, and
- * saved to it. In a routine it belongs to the item being played, and there is
- * always at least a bar between items whatever it says.
+ * saved to it. In a routine it belongs to the item being played, and counts
+ * that item in wherever it falls.
  */
 export function CountInMenu() {
   const bars = usePractice((s) => s.snapshot?.countInBars ?? 0);
@@ -63,7 +63,7 @@ export function CountInMenu() {
         </ul>
         <p className="px-2 pt-2 pb-1 text-[12px] text-ink/64">
           {inRoutine
-            ? 'This item’s own, and kept. Between items it is never less than a bar.'
+            ? 'This item’s own, and kept — it counts the item in wherever it falls in the routine.'
             : 'This exercise’s own, and kept. It takes effect on the next Play.'}
         </p>
       </PopoverContent>

@@ -56,11 +56,19 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           </Button>
         ))}
 
-      {startingTrack && (
-        <Button size="lg" variant="secondary" disabled data-testid="starting-track">
-          {needsClick ? 'Press play on the video' : 'Starting the track…'}
-        </Button>
-      )}
+      {/* A track takes a moment to sound. The transport just looks like it is
+          playing — a "starting…" state only draws the eye to the wait. The
+          exception is a browser holding the video back, which needs a press. */}
+      {startingTrack &&
+        (needsClick ? (
+          <Button size="lg" variant="secondary" disabled data-testid="starting-track">
+            Press play on the video
+          </Button>
+        ) : (
+          <Button size="icon-lg" variant="secondary" aria-label="Starting" data-testid="starting">
+            <PauseIcon className="size-5 fill-current" />
+          </Button>
+        ))}
 
       {!theory && !startingTrack && (running || state === 'paused') && (
         <div className="flex items-center gap-1.5">

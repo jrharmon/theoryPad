@@ -114,7 +114,7 @@ export interface RoutineItem {
   reps: number;
   params: unknown;
   tempo: TempoConfig;
-  /** Copied from the exercise, and its own afterwards. At least a bar between items. */
+  /** Copied from the exercise, and its own afterwards. It counts this item in in a routine too. */
   countInBars?: CountInBars;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
@@ -240,6 +240,8 @@ export interface Settings {
     showNeck: boolean;
     /** The circle of fifths under the neck while practicing, marking the key. */
     showCircle: boolean;
+    /** The whole right-hand column beside the tab — the neck, the circle, a track. */
+    showInfoColumn: boolean;
     /** Tab size, in steps from the default: positive is bigger. Bars per line follow. */
     tabZoom: number;
     /** Light or dark. 'system' follows the computer, and changes when it does. */

@@ -8,7 +8,7 @@ import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
 import { CircleSheet } from './CircleSheet';
-import { SidePanel } from './SidePanel';
+import { InfoColumnToggle, SidePanel } from './SidePanel';
 import { ImprovBody } from './ImprovBody';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
@@ -73,7 +73,8 @@ function PlayedBody({
   const showCircle = ui.showCircle !== false && hasCircle;
   // The column is there for the panels themselves; minimized, they shrink to
   // their titles rather than vanishing, so they can be brought back from here.
-  const showSide = hasNeck || videoColumn || hasCircle;
+  // Hide Info puts the whole column away and gives the tab the width.
+  const showSide = (hasNeck || videoColumn || hasCircle) && ui.showInfoColumn !== false;
   const wide = videoColumn || showNeck || showCircle;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);
@@ -113,6 +114,7 @@ function PlayedBody({
               +
             </Button>
           </div>
+          <InfoColumnToggle />
         </div>
         <div className="mt-2">
           <TabStaff

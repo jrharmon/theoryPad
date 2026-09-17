@@ -268,7 +268,7 @@ ever writes `maxTempo`; moving to the next item needs no click.
 **Agreed at the start of M5:** Home is a plain list — no "today's routine" — with
 favorites (routines and exercises) pinned to the top. A routine opens on an overview of
 everything rolled. No Previous button: a routine is for getting through the set. No gap
-between items — the count-in is the pause, at the next item's tempo (at least a bar, even
+between items — the count-in is the pause, at the next item's tempo and its own length (even
 with count-in off). Settings and export/import stay in M5.
 
 **Outcome.** 640 unit tests, 39 E2E. Things to carry forward:

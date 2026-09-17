@@ -341,6 +341,22 @@ test('the circle of fifths marks the key being played', async ({ page }) => {
   await expect(circle.getByTestId('circle-in-key')).toHaveCount(6);
 });
 
+test('Hide Info puts the whole right column away, and brings it back', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  await expect(page.getByTestId('circle-of-fifths')).toBeVisible();
+
+  const toggle = page.getByTestId('info-column-toggle');
+  await expect(toggle).toHaveText('Hide Info');
+  await toggle.click();
+  await expect(page.getByTestId('circle-of-fifths')).toHaveCount(0);
+  await expect(page.getByText('Shape on the neck')).toHaveCount(0);
+
+  // It says how to get it back, and does.
+  await expect(toggle).toHaveText('Show Info');
+  await toggle.click();
+  await expect(page.getByTestId('circle-of-fifths')).toBeVisible();
+});
+
 test('a roll can leave values out, and the run honours it', async ({ page }) => {
   await page.getByRole('link', { name: EXERCISE }).click();
   const keys = page.getByRole('group', { name: 'Key rolls from' });
