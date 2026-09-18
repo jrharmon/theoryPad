@@ -6,8 +6,8 @@ import { FIRST_RUN_VIDEOS } from './seed/videos';
 
 /**
  * The only place `dexie` is imported. Everything else goes through a
- * repository, so tests can use an in-memory fake and a sync layer can be added
- * later as an adapter rather than a rewrite.
+ * repository, so a sync layer can be added later as an adapter rather than a
+ * rewrite. Tests run the real thing over `fake-indexeddb`.
  */
 export class TheoryPadDB extends Dexie {
   exercises!: Table<Exercise, string>;

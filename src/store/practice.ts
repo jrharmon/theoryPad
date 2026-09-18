@@ -3,8 +3,7 @@ import type { KeyMode } from '@/domain/music';
 import { canonicalKeyMode, pitchClass } from '@/domain/music';
 import {
   coverageCounts,
-  createRepositories,
-  db,
+  repos,
   withRequiredTags,
   type BackingChoice,
   type BackingCriteria,
@@ -119,8 +118,7 @@ async function saveAudio(changes: Partial<Settings['audio']>) {
 
 /** Recent rolls, so the roller can push toward ground you have not covered. */
 async function loadCoverage(exerciseId: string): Promise<CoverageCounts> {
-  const repos = createRepositories(db());
-  const recent = await repos.reps.byExercise(exerciseId, 60);
+  const recent = await repos().reps.byExercise(exerciseId, 60);
   const counts: CoverageCounts = {};
   for (const axis of AXIS_IDS) {
     const values = coverageCounts(recent, axis);
@@ -132,7 +130,7 @@ async function loadCoverage(exerciseId: string): Promise<CoverageCounts> {
 /** A theory drill's leanings, from the last 30 days of its answers. */
 async function loadSubjectWeights(exerciseId: string): Promise<Record<string, number>> {
   const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const recent = await createRepositories(db()).reps.byExercise(exerciseId, 200);
+  const recent = await repos().reps.byExercise(exerciseId, 200);
   return answerWeights(recent.filter((rep) => rep.startedAt >= since));
 }
 
@@ -357,7 +355,6 @@ export const usePractice = create<PracticeState>((set, get) => {
       await get().end();
 
       const definition = exerciseDefinition(exercise.definitionId);
-      const repos = createRepositories(db());
 
       // Constructing the engine is safe without a gesture; only starting it is
       // not, and that happens in `play`.
@@ -368,7 +365,7 @@ export const usePractice = create<PracticeState>((set, get) => {
       const settings = useSettings.getState().settings;
       const { useExercises } = await import('./exercises');
 
-      const session = await repos.sessions.add({
+      const session = await repos().sessions.add({
         routineId: null,
         seed: Math.floor(Date.now() % 2 ** 31),
         startedAt: Date.now(),
@@ -403,7 +400,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         onRepStart: soundFor(engine, settings.instrument, () => get().backing.resolved.kind),
 
         onRepEnd: (rep: RepRecord) => {
-          void repos.reps.add({ ...rep, sessionId: session.id });
+          void repos().reps.add({ ...rep, sessionId: session.id });
           // Remember what was rolled, so `hold` policies have something to hold.
           // Through the store rather than the repository: writing straight to the
           // database left the library holding a stale copy, so a held value never
@@ -447,14 +444,13 @@ export const usePractice = create<PracticeState>((set, get) => {
 
     async prepareRoutine(routine) {
       await get().end();
-      const repos = createRepositories(db());
       audio = await import('@/audio');
       const engine = audio.getAudioEngine();
       if (!useVideos.getState().loaded) await useVideos.getState().load();
       const settings = useSettings.getState().settings;
       const { useRoutines } = await import('./routines');
 
-      const session = await repos.sessions.add({
+      const session = await repos().sessions.add({
         routineId: routine.id,
         seed: Math.floor(Date.now() % 2 ** 31),
         startedAt: Date.now(),
@@ -490,7 +486,7 @@ export const usePractice = create<PracticeState>((set, get) => {
         onRepEnd: (rep) => {
           // Logged against the exercise the item came from — its history — and
           // the item remembers what it rolled, for its own `hold` policies.
-          void repos.reps.add({ ...rep, sessionId: session.id });
+          void repos().reps.add({ ...rep, sessionId: session.id });
           void useRoutines
             .getState()
             .updateItem(routine.id, rep.routineItemId, { heldAxisValues: rep.axes });
@@ -727,8 +723,7 @@ export const usePractice = create<PracticeState>((set, get) => {
       engine.clock.stop();
 
       if (sessionId) {
-        const repos = createRepositories(db());
-        await repos.sessions.end(sessionId, Date.now());
+        await repos().sessions.end(sessionId, Date.now());
       }
 
       set({

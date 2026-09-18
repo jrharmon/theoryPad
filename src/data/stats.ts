@@ -3,8 +3,7 @@ import type { ExerciseStats, Rep } from './entities';
 /**
  * Aggregate maintenance, as pure functions.
  *
- * Both the Dexie repository and the in-memory fake use these, and `rebuild`
- * is defined in terms of the same `apply` — so "the incremental value equals
+ * The Dexie repository uses these, and `rebuild` is defined in terms of the same `apply` — so "the incremental value equals
  * the rebuilt value" is a property that can actually be tested rather than
  * hoped for. That is the whole difference between a counter and a counter you
  * can trust.

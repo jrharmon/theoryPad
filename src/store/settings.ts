@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Instrument } from '@/domain/instrument';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import type { Settings } from '@/data';
-import { createRepositories, db, defaultSettings } from '@/data';
+import { repos, defaultSettings } from '@/data';
 
 interface SettingsState {
   settings: Settings;
@@ -22,8 +22,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
 
   async load() {
     if (get().loaded) return;
-    const repos = createRepositories(db());
-    set({ settings: await repos.settings.get(), loaded: true });
+    set({ settings: await repos().settings.get(), loaded: true });
   },
 
   async save(changes) {
@@ -32,8 +31,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
     // the second write undid the first.
     const merged = { ...get().settings, ...changes };
     set({ settings: merged });
-    const repos = createRepositories(db());
-    await repos.settings.save(merged);
+    await repos().settings.save(merged);
   },
 
   instrument() {

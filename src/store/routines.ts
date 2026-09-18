@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import {
-  createRepositories,
-  db,
+  repos,
   newId,
   type BackingChoice,
   type Exercise,
@@ -9,6 +8,7 @@ import {
   type RoutineItem,
 } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
+import { serialWrites } from './util';
 
 /**
  * An item copied from an exercise: its settings as they are now, and nothing
@@ -74,25 +74,15 @@ interface RoutinesState {
  * a caller's copy — the same reason as the exercises store: two quick edits
  * would otherwise each write their own stale view and the second would win.
  */
-const writeQueues = new Map<string, Promise<unknown>>();
-
-function queued<T>(id: string, work: () => Promise<T>): Promise<T> {
-  const next = (writeQueues.get(id) ?? Promise.resolve()).then(work, work);
-  writeQueues.set(
-    id,
-    next.catch(() => undefined),
-  );
-  return next;
-}
+const queued = serialWrites();
 
 export const useRoutines = create<RoutinesState>((set, get) => {
   /** Read the stored routine, change it, write it, and refresh the list. */
   const mutate = (id: string, change: (routine: Routine) => Partial<Routine>) =>
     queued(id, async () => {
-      const repos = createRepositories(db());
-      const current = await repos.routines.byId(id);
+      const current = await repos().routines.byId(id);
       if (!current) return;
-      const updated = await repos.routines.update(id, change(current));
+      const updated = await repos().routines.update(id, change(current));
       set({ routines: get().routines.map((r) => (r.id === id ? updated : r)) });
     });
 
@@ -101,13 +91,11 @@ export const useRoutines = create<RoutinesState>((set, get) => {
     loaded: false,
 
     async load() {
-      const repos = createRepositories(db());
-      set({ routines: await repos.routines.all(), loaded: true });
+      set({ routines: await repos().routines.all(), loaded: true });
     },
 
     async create(name = 'New routine') {
-      const repos = createRepositories(db());
-      const routine = await repos.routines.add({ name, items: [], sessionAxisPolicies: {} });
+      const routine = await repos().routines.add({ name, items: [], sessionAxisPolicies: {} });
       set({ routines: [...get().routines, routine] });
       return routine;
     },
@@ -128,8 +116,7 @@ export const useRoutines = create<RoutinesState>((set, get) => {
     setBacking: (id, backing) => mutate(id, () => ({ backing })),
 
     async remove(id) {
-      const repos = createRepositories(db());
-      await repos.routines.softDelete(id);
+      await repos().routines.softDelete(id);
       set({ routines: get().routines.filter((r) => r.id !== id) });
     },
   };

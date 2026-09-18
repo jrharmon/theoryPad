@@ -1,6 +1,6 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
-import type { TheoryPadDB } from '../db';
+import { db, type TheoryPadDB } from '../db';
 import type { Exercise, Rep, Routine, Session, Settings, Uuid, Video } from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
@@ -12,6 +12,20 @@ import type {
   NewVideo,
   Repositories,
 } from './types';
+
+let current: { database: TheoryPadDB; repositories: Repositories } | null = null;
+
+/**
+ * The app's repositories, over the app's database.
+ *
+ * The one way the app reaches its data, so `setDb` in a test swaps what every
+ * store reads and writes.
+ */
+export function repos(): Repositories {
+  const database = db();
+  if (current?.database !== database) current = { database, repositories: createRepositories(database) };
+  return current.repositories;
+}
 
 /** Everything the app persists, backed by IndexedDB. */
 export function createRepositories(database: TheoryPadDB, now = () => Date.now()): Repositories {

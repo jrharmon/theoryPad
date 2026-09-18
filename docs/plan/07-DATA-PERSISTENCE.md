@@ -100,8 +100,9 @@ export interface RepRepository {
 
 Three reasons this layer exists and is not ceremony:
 
-1. **Tests use an in-memory fake.** Domain and store tests never touch IndexedDB (which is
-   slow and awkward in jsdom). Only the repository's own tests use `fake-indexeddb`.
+1. **Tests run the real repositories.** Store and session tests use the Dexie repositories
+   over `fake-indexeddb`; the in-memory fake was deleted in the 2026-09 cleanup, since nothing
+   depended on it and a local-first app has no use for a second implementation.
 2. **A sync adapter is a drop-in.** `SyncedRepRepository` wraps the local one and mirrors
    writes. Nothing above changes.
 3. **Queries stay in one place.** The report's aggregations are non-trivial and belong next to

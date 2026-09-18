@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { KeyMode } from '@/domain/music';
 import type { DayKey, PracticeDay } from '@/domain/progress';
 import { dayKey, lastKeyMode } from '@/domain/progress';
-import { createRepositories, db } from '@/data';
+import { repos } from '@/data';
 
 interface ProgressState {
   /** Every day with practice logged, oldest first. */
@@ -22,11 +22,10 @@ export const useProgress = create<ProgressState>((set) => ({
   lastKeyMode: null,
   loaded: false,
   async load() {
-    const repos = createRepositories(db());
     const now = Date.now();
     const [days, recent] = await Promise.all([
-      repos.days.all(),
-      repos.reps.inRange(now - 30 * 24 * 60 * 60 * 1000, now),
+      repos().days.all(),
+      repos().reps.inRange(now - 30 * 24 * 60 * 60 * 1000, now),
     ]);
     set({ days, today: dayKey(now), lastKeyMode: lastKeyMode(recent), loaded: true });
   },

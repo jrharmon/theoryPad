@@ -4,7 +4,6 @@ import { STANDARD_GUITAR } from '@/domain/instrument';
 import Dexie from 'dexie';
 import { TheoryPadDB } from '../db';
 import { createRepositories } from '../repositories/dexie';
-import { createMemoryRepositories } from '../repositories/memory';
 import type { Repositories } from '../repositories/types';
 import type { NewExercise, NewRep, NewSession, NewVideo } from '../repositories/types';
 import { FIRST_RUN_VIDEOS } from '../seed/videos';
@@ -44,11 +43,7 @@ function repFixture(overrides: Partial<NewRep> = {}): NewRep {
   };
 }
 
-/**
- * Both implementations are run against the same suite. The in-memory one is
- * what the rest of the app's tests use, so it has to behave identically — a
- * fake that quietly differs is worse than no fake.
- */
+/** The repository contract, run against Dexie over `fake-indexeddb`. */
 function suite(name: string, make: () => Promise<Repositories>, teardown?: () => Promise<void>) {
   describe(name, () => {
     let repos: Repositories;
@@ -454,8 +449,6 @@ suite(
     currentDb = null;
   },
 );
-
-suite('in-memory repositories', () => Promise.resolve(createMemoryRepositories()));
 
 describe('settings saved before a field existed', () => {
   it('fill in the new field from the defaults, not as false', async () => {

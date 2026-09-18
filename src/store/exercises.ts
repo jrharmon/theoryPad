@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import {
-  createRepositories,
-  db,
+  repos,
   findRedundantExercises,
   type Exercise,
   type NewExercise,
@@ -9,6 +8,7 @@ import {
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
+import { serialWrites } from './util';
 
 interface ExercisesState {
   exercises: Exercise[];
@@ -64,22 +64,8 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
  */
 let inFlight: Promise<void> | null = null;
 
-/**
- * Writes to one exercise run in order.
- *
- * Every update is a read-modify-write of the whole row, so two overlapping
- * ones let the slower reply win and lose the earlier change.
- */
-const writeQueues = new Map<string, Promise<unknown>>();
-
-function queued<T>(id: string, work: () => Promise<T>): Promise<T> {
-  const next = (writeQueues.get(id) ?? Promise.resolve()).then(work, work);
-  writeQueues.set(
-    id,
-    next.catch(() => undefined),
-  );
-  return next;
-}
+/** Writes to one exercise run in order; see `serialWrites`. */
+const queued = serialWrites();
 
 export const useExercises = create<ExercisesState>((set, get) => ({
   exercises: [],
@@ -88,16 +74,15 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   async load() {
     if (get().loaded) return;
     inFlight ??= (async () => {
-      const repos = createRepositories(db());
-      let existing = await repos.exercises.all();
+      let existing = await repos().exercises.all();
 
       // Clear up after the seeding race that shipped: identical, unplayed
       // copies of one definition cannot be told apart because there is nothing
       // to tell apart. Anything with practice behind it is left alone.
-      const { remove } = findRedundantExercises(existing, await repos.stats.all());
+      const { remove } = findRedundantExercises(existing, await repos().stats.all());
       if (remove.length > 0) {
-        for (const exercise of remove) await repos.exercises.softDelete(exercise.id);
-        existing = await repos.exercises.all();
+        for (const exercise of remove) await repos().exercises.softDelete(exercise.id);
+        existing = await repos().exercises.all();
       }
 
       // Seed by definition rather than by count, so this is idempotent even if
@@ -105,10 +90,10 @@ export const useExercises = create<ExercisesState>((set, get) => ({
       const have = new Set(existing.map((e) => e.definitionId));
       for (const definition of EXERCISE_DEFINITIONS) {
         if (have.has(definition.id)) continue;
-        await repos.exercises.add(newExerciseFrom(definition));
+        await repos().exercises.add(newExerciseFrom(definition));
       }
 
-      set({ exercises: await repos.exercises.all(), loaded: true });
+      set({ exercises: await repos().exercises.all(), loaded: true });
     })().finally(() => {
       inFlight = null;
     });
@@ -117,27 +102,24 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   },
 
   async addFromDefinition(definitionId) {
-    const repos = createRepositories(db());
-    const created = await repos.exercises.add(newExerciseFrom(exerciseDefinition(definitionId)));
+    const created = await repos().exercises.add(newExerciseFrom(exerciseDefinition(definitionId)));
     set({ exercises: [...get().exercises, created] });
     return created;
   },
 
   async update(id, changes) {
     await queued(id, async () => {
-      const repos = createRepositories(db());
-      const updated = await repos.exercises.update(id, changes);
+      const updated = await repos().exercises.update(id, changes);
       set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
     });
   },
 
   async setAxisPolicy(id, axis, policy) {
     await queued(id, async () => {
-      const repos = createRepositories(db());
       // Read the row back rather than trusting a caller's copy of the map.
-      const current = await repos.exercises.byId(id);
+      const current = await repos().exercises.byId(id);
       if (!current) return;
-      const updated = await repos.exercises.update(id, {
+      const updated = await repos().exercises.update(id, {
         axisPolicies: { ...current.axisPolicies, [axis]: policy },
       });
       set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
@@ -146,12 +128,11 @@ export const useExercises = create<ExercisesState>((set, get) => ({
 
   async resetToDefaults(id) {
     await queued(id, async () => {
-      const repos = createRepositories(db());
-      const current = await repos.exercises.byId(id);
+      const current = await repos().exercises.byId(id);
       if (!current) return;
 
       const defaults = newExerciseFrom(exerciseDefinition(current.definitionId));
-      const updated = await repos.exercises.update(id, {
+      const updated = await repos().exercises.update(id, {
         params: defaults.params,
         axisPolicies: defaults.axisPolicies,
         heldAxisValues: {},
@@ -163,8 +144,7 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   },
 
   async remove(id) {
-    const repos = createRepositories(db());
-    await repos.exercises.softDelete(id);
+    await repos().exercises.softDelete(id);
     set({ exercises: get().exercises.filter((e) => e.id !== id) });
   },
 }));
