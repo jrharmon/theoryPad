@@ -22,7 +22,7 @@ const DETAIL: Record<number, string> = {
  */
 export function CountInMenu() {
   const bars = usePractice((s) => s.snapshot?.countInBars ?? 0);
-  const inRoutine = usePractice((s) => s.routine !== null);
+  const inRoutine = usePractice((s) => s.routineId !== null);
   const setCountIn = usePractice((s) => s.setCountIn);
   const [open, setOpen] = useState(false);
 

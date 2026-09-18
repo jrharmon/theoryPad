@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import {
   repos,
   newId,
-  type BackingChoice,
   type Exercise,
   type Routine,
   type RoutineItem,
@@ -64,8 +63,8 @@ interface RoutinesState {
   updateItem: (id: string, itemId: string, changes: Partial<RoutineItem>) => Promise<void>;
   moveItem: (id: string, itemId: string, delta: -1 | 1) => Promise<void>;
   removeItem: (id: string, itemId: string) => Promise<void>;
-  markPlayed: (id: string, at: number) => Promise<void>;
-  setBacking: (id: string, backing: BackingChoice) => Promise<void>;
+  /** Any other change to the routine row, against the stored copy. */
+  update: (id: string, changes: Partial<Routine>) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -112,8 +111,7 @@ export const useRoutines = create<RoutinesState>((set, get) => {
     moveItem: (id, itemId, delta) => mutate(id, (r) => ({ items: moveItem(r.items, itemId, delta) })),
     removeItem: (id, itemId) =>
       mutate(id, (r) => ({ items: r.items.filter((item) => item.id !== itemId) })),
-    markPlayed: (id, at) => mutate(id, () => ({ lastPlayedAt: at })),
-    setBacking: (id, backing) => mutate(id, () => ({ backing })),
+    update: (id, changes) => mutate(id, () => changes),
 
     async remove(id) {
       await repos().routines.softDelete(id);

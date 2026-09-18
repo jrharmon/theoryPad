@@ -11,7 +11,8 @@ import prettier from 'eslint-config-prettier';
  * Import direction:
  *   routes → components → domain
  *   routes → store → domain
- *   store  → data, audio
+ *   store  → session, data, audio
+ *   session → exercises, data, domain (audio as types only)
  *   exercises → domain
  *   domain → lib only
  *
@@ -150,6 +151,26 @@ export default tseslint.config(
           group: ['@/routes/*', '@/store/*', '@/data/*'],
           message:
             'Exercise definitions are pure: domain, shared generators and components only.',
+        },
+      ],
+    }),
+  },
+
+  // A session is framework-free, and reaches audio only through the port it is
+  // given: importing '@/audio' at runtime would put Tone on the first-paint path.
+  {
+    files: ['src/session/**/*.{ts,tsx}'],
+    ignores: ['src/session/**/__tests__/**'],
+    rules: restrictImports({
+      patterns: [
+        {
+          group: ['@/store', '@/store/*', '@/routes/*', '@/components/*', 'react', 'zustand'],
+          message: 'A practice session is framework-free: the store adapts it, not the reverse.',
+        },
+        {
+          group: ['@/audio', '@/audio/*'],
+          allowTypeImports: true,
+          message: 'A session gets audio through its AudioPort; import types only.',
         },
       ],
     }),

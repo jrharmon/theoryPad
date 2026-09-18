@@ -22,7 +22,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
   const practice = usePractice();
-  const inRoutine = usePractice((s) => s.routine !== null);
+  const inRoutine = usePractice((s) => s.routineId !== null);
   const startingTrack = usePractice((s) => s.backing.starting);
   const needsClick = usePractice((s) => s.backing.needsClick);
 
@@ -179,7 +179,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
 export function PlaybackToggles() {
   const practice = usePractice();
   const audio = useSettings((s) => s.settings.audio);
-  const inRoutine = usePractice((s) => s.routine !== null);
+  const inRoutine = usePractice((s) => s.routineId !== null);
   // A track is the click: the metronome waits it out, and says why.
   const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
   return (

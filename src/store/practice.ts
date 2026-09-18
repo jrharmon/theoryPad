@@ -1,74 +1,29 @@
 import { create } from 'zustand';
-import type { KeyMode } from '@/domain/music';
-import { canonicalKeyMode, pitchClass } from '@/domain/music';
-import {
-  coverageCounts,
-  repos,
-  withRequiredTags,
-  type BackingChoice,
-  type BackingCriteria,
-  type BackingQuery,
-  type Exercise,
-  type Routine,
-  type Settings,
-} from '@/data';
-import { effectiveTempo, speedFor, stepSpeed } from '@/domain/backing';
-import type { Instrument } from '@/domain/instrument';
-// Type only: the engine itself is imported lazily, so Tone loads on first use.
-import type { AudioEngine } from '@/audio';
-import type * as AudioModuleNs from '@/audio';
-type AudioModule = typeof AudioModuleNs;
-import type { AxisValueKeys, CoverageCounts } from '@/domain/variation';
-import { AXIS_IDS } from '@/domain/variation';
-import { answerWeights } from '@/domain/progress';
-import type { ExerciseInstance } from '@/exercises/types';
-import { exerciseDefinition, findExerciseDefinition } from '@/exercises/registry';
-import { resolveParams } from '@/exercises/params';
-import {
-  ExerciseRunner,
-  RoutineRunner,
-  type Reconfiguration,
-  type RepRecord,
-  type RepStartInfo,
-  type RoutineRunItem,
-  type RoutineSnapshot,
-  type RunnerSnapshot,
-} from '@/exercises/runner';
+import { repos, type BackingChoice, type Exercise, type Routine } from '@/data';
 import type { CountInBars } from '@/domain/phrase';
-import { countInTicks } from '@/domain/phrase';
-import { newId } from '@/data';
+import type { Reconfiguration } from '@/exercises/runner';
+import {
+  ExerciseSession,
+  NO_BACKING,
+  RoutineSession,
+  type AudioPort,
+  type PracticeSession,
+  type SessionDeps,
+  type SessionState,
+} from '@/session';
+import { useExercises } from './exercises';
+import { useRoutines } from './routines';
 import { useSettings } from './settings';
 import { useVideos } from './videos';
-import { NO_BACKING, resolveFor, sameResolution, type BackingState } from './backing';
 
-interface PracticeState {
-  /** The exercise being played — in a routine, the current item's. */
-  runner: ExerciseRunner | null;
-  /** Set when practicing a routine rather than one exercise. */
-  routine: RoutineRunner | null;
-  routineId: string | null;
-  routineSnapshot: RoutineSnapshot | null;
-  /** The configured exercise being practiced, so changes can be saved back to it. */
+interface PracticeState extends SessionState {
+  session: PracticeSession | null;
+  /** The configured exercise being practiced; null in a routine. */
   exerciseId: string | null;
-  snapshot: RunnerSnapshot | null;
-  instance: ExerciseInstance | null;
-  /** Ticks into the phrase; polled on rAF so playback does not re-render. */
-  sessionId: string | null;
-  audioReady: boolean;
-  error: string | null;
-  /** The track or drone playing instead of the synth notes, if one was chosen. */
-  backing: BackingState;
-  /** What the backing menu is choosing for: the exercise, or the routine. */
-  backingFor: { choice: BackingChoice; query: Omit<BackingQuery, 'keyMode'> } | null;
+  /** The routine being practiced; null for a single exercise. */
+  routineId: string | null;
 
-  /**
-   * Roll a variation and generate the material, without touching audio.
-   *
-   * Split from `play` because the AudioContext can only start from a user
-   * gesture, and opening an exercise is not one. This lets the screen show the
-   * brief, the tab and the neck the moment you arrive, with nothing to click
-   * through first.
-   */
+  /** Open an exercise, rolled and shown. Nothing plays until `play`. */
   prepare: (exercise: Exercise) => Promise<void>;
   /** Roll a whole routine for its overview. Nothing plays until `play`. */
   prepareRoutine: (routine: Routine) => Promise<void>;
@@ -94,7 +49,7 @@ interface PracticeState {
   rerollItem: (index: number) => void;
   /** Apply settings changed from the practice screen, and save them to the exercise. */
   reconfigure: (changes: Reconfiguration) => Promise<void>;
-  /** Tear the runner down. Leaving the screen calls this; there is no End button. */
+  /** Tear the session down. Leaving the screen calls this; there is no End button. */
   end: () => Promise<void>;
   setFreeTime: (freeTime: boolean) => void;
   /** The transport's toggles. Remembered app-wide, and applied straight away. */
@@ -106,638 +61,119 @@ interface PracticeState {
   chooseBacking: (choice: BackingChoice) => Promise<void>;
 }
 
-/** The player's app-wide "never roll these", as the roller takes them. */
-function blockedValues(settings: Settings): AxisValueKeys {
-  return { key: settings.practice.blockedKeys ?? [], mode: settings.practice.blockedModes ?? [] };
-}
-
-async function saveAudio(changes: Partial<Settings['audio']>) {
-  const { settings, save } = useSettings.getState();
-  await save({ audio: { ...settings.audio, ...changes } });
-}
-
-/** Recent rolls, so the roller can push toward ground you have not covered. */
-async function loadCoverage(exerciseId: string): Promise<CoverageCounts> {
-  const recent = await repos().reps.byExercise(exerciseId, 60);
-  const counts: CoverageCounts = {};
-  for (const axis of AXIS_IDS) {
-    const values = coverageCounts(recent, axis);
-    if (Object.keys(values).length > 0) counts[axis] = values;
-  }
-  return counts;
-}
-
-/** A theory drill's leanings, from the last 30 days of its answers. */
-async function loadSubjectWeights(exerciseId: string): Promise<Record<string, number>> {
-  const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const recent = await repos().reps.byExercise(exerciseId, 200);
-  return answerWeights(recent.filter((rep) => rep.startedAt >= since));
-}
-
-/**
- * What to do with the audio as each pass starts. Shared by a single exercise
- * and a routine: they differ in what drives them, not in how they sound.
- */
-function soundFor(
-  engine: AudioEngine,
-  instrument: Instrument,
-  backing: () => BackingState['resolved']['kind'],
-) {
-  return ({ phrase, countInTicks, freeTime, continuation, countInFrom }: RepStartInfo) => {
-    // A track plays instead of the notes; the drone plays under them. Under a
-    // track the recording is the click and the count-in, so the metronome says
-    // nothing.
-    const notes = backing() === 'video' ? null : phrase;
-    engine.metronome.setSilenced(backing() === 'video');
-    if (continuation) {
-      // Straight on from the last pass or item: the clock and the click never
-      // stopped, so only the notes need scheduling again — and a count-in in
-      // the middle of the clock needs to click even when the metronome is off.
-      if (countInFrom !== undefined) engine.metronome.countInBetween(countInFrom, countInTicks);
-      engine.phrase.clear();
-      if (notes) engine.phrase.load(notes, instrument, countInTicks);
-      return;
-    }
-    engine.metronome.stop();
-    engine.phrase.clear();
-    if (freeTime) return;
-    // The metronome always runs, muted or not: the count-in clicks either way,
-    // and switching it mid-bar must not shift the beat.
-    const audio = useSettings.getState().settings.audio;
-    if (phrase) engine.configureMetronome({ timeSignature: phrase.timeSignature, countInTicks });
-    engine.metronome.setMuted(!audio.metronomeEnabled);
-    engine.metronome.start();
-    // The phrase goes after the count-in, not at zero.
-    if (notes) engine.phrase.load(notes, instrument, countInTicks);
+async function audioPort(): Promise<AudioPort> {
+  // Loaded on first use, so Tone stays off the first-paint path.
+  const audio = await import('@/audio');
+  // Constructing the engine is safe without a gesture; only starting it is not.
+  const engine = audio.getAudioEngine();
+  return {
+    clock: engine.clock,
+    metronome: engine.metronome,
+    phrase: engine.phrase,
+    configureMetronome: (options) => engine.configureMetronome(options),
+    init: () => engine.init(),
+    setMasterVolume: (decibels) => engine.setMasterVolume(decibels),
+    drone: (keyMode) => new audio.Drone(keyMode),
+    track: (track) => new audio.VideoBacking(track, engine.clock),
   };
 }
 
-let audio: AudioModule | null = null;
-
-const criteriaQuery = (criteria: BackingCriteria | undefined) => (criteria ? { criteria } : {});
-
-function rollSessionKeyMode(): KeyMode {
-  // Standalone practice has no routine to inherit a key from, so the exercise's
-  // own key axis decides. This is only the fallback for exercises that do not
-  // roll one.
-  return canonicalKeyMode({ tonic: pitchClass('C'), mode: 'ionian' });
+/** A session's world: the app's audio, database and stores. */
+async function sessionDeps(): Promise<SessionDeps> {
+  const audio = await audioPort();
+  if (!useVideos.getState().loaded) await useVideos.getState().load();
+  return {
+    audio,
+    repos: repos(),
+    videos: () => useVideos.getState().videos,
+    settings: () => useSettings.getState().settings,
+    saveAudioSettings: async (changes) => {
+      const { settings, save } = useSettings.getState();
+      await save({ audio: { ...settings.audio, ...changes } });
+    },
+    // Through the stores rather than the repositories: writing straight to the
+    // database left the library holding a stale copy.
+    saveExercise: (id, changes) => useExercises.getState().update(id, changes),
+    saveRoutine: (id, changes) => useRoutines.getState().update(id, changes),
+    saveRoutineItem: (id, itemId, changes) => useRoutines.getState().updateItem(id, itemId, changes),
+    now: () => Date.now(),
+  };
 }
+
+const CLOSED = {
+  session: null,
+  exerciseId: null,
+  routineId: null,
+  runner: null,
+  snapshot: null,
+  instance: null,
+  routineSnapshot: null,
+  backing: NO_BACKING,
+  audioReady: false,
+} satisfies Partial<PracticeState>;
 
 export const usePractice = create<PracticeState>((set, get) => {
-  /**
-   * Work out what the chosen backing means in the current key, and make or
-   * drop its source to match. Cheap and idempotent: called after anything that
-   * can move the key or change the choice.
-   */
-  let refreshing = false;
-  const refreshBacking = () => {
-    // Setting the tempo below makes the runner emit, which lands back here.
-    if (refreshing) return;
-    refreshing = true;
-    try {
-      refreshBackingNow();
-    } finally {
-      refreshing = false;
-    }
-  };
-  const refreshBackingNow = () => {
-    const { runner, routine, backing, backingFor } = get();
-    if (!backingFor || !audio) return;
-    const keyMode = routine ? routine.snapshot.keyMode : runner?.snapshot.keyMode;
-    if (!keyMode) return;
-    const { options, resolved } = resolveFor(useVideos.getState().videos, backingFor.choice, {
-      ...backingFor.query,
-      keyMode,
+  let unsubscribe: (() => void) | null = null;
+
+  const attach = (session: PracticeSession) => {
+    unsubscribe = session.subscribe((state) => set(state));
+    set({
+      ...session.state,
+      session,
+      exerciseId: session instanceof ExerciseSession ? session.exerciseId : null,
+      routineId: session instanceof RoutineSession ? session.routineId : null,
     });
-    let next: BackingState = { ...backing, choice: backingFor.choice, options, resolved };
-
-    if (sameResolution(backing.resolved, resolved) && (backing.source || resolved.kind === 'none')) {
-      if (backing.source instanceof audio.Drone) backing.source.setKeyMode(keyMode);
-      set({ backing: next });
-      return;
-    }
-
-    backing.source?.dispose();
-    next = { ...next, source: null, player: null, error: null, started: false };
-    const snapshot = runner?.snapshot;
-    let tempo: number | null = null;
-    // Leaving a track: back to the tempo from before it took over.
-    if (backing.resolved.kind === 'video' && resolved.kind !== 'video' && backing.tempoBefore !== null) {
-      tempo = backing.tempoBefore;
-      next.tempoBefore = null;
-    }
-
-    if (resolved.kind === 'drone') {
-      next.source = new audio.Drone(keyMode);
-    } else if (resolved.kind === 'video' && resolved.video.bpm !== undefined) {
-      const { video } = resolved;
-      const bpm = video.bpm!;
-      const source = new audio.VideoBacking(
-        {
-          videoId: video.videoId,
-          startSec: video.startSec,
-          bpm,
-          beatsPerBar: video.beatsPerBar,
-          ...(video.endSec !== undefined ? { endSec: video.endSec } : {}),
-        },
-        audio.getAudioEngine().clock,
-      );
-      source.player.ready.catch((e: unknown) => {
-        if (get().backing.source === source) {
-          set({ backing: { ...get().backing, error: (e as Error).message } });
-        }
-      });
-      // The track takes the tempo over, at the speed nearest the one you had —
-      // in a routine, the current item's own.
-      const before = routine
-        ? (snapshot?.targetTempo ?? snapshot?.currentTempo ?? bpm)
-        : (next.tempoBefore ?? snapshot?.currentTempo ?? snapshot?.targetTempo ?? bpm);
-      const speed = speedFor(before, bpm);
-      source.setRate(speed);
-      tempo = effectiveTempo(bpm, speed);
-      next = { ...next, source, player: source.player, speed, tempoBefore: before };
-    }
-    set({ backing: next });
-    if (tempo !== null) runner?.setTempo(tempo);
   };
 
-  /** A track's speed, and the tempo that comes out of it. */
-  const applySpeed = (speed: number) => {
-    const { backing, runner } = get();
-    if (backing.resolved.kind !== 'video' || !backing.source) return;
-    backing.source.setRate(speed);
-    runner?.setTempo(effectiveTempo(backing.resolved.video.bpm ?? 0, speed));
-    set({ backing: { ...backing, speed } });
+  const exercise = () => {
+    const { session } = get();
+    return session instanceof ExerciseSession ? session : null;
   };
-
-  /**
-   * Start the backing ahead of the clock, settling once it sounds. A track
-   * that will not start is dropped, and says so, and the notes play instead.
-   */
-  /** The browser held a video back: say so, and wait for the click on it. */
-  const askForClick = { onBlocked: () => set({ backing: { ...get().backing, needsClick: true } }) };
-
-  const startBacking = async (countInTicks: number) => {
-    const { backing } = get();
-    if (!backing.source || backing.starting) return;
-    set({ backing: { ...backing, starting: true } });
-    try {
-      // The play goes out before this awaits — inside the click, if there was one.
-      await backing.source.start(countInTicks, askForClick);
-      set({ backing: { ...get().backing, starting: false, started: true, needsClick: false } });
-    } catch (e) {
-      backing.source.dispose();
-      set({
-        backing: {
-          ...get().backing,
-          source: null,
-          player: null,
-          resolved: { kind: 'none', dropped: false },
-          error: (e as Error).message,
-          starting: false,
-          started: false,
-          needsClick: false,
-        },
-      });
-    }
-  };
-
-  const stopBacking = () => {
-    const { backing } = get();
-    if (!backing.source || (!backing.started && !backing.starting)) return;
-    backing.source.stop();
-    set({ backing: { ...backing, started: false } });
-  };
-
-  /**
-   * A routine's played item has started its clock with the track not yet
-   * going — the first item, or the first after a theory set. Hold the clock,
-   * start the track a count-in ahead of bar 1, and let the clock go again.
-   */
-  const catchUpBacking = async (runner: ExerciseRunner) => {
-    const { backing } = get();
-    if (!audio || backing.starting) return;
-    const snapshot = runner.snapshot;
-    if (snapshot.freeTime) {
-      await startBacking(0);
-      return;
-    }
-    runner.pause();
-    const countInEnd = snapshot.countInRemaining + audio.getAudioEngine().clock.ticks;
-    await startBacking(countInEnd);
-    runner.resume();
-  };
-
-  /** Each routine item has its own tempo: the track's speed changes to fit it. */
-  const fitSpeedTo = (runner: ExerciseRunner) => {
-    const { backing } = get();
-    if (backing.resolved.kind !== 'video' || !backing.resolved.video.bpm) return;
-    const tempo = runner.snapshot.targetTempo ?? runner.snapshot.currentTempo;
-    if (tempo === null) return;
-    applySpeed(speedFor(tempo, backing.resolved.video.bpm));
+  const routine = () => {
+    const { session } = get();
+    return session instanceof RoutineSession ? session : null;
   };
 
   return {
-    runner: null,
-    routine: null,
-    routineId: null,
-    routineSnapshot: null,
-    exerciseId: null,
-    snapshot: null,
-    instance: null,
-    sessionId: null,
-    audioReady: false,
-    error: null,
-    backing: NO_BACKING,
-    backingFor: null,
+    ...CLOSED,
 
     async prepare(exercise) {
       await get().end();
-
-      const definition = exerciseDefinition(exercise.definitionId);
-
-      // Constructing the engine is safe without a gesture; only starting it is
-      // not, and that happens in `play`.
-      audio = await import('@/audio');
-      const engine = audio.getAudioEngine();
-      if (!useVideos.getState().loaded) await useVideos.getState().load();
-
-      const settings = useSettings.getState().settings;
-      const { useExercises } = await import('./exercises');
-
-      const session = await repos().sessions.add({
-        routineId: null,
-        seed: Math.floor(Date.now() % 2 ** 31),
-        startedAt: Date.now(),
-        endedAt: null,
-        sessionKey: rollSessionKeyMode().tonic,
-        sessionMode: rollSessionKeyMode().mode,
-      });
-
-      const runner = new ExerciseRunner({
-        clock: engine.clock,
-        definition,
-        exerciseId: exercise.id,
-        instrument: settings.instrument,
-        sessionId: session.id,
-        sessionKeyMode: rollSessionKeyMode(),
-        params: resolveParams(definition, exercise.params),
-        tempo: exercise.tempo,
-        ...(definition.defaults.tempoPlan ? { tempoPlan: definition.defaults.tempoPlan } : {}),
-        passes: 1,
-        loop: settings.audio.loop,
-        // The exercise's own; older rows that have none fall back to the setting.
-        countInBars: exercise.countInBars ?? settings.audio.countInBars,
-        heldAxisValues: exercise.heldAxisValues,
-        axisPolicies: exercise.axisPolicies,
-        blocked: blockedValues(settings),
-        coverage: await loadCoverage(exercise.id),
-        ...(definition.kind === 'theory'
-          ? { subjectWeights: await loadSubjectWeights(exercise.id) }
-          : {}),
-        now: () => Date.now(),
-
-        onRepStart: soundFor(engine, settings.instrument, () => get().backing.resolved.kind),
-
-        onRepEnd: (rep: RepRecord) => {
-          void repos().reps.add({ ...rep, sessionId: session.id });
-          // Remember what was rolled, so `hold` policies have something to hold.
-          // Through the store rather than the repository: writing straight to the
-          // database left the library holding a stale copy, so a held value never
-          // appeared until a reload.
-          void useExercises.getState().update(exercise.id, { heldAxisValues: rep.axes });
-        },
-      });
-
-      runner.subscribe((snapshot) => {
-        set({ snapshot, instance: runner.currentInstance });
-        if (snapshot.state === 'brief' || snapshot.state === 'done') {
-          engine.metronome.stop();
-          engine.phrase.clear();
-          stopBacking();
-        }
-        // A re-roll can move the key out from under a track.
-        if (snapshot.state === 'brief' && get().runner === runner) refreshBacking();
-      });
-
-      runner.start();
-      set({
-        runner,
-        exerciseId: exercise.id,
-        sessionId: session.id,
-        audioReady: false,
-        error: null,
-        snapshot: runner.snapshot,
-        instance: runner.currentInstance,
-        backingFor: {
-          choice: exercise.backing ?? { kind: 'none' },
-          query: {
-            exerciseId: exercise.id,
-            ...criteriaQuery(
-              withRequiredTags(exercise.backingCriteria, definition.backing?.requiredTags),
-            ),
-          },
-        },
-      });
-      refreshBacking();
+      attach(await ExerciseSession.open(exercise, await sessionDeps()));
     },
 
     async prepareRoutine(routine) {
       await get().end();
-      audio = await import('@/audio');
-      const engine = audio.getAudioEngine();
-      if (!useVideos.getState().loaded) await useVideos.getState().load();
-      const settings = useSettings.getState().settings;
-      const { useRoutines } = await import('./routines');
-
-      const session = await repos().sessions.add({
-        routineId: routine.id,
-        seed: Math.floor(Date.now() % 2 ** 31),
-        startedAt: Date.now(),
-        endedAt: null,
-        sessionKey: rollSessionKeyMode().tonic,
-        sessionMode: rollSessionKeyMode().mode,
-      });
-
-      // An item whose exercise no longer exists in code is left out rather than
-      // failing the whole routine.
-      const items: RoutineRunItem[] = [];
-      for (const item of routine.items) {
-        const definition = findExerciseDefinition(item.definitionId);
-        if (!definition) continue;
-        items.push(
-          definition.kind === 'theory'
-            ? { ...item, definition, subjectWeights: await loadSubjectWeights(item.exerciseId) }
-            : { ...item, definition },
-        );
-      }
-
-      const runner = new RoutineRunner({
-        clock: engine.clock,
-        instrument: settings.instrument,
-        sessionId: session.id,
-        items,
-        sessionAxisPolicies: routine.sessionAxisPolicies,
-        blocked: blockedValues(settings),
-        countInBars: settings.audio.countInBars,
-        loop: settings.audio.loop,
-        now: () => Date.now(),
-        onRepStart: soundFor(engine, settings.instrument, () => get().backing.resolved.kind),
-        onRepEnd: (rep) => {
-          // Logged against the exercise the item came from — its history — and
-          // the item remembers what it rolled, for its own `hold` policies.
-          void repos().reps.add({ ...rep, sessionId: session.id });
-          void useRoutines
-            .getState()
-            .updateItem(routine.id, rep.routineItemId, { heldAxisValues: rep.axes });
-        },
-      });
-
-      let lastItem: ExerciseRunner | null = null;
-      runner.subscribe((snapshot) => {
-        const current = runner.current;
-        set({
-          routineSnapshot: snapshot,
-          runner: current,
-          snapshot: snapshot.current,
-          instance: current?.currentInstance ?? null,
-        });
-        if (snapshot.phase === 'done' || snapshot.current?.state === 'brief') {
-          engine.metronome.stop();
-          engine.phrase.clear();
-          stopBacking();
-        }
-        if (snapshot.phase === 'overview') refreshBacking();
-        if (snapshot.phase !== 'running' || !current) return;
-
-        // One track through the routine, at each item's own tempo.
-        if (current !== lastItem) {
-          lastItem = current;
-          fitSpeedTo(current);
-        }
-        const { backing } = get();
-        const state = snapshot.current?.state;
-        const going = state === 'count-in' || state === 'playing';
-        if (current.currentInstance?.kind === 'theory') {
-          // A theory set pauses the track. Its player goes with the tab it sat
-          // beside, so the next played item builds a fresh one.
-          if (going && backing.source && backing.resolved.kind === 'video') {
-            backing.source.dispose();
-            set({ backing: { ...backing, source: null, player: null, started: false } });
-          }
-          return;
-        }
-        if (going && !backing.started && !backing.starting && backing.resolved.kind !== 'none') {
-          if (!backing.source) refreshBacking();
-          // After the runner has finished starting its clock, not inside it.
-          queueMicrotask(() => void catchUpBacking(current));
-        }
-      });
-
-      runner.open();
-      set({
-        routine: runner,
-        routineId: routine.id,
-        sessionId: session.id,
-        exerciseId: null,
-        audioReady: false,
-        error: null,
-        backingFor: {
-          choice: routine.backing ?? { kind: 'none' },
-          // One track plays through, so it must suit every played item.
-          query: criteriaQuery(
-            withRequiredTags(
-              routine.backingCriteria,
-              items.flatMap((item) => item.definition.backing?.requiredTags ?? []),
-            ),
-          ),
-        },
-      });
-      refreshBacking();
+      attach(await RoutineSession.open(routine, await sessionDeps()));
     },
 
-    async play() {
-      const { runner, routine, routineId } = get();
-      if (!runner && !routine) return;
+    play: () => get().session?.play() ?? Promise.resolve(),
+    pause: () => get().session?.pause(),
+    resume: () => void get().session?.resume(),
+    stop: () => get().session?.stop(),
+    restart: () => get().session?.restart() ?? Promise.resolve(),
+    setTempo: (bpm) => get().session?.setTempo(bpm),
+    nudgeTempo: (delta) => get().session?.nudgeTempo(delta),
+    completeRep: () => get().session?.completeRep(),
+    reroll: () => get().session?.reroll(),
+    skip: () => routine()?.skip(),
+    submitSet: (answers) => get().session?.submitSet(answers),
+    rerollAll: () => routine()?.rerollAll(),
+    rerollItem: (index) => routine()?.rerollItem(index),
+    setFreeTime: (freeTime) => exercise()?.setFreeTime(freeTime),
+    reconfigure: (changes) => exercise()?.reconfigure(changes) ?? Promise.resolve(),
+    setCountIn: (bars) => get().session?.setCountIn(bars) ?? Promise.resolve(),
+    setLoop: (on) => get().session?.setLoop(on) ?? Promise.resolve(),
+    chooseBacking: (choice) => get().session?.chooseBacking(choice) ?? Promise.resolve(),
 
-      // Everything that needs the click starts before anything awaits: the
-      // AudioContext (the classic silent-app bug), and a backing track, which
-      // some browsers only let start from the click itself.
-      const starting = audio?.getAudioEngine().init();
-      let backingStart: Promise<void> | null = null;
-      if (!routine && runner && !get().backing.starting) {
-        const phrase = runner.currentPhrase;
-        const countIn =
-          runner.snapshot.freeTime || !phrase
-            ? 0
-            : countInTicks(phrase.timeSignature, runner.snapshot.countInBars);
-        backingStart = startBacking(countIn);
-      }
-
-      const { getAudioEngine } = await import('@/audio');
-      const engine = getAudioEngine();
-      await (starting ?? engine.init());
-      engine.setMasterVolume(useSettings.getState().settings.audio.masterVolumeDb);
-      set({ audioReady: true });
-
-      if (routine) {
-        if (routine.snapshot.phase === 'overview' && routineId) {
-          const { useRoutines } = await import('./routines');
-          void useRoutines.getState().markPlayed(routineId, Date.now());
-        }
-        routine.play();
-        return;
-      }
-      if (!runner || !backingStart) return;
-      // The clock follows the backing: YouTube takes a few hundred milliseconds
-      // to get going, and nothing should count from the click.
-      await backingStart;
-      runner.begin();
-    },
-
-    pause: () => {
-      const { runner, backing } = get();
-      if (backing.starting) return;
-      if (runner?.snapshot.state !== 'playing' && runner?.snapshot.state !== 'count-in') return;
-      runner.pause();
-      backing.source?.pause();
-    },
-    resume: () => {
-      const { runner, backing } = get();
-      if (runner?.snapshot.state !== 'paused' || backing.starting) return;
-      void (async () => {
-        await backing.source?.resume(askForClick).catch(() => undefined);
-        if (get().backing.needsClick) set({ backing: { ...get().backing, needsClick: false } });
-        runner.resume();
-      })();
-    },
-    stop: () => {
-      const { runner, routine, backing } = get();
-      if (backing.starting || (!runner && !routine)) return;
-      // Back to brief: the runner's subscriber stops the click, the notes and the track.
-      if (routine) routine.stop();
-      else runner?.stop();
-    },
-    async restart() {
-      const { backing } = get();
-      if (backing.starting) return;
-      get().stop();
-      await get().play();
-    },
-    setTempo: (bpm) => {
-      const { backing, runner } = get();
-      if (backing.resolved.kind === 'video' && backing.resolved.video.bpm) {
-        applySpeed(speedFor(bpm, backing.resolved.video.bpm));
-      } else runner?.setTempo(bpm);
-    },
-    nudgeTempo: (delta) => {
-      const { backing, runner } = get();
-      // Under a track the tempo moves in the track's own steps: 5% of its speed.
-      if (backing.resolved.kind === 'video') applySpeed(stepSpeed(backing.speed, Math.sign(delta)));
-      else runner?.nudgeTempo(delta);
-    },
-    completeRep: () => get().runner?.completeRep(),
-    reroll: () => {
-      const { routine, runner } = get();
-      if (routine) routine.rerollCurrent();
-      else runner?.reroll();
-    },
-    skip: () => get().routine?.skip(),
-    submitSet: (answers) => get().runner?.submitSet({ answers }),
-    rerollAll: () => get().routine?.rerollAll(),
-    rerollItem: (index) => get().routine?.rerollItem(index),
-    setFreeTime: (freeTime) => get().runner?.setFreeTime(freeTime),
-
-    async reconfigure(changes) {
-      const { runner, exerciseId } = get();
-      if (!runner || !exerciseId) return;
-      runner.reconfigure(changes);
-
-      // Saved to the exercise too: the dialog is a shortcut to the config page,
-      // not a separate, temporary set of settings.
-      const { useExercises } = await import('./exercises');
-      await useExercises.getState().update(exerciseId, {
-        ...(changes.params !== undefined ? { params: changes.params } : {}),
-        ...(changes.tempo ? { tempo: changes.tempo } : {}),
-        ...(changes.axisPolicies ? { axisPolicies: changes.axisPolicies } : {}),
-      });
-    },
-
-    async setMetronome(on) {
-      const { getAudioEngine } = await import('@/audio');
-      getAudioEngine().metronome.setMuted(!on);
-      await saveAudio({ metronomeEnabled: on });
-    },
-
-    async setCountIn(bars) {
-      const { routine, routineId, routineSnapshot, exerciseId } = get();
-      if (routine) {
-        routine.setCountInBars(bars);
-        const item = routineSnapshot?.items[routineSnapshot.index];
-        if (routineId && item) {
-          const { useRoutines } = await import('./routines');
-          await useRoutines.getState().updateItem(routineId, item.id, { countInBars: bars });
-        }
-        return;
-      }
-      get().runner?.setCountInBars(bars);
-      if (exerciseId) {
-        const { useExercises } = await import('./exercises');
-        await useExercises.getState().update(exerciseId, { countInBars: bars });
-      }
-    },
-
-    async setLoop(on) {
-      const { routine, runner } = get();
-      if (routine) routine.setLoop(on);
-      else runner?.setLoop(on);
-      await saveAudio({ loop: on });
-    },
-
-    async chooseBacking(choice) {
-      const { backingFor, exerciseId, routineId } = get();
-      if (!backingFor) return;
-      set({ backingFor: { ...backingFor, choice } });
-      refreshBacking();
-      if (exerciseId) {
-        const { useExercises } = await import('./exercises');
-        await useExercises.getState().update(exerciseId, { backing: choice });
-      } else if (routineId) {
-        const { useRoutines } = await import('./routines');
-        await useRoutines.getState().setBacking(routineId, choice);
-      }
-    },
+    setMetronome: (on) => get().session?.setMetronome(on) ?? Promise.resolve(),
 
     async end() {
-      const { runner, routine, sessionId, backing } = get();
-      backing.source?.dispose();
-      set({ backing: NO_BACKING, backingFor: null });
-      if (!runner && !routine) return;
-
-      if (routine) routine.end();
-      else runner?.end();
-      const { getAudioEngine } = await import('@/audio');
-      const engine = getAudioEngine();
-      engine.metronome.stop();
-      engine.phrase.clear();
-      engine.clock.stop();
-
-      if (sessionId) {
-        await repos().sessions.end(sessionId, Date.now());
-      }
-
-      set({
-        runner: null,
-        routine: null,
-        routineId: null,
-        routineSnapshot: null,
-        exerciseId: null,
-        snapshot: null,
-        instance: null,
-        sessionId: null,
-      });
+      const { session } = get();
+      unsubscribe?.();
+      unsubscribe = null;
+      set(CLOSED);
+      await session?.end();
     },
   };
 });
-
-export { newId };

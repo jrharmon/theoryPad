@@ -128,7 +128,8 @@ direction:
 ```
 routes → components → domain
 routes → store → domain
-store  → data, audio, exercises
+store  → session, data, audio, exercises
+session → exercises, data, domain (audio as types only: it gets an AudioPort)
 exercises → domain
 domain → (nothing but lib)
 ```

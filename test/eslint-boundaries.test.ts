@@ -108,3 +108,13 @@ describe('src/exercises boundaries', () => {
     expect(messages.some((m) => m.includes('Exercise definitions are pure'))).toBe(true);
   });
 });
+
+describe('src/session boundaries', () => {
+  it('rejects the store, and audio except as types', async () => {
+    const messages = await messagesFor(
+      'src/session',
+      "export * from '@/store/practice';\nexport { getAudioEngine } from '@/audio';\nexport type { AudioEngine } from '@/audio';\n",
+    );
+    expect(messages.filter((m) => m.startsWith('no-restricted-imports'))).toHaveLength(2);
+  });
+});

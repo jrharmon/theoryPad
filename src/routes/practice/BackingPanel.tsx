@@ -88,7 +88,7 @@ export function BackingPanel() {
  * its own only — a routine is for playing through, not for lessons.
  */
 export function ReferencePanel() {
-  const exerciseId = usePractice((s) => (s.routine ? null : s.exerciseId));
+  const exerciseId = usePractice((s) => s.exerciseId);
   const videos = useVideos((s) => s.videos);
   if (!exerciseId) return null;
   const lessons = referenceVideos(videos, exerciseId);

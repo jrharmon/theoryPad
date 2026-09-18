@@ -33,7 +33,7 @@ export function usePhraseTick(playing: boolean): number {
  */
 export function useVideoColumn(): boolean {
   const hasTrack = usePractice((s) => s.backing.resolved.kind === 'video' || s.backing.error !== null);
-  const exerciseId = usePractice((s) => (s.routine ? null : s.exerciseId));
+  const exerciseId = usePractice((s) => s.exerciseId);
   const lessons = useVideos((s) => (exerciseId ? referenceVideos(s.videos, exerciseId).length : 0));
   return hasTrack || lessons > 0;
 }
