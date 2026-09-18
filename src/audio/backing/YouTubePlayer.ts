@@ -156,17 +156,27 @@ export class YouTubePlayer {
     return this.loaded && this.api !== null;
   }
 
+  /**
+   * The API, once it can be called. Before onReady the player object exists
+   * but has no methods: calling one threw, from inside a routine starting its
+   * first item, and the track never started. A rate set before then is applied
+   * when the track starts.
+   */
+  private get live(): YTPlayerApi | null {
+    return this.loaded ? this.api : null;
+  }
+
   get currentTime(): number {
-    return this.api?.getCurrentTime() ?? 0;
+    return this.live?.getCurrentTime() ?? 0;
   }
 
   /** Zero until YouTube knows. */
   get duration(): number {
-    return this.api?.getDuration() ?? 0;
+    return this.live?.getDuration() ?? 0;
   }
 
   get state(): number {
-    return this.api?.getPlayerState() ?? YT_STATE.unstarted;
+    return this.live?.getPlayerState() ?? YT_STATE.unstarted;
   }
 
   onState(listener: (state: number) => void): () => void {
@@ -175,19 +185,19 @@ export class YouTubePlayer {
   }
 
   play(): void {
-    this.api?.playVideo();
+    this.live?.playVideo();
   }
 
   pause(): void {
-    this.api?.pauseVideo();
+    this.live?.pauseVideo();
   }
 
   seekTo(seconds: number): void {
-    this.api?.seekTo(Math.max(0, seconds), true);
+    this.live?.seekTo(Math.max(0, seconds), true);
   }
 
   setRate(rate: number): void {
-    this.api?.setPlaybackRate(rate);
+    this.live?.setPlaybackRate(rate);
   }
 
   /**
@@ -247,7 +257,8 @@ export class YouTubePlayer {
     this.destroyed = true;
     for (const cancel of [...this.cancels]) cancel(new Error('The player was closed.'));
     this.listeners.clear();
-    this.api?.destroy();
+    // Before onReady there is no destroy to call; removing the element ends it.
+    this.live?.destroy();
     this.api = null;
     this.element.remove();
   }

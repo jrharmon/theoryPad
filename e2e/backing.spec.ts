@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { open } from './helpers';
+import { answerSet, open } from './helpers';
 
 /**
  * A stand-in for YouTube's IFrame API, so these tests never touch the network.
@@ -16,6 +16,9 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
       private startedAt: number | null = null;
       /** A strict browser: nothing plays until the video itself is clicked once. */
       private allowed = !blocking;
+      /** Like the real API: the player has no methods to call until onReady. */
+      private loaded = false;
+      private readonly stand: HTMLElement;
       private readonly events: Events;
       constructor(element: HTMLElement, options: { playerVars: { start?: number }; events: Events }) {
         this.events = options.events;
@@ -28,16 +31,28 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
           this.playVideo();
         });
         element.replaceWith(stand);
-        setTimeout(() => this.events.onReady(), 0);
+        this.stand = stand;
+        // Like the real iframe: nothing loads until it is on the page.
+        const whenMounted = () => {
+          if (!stand.isConnected) return void setTimeout(whenMounted, 20);
+          this.loaded = true;
+          this.events.onReady();
+        };
+        setTimeout(whenMounted, 0);
+      }
+      private live() {
+        if (!this.loaded) throw new TypeError('YouTube player method called before onReady');
       }
       private get time() {
         return this.startedAt === null ? this.base : this.base + ((performance.now() - this.startedAt) / 1000) * this.rate;
       }
       private set(state: number) {
         this.state = state;
+        this.stand.dataset.state = String(state);
         this.events.onStateChange({ data: state });
       }
       playVideo() {
+        this.live();
         if (this.state === 1 || !this.allowed) return;
         setTimeout(() => {
           this.startedAt = performance.now();
@@ -45,15 +60,18 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
         }, 150);
       }
       pauseVideo() {
+        this.live();
         this.base = this.time;
         this.startedAt = null;
         this.set(2);
       }
       seekTo(seconds: number) {
+        this.live();
         this.base = seconds;
         if (this.startedAt !== null) this.startedAt = performance.now();
       }
       setPlaybackRate(rate: number) {
+        this.live();
         this.base = this.time;
         if (this.startedAt !== null) this.startedAt = performance.now();
         this.rate = rate;
@@ -186,4 +204,68 @@ test('a browser that holds the video back asks for a click on it, then plays', a
   await expect(page.getByTestId('pause')).toBeVisible();
   await expect(page.getByTestId('needs-click')).toHaveCount(0);
   await expect(page.getByTestId('backing-error')).toHaveCount(0);
+});
+
+test('a routine starts its track with the first item, and brings it back after a theory set', async ({
+  page,
+}) => {
+  await page.goto('/#/exercises');
+  await expect(page.getByRole('link', { name: 'Modes up the neck', exact: true })).toBeVisible();
+  // Straight into the database: the routine builder's own flow is tested elsewhere.
+  const routineId = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const open = indexedDB.open('theorypad');
+      open.onsuccess = () => resolve(open.result);
+    });
+    const exercises = await new Promise<{ id: string; definitionId: string; params: unknown }[]>(
+      (resolve) => {
+        const all = db.transaction('exercises').objectStore('exercises').getAll();
+        all.onsuccess = () => resolve(all.result as never);
+      },
+    );
+    const item = (definitionId: string) => {
+      const exercise = exercises.find((e) => e.definitionId === definitionId)!;
+      return {
+        id: crypto.randomUUID(),
+        exerciseId: exercise.id,
+        definitionId,
+        reps: 1,
+        params: exercise.params,
+        tempo: { targetTempo: 80, maxTempo: null },
+        countInBars: 1,
+        axisPolicies: {},
+        heldAxisValues: {},
+      };
+    };
+    const routine = {
+      id: crypto.randomUUID(),
+      name: 'With a track',
+      items: [item('modes-through-key'), item('circle-of-fifths'), item('modes-through-key')],
+      sessionAxisPolicies: {
+        key: { mode: 'fixed', value: 'A' },
+        mode: { mode: 'fixed', value: 'aeolian' },
+      },
+      backing: { kind: 'video', id: '6d0f3f5e-7a51-4c1e-9a55-0a1b2c3d4e5f' },
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    await new Promise((resolve) => {
+      const tx = db.transaction('routines', 'readwrite');
+      tx.objectStore('routines').put(routine);
+      tx.oncomplete = resolve;
+    });
+    return routine.id;
+  });
+
+  await page.goto(`/#/practice/routine/${routineId}`);
+  await page.getByRole('button', { name: 'Start' }).click();
+  await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-state', '1');
+  await expect(page.getByTestId('pause')).toBeVisible();
+
+  // Skipping to the theory set puts the track away; answering it brings one back.
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(page.getByTestId('theory-question')).toBeVisible();
+  await answerSet(page);
+  await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-state', '1');
+  await expect(page.getByTestId('pause')).toBeVisible();
 });
