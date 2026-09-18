@@ -22,7 +22,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
-| M7b — Ear training and "hear it" | **paused** — next when work resumes; see "Remaining work" |
+| Cleanup — architecture review | **next** — `docs/review/ARCHITECTURE-REVIEW.md` |
+| M7b — Ear training and "hear it" | after the cleanup; see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`; the merged local branch
@@ -233,7 +234,11 @@ found first; those are the most valuable input a pause produces.
 
 Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 
-**M7b — Ear training and "hear it"** (next when work resumes)
+**Cleanup — architecture review** (next, **before M7b**; agreed 2026-09-17)
+- Work through `docs/review/ARCHITECTURE-REVIEW.md`: its **Work plan** is the task list and its
+  **Decisions** section records what the player settled. One step per commit, stop at the gate.
+
+**M7b — Ear training and "hear it"** (after the cleanup)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
   drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
   settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
