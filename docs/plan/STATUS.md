@@ -238,10 +238,15 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 **Cleanup — architecture review** (next, **before M7b**; agreed 2026-09-17)
 - Work through `docs/review/ARCHITECTURE-REVIEW.md`: its **Work plan** is the task list and its
   **Decisions** section records what the player settled. One step per commit, stop at the gate.
-- **In progress on branch `cleanup-services`** (service and test code first; styling steps 1–4
-  not started). Done: step 5 (A3+A5) and step 6 (A1+A4+A6+T1 — `src/session/`). **At the gate:**
-  the player's hands-on check with a backing track, in an exercise and in a routine, before
-  merging. Next: step 7 (A2), then step 8 (T2–T4), then 9.
+- Service and test code first; styling steps 1–4 not started. Steps 5 (A3+A5) and 6
+  (A1+A4+A6+T1 — `src/session/`) reviewed and merged to `main` 2026-09-19. Step 7 (A2 —
+  `PassTiming` in `src/exercises/runner/timing.ts`, `PlayedDefinition | TheoryDefinition`) done
+  on branch `cleanup-timing`, **at the gate**. Next: step 8 (T2–T4), then 9.
+- Step 7 fixed a live bug: theory subject weights never reached `generate`, so the circle of
+  fifths never leaned toward misses. Worth a look at the gate: it should now ask more about
+  what you get wrong.
+- Found, not changed: in free time a routine item plays one pass whatever its reps (the free
+  strategy's `again` is `none`, as the old code behaved). Ask whether reps should count there.
 - Step 6 changed two behaviors on purpose: a track now fits the tempo you are hearing in a
   routine too (it used to prefer the item's target), and leaving a track mid-routine restores
   the current item's tempo (it used to restore the first item's).
