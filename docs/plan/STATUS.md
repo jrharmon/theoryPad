@@ -245,6 +245,13 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 - Step 6 changed two behaviors on purpose: a track now fits the tempo you are hearing in a
   routine too (it used to prefer the item's target), and leaving a track mid-routine restores
   the current item's tempo (it used to restore the first item's).
+- Gate feedback (2026-09-18): a routine's track never started with its first item (YouTube's
+  player was called before onReady) — fixed, and the E2E fake YouTube now loads only once
+  mounted and throws before onReady, as the real one does. **Decided:** after a theory set the
+  next played item starts its track from bar 1 — better after time away from the guitar.
+- E2E runs against `vite preview` on :4173: **`pnpm build` first**, or it tests an old `dist/`
+  (it did, once more, during step 6). The dev-gallery test "returns to Play when a phrase reaches
+  its end" is flaky under full-suite load; unrelated to the cleanup.
 
 **M7b — Ear training and "hear it"** (after the cleanup)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
