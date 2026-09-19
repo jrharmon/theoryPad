@@ -706,6 +706,20 @@ describe('theory', () => {
     expect(runner.snapshot.variation!.axes.key!.key).toBe(key);
   });
 
+  it('hands the drill its leanings, every set', () => {
+    // Loaded from recent answers but never passed on, the weights once did nothing.
+    const generate = vi.fn((context: Parameters<typeof diatonicDrill.generate>[0]) =>
+      diatonicDrill.generate(context),
+    );
+    const subjectWeights = { 'key:Eb': 3 };
+    const { runner } = theory({ definition: { ...diatonicDrill, generate }, subjectWeights });
+    runner.start();
+    runner.begin();
+    runner.submitSet({ answers: answers(8, 8) });
+    expect(generate).toHaveBeenCalledTimes(2);
+    for (const [context] of generate.mock.calls) expect(context.subjectWeights).toEqual(subjectWeights);
+  });
+
   it('plays a routine’s passes as consecutive sets, then finishes, ignoring loop', () => {
     const { runner } = theory({ passes: 2, endWhenFinished: true, loop: true });
     runner.start();

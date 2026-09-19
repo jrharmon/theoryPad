@@ -92,13 +92,12 @@ export interface ExerciseDefaults<P> {
   axisPolicies?: AxisPolicies;
 }
 
-export interface ExerciseDefinition<P = void> {
+interface DefinitionBase<P> {
   /** Stable slug. Persisted in the rep log forever — never change it. */
   id: string;
   name: string;
   /** Controlled vocabulary. An exercise usually carries two to four. */
   tags: ExerciseTag[];
-  kind: 'played' | 'theory';
   /** One sentence, for the exercise library. */
   summary: string;
   /** What this trains and why. Markdown. */
@@ -130,17 +129,34 @@ export interface ExerciseDefinition<P = void> {
 
   defaults: ExerciseDefaults<P>;
 
-  timing?: ExerciseTiming;
-
-  /** The function. Pure: same context in, same instance out. */
-  generate(context: GenerationContext<P>): ExerciseInstance;
-
-  /** How long one rep takes, for routine duration estimates. */
-  estimateRepSeconds(instance: ExerciseInstance, tempo: number | null): number;
-
   /** Replace the default runner body entirely. The escape hatch. */
   Renderer?: ComponentType<ExerciseRendererProps>;
 }
+
+/** Played on the guitar: a phrase, against the clock or in free time. */
+export interface PlayedDefinition<P = void> extends DefinitionBase<P> {
+  kind: 'played';
+  timing?: ExerciseTiming;
+  /** The function. Pure: same context in, same instance out. */
+  generate(context: GenerationContext<P>): PlayedInstance;
+  /** How long one rep takes, for routine duration estimates. */
+  estimateRepSeconds(instance: PlayedInstance, tempo: number | null): number;
+}
+
+/** Answered, not played: a set of questions, with no clock at all. */
+export interface TheoryDefinition<P = void> extends DefinitionBase<P> {
+  kind: 'theory';
+  /** The function. Pure: same context in, same instance out. A fresh set each pass. */
+  generate(context: GenerationContext<P>): TheoryInstance;
+  /** How long one set takes, for routine duration estimates. */
+  estimateRepSeconds(instance: TheoryInstance): number;
+}
+
+/**
+ * An exercise. The kind decides what `generate` returns, so a theory
+ * definition cannot hand back a phrase, and nothing downstream has to check.
+ */
+export type ExerciseDefinition<P = void> = PlayedDefinition<P> | TheoryDefinition<P>;
 
 /** An ExerciseDefinition with its params type erased, for storing in the registry. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

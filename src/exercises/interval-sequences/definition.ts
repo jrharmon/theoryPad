@@ -5,7 +5,7 @@ import { STRAIGHT_EIGHTHS, phraseBuilder } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { Direction, IntervalPairing, IntervalPattern } from '@/domain/variation';
 import { INTERVAL_PATTERNS } from '@/domain/variation';
-import type { ExerciseDefinition, PlayedInstance } from '../types';
+import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
   axisDisplay,
   axisValue,
@@ -21,7 +21,7 @@ import {
   shapeFrom,
 } from '../shared';
 
-export const intervalSequences: ExerciseDefinition = {
+export const intervalSequences: PlayedDefinition = {
   id: 'interval-sequences',
   name: 'Interval sequences',
   tags: ['scales', 'intervals', 'positional'],

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { StringSet } from '@/domain/instrument';
 import { allStrings, stringLabel } from '@/domain/instrument';
 import { QUARTER, phraseBuilder } from '@/domain/phrase';
-import type { ExerciseDefinition, PlayedInstance } from '../types';
+import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
   axisValue,
   keyModeLabel,
@@ -22,7 +22,7 @@ const params = z.object({
 
 export type OneNotePerStringParams = z.infer<typeof params>;
 
-export const oneNotePerString: ExerciseDefinition<OneNotePerStringParams> = {
+export const oneNotePerString: PlayedDefinition<OneNotePerStringParams> = {
   id: 'one-note-per-string',
   name: 'One note per string',
   tags: ['scales', 'modes', 'fretboard-knowledge', 'whole-neck'],

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { circleQuestions } from '@/domain/theory';
-import type { ExerciseDefinition, TheoryInstance } from '../types';
+import type { TheoryDefinition, TheoryInstance } from '../types';
 import { makeBrief } from '../shared';
 
 const params = z.object({
@@ -31,7 +31,7 @@ const params = z.object({
 
 export type CircleOfFifthsParams = z.infer<typeof params>;
 
-export const circleOfFifths: ExerciseDefinition<CircleOfFifthsParams> = {
+export const circleOfFifths: TheoryDefinition<CircleOfFifthsParams> = {
   id: 'circle-of-fifths',
   name: 'Circle of fifths',
   tags: ['theory', 'key-signatures', 'no-guitar'],
@@ -63,7 +63,6 @@ export const circleOfFifths: ExerciseDefinition<CircleOfFifthsParams> = {
       includeModes: true,
     },
   },
-  timing: 'free',
 
   generate({ rng, params: config, subjectWeights = {} }): TheoryInstance {
     const keyWeights = Object.fromEntries(
@@ -88,5 +87,5 @@ export const circleOfFifths: ExerciseDefinition<CircleOfFifthsParams> = {
     };
   },
 
-  estimateRepSeconds: (instance) => (instance.kind === 'theory' ? instance.questions.length * 8 : 0),
+  estimateRepSeconds: (set) => set.questions.length * 8,
 };

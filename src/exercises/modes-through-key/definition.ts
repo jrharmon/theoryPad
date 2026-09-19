@@ -4,7 +4,7 @@ import { noteAtDegree } from '@/domain/music';
 import { EIGHTH, QUARTER, phraseBuilder, phraseSeconds, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { AxisId, Direction } from '@/domain/variation';
-import type { ExerciseDefinition, GenerationContext, PlayedInstance } from '../types';
+import type { PlayedDefinition, GenerationContext, PlayedInstance } from '../types';
 import {
   arpeggioRun,
   axisDisplay,
@@ -29,7 +29,7 @@ export type ModesThroughKeyParams = z.infer<typeof params>;
 
 const AXES = ['mode', 'key', 'direction', 'rhythmPattern', 'targetScaleDegree'] as const;
 
-export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
+export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
   id: 'modes-through-key',
   name: 'Modes up the neck',
   tags: ['scales', 'modes', 'whole-neck', 'positional'],
@@ -131,8 +131,5 @@ export const modesThroughKey: ExerciseDefinition<ModesThroughKeyParams> = {
     };
   },
 
-  estimateRepSeconds(instance, tempo) {
-    if (instance.kind !== 'played') return 0;
-    return phraseSeconds(instance.phrase, tempo ?? 70);
-  },
+  estimateRepSeconds: (instance, tempo) => phraseSeconds(instance.phrase, tempo ?? 70),
 };

@@ -4,7 +4,7 @@ import { noteAtDegree } from '@/domain/music';
 import type { NeckPosition, StringSet } from '@/domain/instrument';
 import { allStrings, scaleOnNeck } from '@/domain/instrument';
 import { FOUR_FOUR, phraseBuilder, ticksPerBar } from '@/domain/phrase';
-import type { ExerciseDefinition, PlayedInstance } from '../types';
+import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
   axisDisplay,
   axisValue,
@@ -34,7 +34,7 @@ const HIGHEST_FRET = 15;
 /** The label on each phrase's first bar — also how the screen counts phrases. */
 export const PHRASE_LABEL = 'Phrase';
 
-export const freeImprovTarget: ExerciseDefinition<FreeImprovTargetParams> = {
+export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
   id: 'free-improv-target',
   name: 'Improvise to a target',
   tags: ['improv', 'modes', 'whole-neck', 'timing'],
@@ -101,6 +101,5 @@ export const freeImprovTarget: ExerciseDefinition<FreeImprovTargetParams> = {
     };
   },
 
-  estimateRepSeconds: (instance, tempo) =>
-    instance.kind === 'played' ? (instance.phrase.totalTicks / 480) * (60 / (tempo ?? 90)) : 0,
+  estimateRepSeconds: (instance, tempo) => (instance.phrase.totalTicks / 480) * (60 / (tempo ?? 90)),
 };

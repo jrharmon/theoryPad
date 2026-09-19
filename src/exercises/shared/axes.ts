@@ -1,6 +1,6 @@
 import { phraseSeconds } from '@/domain/phrase';
 import type { AxisId, RolledVariation } from '@/domain/variation';
-import type { ExerciseInstance } from '../types';
+import type { PlayedInstance } from '../types';
 
 /**
  * A rolled axis value, or the fallback when the axis was not rolled.
@@ -20,6 +20,6 @@ export function optionalAxis<T>(variation: RolledVariation, id: AxisId): T | und
 
 /** The usual `estimateRepSeconds`: how long the phrase lasts at the given tempo. */
 export function phraseEstimate(defaultTempo: number) {
-  return (instance: ExerciseInstance, tempo: number | null): number =>
-    instance.kind === 'played' ? phraseSeconds(instance.phrase, tempo ?? defaultTempo) : 0;
+  return (instance: PlayedInstance, tempo: number | null): number =>
+    phraseSeconds(instance.phrase, tempo ?? defaultTempo);
 }

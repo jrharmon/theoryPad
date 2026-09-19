@@ -16,6 +16,7 @@ import {
 import type { TempoConfig, TempoPlan } from '@/domain/tempo';
 import { clampTempo, resolveStartTempo } from '@/domain/tempo';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
+import { passTiming, type PassTiming } from './timing';
 import type { RepOutcome, RepRecord, RunnerSnapshot, RunnerState, SetResult } from './types';
 
 export interface RunnerConfig {
@@ -143,8 +144,25 @@ export class ExerciseRunner {
   private completed: RepRecord[] = [];
   private lastSet: SetResult | null = null;
 
+  // What changes while it runs. `config` stays what it was opened with.
+  private params: unknown;
+  private tempo: TempoConfig;
+  private axisPolicies: AxisPolicies | undefined;
+  /** What was played last, for `hold` policies and freshness. */
+  private held: Record<string, string>;
+  private loop: boolean;
+  private countInBars: CountInBars;
+  private freeTime: boolean;
+
   constructor(config: RunnerConfig) {
     this.config = config;
+    this.params = config.params;
+    this.tempo = config.tempo;
+    this.axisPolicies = config.axisPolicies;
+    this.held = config.heldAxisValues ?? {};
+    this.loop = config.loop ?? false;
+    this.countInBars = config.countInBars ?? 0;
+    this.freeTime = config.freeTime ?? false;
   }
 
   // ---------------------------------------------------------------- reading
@@ -155,15 +173,15 @@ export class ExerciseRunner {
       state: this.state,
       passesPlayed: this.passesPlayed,
       passes: this.passes,
-      loop: this.config.loop ?? false,
+      loop: this.loop,
       lastSet: this.lastSet,
       variation: this.variation,
       phraseTick: Math.max(0, raw - this.passStartTick),
       countInRemaining: Math.max(0, this.countInEndTick - raw),
-      countInBars: this.config.countInBars ?? 0,
+      countInBars: this.countInBars,
       currentTempo: this.currentTempo,
-      targetTempo: this.config.tempo.targetTempo,
-      freeTime: this.isFreeTime,
+      targetTempo: this.tempo.targetTempo,
+      freeTime: !this.timing.clock,
       keyMode: this.currentKeyMode ?? this.config.sessionKeyMode,
       instrument: this.config.instrument,
     };
@@ -186,15 +204,14 @@ export class ExerciseRunner {
     return Math.max(1, this.config.passes ?? 1);
   }
 
-  /** A theory exercise: questions rather than a phrase, and no clock at all. */
-  private get isTheory(): boolean {
-    return this.config.definition.kind === 'theory';
+  /** What play, loop and stop mean for this exercise, as it is set now. */
+  private get timing(): PassTiming {
+    return passTiming(this.config.definition, this.freeTime);
   }
 
-  private get isFreeTime(): boolean {
-    if (this.config.definition.timing === 'free') return true;
-    if (this.config.definition.timing === 'metronome') return false;
-    return this.config.freeTime ?? false;
+  /** Counting in, playing or paused: a pass has started and not finished. */
+  private get isInPass(): boolean {
+    return this.state === 'count-in' || this.state === 'playing' || this.state === 'paused';
   }
 
   subscribe(listener: RunnerListener): () => void {
@@ -229,7 +246,7 @@ export class ExerciseRunner {
   begin(): void {
     if (this.state !== 'brief') return;
     this.passesThisRun = 0;
-    this.beginPass();
+    this.startPass({ countInBars: this.countInBars });
   }
 
   /**
@@ -238,7 +255,7 @@ export class ExerciseRunner {
    * back to ready with a fresh set waiting.
    */
   submitSet(result: { answers: { subject: string; correct: boolean }[] }): void {
-    if (!this.isTheory || this.state !== 'playing') return;
+    if (this.timing.name !== 'set' || this.state !== 'playing') return;
     const correct = result.answers.filter((a) => a.correct).length;
     this.finishPass('completed', {
       score: { correct, total: result.answers.length },
@@ -253,47 +270,11 @@ export class ExerciseRunner {
    */
   beginNext(countInBars: number): void {
     if (this.state !== 'brief') return;
-    const { clock } = this.config;
-    if (this.isFreeTime || this.isTheory) {
-      clock.stop();
-      this.begin();
-      return;
-    }
-    if (clock.state !== 'started') {
-      // Coming from something with no clock — a theory set. Start one, still
-      // counted in: it is the only warning of what is next.
-      this.passesThisRun = 0;
-      this.beginPass({ countInBars });
-      return;
-    }
-
     this.passesThisRun = 0;
-    this.repStartedAt = this.config.now();
-    if (this.currentTempo !== null) clock.setBpm(this.currentTempo);
-
-    const phrase = this.currentPhrase;
-    const from = clock.ticks;
-    this.countInEndTick = from + (phrase ? countInTicks(phrase.timeSignature, countInBars) : 0);
-    this.passStartTick = this.countInEndTick;
-
-    if (this.countInEndTick > from) {
-      this.setState('count-in');
-      this.handles.push(clock.schedule(() => this.setState('playing'), this.countInEndTick));
-    } else {
-      this.setState('playing');
-    }
-
-    this.scheduleEnd();
-    this.config.onRepStart?.({
-      phrase,
-      countInTicks: this.passStartTick,
-      continuation: true,
-      countInFrom: from,
-      tempo: this.currentTempo,
-      freeTime: false,
-      repIndex: this.passesPlayed,
-      ...(this.config.subjectWeights ? { subjectWeights: this.config.subjectWeights } : {}),
-    });
+    // Coming from something with no clock — a theory set — this starts one,
+    // still counted in: it is the only warning of what is next.
+    const running = this.timing.clock && this.config.clock.state === 'started';
+    this.startPass({ countInBars, onRunningClock: running });
   }
 
   /**
@@ -303,16 +284,13 @@ export class ExerciseRunner {
    */
   skip(): void {
     if (this.state === 'done' || this.state === 'idle') return;
-    if (this.state === 'playing' || this.state === 'paused' || this.state === 'count-in') {
-      this.finishPass('skipped', { stop: true });
-    }
+    if (this.isInPass) this.finishPass('skipped', { stop: true });
     this.clearScheduled();
     this.setState('done');
   }
 
   pause(): void {
-    // A theory set has no clock to stop; it waits for you anyway.
-    if (this.isTheory) return;
+    if (!this.timing.pausable) return;
     if (this.state !== 'playing' && this.state !== 'count-in') return;
     this.config.clock.pause();
     this.setState('paused');
@@ -330,7 +308,7 @@ export class ExerciseRunner {
    * clock when a metered phrase reaches its end.
    */
   completeRep(outcome: RepOutcome = 'completed'): void {
-    if (this.state !== 'playing' && this.state !== 'paused' && this.state !== 'count-in') return;
+    if (!this.isInPass) return;
     this.finishPass(outcome);
   }
 
@@ -344,7 +322,7 @@ export class ExerciseRunner {
     if (this.state === 'done' || this.state === 'idle') return;
     this.stopPass();
     this.rollAttempt += 1;
-    const policies: AxisPolicies = { ...this.config.axisPolicies };
+    const policies: AxisPolicies = { ...this.axisPolicies };
     for (const [id, policy] of Object.entries(policies)) {
       if (policy.mode === 'hold') policies[id as keyof AxisPolicies] = { mode: 'roll' };
     }
@@ -364,18 +342,18 @@ export class ExerciseRunner {
     if (this.state === 'done' || this.state === 'idle') return;
     this.stopPass();
 
-    if (changes.params !== undefined) this.config.params = changes.params;
+    if (changes.params !== undefined) this.params = changes.params;
     if (changes.tempo) {
-      const targetMoved = changes.tempo.targetTempo !== this.config.tempo.targetTempo;
-      this.config.tempo = changes.tempo;
+      const targetMoved = changes.tempo.targetTempo !== this.tempo.targetTempo;
+      this.tempo = changes.tempo;
       if (targetMoved) this.currentTempo = this.startTempo();
     }
 
     const previous = this.variation;
     if (changes.axisPolicies && previous) {
-      const before = this.config.axisPolicies ?? {};
+      const before = this.axisPolicies ?? {};
       const after = changes.axisPolicies;
-      this.config.axisPolicies = after;
+      this.axisPolicies = after;
       const kept = variationKeys(previous);
       const policies: AxisPolicies = {};
       const changed = new Set<string>();
@@ -418,8 +396,8 @@ export class ExerciseRunner {
    * restarting a few times before settling leaves no trail.
    */
   stop(): void {
-    if (this.state !== 'playing' && this.state !== 'paused' && this.state !== 'count-in') return;
-    const played = this.isFreeTime || this.isTheory || this.config.clock.ticks >= this.countInEndTick;
+    if (!this.isInPass) return;
+    const played = !this.timing.clock || this.config.clock.ticks >= this.countInEndTick;
     if (played) {
       this.stopPass();
     } else {
@@ -438,13 +416,13 @@ export class ExerciseRunner {
 
   /** Keep going after this pass, or stop at the end of it. */
   setLoop(loop: boolean): void {
-    this.config.loop = loop;
+    this.loop = loop;
     this.emit();
   }
 
   /** Takes effect the next time Play is pressed. */
   setCountInBars(bars: CountInBars): void {
-    this.config.countInBars = bars;
+    this.countInBars = bars;
     this.emit();
   }
 
@@ -467,27 +445,25 @@ export class ExerciseRunner {
 
   /** Turn the metronome on or off between reps. */
   setFreeTime(freeTime: boolean): void {
-    if (this.config.definition.timing === 'free' || this.config.definition.timing === 'metronome') {
-      return;
-    }
-    this.config.freeTime = freeTime;
+    // Only where the choice changes anything: not a set, nor a fixed timing.
+    const { definition } = this.config;
+    if (passTiming(definition, true) === passTiming(definition, false)) return;
+    this.freeTime = freeTime;
     this.emit();
   }
 
   // ------------------------------------------------------------- internals
 
   private startTempo(): number | null {
-    return this.isFreeTime
-      ? null
-      : resolveStartTempo(this.config.tempo, this.config.tempoPlan, 0);
+    return this.timing.clock ? resolveStartTempo(this.tempo, this.config.tempoPlan, 0) : null;
   }
 
   /** Roll a variation and generate its material. */
   private roll(options: { policies?: AxisPolicies; held?: Record<string, string> } = {}): void {
     const { definition, instrument, sessionKeyMode, sessionId, exerciseId } = this.config;
     // `held` is what a hold keeps and what freshness is judged against.
-    const held = options.held ?? this.config.heldAxisValues ?? {};
-    const policies = options.policies ?? this.config.axisPolicies;
+    const held = options.held ?? this.held;
+    const policies = options.policies ?? this.axisPolicies;
 
     this.variation = rollVariation({
       axes: definition.axes,
@@ -517,28 +493,45 @@ export class ExerciseRunner {
       variation: this.variation,
       keyMode: this.currentKeyMode,
       instrument,
-      params: this.config.params,
+      params: this.params,
+      // Loaded for this but never passed on until the 2026-09 cleanup, so
+      // the circle of fifths leaned nowhere.
+      ...(this.config.subjectWeights ? { subjectWeights: this.config.subjectWeights } : {}),
       // A theory set is new questions each pass, on the same variation. A
       // played exercise's material never changes between passes.
       rng: mulberry32(
-        this.isTheory ? hashSeed(this.variation.seed, this.passesPlayed) : this.variation.seed,
+        this.timing.freshEachPass
+          ? hashSeed(this.variation.seed, this.passesPlayed)
+          : this.variation.seed,
       ),
       repIndex: this.passesPlayed,
     });
   }
 
-  /** Start playing from the ready state, counting in first. */
-  private beginPass(options: { countInBars?: number } = {}): void {
+  /**
+   * Start a pass from the ready state, counting in first. From the top, the
+   * clock is reset and started; on a running clock — a routine's next item —
+   * it counts in from where the clock is, at this item's tempo, so a change
+   * of tempo is heard before it matters.
+   */
+  private startPass({
+    countInBars,
+    onRunningClock = false,
+  }: {
+    countInBars: number;
+    onRunningClock?: boolean;
+  }): void {
     const { clock } = this.config;
     this.clearScheduled();
-    clock.stop();
-    clock.seek(0);
-
+    if (!onRunningClock) {
+      clock.stop();
+      clock.seek(0);
+    }
     this.repStartedAt = this.config.now();
 
-    if (this.isFreeTime || this.isTheory) {
+    if (!this.timing.clock) {
       // No clock, no count-in, no playhead. The pass ends when the player says
-      // — or, for theory, when the set is submitted.
+      // — or, for a set, when it is submitted.
       this.countInEndTick = 0;
       this.passStartTick = 0;
       this.config.onRepStart?.({
@@ -554,14 +547,12 @@ export class ExerciseRunner {
     }
 
     if (this.currentTempo !== null) clock.setBpm(this.currentTempo);
-
     const phrase = this.currentPhrase;
-    this.countInEndTick = phrase
-      ? countInTicks(phrase.timeSignature, options.countInBars ?? this.config.countInBars ?? 0)
-      : 0;
+    const from = clock.ticks;
+    this.countInEndTick = from + (phrase ? countInTicks(phrase.timeSignature, countInBars) : 0);
     this.passStartTick = this.countInEndTick;
 
-    if (this.countInEndTick > 0) {
+    if (this.countInEndTick > from) {
       this.setState('count-in');
       this.handles.push(clock.schedule(() => this.setState('playing'), this.countInEndTick));
     } else {
@@ -572,13 +563,16 @@ export class ExerciseRunner {
     this.config.onRepStart?.({
       phrase,
       countInTicks: this.passStartTick,
-      continuation: false,
+      // On a running clock the metronome never stopped: only the notes need
+      // scheduling, and the count-in needs clicking even when it is muted.
+      continuation: onRunningClock,
+      ...(onRunningClock ? { countInFrom: from } : {}),
       tempo: this.currentTempo,
       freeTime: false,
       repIndex: this.passesPlayed,
     });
 
-    clock.start();
+    if (!onRunningClock) clock.start();
   }
 
   /**
@@ -611,9 +605,7 @@ export class ExerciseRunner {
 
   /** Stop whatever is playing, logging an unfinished pass as abandoned. */
   private stopPass(): void {
-    if (this.state === 'playing' || this.state === 'paused' || this.state === 'count-in') {
-      this.finishPass('abandoned', { stop: true });
-    }
+    if (this.isInPass) this.finishPass('abandoned', { stop: true });
     this.clearScheduled();
     this.config.clock.stop();
   }
@@ -635,7 +627,7 @@ export class ExerciseRunner {
         startedAt: this.repStartedAt || this.config.now(),
         endedAt: this.config.now(),
         tempo: this.currentTempo,
-        freeTime: this.isFreeTime,
+        freeTime: !this.timing.clock,
         axes: variationKeys(this.variation),
         seed: this.variation.seed,
         status: outcome,
@@ -652,24 +644,24 @@ export class ExerciseRunner {
       this.completed.push(record);
       this.config.onRepEnd?.(record);
       // What was played is what a `hold` keeps next time.
-      this.config.heldAxisValues = variationKeys(this.variation);
+      this.held = variationKeys(this.variation);
     }
 
     this.passesPlayed += 1;
     this.passesThisRun += 1;
+    const { timing } = this;
     // A fresh set for the next pass — whether that is straight away in a
     // routine, or the next press of Again.
-    if (this.isTheory) this.generate();
+    if (timing.freshEachPass) this.generate();
     if (options.stop) return;
 
-    // Loop means nothing to a theory set: it runs its passes and stops.
-    const again = (this.config.loop && !this.isTheory) || this.passesThisRun < this.passes;
-    if (again && this.isTheory) {
+    const again = (this.loop && timing.loops) || this.passesThisRun < this.passes;
+    if (again && timing.again === 'wait') {
       this.repStartedAt = this.config.now();
       this.emit();
       return;
     }
-    if (again && !this.isFreeTime) {
+    if (again && timing.again === 'straight-on') {
       this.continuePass();
       return;
     }

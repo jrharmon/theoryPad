@@ -3,7 +3,7 @@ import type { NeckPosition } from '@/domain/instrument';
 import { STRAIGHT_EIGHTHS, phraseBuilder } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { Direction } from '@/domain/variation';
-import type { ExerciseDefinition, PlayedInstance } from '../types';
+import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
   axisDisplay,
   axisValue,
@@ -22,7 +22,7 @@ const params = z.object({
 
 export type PositionShiftingParams = z.infer<typeof params>;
 
-export const positionShifting: ExerciseDefinition<PositionShiftingParams> = {
+export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
   id: 'position-shifting',
   name: 'Position shifting',
   tags: ['scales', 'horizontal', 'whole-neck'],

@@ -25,21 +25,22 @@ export function estimateItemSeconds(
     policies: item.axisPolicies,
     ...(definition.allowedValues ? { allowed: definition.allowedValues } : {}),
   });
-  const instance = definition.generate({
+  const context = {
     variation,
-    keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('C'), mode: 'ionian' },
+    keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('C'), mode: 'ionian' as const },
     instrument,
     params: resolveParams(definition, item.params),
     rng: mulberry32(1),
     repIndex: 0,
-  });
+  };
+  const reps = Math.max(1, item.reps);
+  if (definition.kind === 'theory') {
+    return definition.estimateRepSeconds(definition.generate(context)) * reps;
+  }
   const tempo = item.tempo.targetTempo;
-  const pass = definition.estimateRepSeconds(instance, tempo);
-  const countIn =
-    instance.kind === 'played' && tempo !== null
-      ? ticksToSeconds(ticksPerBar(instance.phrase.timeSignature), tempo)
-      : 0;
-  return pass * Math.max(1, item.reps) + countIn;
+  const played = definition.generate(context);
+  const countIn = tempo !== null ? ticksToSeconds(ticksPerBar(played.phrase.timeSignature), tempo) : 0;
+  return definition.estimateRepSeconds(played, tempo) * reps + countIn;
 }
 
 /** "4 min", "45 sec" — a routine's running total. */

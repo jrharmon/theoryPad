@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { diatonicQuestions } from '@/domain/theory';
-import type { ExerciseDefinition, TheoryInstance } from '../types';
+import type { TheoryDefinition, TheoryInstance } from '../types';
 import { keyModeLabel, makeBrief, orderedHighlights } from '../shared';
 
 const params = z.object({
@@ -14,7 +14,7 @@ const params = z.object({
 
 export type DiatonicDrillParams = z.infer<typeof params>;
 
-export const diatonicDrill: ExerciseDefinition<DiatonicDrillParams> = {
+export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
   id: 'diatonic-drill',
   name: 'Key signature drill',
   tags: ['theory', 'chords', 'key-signatures', 'no-guitar'],
@@ -39,7 +39,6 @@ export const diatonicDrill: ExerciseDefinition<DiatonicDrillParams> = {
       questionCount: 8,
     },
   },
-  timing: 'free',
 
   generate({ keyMode, rng, variation, params: config }): TheoryInstance {
     const questions = diatonicQuestions({
@@ -60,5 +59,5 @@ export const diatonicDrill: ExerciseDefinition<DiatonicDrillParams> = {
     };
   },
 
-  estimateRepSeconds: (instance) => (instance.kind === 'theory' ? instance.questions.length * 12 : 0),
+  estimateRepSeconds: (set) => set.questions.length * 12,
 };
