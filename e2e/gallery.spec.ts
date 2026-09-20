@@ -88,6 +88,11 @@ test.describe('dev gallery', () => {
     // Chords is the shortest example, so this does not need long to finish.
     const section = page.locator('section').filter({ hasText: 'CHORDS' });
     await section.getByRole('button', { name: 'Play' }).click();
+    // Wait until it is genuinely under way before waiting for it to finish.
+    // Play is async — it loads Tone and starts the AudioContext — so the
+    // button still says Play for a moment after the click, and waiting
+    // straight for Play is answered by that, not by the phrase ending.
+    await expect(section.getByTestId('playhead')).toBeVisible();
 
     // Ending used to pause the transport past every scheduled event, leaving a
     // "Resume" button that toggled forever and played nothing.

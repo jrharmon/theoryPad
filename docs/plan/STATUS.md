@@ -273,9 +273,20 @@ driven in the browser and looked at rather than only tested.
 position is due again, what lies behind it is not. Without that, seeking back over a phrase
 replayed its notes in the browser and not in tests.
 
-**Known, and not from this round:** `e2e/gallery.spec.ts` "returns to Play when a phrase reaches
-its end" fails in a full `pnpm test:e2e` run and passes on its own. It does the same on an
-unmodified tree, so it is a pre-existing flake in the dev gallery, not a regression.
+**And the gallery flake it turned up, fixed.** `e2e/gallery.spec.ts` "returns to Play when a
+phrase reaches its end" had been failing in a full `pnpm test:e2e` run and passing on its own —
+on an unmodified tree too, so it predated the round. It was not a timing flake but a hole in the
+test: it clicked Play and then waited for a Play button, which the click had not changed yet,
+because `useTransport.play` is async (it loads Tone and starts the AudioContext). That wait was
+answered 33 ms after the click rather than by the 2.7 s phrase ending, so the test went on to
+"click Play again" while the first play was still starting — and under load that second click
+landed just as the button became Pause, pausing instead of replaying. Hence a Resume button and
+no playhead. The test now waits for the playhead before waiting for the phrase to end, and takes
+the 3.6 s it always should have. Four full-suite runs and a `--repeat-each=4` pass.
+
+Worth knowing for the dev gallery: `play()` shows nothing while it is starting, so its button can
+be pressed again and start a second `play()`. That is dev-only — the practice transport has its
+`starting` state for exactly this — but it is what made the test's hole reachable.
 
 ## The pause is over (2026-09-20)
 
