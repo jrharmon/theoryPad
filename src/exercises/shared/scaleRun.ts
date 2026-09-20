@@ -102,7 +102,8 @@ export function scaleNoteFrom(
  * root, which in C would put a 3rd-position shape at the 8th fret.
  *
  * Near the top of the neck the shape may not fit, so the start moves down
- * until it does. `startFret` is where it actually landed.
+ * until it does; at the bottom a shape the hand cannot hold that low starts
+ * higher instead. Either way, `startFret` is where it actually landed.
  */
 export function shapeFrom(options: {
   instrument: Instrument;
@@ -127,7 +128,9 @@ export function shapeFrom(options: {
       notesPerString,
     });
     if (positions.length === expected) {
-      return { startDegree: start.degree, startFret: start.fret, positions };
+      // A shape the hand cannot hold this low starts higher instead, so the
+      // fret it landed on is the shape's own, not the one that was asked for.
+      return { startDegree: start.degree, startFret: positions[0]!.fret, positions };
     }
   }
   return null;

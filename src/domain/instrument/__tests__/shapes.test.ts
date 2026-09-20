@@ -12,6 +12,7 @@ import { scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
 
 const G_MAJOR = { tonic: pitchClass('G'), mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
+const A_LYDIAN = { tonic: pitchClass('A'), mode: 'lydian' as const };
 
 function fretsByString(shape: { string: number; fret: number }[]): Map<number, number[]> {
   const map = new Map<number, number[]>();
@@ -47,10 +48,9 @@ describe('scaleShape', () => {
         const notes = scaleNotes(keyMode);
         const inKey = new Set(notes.map((n) => chroma(n)));
 
-        // From fret 3 up: at the very bottom of a drop-D neck this run is
-        // genuinely unplayable (see STATUS — the shape spans sixteen frets),
-        // which is a generator question, not a test one.
-        for (const minFret of [3, 5, 9]) {
+        // From the nut up, including the open position: a shape the hand
+        // cannot hold that low starts higher rather than spanning the neck.
+        for (const minFret of [0, 1, 3, 5, 9]) {
           for (let degree = 1; degree <= 7; degree += 1) {
             const where = `${instrument.name} ${mode} degree ${degree} min ${minFret}`;
             const shape = scaleShape(instrument, {
@@ -101,6 +101,22 @@ describe('scaleShape', () => {
         }
       }
     }
+  });
+
+  it('starts higher rather than stretching the hand across the neck', () => {
+    // In drop D the low string runs 1-2-4 and the next note of the scale sits
+    // below the open A string, leaving fret 11 as the only way on: a sixteen-
+    // fret shape. The hand goes up the neck instead, to the shape it would
+    // have found a fret or two higher.
+    const lydian = { keyMode: A_LYDIAN, startDegree: 4 as DegreeNumber };
+    const atTheNut = scaleShape(DROP_D_GUITAR, { ...lydian, minFret: 1 });
+
+    expect(shapeSpan(atTheNut)).toEqual({ low: 11, high: 16 });
+    expect(atTheNut).toEqual(scaleShape(DROP_D_GUITAR, { ...lydian, minFret: 3 }));
+    // Starting higher is a move of the hand, not of the run: same notes.
+    expect(atTheNut.map((p) => p.note)).toEqual(
+      scaleShape(STANDARD_GUITAR, { ...lydian, minFret: 1 }).map((p) => p.note),
+    );
   });
 
   it('puts the asked-for number of notes on each string', () => {

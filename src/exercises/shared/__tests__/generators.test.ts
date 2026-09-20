@@ -233,6 +233,17 @@ describe('horizontalRun', () => {
     },
   );
 
+  it.each(GUITARS)(
+    'finds a start where both routes fit, at the nut too (%s)',
+    (_id, instrument) => {
+      // The way down shifts on other strings, so it can need a hand position the
+      // way up does not: in drop D the three-note low string runs past the open
+      // A, and the run starts a shape higher rather than one route going with it.
+      const run = check(instrument, 'every-other-string', 0);
+      expect(run.startFret).toBe(run.up[0]!.fret);
+    },
+  );
+
   it('marks the extra note on a string as the shift', () => {
     const run = horizontalRun({
       instrument: STANDARD_GUITAR,
