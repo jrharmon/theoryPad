@@ -238,15 +238,21 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 **Cleanup — architecture review** (next, **before M7b**; agreed 2026-09-17)
 - Work through `docs/review/ARCHITECTURE-REVIEW.md`: its **Work plan** is the task list and its
   **Decisions** section records what the player settled. One step per commit, stop at the gate.
-- Service and test code first; styling steps 1–4 not started. Steps 5 (A3+A5) and 6
-  (A1+A4+A6+T1 — `src/session/`) reviewed and merged to `main` 2026-09-19. Step 7 (A2 —
-  `PassTiming` in `src/exercises/runner/timing.ts`, `PlayedDefinition | TheoryDefinition`) done
-  on branch `cleanup-timing`, **at the gate**. Next: step 8 (T2–T4), then 9.
+- Service and test code first; styling steps 1–4 not started. Steps 5 (A3+A5), 6 (A1+A4+A6+T1 —
+  `src/session/`), 7 (A2 — `PassTiming` in `src/exercises/runner/timing.ts`, `PlayedDefinition |
+  TheoryDefinition`) and 8 (T2–T4) are reviewed and merged to `main`. Next: step 9 (A7+S2).
 - Step 7 fixed a live bug: theory subject weights never reached `generate`, so the circle of
-  fifths never leaned toward misses. Worth a look at the gate: it should now ask more about
-  what you get wrong.
-- Found, not changed: in free time a routine item plays one pass whatever its reps (the free
-  strategy's `again` is `none`, as the old code behaved). Ask whether reps should count there.
+  fifths never leaned toward misses. Reviewed at the gate; a free-time routine item now plays
+  every rep it asks for, one per Done, rather than a single pass.
+- Step 8: 785 unit tests → 668 (15%, not the 25–30% the review aimed at — the rest are distinct
+  behaviours, and the rule was to remove a test only when another would fail for the same bug).
+  E2E db helpers now live in `e2e/helpers.ts`.
+- **Found, not fixed — an unplayable shape.** `scaleShape(DROP_D_GUITAR, A lydian, startDegree 4,
+  minFret 1)` spans sixteen frets: the low D string runs 1-2-4, and the next scale note is below
+  the open A string, so it jumps to fret 11. With `minFret` 2 or more the same shape is fine. The
+  invariant test's `minFret` loop starts at 3 because of it.
+- Locally `pnpm test:e2e` runs 5 workers with no retry and flakes (gallery replay, transport
+  toggles, a theory question); each passes alone, and CI runs one worker with a retry.
 - Step 6 changed two behaviors on purpose: a track now fits the tempo you are hearing in a
   routine too (it used to prefer the item's target), and leaving a track mid-routine restores
   the current item's tempo (it used to restore the first item's).
