@@ -3,6 +3,7 @@ import type { Instrument } from '@/domain/instrument';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import type { Settings } from '@/data';
 import { repos, defaultSettings } from '@/data';
+import { serialWrites } from './util';
 
 interface SettingsState {
   settings: Settings;
@@ -11,6 +12,16 @@ interface SettingsState {
   save: (changes: Partial<Omit<Settings, 'key' | 'updatedAt'>>) => Promise<void>;
   instrument: () => Instrument;
 }
+
+/**
+ * Writes to the one settings row run in order.
+ *
+ * Two quick toggles — Loop then the metronome — each wrote the whole row, and
+ * if the first write landed second it put the older row back: the toggle was
+ * on screen and gone after a reload. Each write sends the current merged
+ * settings, so the last one to run writes the newest state.
+ */
+const queued = serialWrites();
 
 /**
  * Settings are read once at start-up and kept in memory. They are small,
@@ -29,9 +40,8 @@ export const useSettings = create<SettingsState>((set, get) => ({
     // In memory first, then to disk. Waiting for the write before updating
     // meant two quick toggles each merged into the same stale settings, and
     // the second write undid the first.
-    const merged = { ...get().settings, ...changes };
-    set({ settings: merged });
-    await repos().settings.save(merged);
+    set({ settings: { ...get().settings, ...changes } });
+    await queued('settings', () => repos().settings.save(get().settings));
   },
 
   instrument() {

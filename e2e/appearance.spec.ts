@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { savedSettings } from './helpers';
 
 const html = (page: Page) => page.locator('html');
 const choice = (page: Page, name: 'System' | 'Light' | 'Dark') =>
@@ -33,6 +34,7 @@ test.describe('on a light system', () => {
     await expect(html(page)).toHaveAttribute('data-theme', 'dark');
     await expect(choice(page, 'Dark')).toHaveAttribute('aria-pressed', 'true');
 
+    await savedSettings(page, (s) => s.ui.appearance === 'dark');
     await page.reload();
     expect(await themeAtLoad(page)).toBe('dark');
     await expect(choice(page, 'Dark')).toHaveAttribute('aria-pressed', 'true');
@@ -65,6 +67,7 @@ test.describe('on a dark system', () => {
     await choice(page, 'Light').click();
     await expect(html(page)).toHaveAttribute('data-theme', 'light');
 
+    await savedSettings(page, (s) => s.ui.appearance === 'light');
     await page.reload();
     expect(await themeAtLoad(page)).toBe('light');
     await expect(choice(page, 'Light')).toHaveAttribute('aria-pressed', 'true');

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readStore, storedReps, writeRow } from './helpers';
+import { readStore, savedSettings, storedReps, writeRow } from './helpers';
 
 /** The exercise these tests drive, by its display name. The library seeds others too. */
 const EXERCISE = 'Modes up the neck';
@@ -197,6 +197,7 @@ test('the transport toggles are remembered', async ({ page }) => {
   await expect(loop).toHaveAttribute('aria-pressed', 'true');
   await expect(metronome).toHaveAttribute('aria-pressed', 'false');
 
+  await savedSettings(page, (s) => s.audio.loop === true && s.audio.metronomeEnabled === false);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Loop', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Metronome', exact: true })).toHaveAttribute('aria-pressed', 'false');

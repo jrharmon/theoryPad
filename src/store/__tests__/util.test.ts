@@ -13,6 +13,14 @@ describe('serialWrites', () => {
         }, ms),
       );
 
+    // The first write for a row starts at once; the rest queue behind it.
+    let started = false;
+    void queued('started', () => {
+      started = true;
+      return Promise.resolve();
+    });
+    expect(started).toBe(true);
+
     const first = queued('a', slow('a1', 20));
     const failed = queued('a', () => Promise.reject(new Error('write failed')));
     const third = queued('a', slow('a3', 0));

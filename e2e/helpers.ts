@@ -90,3 +90,24 @@ export interface StoredRep {
 
 /** Reps as they were logged. */
 export const storedReps = (page: Page) => readStore<StoredRep>(page, 'reps');
+
+/**
+ * Wait until the settings row on disk matches, before a reload.
+ *
+ * Settings are applied on screen at once and written a moment later; a reload
+ * in between loses the write, and the app makes no promise about that gap.
+ */
+export async function savedSettings(
+  page: Page,
+  matches: (settings: { ui: Record<string, unknown>; audio: Record<string, unknown> }) => boolean,
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const [row] = await readStore<{ ui: Record<string, unknown>; audio: Record<string, unknown> }>(
+        page,
+        'settings',
+      );
+      return row ? matches(row) : false;
+    })
+    .toBe(true);
+}
