@@ -39,11 +39,13 @@ import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
 import { BackingTracksSection } from './BackingTracksSection';
 
 export function SettingsPage() {
-  const { settings, load, save } = useSettings();
+  const { settings, reload, save } = useSettings();
 
+  // Every visit reads the stored row again: settings changed in another tab
+  // were otherwise invisible here until the page was refreshed.
   useEffect(() => {
-    void load();
-  }, [load]);
+    void reload();
+  }, [reload]);
 
   const { audio, ui, instrument, practice } = settings;
 
