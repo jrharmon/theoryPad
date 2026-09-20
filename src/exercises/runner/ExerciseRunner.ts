@@ -147,6 +147,11 @@ export class ExerciseRunner {
   private countInEndTick = 0;
   /** Tick the current pass's phrase starts at. Passes after the first run straight on. */
   private passStartTick = 0;
+  /**
+   * Tick this press of Play started playing at — after its count-in. Passes
+   * run straight on from each other, so the whole run is measured from here.
+   */
+  private runStartTick = 0;
   private completed: RepRecord[] = [];
   private lastSet: SetResult | null = null;
 
@@ -183,6 +188,9 @@ export class ExerciseRunner {
       lastSet: this.lastSet,
       variation: this.variation,
       phraseTick: Math.max(0, raw - this.passStartTick),
+      // Nothing under way means nothing played: Stop and a finished run both
+      // read 0, which is what the transport's clock shows.
+      runTicks: this.isInPass ? Math.max(0, raw - this.runStartTick) : 0,
       countInRemaining: Math.max(0, this.countInEndTick - raw),
       countInBars: this.countInBars,
       currentTempo: this.currentTempo,
@@ -564,6 +572,7 @@ export class ExerciseRunner {
       // — or, for a set, when it is submitted.
       this.countInEndTick = 0;
       this.passStartTick = 0;
+      this.runStartTick = 0;
       this.config.onRepStart?.({
         phrase: this.currentPhrase,
         countInTicks: 0,
@@ -581,6 +590,7 @@ export class ExerciseRunner {
     const from = clock.ticks;
     this.countInEndTick = from + (phrase ? countInTicks(phrase.timeSignature, countInBars) : 0);
     this.passStartTick = this.countInEndTick;
+    this.runStartTick = this.countInEndTick;
 
     if (this.countInEndTick > from) {
       this.setState('count-in');

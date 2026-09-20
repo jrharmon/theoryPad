@@ -47,6 +47,32 @@ function playPass(runner: ExerciseRunner, clock: FakeClock) {
 }
 
 describe('ExerciseRunner', () => {
+  it('times the whole run, not the pass, and Stop puts the clock back', () => {
+    const { runner, clock } = makeRunner({ countInBars: 1, passes: 2 });
+    runner.start();
+    const phrase = runner.currentPhrase!;
+    const pass = phrase.totalTicks * (phrase.repeat ?? 1);
+    const countIn = ticksPerBar(phrase.timeSignature);
+
+    // Nothing played yet, and the count-in is not playing either.
+    expect(runner.snapshot.runTicks).toBe(0);
+    runner.begin();
+    clock.advanceTicks(countIn - QUARTER);
+    expect(runner.snapshot).toMatchObject({ state: 'count-in', runTicks: 0 });
+
+    clock.advanceTicks(QUARTER + QUARTER * 2);
+    expect(runner.snapshot.runTicks).toBe(QUARTER * 2);
+
+    // The second pass runs straight on, so the run keeps counting through it
+    // rather than starting again with the phrase.
+    clock.advanceTicks(pass);
+    expect(runner.snapshot).toMatchObject({ state: 'playing', phraseTick: QUARTER * 2 });
+    expect(runner.snapshot.runTicks).toBe(pass + QUARTER * 2);
+
+    runner.stop();
+    expect(runner.snapshot).toMatchObject({ state: 'brief', runTicks: 0 });
+  });
+
   it('moves the playhead to a clicked note, playing or paused, and still ends the pass there', () => {
     const { runner, clock } = makeRunner({ countInBars: 1 });
     runner.start();

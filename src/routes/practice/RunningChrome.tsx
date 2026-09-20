@@ -1,5 +1,6 @@
 import { findExerciseDefinition } from '@/exercises/registry';
 import { usePractice } from '@/store/practice';
+import { useRunnerTicks } from './usePracticeBody';
 
 /**
  * The persistent bar across a running exercise: what it is, how many passes
@@ -10,6 +11,11 @@ export function RunningChrome({ name }: { name: string }) {
   const instance = usePractice((s) => s.instance);
   const routine = usePractice((s) => s.routineSnapshot);
   const practice = usePractice();
+  const state = snapshot?.state;
+  // The runner does not emit as the clock moves, so the bar has to read it.
+  const { phraseTick } = useRunnerTicks(
+    state === 'playing' || state === 'count-in' || state === 'paused',
+  );
   if (!snapshot) return null;
 
   if (routine) {
@@ -40,7 +46,7 @@ export function RunningChrome({ name }: { name: string }) {
     );
   }
 
-  const { passesPlayed, state, phraseTick } = snapshot;
+  const { passesPlayed } = snapshot;
   const paused = state === 'paused';
   // A theory set has no clock: nothing to pause, and no phrase to be through.
   const theory = instance?.kind === 'theory';

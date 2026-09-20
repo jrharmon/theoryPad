@@ -7,6 +7,8 @@ import { useSettings } from '@/store/settings';
 import { BackingMenu, TrackSpeed } from './BackingMenu';
 import { CountInMenu } from './CountInMenu';
 import { BackingDroppedNote } from './BackingPanel';
+import { formatClock, runClock } from './runClock';
+import { useRunnerTicks } from './usePracticeBody';
 
 /**
  * The controls, frozen to the bottom of the screen.
@@ -26,14 +28,21 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
   const inRoutine = usePractice((s) => s.routineId !== null);
   const startingTrack = usePractice((s) => s.backing.starting);
   const needsClick = usePractice((s) => s.backing.needsClick);
+  const state = snapshot?.state;
+  // The runner only emits when something happens to it, so the position and
+  // the clock are read off the clock itself, frame by frame.
+  const ticks = useRunnerTicks(
+    state === 'playing' || state === 'count-in' || state === 'paused',
+  );
 
-  if (!snapshot) return null;
+  if (!snapshot || state === undefined) return null;
 
-  const { state, currentTempo, targetTempo } = snapshot;
+  const { currentTempo, targetTempo } = snapshot;
   const phrase = instance?.kind === 'played' ? instance.phrase : null;
   // A theory set has no pulse: no tempo, no click, nothing to pause.
   const theory = instance?.kind === 'theory';
-  const position = phrase ? tickToBarBeat(phrase, snapshot.phraseTick) : null;
+  const position = phrase ? tickToBarBeat(phrase, ticks.phraseTick) : null;
+  const clock = theory ? null : runClock({ ...snapshot, ...ticks }, phrase);
   const running = state === 'playing' || state === 'count-in';
 
   return (
@@ -157,6 +166,18 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       {state === 'playing' && position && (
         <span className="num text-body-sm font-extrabold" data-testid="position">
           Bar {position.bar + 1} · beat {position.beat + 1}
+        </span>
+      )}
+
+      {/* Shown before you start too: how long the exercise runs for is worth
+          knowing with a guitar in your hands and no hand free to work it out. */}
+      {clock && (
+        <span className="num text-body-sm font-extrabold" data-testid="run-clock">
+          {formatClock(clock.elapsedSeconds)}
+          <span className="font-semibold text-ink-muted">
+            {' / '}
+            {formatClock(clock.totalSeconds)}
+          </span>
         </span>
       )}
 

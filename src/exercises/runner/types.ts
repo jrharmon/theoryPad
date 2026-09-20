@@ -55,6 +55,11 @@ export interface RunnerSnapshot {
   variation: RolledVariation | null;
   /** Ticks into the phrase, with any count-in already discounted. */
   phraseTick: number;
+  /**
+   * Ticks played since this press of Play, across every pass of the run, with
+   * count-ins discounted. 0 when nothing is under way — Stop puts it back.
+   */
+  runTicks: number;
   /** Ticks of count-in remaining, or 0. */
   countInRemaining: number;
   /** How long this exercise counts in for — its own setting, not the app's. */
