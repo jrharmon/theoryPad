@@ -7,33 +7,49 @@
 @import 'tailwindcss';
 
 @theme {
-  /* ---- Core roles ---- */
-  --color-bg: #f5f6f8; /* graph paper */
-  --color-surface: #eceff4;
-  --color-ink: #24262b; /* graphite */
-  --color-accent: #2347b5; /* ballpoint */
+  /*
+   * ---- Palette ----
+   *
+   * The only place a colour is written down. Dark redefines these and the
+   * roles below follow, so a role needs a dark value of its own only where
+   * it genuinely maps differently — the transport lifting off the page, or
+   * the playhead going translucent because multiply does nothing on slate.
+   */
+  --paper: #ffffff; /* a sheet */
+  --page: #f5f6f8; /* the ground a sheet sits on */
+  --surface: #eceff4; /* a panel inside a sheet */
+  --ink-base: #24262b; /* graphite */
+  --line: #e2e5eb; /* rules, dividers, edges */
+  --line-strong: #d5d9e1; /* a control's edge */
+  --neck-line: #cfd4dd; /* frets and the neck's edge */
+  --inlay-base: #dfe3ea;
+  --blue: #2347b5; /* ballpoint */
+  --blue-strong: #2347b5; /* the blue that reads on this ground */
+  --blue-fill: #2347b5; /* blue as a filled bar */
+  --blue-text: #1f3fa3; /* blue as words */
+  --blue-tint: #e9eefc; /* blue as a wash */
+  --blue-mid: #6f8ad8; /* halfway, for a heat scale */
+  --blue-deep: #c9d3ee; /* a chord tone, and the low end of heat */
+  --yellow: #ffe14d; /* highlighter */
+  --star-base: #e2a400;
+  --white: #ffffff;
 
-  /* ---- Neutral ramp ---- */
-  --color-neutral-100: #f7f8fa;
+  /* ---- Core roles ---- */
+  --color-bg: var(--page);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink-base);
+  --color-accent: var(--blue);
+
+  /* ---- Neutral ramp ----
+     What the report's charts and a chord row read; the rest of the ramp went
+     unused and was deleted in the 2026-09 cleanup. */
   --color-neutral-200: #eceff4;
   --color-neutral-300: #dfe3ea;
-  --color-neutral-400: #c3c9d4;
-  --color-neutral-500: #9aa1ae;
   --color-neutral-600: #737a88;
-  --color-neutral-700: #535966;
-  --color-neutral-800: #3a3e46;
-  --color-neutral-900: #24262b;
 
   /* ---- Accent ramp ---- */
-  --color-accent-100: #eef2fd;
-  --color-accent-200: #dbe3fa;
-  --color-accent-300: #b7c6f3;
-  --color-accent-400: #8199e3;
-  --color-accent-500: #4d6bcf;
   --color-accent-600: #2347b5;
   --color-accent-700: #1f3fa3;
-  --color-accent-800: #1a3280;
-  --color-accent-900: #14244f;
 
   /* ---- Type ----
      UI text; h1/h2; names and titles (face-title); numbers read while playing (num); kickers. */
@@ -77,8 +93,8 @@
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 12px;
+  --radius-lg: var(--radius-panel);
+  --radius-xl: var(--radius-panel);
   --radius-2xl: 14px;
   --radius-3xl: 16px;
   --radius-control: 8px;
@@ -88,7 +104,7 @@
 
 /* Section rules and row rules. */
 @theme {
-  --color-divider: #e2e5eb;
+  --color-divider: var(--line);
 }
 
 /*
@@ -98,33 +114,33 @@
  */
 @theme static {
   /* Grounds: the page, a sheet on it, a ruled line inside a sheet. */
-  --color-paper: #ffffff;
-  --color-rule: #e2e5eb;
+  --color-paper: var(--paper);
+  --color-rule: var(--line);
   /* Graph paper, dropped at review: it added little. Its light value was rgba(36, 38, 43, 0.045). */
   --color-grid: transparent;
-  --color-highlight: #ffe14d;
+  --color-highlight: var(--yellow);
 
   /* Accent in its other jobs. */
-  --color-accent-text: #1f3fa3;
-  --color-accent-tint: #e9eefc;
-  --color-on-accent: #ffffff;
+  --color-accent-text: var(--blue-text);
+  --color-accent-tint: var(--blue-tint);
+  --color-on-accent: var(--white);
 
   /* App chrome: the nav header, the avatar, the running-exercise bar and its progress. */
-  --color-nav: #ffffff;
-  --color-nav-ink: #24262b;
-  --color-nav-active: #1f3fa3;
-  --color-avatar: #e9eefc;
-  --color-avatar-ink: #1f3fa3;
-  --color-chrome: #ffffff;
-  --color-chrome-ink: #24262b;
-  --color-track: #e8ebf0;
-  --color-fill: #2347b5;
+  --color-nav: var(--paper);
+  --color-nav-ink: var(--ink-base);
+  --color-nav-active: var(--blue-text);
+  --color-avatar: var(--blue-tint);
+  --color-avatar-ink: var(--blue-text);
+  --color-chrome: var(--paper);
+  --color-chrome-ink: var(--ink-base);
+  --color-track: var(--line);
+  --color-fill: var(--blue-fill);
   --color-fill-current: color-mix(in oklab, var(--color-fill) 60%, transparent);
 
   /* The transport bar floating at the bottom of a practice screen. */
-  --color-transport: #ffffff;
-  --color-transport-ink: #24262b;
-  --color-transport-edge: #e2e5eb;
+  --color-transport: var(--paper);
+  --color-transport-ink: var(--ink-base);
+  --color-transport-edge: var(--line);
 
   /*
    * Ink, quieter. Three steps, not the eight that grew by eye: muted is the
@@ -136,48 +152,48 @@
   --color-ink-disabled: color-mix(in srgb, var(--color-ink) 35%, transparent);
 
   /* Pressed and selected: every toggle, and a picked table cell. */
-  --color-toggle-on: #e9eefc;
-  --color-toggle-on-ink: #1f3fa3;
-  --color-toggle-on-ring: rgba(35, 71, 181, 0.35);
-  --color-toggle-off: #ffffff;
-  --color-toggle-off-ink: rgba(36, 38, 43, 0.55);
-  --color-toggle-edge: #d5d9e1;
+  --color-toggle-on: var(--blue-tint);
+  --color-toggle-on-ink: var(--blue-text);
+  --color-toggle-on-ring: color-mix(in srgb, var(--blue-strong) 35%, transparent);
+  --color-toggle-off: var(--paper);
+  --color-toggle-off-ink: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --color-toggle-edge: var(--line-strong);
 
   /* Tab. The playhead is a highlighter swipe, multiplied over the digits. */
-  --color-tab-line: rgba(36, 38, 43, 0.28);
-  --color-tab-bar: rgba(36, 38, 43, 0.55);
-  --color-tab-digit: #24262b;
+  --color-tab-line: color-mix(in srgb, var(--color-ink) 26%, transparent);
+  --color-tab-bar: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  --color-tab-digit: var(--ink-base);
   --color-playhead: rgba(255, 225, 77, 0.75);
 
   /* The neck, and the dots on it by role. Heat stays graphite: blue is for targets. */
-  --color-neck: #ffffff;
-  --color-neck-fret: #cfd4dd;
-  --color-neck-nut: #24262b;
-  --color-neck-string: rgba(36, 38, 43, 0.32);
-  --color-neck-edge: #cfd4dd;
-  --color-neck-heat: #24262b;
-  --color-inlay: #dfe3ea;
-  --color-dot-root: #24262b;
-  --color-dot-root-ink: #ffffff;
-  --color-dot-target: #2347b5;
-  --color-dot-target-ink: #ffffff;
-  --color-dot-chord: #c9d3ee;
-  --color-dot-chord-ink: #24262b;
+  --color-neck: var(--paper);
+  --color-neck-fret: var(--neck-line);
+  --color-neck-nut: var(--ink-base);
+  --color-neck-string: color-mix(in srgb, var(--color-ink) 31%, transparent);
+  --color-neck-edge: var(--neck-line);
+  --color-neck-heat: var(--ink-base);
+  --color-inlay: var(--inlay-base);
+  --color-dot-root: var(--ink-base);
+  --color-dot-root-ink: var(--white);
+  --color-dot-target: var(--blue);
+  --color-dot-target-ink: var(--white);
+  --color-dot-chord: var(--blue-deep);
+  --color-dot-chord-ink: var(--ink-base);
   --color-dot-pass: #eef1f6;
-  --color-dot-pass-ink: rgba(36, 38, 43, 0.75);
+  --color-dot-pass-ink: color-mix(in srgb, var(--color-ink) 76%, transparent);
 
   /* An axis that changed since the last roll; a favorite. */
-  --color-fresh: #ffffff;
-  --color-fresh-ink: #24262b;
-  --color-star: #e2a400;
+  --color-fresh: var(--paper);
+  --color-fresh-ink: var(--ink-base);
+  --color-star: var(--star-base);
 
   /* Heatmaps and the time-by-day chart, none to most. */
-  --color-heat-0: #eceff4;
-  --color-heat-1: #bccaf0;
-  --color-heat-2: #6f8ad8;
-  --color-heat-3: #2347b5;
-  --color-heat-future: #dfe3ea;
-  --color-heat-today: #24262b;
+  --color-heat-0: var(--surface);
+  --color-heat-1: var(--blue-deep);
+  --color-heat-2: var(--blue-mid);
+  --color-heat-3: var(--blue-strong);
+  --color-heat-future: var(--inlay-base);
+  --color-heat-today: var(--ink-base);
 }
 
 /**
@@ -264,94 +280,38 @@
  * nothing on a dark ground.
  */
 :root[data-theme='dark'] {
-  --color-bg: #15171c;
-  --color-paper: #1d2027;
-  --color-surface: #252932;
-  --color-ink: #e4e7ee;
-  --color-grid: transparent; /* was rgba(228, 231, 238, 0.035) */
-  --color-highlight: rgba(255, 225, 77, 0.34);
+  /* The palette. Every role above follows these. */
+  --paper: #1d2027;
+  --page: #15171c;
+  --surface: #252932;
+  --ink-base: #e4e7ee;
+  --line: #2c313b;
+  --line-strong: #363c48;
+  --neck-line: #3a404c;
+  --inlay-base: #343a45;
+  --blue: #4a6ae0;
+  --blue-strong: #9db0ff;
+  --blue-fill: #6d88f0;
+  --blue-text: #9db0ff;
+  --blue-tint: rgba(123, 149, 255, 0.16);
+  --blue-mid: #4a6ae0;
+  --blue-deep: #2f3f78;
+  --yellow: rgba(255, 225, 77, 0.34);
+  --star-base: #f0b400;
 
-  --color-accent: #4a6ae0;
-  --color-accent-text: #9db0ff;
-  --color-accent-tint: rgba(123, 149, 255, 0.16);
-  --color-on-accent: #ffffff;
-
-  --color-divider: #2c313b;
-  --color-rule: #2c313b;
-
-  --color-nav: #1d2027;
-  --color-nav-ink: #e4e7ee;
-  --color-nav-active: #b4c3ff;
-  --color-avatar: rgba(123, 149, 255, 0.16);
-  --color-avatar-ink: #b4c3ff;
-  --color-chrome: #1d2027;
-  --color-chrome-ink: #e4e7ee;
-  --color-track: #2c313b;
-  --color-fill: #6d88f0;
-
-  --color-transport: #22262e;
-  --color-transport-ink: #e4e7ee;
-  --color-transport-edge: #2c313b;
-
-  --color-toggle-on: rgba(123, 149, 255, 0.16);
-  --color-toggle-on-ink: #b4c3ff;
-  --color-toggle-on-ring: rgba(157, 176, 255, 0.35);
-  --color-toggle-off: #1d2027;
-  --color-toggle-off-ink: rgba(228, 231, 238, 0.55);
-  --color-toggle-edge: #363c48;
-
-  --color-tab-line: rgba(228, 231, 238, 0.24);
-  --color-tab-bar: rgba(228, 231, 238, 0.5);
-  --color-tab-digit: #e4e7ee;
-  --color-playhead: rgba(255, 225, 77, 0.26);
-
-  --color-neck: #1d2027;
-  --color-neck-fret: #3a404c;
-  --color-neck-nut: #e4e7ee;
-  --color-neck-string: rgba(228, 231, 238, 0.3);
-  --color-neck-edge: #3a404c;
-  --color-neck-heat: #e4e7ee;
-  --color-inlay: #343a45;
-  --color-dot-root: #e4e7ee;
-  --color-dot-root-ink: #15171c;
-  --color-dot-target: #4a6ae0;
-  --color-dot-target-ink: #ffffff;
-  --color-dot-chord: #2f3f78;
-  --color-dot-chord-ink: #e4e7ee;
+  /* Roles that map differently here, and only those. */
+  --color-transport: #22262e; /* the bar lifts off the page rather than casting a shadow */
+  --color-playhead: rgba(255, 225, 77, 0.26); /* multiply does nothing on slate */
+  --color-dot-root-ink: var(--page);
   --color-dot-pass: #2a2e37;
-  --color-dot-pass-ink: rgba(228, 231, 238, 0.78);
-
-  --color-fresh: #1d2027;
-  --color-fresh-ink: #e4e7ee;
-  --color-star: #f0b400;
-
-  --color-heat-0: #252932;
-  --color-heat-1: #2f3f78;
-  --color-heat-2: #4a6ae0;
-  --color-heat-3: #9db0ff;
-  --color-heat-future: #2c313b;
-  --color-heat-today: #e4e7ee;
+  --color-heat-future: var(--line);
 
   /* The ramps invert, so "a subtle fill" and "accent that reads" stay true. */
-  --color-neutral-100: #1d2027;
   --color-neutral-200: #252932;
   --color-neutral-300: #2c313b;
-  --color-neutral-400: #3a404c;
-  --color-neutral-500: #555c6a;
   --color-neutral-600: #7a8190;
-  --color-neutral-700: #a3a9b6;
-  --color-neutral-800: #c9cdd6;
-  --color-neutral-900: #e4e7ee;
-
-  --color-accent-100: #182040;
-  --color-accent-200: #1f2b5a;
-  --color-accent-300: #2f3f78;
-  --color-accent-400: #3d56b0;
-  --color-accent-500: #4a6ae0;
   --color-accent-600: #6d88f0;
   --color-accent-700: #9db0ff;
-  --color-accent-800: #c1ceff;
-  --color-accent-900: #e3e9ff;
 
   --destructive: #f97066;
   --shadow-float: 0 12px 36px rgba(0, 0, 0, 0.5);
