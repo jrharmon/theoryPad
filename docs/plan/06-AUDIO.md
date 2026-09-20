@@ -355,7 +355,11 @@ gives 0.25–2 in 0.05 steps, a generated source any tempo, the drone none.
 1. `<VideoEmbed videoId startSec endSec />` renders a static thumbnail
    (`https://i.ytimg.com/vi/<id>/hqdefault.jpg`) with a play overlay. Zero third-party code.
 2. On click, load `https://www.youtube.com/iframe_api` once, then mount a player into the slot.
-3. Use `youtube-nocookie.com` as the host for the privacy-preserving default.
+3. Use `www.youtube.com` as the host. This was `youtube-nocookie.com` until 2026-09-20:
+   nocookie strips the viewer's YouTube session, so a Premium subscription never reached the
+   iframe and every video opened with an advert. Cookies and viewing history against the
+   account are the accepted price. The facade above is what keeps the privacy cost down —
+   nothing third-party loads until someone clicks.
 4. `startSec`/`endSec` map to the player's `start`/`end` params, so an exercise can point at
    the exact 40 seconds of a lesson that matters.
 

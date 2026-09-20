@@ -3,8 +3,15 @@
  * needs.
  *
  * Never loaded on page load: it is heavy, and it tracks. Nothing touches
- * YouTube until someone chooses a track or presses play on a video. The host is
- * youtube-nocookie.com, the privacy-preserving embed.
+ * YouTube until someone chooses a track or presses play on a video.
+ *
+ * The host is www.youtube.com rather than youtube-nocookie.com, which this
+ * used until 2026-09-20. nocookie strips the viewer's YouTube session, so a
+ * Premium subscription never reached the iframe and every track opened with an
+ * advert. The regular host costs cookies and viewing history logged against
+ * the account, and buys a Premium viewer no adverts at all — the trade the
+ * player chose, and the same one Soundslice makes. Adverts still reach anyone
+ * without Premium, which is why `StartWatch` stays.
  */
 
 import { StartWatch, isTrackTime } from '@/domain/backing';
@@ -138,7 +145,7 @@ export class YouTubePlayer {
         new Promise<void>((resolve, reject) => {
           if (this.destroyed) return reject(new Error('The player was closed.'));
           this.api = new YT.Player(slot, {
-            host: 'https://www.youtube-nocookie.com',
+            host: 'https://www.youtube.com',
             videoId,
             width: '100%',
             height: '100%',

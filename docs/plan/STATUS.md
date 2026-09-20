@@ -1,12 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. The architecture-review cleanup is merged, pushed and live
-(`4ac008a`). **Task 1 of "Backing tracks — ads and the YouTube host" is built and at the gate**
-on branch `backing-ads` (`04c7167`) — unmerged and undeployed, because adverts only exist on the
-deploy and only `main` deploys. It also corrected the ad signal this whole run was planned
-around: see that section before starting task 2. Written as a hand-off: a fresh session should be
-able to pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with
-"Remaining work".
+**Last updated:** 2026-09-20. **Tasks 1 and 2 of "Backing tracks — ads and the YouTube host" are
+done**; task 1 is merged and live (`45633bf`), task 2 is at the gate. Task 1 corrected the advert
+signal this whole run was planned around, and task 3 now has a measured blocker — an advert can
+stall in a state only YouTube's own controls can clear, which is exactly what task 3 removes.
+Read both sections before starting it. Written as a hand-off: a fresh session should be able to
+pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with "Remaining
+work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -24,7 +24,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
-| Backing tracks — ads and the YouTube host | task 1 built, **at the gate** (`backing-ads`); tasks 2–3 next |
+| Backing tracks — ads and the YouTube host | tasks 1–2 done; **task 3 at the gate's discretion** — it has an unresolved blocker, see below |
 | M7b — Ear training and "hear it" | after the ad work — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -71,7 +71,7 @@ files, 57 E2E, `pnpm check` green.
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
 | `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
-| `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, youtube-nocookie), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
+| `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, host www.youtube.com), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
 | `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
 | `src/store/` (M7) | `videos` (the table). The backing state's shape and its controller live in `src/session/backing.ts`. |
 | `src/components/media/` | `PlayerSlot` (mounts a player's node once — moving an iframe reloads it), `VideoEmbed` (thumbnail until clicked), `useEnlarge`/`EnlargeScrim`. |
@@ -297,8 +297,9 @@ the browser had blocked autoplay. What was established:
   `localhost` shows no ads; from `jrharmon.github.io` it does. Localhost embeds are not
   monetizable, so **local testing cannot reproduce ads — every check here happens on the deploy.**
   The player had been testing on localhost more than they realized, which is why it felt new.
-- **Why ads reach the player at all.** The app embeds `youtube-nocookie.com` (`YouTubePlayer.ts`),
-  which strips the viewer's YouTube session cookies. The player therefore cannot see a signed-in
+- **Why ads reach the player at all.** The app embedded `youtube-nocookie.com`
+  (`YouTubePlayer.ts`) at the time, which strips the viewer's YouTube session cookies. Task 2 has
+  since moved it to `www.youtube.com`. The player therefore cannot see a signed-in
   Premium account and serves ads to an anonymous viewer. nocookie has been the host since M7a
   (`cc08352`, `64cdc42`, `629b5ed`) — it never changed. The player has Premium and sees no ads on
   youtube.com itself; that subscription simply never reaches the iframe.
@@ -368,13 +369,24 @@ green including the genuine blocked path.
 - A signed-out browser, for what a viewer without Premium gets.
 - Safari/Firefox, that the genuine blocked path still asks for its click (now at 4.0 s, not 2.5 s).
 
-**2. Switch the host to `www.youtube.com` (S) — only once task 1 is confirmed working.**
-One line in `YouTubePlayer.ts`. Also update the file's header comment, which currently argues for
-nocookie ("it is heavy, and it tracks… the privacy-preserving embed"), and any doc repeating it.
-**Trade-off accepted by the player:** YouTube sets cookies and logs viewing from the app; in
-exchange a Premium viewer sees no ads at all. Evidence it will work: Soundslice does exactly this
-and is ad-free in the player's own Chrome, so third-party cookies are not being blocked there.
-The ad-tolerance work from task 1 **stays** — users without Premium still get ads.
+**2. Switch the host to `www.youtube.com` (S) — built 2026-09-20, at the gate.**
+Trade-off accepted by the player: YouTube sets cookies and logs viewing from the app; in exchange
+a Premium viewer sees no adverts at all. The task 1 work **stays** — anyone without Premium still
+gets adverts.
+
+- **Two embeds, not the one this task named.** `YouTubePlayer.ts` is the backing player;
+  `VideoEmbed.tsx` is the reference/lesson iframe, which was also on nocookie. Both switched, at
+  the gate's direction: a lesson is watched end to end, so a Premium viewer should not sit through
+  an advert to reach it, and one host is one thing to explain. `VideoEmbed`'s facade is untouched,
+  so nothing third-party still loads until someone clicks.
+- **Verified on the deploy before switching that task 1 survives the move.** The advert signal is
+  identical on `www.youtube.com`: state stays `unstarted` throughout, and `getCurrentTime()`
+  leaves the seek target and runs the advert's clock up from zero. `StartWatch` needed no change.
+  This was the real risk in this task and it is cleared by measurement, not by argument.
+- `src/domain/backing/youtube.ts` still **parses** nocookie links — a pasted nocookie URL must go
+  on working. That is deliberate; do not "tidy" it.
+- Docs updated: `06-AUDIO.md` decision 3 now records the switch and why, and both file headers
+  explain the trade rather than arguing for nocookie.
 
 **3. Disable YouTube's own controls (S).**
 `YouTubePlayer.ts` passes `controls: 1` for the backing player, so YouTube's controls show.
@@ -382,13 +394,20 @@ Pausing on the video pauses the video but does **not** stop the exercise — the
 Set `controls: 0` so only the app's transport drives playback, as Soundslice does. `disablekb: 1`
 is already set. Two things to resolve while doing it:
 
+- **Answered before task 2, while adverts were still reachable: Skip survives `controls: 0`.**
+  Measured on the deploy with `host: www.youtube.com, controls: 0` — a skippable advert renders
+  its "You can skip to video in 5" countdown and then its Skip button exactly as with
+  `controls: 1`. `controls: 0` hides YouTube's transport, not the advert's own UI. This had to be
+  settled first: once task 2 lands, the player's Premium means their own browser shows no adverts
+  to test against, and the check needs a signed-out browser.
 - `needsClick` recovery currently depends on the user pressing YouTube's own play button. With the
   controls gone that route disappears — either keep a way to click through, or make sure task 1's
-  stall path no longer needs one.
-- **New, from task 1's measurements: check whether Skip survives `controls: 0`.** A skippable
-  advert's Skip button was seen on the deploy with `controls: 1`. If it goes with the controls, a
-  2:35 sponsored advert becomes unskippable and the exercise waits the whole thing out. Verify on
-  the deploy before settling on `controls: 0`.
+  stall path no longer needs one. **This is now a live problem, not a theoretical one.** While
+  testing the above, an advert was seen to stall with `getCurrentTime()` frozen on the seek target
+  and `getPlayerState()` at `unstarted`; `playVideo()` is a **no-op during an advert**, so the API
+  could not restart it. `StartWatch` correctly calls that stalled and asks for a click — and with
+  `controls: 0` there is nothing to click. Resolve this before shipping task 3; an app-level
+  "start the video" affordance over the iframe is the obvious candidate.
 - The player must stay visible and **at least 200×200 px** (YouTube's ToS minimum; Soundslice
   enforces it with its own "YouTube requires videos to be at least this big" notice). Check the
   side column and the shrunk state.

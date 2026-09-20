@@ -9,6 +9,11 @@ import { EnlargeScrim } from './EnlargeScrim';
  * A video to watch — a lesson or a demo. Until it is clicked it is YouTube's
  * still with a play button: no YouTube script, no player, nothing that tracks.
  * Playing it plays the video and nothing else.
+ *
+ * Clicking it embeds www.youtube.com, not the nocookie host this used until
+ * 2026-09-20: a lesson is watched end to end, so a Premium viewer should not
+ * sit through an advert to reach it. The facade is what keeps the privacy
+ * cost down — nothing loads until someone asks for it.
  */
 export function VideoEmbed({
   videoId,
@@ -39,7 +44,7 @@ export function VideoEmbed({
             <iframe
               title={title}
               className="h-full w-full"
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`}
+              src={`https://www.youtube.com/embed/${videoId}?${params.toString()}`}
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
