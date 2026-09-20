@@ -45,8 +45,8 @@ export function DayBarChart({
           <span
             key={day.date}
             className={cn(
-              'tabular min-w-[8px] max-w-[32px] flex-1 text-center text-[10px] leading-none',
-              weekday(day.date) === 0 ? 'text-ink' : 'text-ink/45',
+              'tabular min-w-[8px] max-w-[32px] flex-1 text-center text-caption leading-none',
+              weekday(day.date) === 0 ? 'text-ink' : 'text-ink-faint',
             )}
           >
             {i % showEvery === 0 || weekday(day.date) === 0 ? Number(day.date.slice(8)) : ''}

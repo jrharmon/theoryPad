@@ -154,7 +154,7 @@ export function ExerciseDetail() {
           )}
 
           <Kicker>What varies</Kicker>
-          <p className="mb-3 max-w-[560px] text-[13px] text-ink/64">
+          <p className="mb-3 max-w-[560px] text-body-sm text-ink-muted">
             <strong>Roll</strong> picks a new value each time you open it or re-roll.{' '}
             <strong>Fixed</strong> pins one. <strong>Hold</strong> keeps whatever came up last
             and stays there until you press re-roll — for working one key for a while without
@@ -170,7 +170,7 @@ export function ExerciseDetail() {
           />
 
           {definition.axes.length === 0 && (
-            <p className="text-[13px] text-ink/64">
+            <p className="text-body-sm text-ink-muted">
               This exercise is the same every time — it varies nothing.
             </p>
           )}

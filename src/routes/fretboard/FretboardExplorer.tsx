@@ -187,7 +187,7 @@ export function FretboardExplorer() {
               onClick={() => setShapeIndex(i)}
             >
               <span className="tabular">{degrees[s.startDegree - 1]!.label}</span>
-              <span className="tabular text-[11px] opacity-60">fret {s.startFret}</span>
+              <span className="tabular text-caption opacity-60">fret {s.startFret}</span>
             </ToggleButton>
           ))}
         </div>
@@ -202,7 +202,7 @@ export function FretboardExplorer() {
           {...(heat ? { heat, heatCounts: counts } : {})}
         />
         <div
-          className="mt-4 flex flex-wrap items-center gap-6 text-[12px] text-ink/70"
+          className="mt-4 flex flex-wrap items-center gap-6 text-meta text-ink-muted"
           data-testid="legend"
         >
           <span className="flex items-center gap-2">
@@ -235,12 +235,12 @@ export function FretboardExplorer() {
         <div className="sheet px-5 py-4" data-testid="coverage-panel">
           <Kicker>{layer === 'recent' ? 'Last 30 days' : 'All time'}</Kicker>
           {loaded && (
-            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">
-              <dt className="text-ink/64">Spots played</dt>
+            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body-sm">
+              <dt className="text-ink-muted">Spots played</dt>
               <dd className="tabular" data-testid="spots-played">
                 {summary.touched} of {summary.total}
               </dd>
-              <dt className="text-ink/64">Frets never played</dt>
+              <dt className="text-ink-muted">Frets never played</dt>
               <dd className="tabular" data-testid="frets-never">
                 {summary.untouchedFrets.length === 0
                   ? 'none'
@@ -248,7 +248,7 @@ export function FretboardExplorer() {
                     ? 'all of them, so far'
                     : fretRuns(summary.untouchedFrets)}
               </dd>
-              <dt className="text-ink/64">Keys and modes</dt>
+              <dt className="text-ink-muted">Keys and modes</dt>
               <dd className="tabular">{keyModesPlayed} of 84</dd>
             </dl>
           )}

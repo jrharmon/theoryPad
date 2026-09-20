@@ -124,14 +124,14 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
               className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4 last:border-b-0"
               data-testid="overview-item"
             >
-              <span className="text-[13px] font-extrabold tabular-nums text-ink/45">
+              <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">
                 {index + 1}
               </span>
               <div className="min-w-0">
                 <p className="kicker">
                   {definition?.name} · {item.reps === 1 ? '1 pass' : `${item.reps} passes`}
                 </p>
-                <p className="face-title text-[18px]">{item.instance?.brief.headline}</p>
+                <p className="face-title text-lead">{item.instance?.brief.headline}</p>
               </div>
               <Button variant="secondary" size="sm" onClick={() => practice.rerollItem(index)}>
                 Re-roll
@@ -164,18 +164,18 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
     <div className="px-8 py-10">
       <Kicker accent>Finished</Kicker>
       <h2>{routine.name}</h2>
-      <p className="mb-6 text-[14px] text-ink/70 tabular-nums">
+      <p className="mb-6 text-body-sm text-ink-muted tabular-nums">
         {formatDuration(seconds)} · every pass logged against its exercise.
       </p>
       <ol className="sheet mb-8 max-w-[640px] px-5">
         {snapshot.items.map((item, index) => (
           <li
             key={item.id}
-            className="flex gap-3 border-b border-rule py-2.5 text-[14px] last:border-b-0"
+            className="flex gap-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
           >
-            <span className="w-6 tabular-nums text-ink/45">{index + 1}</span>
+            <span className="w-6 tabular-nums text-ink-faint">{index + 1}</span>
             <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
-            <span className="tabular-nums text-ink/64">
+            <span className="tabular-nums text-ink-muted">
               {item.completed === 0 && item.skipped
                 ? 'skipped'
                 : `${item.completed === 1 ? '1 pass' : `${item.completed} passes`}${item.skipped ? ' · skipped' : ''}`}

@@ -82,7 +82,7 @@ export function RoutineBuilder() {
               onRename={(name) => void routines.rename(routine.id, name)}
             />
           </div>
-          <p className="mt-1 text-[13px] text-ink/64 tabular-nums">
+          <p className="mt-1 text-body-sm text-ink-muted tabular-nums">
             {routine.items.length === 0
               ? 'Add the exercises it plays, in order.'
               : `${routine.items.length} exercise${routine.items.length === 1 ? '' : 's'} · about ${formatDuration(total)}`}
@@ -107,7 +107,7 @@ export function RoutineBuilder() {
 
       <div className="px-8 pt-1 pb-6">
         <Kicker>Key and mode</Kicker>
-        <p className="mb-3 mt-1 text-[13px] text-ink/64">
+        <p className="mb-3 mt-1 text-body-sm text-ink-muted">
           Rolled once when the routine starts, and shared by every exercise in it.
         </p>
         <div className="max-w-[900px]">
@@ -130,7 +130,7 @@ export function RoutineBuilder() {
             Add exercise
           </Button>
         </div>
-        <p className="mb-3 mt-1 max-w-[640px] text-[13px] text-ink/64">
+        <p className="mb-3 mt-1 max-w-[640px] text-body-sm text-ink-muted">
           Each is its own copy: changing it here leaves the library alone, and the same exercise
           can go in more than once. Its passes still count toward that exercise’s history.
         </p>
@@ -211,7 +211,7 @@ function ItemRow({
 
   if (!definition) {
     return (
-      <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-[13px] text-ink/64">
+      <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-body-sm text-ink-muted">
         An exercise that no longer exists ({item.definitionId}) — it will be left out.
         <Button
           variant="secondary"
@@ -235,10 +235,12 @@ function ItemRow({
       className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-3 py-3 ${last ? '' : 'border-b border-rule'}`}
       data-testid="routine-item"
     >
-      <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
+      <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">
+        {index + 1}
+      </span>
       <div className="min-w-0">
-        <p className="face-title text-[15px]">{definition.name}</p>
-        <p className="truncate text-[12px] text-ink/64">{described.join(' · ')}</p>
+        <p className="face-title text-body">{definition.name}</p>
+        <p className="truncate text-meta text-ink-muted">{described.join(' · ')}</p>
       </div>
 
       <div className="flex items-center gap-1">
@@ -254,7 +256,10 @@ function ItemRow({
           >
             −
           </Button>
-          <span className="w-16 text-center text-[13px] tabular-nums" data-testid="item-passes">
+          <span
+            className="w-16 text-center text-body-sm tabular-nums"
+            data-testid="item-passes"
+          >
             {item.reps} {item.reps === 1 ? 'pass' : 'passes'}
           </span>
           <Button
@@ -357,8 +362,8 @@ function AddExerciseDialog({
               >
                 <span className="w-4 text-star">{exercise.favorite ? '★' : ''}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="face-title block text-[15px]">{definition.name}</span>
-                  <span className="block text-[12px] text-ink/64">{definition.summary}</span>
+                  <span className="face-title block text-body">{definition.name}</span>
+                  <span className="block text-meta text-ink-muted">{definition.summary}</span>
                 </span>
               </button>
             </li>

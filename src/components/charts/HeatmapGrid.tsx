@@ -45,7 +45,7 @@ export function HeatmapGrid({
       data-testid="heatmap"
     >
       {WEEKDAYS.map((day, i) => (
-        <span key={i} className="text-center text-[10px] leading-none text-ink/45">
+        <span key={i} className="text-center text-caption leading-none text-ink-faint">
           {day}
         </span>
       ))}

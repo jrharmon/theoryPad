@@ -91,11 +91,11 @@ export function ExerciseLibrary() {
               <div className="min-w-0 flex-1">
                 <Link
                   to={`/exercises/${exercise.id}`}
-                  className="face-title text-[20px] hover:text-accent-text"
+                  className="face-title text-title hover:text-accent-text"
                 >
                   {definition.name}
                 </Link>
-                <p className="text-[13px] text-ink/65">{definition.summary}</p>
+                <p className="text-body-sm text-ink-muted">{definition.summary}</p>
 
                 {/* Two instances of one definition share a name and summary,
                     so what differs has to be on the row. */}
@@ -106,7 +106,7 @@ export function ExerciseLibrary() {
                     instrument,
                   );
                   return policies.length > 0 ? (
-                    <p className="mt-1 text-[12px] text-ink/50">{policies.join(' · ')}</p>
+                    <p className="mt-1 text-meta text-ink-faint">{policies.join(' · ')}</p>
                   ) : null;
                 })()}
 
@@ -120,7 +120,7 @@ export function ExerciseLibrary() {
               </div>
 
               <div className="w-24 shrink-0 text-right">
-                <p className="text-[20px] font-extrabold tabular-nums">
+                <p className="text-title font-extrabold tabular-nums">
                   {exercise.tempo.targetTempo ?? '—'}
                 </p>
                 <p className="kicker">target bpm</p>

@@ -46,7 +46,7 @@ export function BackingMenu() {
           className="max-w-[260px]"
           data-testid="backing-menu"
         >
-          <span className="text-ink/64">Backing</span>
+          <span className="text-ink-muted">Backing</span>
           <span className="truncate">{label(backing.resolved)}</span>
         </Button>
       </PopoverTrigger>
@@ -77,7 +77,7 @@ export function BackingMenu() {
           ))}
         </ul>
         {backing.options.length === 0 && (
-          <p className="px-2 pt-2 pb-1 text-[12px] text-ink/64">
+          <p className="px-2 pt-2 pb-1 text-meta text-ink-muted">
             No tracks in {key} yet.{' '}
             <Link to="/settings" className="text-accent-text underline">
               Add one in Settings
@@ -121,8 +121,8 @@ function Option({
         data-toggle={selected ? 'on' : 'off'}
         className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
       >
-        <span className="block text-[13px] font-semibold">{title}</span>
-        <span className={cn('block text-[12px]', selected ? 'opacity-80' : 'text-ink/64')}>
+        <span className="block text-body-sm font-semibold">{title}</span>
+        <span className={cn('block text-meta', selected ? 'opacity-80' : 'text-ink-muted')}>
           {detail}
         </span>
       </button>
@@ -137,7 +137,7 @@ export function TrackSpeed() {
   const mushy = backing.speed < SPEED_MUSHY_BELOW;
   return (
     <span
-      className={cn('text-[12px] tabular-nums', mushy ? 'text-destructive' : 'text-ink/64')}
+      className={cn('text-meta tabular-nums', mushy ? 'text-destructive' : 'text-ink-muted')}
       title={mushy ? 'Below 50% the recording gets smeared' : 'The track’s speed'}
       data-testid="track-speed"
     >

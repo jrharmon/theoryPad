@@ -42,12 +42,14 @@ export function CircleStrip({ correct, picked }: { correct: number; picked?: num
               isPicked ? 'outline-2 -outline-offset-2 outline-ink' : '',
             ].join(' ')}
           >
-            <span className="text-[15px] font-extrabold">{majorAt(position)}</span>
-            <span className={`text-[11px] ${isCorrect ? 'text-on-accent/85' : 'text-ink/64'}`}>
+            <span className="text-body font-extrabold">{majorAt(position)}</span>
+            <span
+              className={`text-caption ${isCorrect ? 'text-on-accent/85' : 'text-ink-muted'}`}
+            >
               {minorAt(position)}m
             </span>
             <span
-              className={`text-[11px] tabular-nums ${isCorrect ? 'text-on-accent/85' : 'text-ink/64'}`}
+              className={`text-caption tabular-nums ${isCorrect ? 'text-on-accent/85' : 'text-ink-muted'}`}
             >
               {count(position)}
             </span>

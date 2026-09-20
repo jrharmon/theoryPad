@@ -40,19 +40,19 @@ export function KeyModeGrid({
   return (
     <div className="overflow-x-auto">
       <div
-        className="inline-grid gap-[3px] text-[11px]"
+        className="inline-grid gap-[3px] text-caption"
         style={{ gridTemplateColumns: `84px repeat(12, 22px)` }}
         data-testid={testId}
       >
         <span />
         {columns.map((c) => (
-          <span key={c} className="text-center text-ink/64">
+          <span key={c} className="text-center text-ink-muted">
             {preferredTonic(c, 'ionian')}
           </span>
         ))}
         {MODE_NAMES.map((mode) => (
           <div key={mode} className="contents">
-            <span className="self-center text-ink/70">{title(mode)}</span>
+            <span className="self-center text-ink-muted">{title(mode)}</span>
             {columns.map((c) => {
               const n = grid[mode][c] ?? 0;
               const tonic = preferredTonic(c, mode);
@@ -67,7 +67,7 @@ export function KeyModeGrid({
                   aria-pressed={isSelected}
                   onClick={() => onSelect({ tonic, mode })}
                   className={cn(
-                    'h-[22px] text-[10px] tabular-nums hover:outline-1 hover:outline-ink',
+                    'h-[22px] text-caption tabular-nums hover:outline-1 hover:outline-ink',
                     shade(n, max),
                     share(n, max) >= 0.67 ? 'text-paper' : 'text-ink',
                     isSelected &&

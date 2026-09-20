@@ -19,7 +19,7 @@ export function FavoriteToggle({
       aria-label={`Favorite ${label}`}
       title={on ? 'Unpin from the top' : 'Pin to the top'}
       onClick={() => onChange(!on)}
-      className={`w-6 shrink-0 text-[18px] leading-none ${on ? 'text-star' : 'text-ink/25 hover:text-ink/50'}`}
+      className={`w-6 shrink-0 text-lead leading-none ${on ? 'text-star' : 'text-ink-disabled hover:text-ink-faint'}`}
     >
       {on ? '★' : '☆'}
     </button>

@@ -28,15 +28,15 @@ export function TheoryBody({ instance }: { instance: TheoryInstance }) {
         {last ? (
           <>
             <Kicker accent>Last set</Kicker>
-            <p className="num text-[34px] font-extrabold" data-testid="theory-score">
+            <p className="num text-hero font-extrabold" data-testid="theory-score">
               {last.correct} of {last.total}
             </p>
-            <p className="text-[14px] text-ink/64 tabular-nums">
+            <p className="text-body-sm text-ink-muted tabular-nums">
               {formatSeconds(last.seconds)} · a new set is ready — Enter to start it.
             </p>
           </>
         ) : (
-          <p className="text-[15px] text-ink/70">
+          <p className="text-body text-ink-muted">
             {instance.questions.length} questions. Press Start, or Enter, when you are ready.
           </p>
         )}
@@ -172,16 +172,16 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
         </Kicker>
         {phase === 'right' && (
           <span
-            className="text-[13px] font-semibold text-accent-text"
+            className="text-body-sm font-semibold text-accent-text"
             data-testid="theory-right"
           >
             Right
           </span>
         )}
       </div>
-      <h3 className="face-title mb-1 mt-1 text-[26px]">{question.prompt}</h3>
+      <h3 className="face-title mb-1 mt-1 text-display">{question.prompt}</h3>
       {question.kind === 'table-fill' && question.note && (
-        <p className="mb-3 text-[13px] text-ink/64">{question.note}</p>
+        <p className="mb-3 text-body-sm text-ink-muted">{question.note}</p>
       )}
 
       <div className="mt-4">
@@ -206,7 +206,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
           <Button onClick={next} data-testid="theory-continue">
             {index + 1 >= questions.length ? 'Finish' : 'Next question'}
           </Button>
-          <span className="ml-3 text-[12px] text-ink/50">or Enter</span>
+          <span className="ml-3 text-meta text-ink-faint">or Enter</span>
         </div>
       )}
     </div>

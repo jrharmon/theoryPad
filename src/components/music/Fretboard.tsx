@@ -133,10 +133,10 @@ export function Fretboard({
             key={fret}
             data-testid={`fret-number-${fret}`}
             className={[
-              'num text-center text-[10px]',
+              'num text-center text-caption',
               // accent-700, not accent-text: the gallery E2E asserts this class, and the
               // ramp step equals accent-text in both themes.
-              emphasis.has(fret) ? 'font-semibold text-accent-700' : 'text-ink/50',
+              emphasis.has(fret) ? 'font-semibold text-accent-700' : 'text-ink-faint',
             ].join(' ')}
           >
             {fret}
@@ -176,7 +176,7 @@ function FretboardRow({
   return (
     <>
       <div
-        className="num grid place-items-center text-[10px] text-ink/64"
+        className="num grid place-items-center text-caption text-ink-muted"
         style={{ height: rowHeight }}
         data-testid={`string-label-${stringIndex}`}
       >

@@ -28,15 +28,15 @@ export function SinglePick({
             data-state={state}
             onClick={() => onPick(option.id)}
             className={[
-              'flex items-center gap-3 rounded-control border px-4 py-3 text-left text-[17px] font-semibold',
+              'flex items-center gap-3 rounded-control border px-4 py-3 text-left text-lead font-semibold',
               state === 'open' ? 'border-toggle-edge bg-paper hover:bg-surface' : '',
               state === 'correct' ? 'border-accent bg-accent text-on-accent' : '',
               state === 'wrong' ? 'border-ink border-2 bg-paper text-ink' : '',
-              state === 'other' ? 'border-toggle-edge bg-paper text-ink/40' : '',
+              state === 'other' ? 'border-toggle-edge bg-paper text-ink-faint' : '',
             ].join(' ')}
           >
             <span
-              className={`w-5 text-[12px] tabular-nums ${state === 'correct' ? 'text-on-accent/80' : 'text-ink/45'}`}
+              className={`w-5 text-meta tabular-nums ${state === 'correct' ? 'text-on-accent/80' : 'text-ink-faint'}`}
             >
               {i + 1}
             </span>

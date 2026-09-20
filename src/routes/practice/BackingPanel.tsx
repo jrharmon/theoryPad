@@ -51,8 +51,8 @@ export function BackingPanel() {
         </div>
         {video && (
           <>
-            <p className="mt-1 truncate text-[13px] font-semibold">{video.title}</p>
-            <p className="text-[12px] text-ink/64">
+            <p className="mt-1 truncate text-body-sm font-semibold">{video.title}</p>
+            <p className="text-meta text-ink-muted">
               {[
                 video.keyMode && `${video.keyMode.tonic} ${modeTitle(video.keyMode.mode)}`,
                 video.bpm !== undefined &&
@@ -64,7 +64,7 @@ export function BackingPanel() {
             </p>
             {backing.needsClick && (
               <p
-                className="mt-2 text-[13px] font-semibold text-accent-text"
+                className="mt-2 text-body-sm font-semibold text-accent-text"
                 data-testid="needs-click"
               >
                 Your browser wants the first play to come from the video itself. Press its play
@@ -77,7 +77,7 @@ export function BackingPanel() {
           </>
         )}
         {backing.error && (
-          <p className="mt-2 text-[13px] text-destructive" data-testid="backing-error">
+          <p className="mt-2 text-body-sm text-destructive" data-testid="backing-error">
             {backing.error} Playing without it.
           </p>
         )}
@@ -122,7 +122,7 @@ export function BackingDroppedNote() {
   const keyMode = usePractice((s) => s.snapshot?.keyMode);
   if (!dropped || !keyMode) return null;
   return (
-    <span className="text-[12px] text-ink/64">
+    <span className="text-meta text-ink-muted">
       Your track isn’t in {keyMode.tonic} {modeTitle(keyMode.mode)} — the synth plays instead.
     </span>
   );

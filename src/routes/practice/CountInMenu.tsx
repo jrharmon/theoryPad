@@ -35,7 +35,7 @@ export function CountInMenu() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="secondary" size="sm" data-testid="count-in-menu">
-          <span className="text-ink/64">Count-in</span>
+          <span className="text-ink-muted">Count-in</span>
           <span>{LABEL[bars]}</span>
         </Button>
       </PopoverTrigger>
@@ -51,11 +51,11 @@ export function CountInMenu() {
                 className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
                 onClick={() => pick(choice)}
               >
-                <span className="block text-[13px] font-semibold">{LABEL[choice]}</span>
+                <span className="block text-body-sm font-semibold">{LABEL[choice]}</span>
                 <span
                   className={cn(
-                    'block text-[12px]',
-                    choice === bars ? 'opacity-80' : 'text-ink/64',
+                    'block text-meta',
+                    choice === bars ? 'opacity-80' : 'text-ink-muted',
                   )}
                 >
                   {DETAIL[choice]}
@@ -64,7 +64,7 @@ export function CountInMenu() {
             </li>
           ))}
         </ul>
-        <p className="px-2 pt-2 pb-1 text-[12px] text-ink/64">
+        <p className="px-2 pt-2 pb-1 text-meta text-ink-muted">
           {inRoutine
             ? 'This item’s own, and kept — it counts the item in wherever it falls in the routine.'
             : 'This exercise’s own, and kept. It takes effect on the next Play.'}

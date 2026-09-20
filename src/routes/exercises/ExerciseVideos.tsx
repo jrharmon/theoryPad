@@ -34,7 +34,7 @@ export function ExerciseVideos({ exercise, played }: { exercise: Exercise; playe
           Add a video
         </Button>
       </div>
-      <p className="mt-1 text-[12px] text-ink/64">
+      <p className="mt-1 text-meta text-ink-muted">
         {played
           ? 'Lessons and demos to watch, or tracks made for this exercise.'
           : 'Lessons and demos to watch.'}
@@ -57,7 +57,7 @@ export function ExerciseVideos({ exercise, played }: { exercise: Exercise; playe
               </Button>
             </VideoEmbed>
             {video.playAlong && (
-              <p className="text-[12px] text-ink/64">
+              <p className="text-meta text-ink-muted">
                 Backing track{video.bpm !== undefined ? ` · ${video.bpm} bpm` : ''}
                 {video.keyMode ? '' : ' · any key'}
               </p>
@@ -105,21 +105,21 @@ export function BackingCriteriaEditor({
   return (
     <div className="sheet px-5 py-4" data-testid="backing-criteria">
       <Kicker>Backing tracks offered</Kicker>
-      <p className="mt-1 text-[12px] text-ink/64">
+      <p className="mt-1 text-meta text-ink-muted">
         Shared tracks in the session’s key and mode. Narrow them here; this exercise’s own
         tracks are always offered.
       </p>
       <div className="mt-3 space-y-3">
         {requiredTags.length > 0 && (
-          <p className="text-[13px]" data-testid="required-tags">
-            <span className="text-ink/64">This exercise always asks for </span>
+          <p className="text-body-sm" data-testid="required-tags">
+            <span className="text-ink-muted">This exercise always asks for </span>
             {requiredTags.map((tag, i) => (
               <span key={tag}>
                 {i > 0 && ', '}
                 <span className="font-semibold">{tag}</span>
               </span>
             ))}
-            <span className="text-ink/64">.</span>
+            <span className="text-ink-muted">.</span>
           </p>
         )}
         <Field

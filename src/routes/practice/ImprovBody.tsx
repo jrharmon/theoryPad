@@ -69,11 +69,13 @@ export function ImprovBody({
         <div className="sheet grid gap-6 px-6 py-5 sm:grid-cols-2" data-testid="phrase-counter">
           <div>
             <Kicker>{phrase === null ? 'Phrases' : 'Phrase'}</Kicker>
-            <p className="num face-title mt-1 text-[56px] leading-none font-extrabold">
+            <p className="num face-title mt-1 text-jumbo leading-none font-extrabold">
               {phrase ?? count}
-              {phrase !== null && <span className="text-[28px] text-ink/45"> of {count}</span>}
+              {phrase !== null && (
+                <span className="text-display text-ink-faint"> of {count}</span>
+              )}
             </p>
-            <p className="num mt-2 text-[17px] text-ink/70">
+            <p className="num mt-2 text-lead text-ink-muted">
               {bar === null
                 ? state === 'count-in'
                   ? 'Counting in…'
@@ -91,10 +93,10 @@ export function ImprovBody({
               data-testid="landing-target"
             >
               <Kicker>{landing ? 'Land it' : 'End each phrase on'}</Kicker>
-              <p className="face-title mt-1 text-[56px] leading-none font-extrabold text-accent-text">
+              <p className="face-title mt-1 text-jumbo leading-none font-extrabold text-accent-text">
                 {target}
               </p>
-              <p className="mt-2 text-[17px] text-ink/70">the {ordinal(degree!)}</p>
+              <p className="mt-2 text-lead text-ink-muted">the {ordinal(degree!)}</p>
             </div>
           )}
         </div>

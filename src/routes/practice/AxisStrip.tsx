@@ -59,16 +59,16 @@ export function AxisStrip() {
           {cell.key === 'key' ? (
             <ReferenceTrigger
               keyMode={snapshot.keyMode}
-              className={`face-title text-left text-[19px] underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current ${cell.fresh ? 'highlight' : ''}`}
+              className={`face-title text-left text-lead underline decoration-current/25 decoration-1 underline-offset-4 hover:decoration-current ${cell.fresh ? 'highlight' : ''}`}
             >
               {cell.value}
             </ReferenceTrigger>
           ) : (
-            <p className={`face-title text-[19px] ${cell.fresh ? 'w-fit highlight' : ''}`}>
+            <p className={`face-title text-lead ${cell.fresh ? 'w-fit highlight' : ''}`}>
               {cell.value}
             </p>
           )}
-          {cell.note && <p className="text-[11px] text-ink/64 tabular-nums">{cell.note}</p>}
+          {cell.note && <p className="text-caption text-ink-muted tabular-nums">{cell.note}</p>}
         </div>
       ))}
     </div>

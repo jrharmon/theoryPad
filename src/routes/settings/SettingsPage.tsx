@@ -112,7 +112,7 @@ export function SettingsPage() {
               onChange={(e) => setVolume(Number(e.target.value))}
               className="w-[220px] accent-[var(--color-accent)]"
             />
-            <span className="w-14 text-[13px] tabular-nums text-ink/64">
+            <span className="w-14 text-body-sm tabular-nums text-ink-muted">
               {audio.masterVolumeDb > 0 ? '+' : ''}
               {audio.masterVolumeDb} dB
             </span>
@@ -121,7 +121,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Keys and modes">
-        <p className="text-[13px] text-ink/64">
+        <p className="text-body-sm text-ink-muted">
           Strike out any you don&rsquo;t want to practice. They never come up when a key or mode
           is rolled, in any exercise or routine. One you pin or hold on purpose still plays.
         </p>
@@ -183,7 +183,7 @@ export function SettingsPage() {
             >
               −
             </Button>
-            <span className="w-16 text-center text-[13px] tabular-nums">
+            <span className="w-16 text-center text-body-sm tabular-nums">
               {ui.tabZoom === 0 ? 'Default' : ui.tabZoom > 0 ? `+${ui.tabZoom}` : ui.tabZoom}
             </span>
             <Button
@@ -227,8 +227,8 @@ function Row({
   return (
     <div className="grid grid-cols-[180px_1fr] items-start gap-4">
       <div>
-        <p className="text-[14px] font-semibold">{label}</p>
-        {hint && <p className="text-[12px] text-ink/64">{hint}</p>}
+        <p className="text-body-sm font-semibold">{label}</p>
+        {hint && <p className="text-meta text-ink-muted">{hint}</p>}
       </div>
       <div>{children}</div>
     </div>
@@ -289,7 +289,7 @@ function Blockable({
             key={o.id}
             size="xs"
             variant={on ? 'secondary' : 'ghost'}
-            className={on ? '' : 'text-ink/35 line-through'}
+            className={on ? '' : 'text-ink-disabled line-through'}
             aria-pressed={on}
             disabled={on && open === 1}
             onClick={() =>
@@ -365,7 +365,7 @@ function DataSection() {
 
   return (
     <Section title="Your data">
-      <p className="text-[13px] text-ink/64">
+      <p className="text-body-sm text-ink-muted">
         Everything lives in this browser. Export to back it up or move it to another device.
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -384,7 +384,7 @@ function DataSection() {
           onChange={(e) => void choose(e.target.files?.[0])}
         />
       </div>
-      {error && <p className="text-[13px] text-destructive">{error}</p>}
+      {error && <p className="text-body-sm text-destructive">{error}</p>}
 
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         {pending && (
@@ -396,16 +396,16 @@ function DataSection() {
                 changed until you choose.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 text-[13px]">
+            <div className="space-y-4 text-body-sm">
               <div>
                 <p className="font-semibold">Merge — keeps whichever copy was changed last</p>
-                <p className="text-ink/64" data-testid="merge-summary">
+                <p className="text-ink-muted" data-testid="merge-summary">
                   {describe(pending.merge)}
                 </p>
               </div>
               <div>
                 <p className="font-semibold">Replace — this browser becomes exactly the file</p>
-                <p className="text-ink/64" data-testid="replace-summary">
+                <p className="text-ink-muted" data-testid="replace-summary">
                   {describe(pending.replace)}
                 </p>
               </div>

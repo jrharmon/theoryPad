@@ -33,7 +33,9 @@ export function PracticeBody() {
       <div className="px-8 pt-6 pb-4">
         <Kicker accent>This time you are playing</Kicker>
         <h2 className="max-w-[820px]">{instance.brief.headline}</h2>
-        <p className="max-w-[640px] text-[14px] text-ink/70">{instance.brief.instruction}</p>
+        <p className="max-w-[640px] text-body-sm text-ink-muted">
+          {instance.brief.instruction}
+        </p>
       </div>
 
       <AxisStrip />

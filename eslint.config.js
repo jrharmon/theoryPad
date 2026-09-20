@@ -70,6 +70,25 @@ const DOMAIN_PATTERNS = [
   },
 ];
 
+/**
+ * Type sizes come from the scale in theme.css, never an arbitrary value:
+ * text-[13px] scattered through forty files is what the scale replaced.
+ *
+ * Kept as selectors rather than its own config block: for a given rule the
+ * last matching block wins outright, so a second block setting
+ * no-restricted-syntax would switch the domain purity selectors off.
+ */
+const TYPE_SCALE_SELECTORS = [
+  {
+    selector: 'Literal[value=/text-\\[\\d+px\\]/]',
+    message: 'Use a size from the type scale (text-caption … text-jumbo), not text-[Npx].',
+  },
+  {
+    selector: 'TemplateElement[value.raw=/text-\\[\\d+px\\]/]',
+    message: 'Use a size from the type scale (text-caption … text-jumbo), not text-[Npx].',
+  },
+];
+
 const DOMAIN_PURITY_RULES = {
   'no-restricted-globals': [
     'error',
@@ -90,6 +109,7 @@ const DOMAIN_PURITY_RULES = {
       selector: "NewExpression[callee.name='Date'][arguments.length=0]",
       message: 'src/domain must take time as a parameter, never read the clock.',
     },
+    ...TYPE_SCALE_SELECTORS,
   ],
 };
 
@@ -141,7 +161,10 @@ export default tseslint.config(
   // --- Layer boundaries (docs/plan/01-ARCHITECTURE.md) ---
   // Ordered general → specific; the last matching block wins.
 
-  { files: ['src/**/*.{ts,tsx}'], rules: restrictImports() },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: { ...restrictImports(), 'no-restricted-syntax': ['error', ...TYPE_SCALE_SELECTORS] },
+  },
 
   {
     files: ['src/exercises/**/*.{ts,tsx}'],

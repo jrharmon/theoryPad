@@ -46,13 +46,13 @@ function PracticeStrip() {
       <HeatmapGrid cells={cells} today={today} cellSize={13} />
       <div>
         <Kicker>Streak</Kicker>
-        <p className="num text-[28px] leading-tight" data-testid="streak">
+        <p className="num text-display leading-tight" data-testid="streak">
           {current} {current === 1 ? 'day' : 'days'}
         </p>
       </div>
       <div>
         <Kicker>This week</Kicker>
-        <p className="num text-[28px] leading-tight" data-testid="week-time">
+        <p className="num text-display leading-tight" data-testid="week-time">
           {formatPracticeTime(thisWeek)}
         </p>
       </div>
@@ -126,11 +126,11 @@ export function Home() {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/routines/${routine.id}`}
-                    className="face-title text-[18px] hover:text-accent-text"
+                    className="face-title text-lead hover:text-accent-text"
                   >
                     {routine.name}
                   </Link>
-                  <p className="text-[13px] text-ink/64 tabular-nums">
+                  <p className="text-body-sm text-ink-muted tabular-nums">
                     {count === 0
                       ? 'No exercises yet'
                       : `${count} exercise${count === 1 ? '' : 's'} · about ${formatDuration(durations.get(routine.id) ?? 0)}`}

@@ -146,7 +146,7 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
         {link && (
           <div className="space-y-1">
             <PlayerSlot player={player} className="max-w-[560px]" keepKeys />
-            {playerError && <p className="text-[13px] text-destructive">{playerError}</p>}
+            {playerError && <p className="text-body-sm text-destructive">{playerError}</p>}
           </div>
         )}
 
@@ -171,7 +171,7 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
         </div>
 
         {!shared && (
-          <label className="flex items-center gap-2 text-[14px]">
+          <label className="flex items-center gap-2 text-body-sm">
             <input
               type="checkbox"
               checked={draft.playAlong}
@@ -213,7 +213,10 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
         )}
 
         {problems.length > 0 && draft.link.trim() !== '' && (
-          <ul className="list-disc pl-5 text-[13px] text-ink/64" data-testid="track-problems">
+          <ul
+            className="list-disc pl-5 text-body-sm text-ink-muted"
+            data-testid="track-problems"
+          >
             {problems.map((p) => (
               <li key={p}>{p}</li>
             ))}
@@ -406,7 +409,7 @@ function Timing({
         <Button disabled={!player} onClick={tap} className="min-w-[88px]" data-testid="tap">
           {playing ? 'Tap (T)' : 'Start the video (T)'}
         </Button>
-        <p className="text-[13px] text-ink/64" data-testid="tap-readout">
+        <p className="text-body-sm text-ink-muted" data-testid="tap-readout">
           {taps.length === 0
             ? playing
               ? 'Now tap every beat, starting on the first beat of bar 1.'
@@ -625,7 +628,7 @@ function TagSuggestions({
         <button
           key={tag}
           type="button"
-          className="rounded-toggle bg-ink/5 px-2 py-0.5 text-[12px] text-ink/70 hover:bg-ink/10"
+          className="rounded-toggle bg-ink/5 px-2 py-0.5 text-meta text-ink-muted hover:bg-ink/10"
           onClick={() =>
             change({
               tags: [...(have.size ? [draft.tags.trim().replace(/,$/, '')] : []), tag].join(

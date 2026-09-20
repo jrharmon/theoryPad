@@ -88,7 +88,7 @@ export function AxisPolicyEditor({
       ))}
       {ordered.some((id) => (blocked[id]?.length ?? 0) > 0) && (
         <p
-          className="border-t border-rule px-3 py-2 text-[12px] text-ink/64"
+          className="border-t border-rule px-3 py-2 text-meta text-ink-muted"
           data-testid="blocked-note"
         >
           Struck-out keys and modes are off in Settings: a roll never picks them. Fixed still
@@ -97,7 +97,7 @@ export function AxisPolicyEditor({
       )}
       {keyMode && (
         <div
-          className="border-t border-rule px-3 py-2 text-[13px] text-ink/70"
+          className="border-t border-rule px-3 py-2 text-body-sm text-ink-muted"
           data-testid="key-mode-reference"
         >
           Notes and chords of{' '}
@@ -153,7 +153,7 @@ function AxisRow({
         first ? '' : 'border-t border-rule'
       }`}
     >
-      <span className="pt-1.5 text-[13px] font-semibold">{definition.label}</span>
+      <span className="pt-1.5 text-body-sm font-semibold">{definition.label}</span>
 
       <Select
         value={policy.mode}
@@ -206,7 +206,7 @@ function AxisRow({
                 size="xs"
                 // Quiet on purpose: a row of accent chips on every axis is a wall of red.
                 variant={on && !off ? 'secondary' : 'ghost'}
-                className={on && !off ? '' : 'text-ink/35 line-through'}
+                className={on && !off ? '' : 'text-ink-disabled line-through'}
                 aria-pressed={on && !off}
                 disabled={off}
                 title={off ? 'Struck out in Settings — never rolled' : undefined}
@@ -220,7 +220,7 @@ function AxisRow({
       )}
 
       {policy.mode === 'hold' && (
-        <span className="pt-1.5 text-[12px] text-ink/50" data-testid={`held-${id}`}>
+        <span className="pt-1.5 text-meta text-ink-faint" data-testid={`held-${id}`}>
           {heldValue === undefined
             ? 'Nothing held yet — rolls once, then stays'
             : `Holding ${heldLabel(definition, heldValue, instrument)}`}

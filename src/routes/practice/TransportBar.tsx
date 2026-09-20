@@ -126,7 +126,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           >
             −
           </Button>
-          <span className="num w-12 text-center text-[17px] font-extrabold" data-testid="tempo">
+          <span className="num w-12 text-center text-lead font-extrabold" data-testid="tempo">
             {currentTempo}
           </span>
           <Button
@@ -139,7 +139,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           </Button>
           <TrackSpeed />
           {targetTempo !== null && currentTempo !== targetTempo && (
-            <span className="ml-1 text-[12px] text-ink/64 tabular-nums">
+            <span className="ml-1 text-meta text-ink-muted tabular-nums">
               target {targetTempo}
             </span>
           )}
@@ -152,10 +152,10 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       {!theory && state === 'brief' && <BackingDroppedNote />}
 
       {state === 'count-in' && (
-        <span className="text-[13px] font-extrabold tabular-nums">Counting in…</span>
+        <span className="text-body-sm font-extrabold tabular-nums">Counting in…</span>
       )}
       {state === 'playing' && position && (
-        <span className="num text-[13px] font-extrabold" data-testid="position">
+        <span className="num text-body-sm font-extrabold" data-testid="position">
           Bar {position.bar + 1} · beat {position.beat + 1}
         </span>
       )}

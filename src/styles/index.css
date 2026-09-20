@@ -23,7 +23,7 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: var(--text-body);
     line-height: 1.55;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
@@ -57,13 +57,13 @@
     font-size: 25px;
   }
   h4 {
-    font-size: 20px;
+    font-size: var(--text-title);
   }
   h5 {
-    font-size: 16px;
+    font-size: var(--text-body);
   }
   h6 {
-    font-size: 13px;
+    font-size: var(--text-body-sm);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -106,7 +106,7 @@
   font-weight: var(--kicker-weight);
   letter-spacing: var(--kicker-tracking);
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-ink) 64%, transparent);
+  color: var(--color-ink-muted);
 }
 
 @utility kicker-accent {

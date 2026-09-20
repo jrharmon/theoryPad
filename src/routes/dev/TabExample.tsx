@@ -52,7 +52,7 @@ export function TabExample({
           type="button"
           onClick={onPrimary}
           className={[
-            'px-5 py-2 text-[14px] font-semibold',
+            'px-5 py-2 text-body-sm font-semibold',
             isPlaying
               ? 'border border-rule hover:bg-ink/5'
               : 'bg-accent text-on-accent hover:bg-accent-600 active:bg-accent-700',
@@ -65,18 +65,18 @@ export function TabExample({
           type="button"
           onClick={transport.stop}
           disabled={!isActive}
-          className="border border-rule px-4 py-2 text-[13px] hover:bg-ink/5 disabled:opacity-45"
+          className="border border-rule px-4 py-2 text-body-sm hover:bg-ink/5 disabled:opacity-45"
         >
           Stop
         </button>
 
-        <span className="text-[12px] text-ink/64 tabular-nums">
+        <span className="text-meta text-ink-muted tabular-nums">
           {phrase.bars.length} bars
           {passes > 1 ? ` × ${passes}` : ''} · {seconds.toFixed(1)}s at {transport.bpm} bpm
         </span>
 
         {pass !== null && passes > 1 && (
-          <span className="text-[12px] font-semibold text-accent-text tabular-nums">
+          <span className="text-meta font-semibold text-accent-text tabular-nums">
             Pass {pass} of {passes}
           </span>
         )}

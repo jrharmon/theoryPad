@@ -37,7 +37,7 @@ function Stat({ label, value, testId }: { label: string; value: string; testId: 
   return (
     <div>
       <Kicker>{label}</Kicker>
-      <p className="tabular text-[28px] leading-tight" data-testid={testId}>
+      <p className="tabular text-display leading-tight" data-testid={testId}>
         {value}
       </p>
     </div>
@@ -138,7 +138,7 @@ export function ReportPage() {
       <div className="px-8 py-7">
         <Kicker accent>Practice</Kicker>
         <h1>Report</h1>
-        <p className="text-[15px] text-ink/70" data-testid="report-range">
+        <p className="text-body text-ink-muted" data-testid="report-range">
           {formatRange(range.from, range.to)}
         </p>
       </div>
@@ -159,7 +159,7 @@ export function ReportPage() {
           ))}
         </div>
         {choice === 'custom' && (
-          <div className="flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-body-sm">
             <input
               type="date"
               aria-label="From"
@@ -170,7 +170,7 @@ export function ReportPage() {
               }
               className="border border-rule bg-paper px-2 py-1"
             />
-            <span className="text-ink/64">to</span>
+            <span className="text-ink-muted">to</span>
             <input
               type="date"
               aria-label="To"
@@ -232,7 +232,7 @@ export function ReportPage() {
             ) : (
               <div className="sheet overflow-x-auto px-5 pb-1">
                 <table
-                  className="w-full border-collapse text-left text-[14px]"
+                  className="w-full border-collapse text-left text-body-sm"
                   data-testid="report-table"
                 >
                   <thead>
@@ -254,7 +254,7 @@ export function ReportPage() {
                             className={
                               sort.column === column.id
                                 ? 'kicker text-ink'
-                                : 'kicker text-ink/64 hover:text-ink'
+                                : 'kicker text-ink-muted hover:text-ink'
                             }
                             onClick={() => sortBy(column.id)}
                           >

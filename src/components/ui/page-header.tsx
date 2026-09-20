@@ -31,7 +31,7 @@ export function PageHeader({
 
 /** The sentence under a title. Its own export for the headers that build their own title. */
 export function PageIntro({ children }: { children: ReactNode }) {
-  return <p className="max-w-[640px] text-[15px] text-ink/70">{children}</p>;
+  return <p className="max-w-[640px] text-body text-ink-muted">{children}</p>;
 }
 
 /** What a screen shows while it reads the database, or rolls what to play. */
@@ -42,5 +42,7 @@ export function LoadingState({
   children?: ReactNode;
   inline?: boolean;
 }) {
-  return <p className={cn('text-[13px] text-ink/64', !inline && 'px-8 py-8')}>{children}</p>;
+  return (
+    <p className={cn('text-body-sm text-ink-muted', !inline && 'px-8 py-8')}>{children}</p>
+  );
 }

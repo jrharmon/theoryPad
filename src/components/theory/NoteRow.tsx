@@ -31,8 +31,8 @@ export function NoteRow({
               on ? 'bg-accent text-on-accent' : '',
             ].join(' ')}
           >
-            <span className="text-[15px] font-extrabold">{note}</span>
-            <span className={`text-[11px] ${on ? 'text-on-accent/85' : 'text-ink/64'}`}>
+            <span className="text-body font-extrabold">{note}</span>
+            <span className={`text-caption ${on ? 'text-on-accent/85' : 'text-ink-muted'}`}>
               {degrees[i]!.label}
             </span>
           </div>

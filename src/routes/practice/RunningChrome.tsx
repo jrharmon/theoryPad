@@ -21,10 +21,10 @@ export function RunningChrome({ name }: { name: string }) {
         className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink"
         data-testid="routine-chrome"
       >
-        <span className="num text-[16px] font-extrabold">
+        <span className="num text-body font-extrabold">
           {String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
         </span>
-        <span className="text-[13px] font-semibold">{current}</span>
+        <span className="text-body-sm font-semibold">{current}</span>
         <div className="flex flex-1 gap-[3px]" aria-hidden>
           {items.map((item, i) => (
             <span
@@ -33,7 +33,7 @@ export function RunningChrome({ name }: { name: string }) {
             />
           ))}
         </div>
-        <span className="text-[12px] opacity-70">
+        <span className="text-meta opacity-70">
           {next ? `Next: ${next}` : `${name} · last one`}
         </span>
       </div>
@@ -50,8 +50,8 @@ export function RunningChrome({ name }: { name: string }) {
 
   return (
     <div className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink">
-      <span className="text-[13px] font-semibold">{name}</span>
-      <span className="num text-[13px] opacity-75" data-testid="passes">
+      <span className="text-body-sm font-semibold">{name}</span>
+      <span className="num text-body-sm opacity-75" data-testid="passes">
         {theory
           ? passesPlayed === 1
             ? '1 set'
@@ -77,7 +77,7 @@ export function RunningChrome({ name }: { name: string }) {
         <button
           type="button"
           onClick={() => (paused ? practice.resume() : practice.pause())}
-          className="rounded-full border border-rule px-3 py-1 text-[13px] font-semibold hover:bg-chrome-ink/10"
+          className="rounded-full border border-rule px-3 py-1 text-body-sm font-semibold hover:bg-chrome-ink/10"
         >
           {paused ? 'Resume' : 'Pause'}
         </button>

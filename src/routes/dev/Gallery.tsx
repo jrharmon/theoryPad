@@ -104,7 +104,7 @@ export function Gallery() {
               type="button"
               onClick={() => setShapeIndex(i)}
               className={[
-                'px-3 py-1 text-[13px] tabular-nums',
+                'px-3 py-1 text-body-sm tabular-nums',
                 i === shapeIndex
                   ? 'bg-accent font-semibold text-on-accent'
                   : 'border border-rule hover:bg-ink/5',
@@ -156,7 +156,7 @@ function Header() {
     <div className="border-b-(length:--rule-section-w) border-divider px-8 py-6">
       <p className="kicker kicker-accent">Dev gallery · milestone 1</p>
       <h1>D Dorian</h1>
-      <p className="text-[15px] text-ink/70">
+      <p className="text-body text-ink-muted">
         {scaleNotes(D_DORIAN).join(' · ')} — signature note {signatureNote(D_DORIAN)}, relative
         major {sig.relativeMajor}, {sig.sharps} sharps and {sig.flats} flats.
       </p>
@@ -178,7 +178,7 @@ function ArticulationLegend() {
       {marks.map(([glyph, meaning]) => (
         <div key={meaning} className="flex items-baseline gap-2">
           <dt className="font-extrabold text-accent-text">{glyph}</dt>
-          <dd className="text-[12px] text-ink/64">{meaning}</dd>
+          <dd className="text-meta text-ink-muted">{meaning}</dd>
         </div>
       ))}
     </dl>
@@ -191,7 +191,7 @@ function TransportBar({ transport }: { transport: Transport }) {
     <div className="sticky top-0 z-10 flex flex-wrap items-center gap-5 border-b-(length:--rule-section-w) border-divider bg-bg px-8 py-3">
       <span className="kicker kicker-accent">Playback</span>
 
-      <label className="flex items-center gap-2 text-[13px]">
+      <label className="flex items-center gap-2 text-body-sm">
         <span className="kicker">Tempo</span>
         <input
           type="range"
@@ -212,7 +212,7 @@ function TransportBar({ transport }: { transport: Transport }) {
       <Toggle label="Notes" checked={transport.withNotes} onChange={transport.setWithNotes} />
       <Toggle label="Loop" checked={transport.isLooping} onChange={transport.setLooping} />
 
-      <span className="ml-auto text-[12px] text-ink/50">
+      <span className="ml-auto text-meta text-ink-faint">
         {transport.activeId
           ? `Playing: ${transport.activeId}`
           : 'One clock — starting an example stops any other'}
@@ -236,7 +236,7 @@ function Section({
     <section className="scroll-mt-14 border-b border-rule px-8 py-7">
       <div className="mb-4">
         <p className="kicker">{title}</p>
-        {note && <p className="text-[12px] text-ink/64">{note}</p>}
+        {note && <p className="text-meta text-ink-muted">{note}</p>}
       </div>
       {children}
     </section>
@@ -253,7 +253,7 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-[13px]">
+    <label className="flex items-center gap-2 text-body-sm">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
@@ -263,7 +263,7 @@ function Toggle({
 function TheoryTable() {
   const chords = diatonicChords(D_DORIAN);
   return (
-    <table className="w-full text-left text-[13px]">
+    <table className="w-full text-left text-body-sm">
       <thead>
         <tr className="border-b border-rule">
           {['Deg', 'Triad', '7th', '9th', 'Function'].map((h) => (
@@ -285,8 +285,8 @@ function TheoryTable() {
             <td className="py-2 font-semibold">{chord.degree.label}</td>
             <td className="py-2 font-semibold">{chord.triadSymbol}</td>
             <td className="py-2">{chord.seventhSymbol}</td>
-            <td className="py-2 text-ink/64">{chord.ninthSymbol ?? '—'}</td>
-            <td className="py-2 text-ink/64">
+            <td className="py-2 text-ink-muted">{chord.ninthSymbol ?? '—'}</td>
+            <td className="py-2 text-ink-muted">
               {chord.function === 'other' ? '' : chord.function}
             </td>
           </tr>

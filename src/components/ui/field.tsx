@@ -18,7 +18,7 @@ export function Field({
         {label}
       </Label>
       <div className="mt-1">{children}</div>
-      {hint && <p className="mt-1 text-[11px] text-ink/50">{hint}</p>}
+      {hint && <p className="mt-1 text-caption text-ink-faint">{hint}</p>}
     </div>
   );
 }

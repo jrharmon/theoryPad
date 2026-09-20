@@ -397,7 +397,7 @@ function TabRow({
   return (
     <>
       <div
-        className="num grid place-items-center bg-paper text-[11px] text-ink/50"
+        className="num grid place-items-center bg-paper text-caption text-ink-faint"
         style={{ height: rowHeight, ...lineBackground }}
         data-testid={`tab-string-label-${stringIndex}`}
       >

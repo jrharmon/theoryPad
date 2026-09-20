@@ -20,8 +20,8 @@ export function TheoryFeedback({
 
   return (
     <div className="space-y-3 border-l-2 border-accent pl-4" data-testid="theory-feedback">
-      {whatItIs && <p className="text-[14px] text-ink/70">{whatItIs}</p>}
-      <p className="text-[15px] font-semibold">{feedback.rule}</p>
+      {whatItIs && <p className="text-body-sm text-ink-muted">{whatItIs}</p>}
+      <p className="text-body font-semibold">{feedback.rule}</p>
       {visual?.kind === 'circle-of-fifths' && (
         <CircleStrip
           correct={visual.correct}

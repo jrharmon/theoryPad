@@ -90,7 +90,7 @@ export function ParamsEditor({
                       key={o.value}
                       size="xs"
                       variant={on ? 'secondary' : 'ghost'}
-                      className={on ? '' : 'text-ink/35 line-through'}
+                      className={on ? '' : 'text-ink-disabled line-through'}
                       aria-pressed={on}
                       // Keep the schema's order, and never drop below its minimum.
                       disabled={on && chosen.length <= field.min}

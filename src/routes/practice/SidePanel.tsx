@@ -48,7 +48,7 @@ export function SidePanel({
         <Button
           variant="ghost"
           size="icon-xs"
-          className="ml-auto text-ink/64"
+          className="ml-auto text-ink-muted"
           aria-expanded={open}
           aria-label={open ? `Minimize ${title}` : `Show ${title}`}
           title={open ? 'Minimize' : 'Show'}

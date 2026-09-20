@@ -46,7 +46,7 @@ export function BackingTracksSection() {
           Add a track
         </Button>
       </div>
-      <p className="mt-2 max-w-[760px] text-[13px] text-ink/64">
+      <p className="mt-2 max-w-[760px] text-body-sm text-ink-muted">
         Offered to any exercise or routine in the same key and mode. The grid shows which are
         covered — pick a filled cell to list its tracks, an empty one to add one there.
       </p>
@@ -63,9 +63,9 @@ export function BackingTracksSection() {
       </div>
 
       <div className="mt-5 flex items-baseline gap-3">
-        <p className="text-[13px] font-semibold">
+        <p className="text-body-sm font-semibold">
           {filter ? `${filter.tonic} ${modeTitle(filter.mode)}` : 'Every shared track'}
-          <span className="font-normal text-ink/64"> · {shown.length}</span>
+          <span className="font-normal text-ink-muted"> · {shown.length}</span>
         </p>
         {filter && (
           <Button variant="ghost" size="xs" onClick={() => setFilter(null)}>
@@ -78,8 +78,8 @@ export function BackingTracksSection() {
         {shown.map((track) => (
           <li key={track.id} className="flex items-center gap-4 py-2.5">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-semibold">{track.title}</p>
-              <p className="text-[12px] text-ink/64">
+              <p className="truncate text-body-sm font-semibold">{track.title}</p>
+              <p className="text-meta text-ink-muted">
                 {[
                   track.keyMode && `${track.keyMode.tonic} ${modeTitle(track.keyMode.mode)}`,
                   track.bpm !== undefined && `${track.bpm} bpm`,

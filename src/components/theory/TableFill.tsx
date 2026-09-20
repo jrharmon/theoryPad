@@ -64,11 +64,7 @@ export function TableFill({
               ].join(' ')}
             >
               {givenColumns.map((c) => (
-                <span
-                  key={c.id}
-                  className="w-20 shrink-0 text-[15px] font-extrabold"
-                  role="cell"
-                >
+                <span key={c.id} className="w-20 shrink-0 text-body font-extrabold" role="cell">
                   {row.given[c.id]}
                 </span>
               ))}
@@ -88,7 +84,7 @@ export function TableFill({
                         onPick(r, option.id);
                       }}
                       className={[
-                        'min-w-12 rounded-full border px-2.5 py-1 text-[14px] font-semibold',
+                        'min-w-12 rounded-full border px-2.5 py-1 text-body-sm font-semibold',
                         // Picked, before the set is marked: the toggle look.
                         isPicked && !submitted ? 'border-transparent' : '',
                         isPicked && submitted && right
@@ -99,18 +95,20 @@ export function TableFill({
                           : '',
                         showCorrect ? 'border-accent bg-accent text-on-accent' : '',
                         !isPicked && !showCorrect
-                          ? 'border-toggle-edge bg-paper hover:border-ink disabled:text-ink/35 disabled:hover:border-toggle-edge'
+                          ? 'border-toggle-edge bg-paper hover:border-ink disabled:text-ink-disabled disabled:hover:border-toggle-edge'
                           : '',
                       ].join(' ')}
                     >
-                      {active && <span className="mr-1 text-[10px] text-ink/45">{i + 1}</span>}
+                      {active && (
+                        <span className="mr-1 text-caption text-ink-faint">{i + 1}</span>
+                      )}
                       {option.label}
                     </button>
                   );
                 })}
                 {submitted && (
                   <span
-                    className={`ml-2 text-[13px] font-semibold ${right ? 'text-ink/50' : 'text-destructive'}`}
+                    className={`ml-2 text-body-sm font-semibold ${right ? 'text-ink-faint' : 'text-destructive'}`}
                   >
                     {right ? '✓' : '✗'}
                   </span>
@@ -126,7 +124,7 @@ export function TableFill({
           <Button disabled={!complete} onClick={onSubmit} data-testid="submit-table">
             Submit
           </Button>
-          <span className="text-[12px] text-ink/50">
+          <span className="text-meta text-ink-faint">
             {complete
               ? 'Enter submits.'
               : 'Number keys fill the highlighted row. Nothing is marked until you submit.'}

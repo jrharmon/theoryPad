@@ -37,14 +37,17 @@ function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }
             <p
               className={cn(
                 'font-extrabold',
-                size === 'full' ? 'text-[22px]' : 'text-[17px]',
+                size === 'full' ? 'text-headline' : 'text-lead',
                 isSignature && 'text-accent',
               )}
             >
               {note}
             </p>
             <p
-              className={cn('tabular text-[11px]', isSignature ? 'text-accent' : 'text-ink/64')}
+              className={cn(
+                'tabular text-caption',
+                isSignature ? 'text-accent' : 'text-ink-muted',
+              )}
             >
               {degrees[i]!.label}
             </p>
@@ -59,7 +62,7 @@ function Prose({ label, children }: { label: string; children: string }) {
   return (
     <div className="border-b border-rule py-3">
       <Kicker>{label}</Kicker>
-      <p className="mt-1 text-[14px] leading-relaxed">{children}</p>
+      <p className="mt-1 text-body-sm leading-relaxed">{children}</p>
     </div>
   );
 }
@@ -91,8 +94,8 @@ export function KeyModeView({
   if (variant === 'compact') {
     return (
       <div className={cn('w-[360px]', className)} data-testid="key-mode-compact">
-        <p className="text-[20px] font-extrabold">{name}</p>
-        <p className="mb-3 text-[13px] text-ink/70">{character.summary}</p>
+        <p className="text-title font-extrabold">{name}</p>
+        <p className="mb-3 text-body-sm text-ink-muted">{character.summary}</p>
         <Notes keyMode={keyMode} size="compact" />
         <div className="grid grid-cols-7 border-b border-rule">
           {chords.map((chord, i) => (
@@ -100,13 +103,13 @@ export function KeyModeView({
               key={chord.root}
               className={cn('px-1 py-2 text-center', i > 0 && 'border-l border-rule')}
             >
-              <p className="tabular text-[11px] text-ink/64">{romanNumeral(chord)}</p>
-              <p className="text-[13px] font-bold">{chord.triadSymbol}</p>
+              <p className="tabular text-caption text-ink-muted">{romanNumeral(chord)}</p>
+              <p className="text-body-sm font-bold">{chord.triadSymbol}</p>
             </div>
           ))}
         </div>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-[11px] text-ink/45">K to close</span>
+          <span className="text-caption text-ink-faint">K to close</span>
           {onFullView && (
             <Button size="sm" variant="secondary" onClick={onFullView}>
               Full view
@@ -120,18 +123,18 @@ export function KeyModeView({
   return (
     <div className={className} data-testid="key-mode-full">
       <Kicker accent>Key &amp; mode</Kicker>
-      <p className="text-[28px] font-extrabold leading-tight">{name}</p>
-      <p className="mb-4 text-[14px] text-ink/70">{character.summary}</p>
+      <p className="text-display font-extrabold leading-tight">{name}</p>
+      <p className="mb-4 text-body-sm text-ink-muted">{character.summary}</p>
 
       <Notes keyMode={keyMode} size="full" />
 
       <Kicker className="mt-6 block">Chords</Kicker>
       <div className="overflow-x-auto">
-        <table className="mt-2 w-full border-collapse text-left text-[14px]">
+        <table className="mt-2 w-full border-collapse text-left text-body-sm">
           <thead>
             <tr className="border-b-(length:--rule-section-w) border-divider">
               {['', 'Triad', '7th', '9th', 'Function'].map((h) => (
-                <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink/64">
+                <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink-muted">
                   {h}
                 </th>
               ))}
@@ -147,11 +150,13 @@ export function KeyModeView({
                 )}
                 data-function={chord.function}
               >
-                <td className="tabular py-1.5 pr-4 pl-1 text-ink/64">{romanNumeral(chord)}</td>
+                <td className="tabular py-1.5 pr-4 pl-1 text-ink-muted">
+                  {romanNumeral(chord)}
+                </td>
                 <td className="py-1.5 pr-4 font-bold">{chord.triadSymbol}</td>
                 <td className="py-1.5 pr-4">{chord.seventhSymbol}</td>
                 <td className="py-1.5 pr-4">{chord.ninthSymbol ?? '—'}</td>
-                <td className="py-1.5 pr-4 text-ink/70">{FUNCTION_LABEL[chord.function]}</td>
+                <td className="py-1.5 pr-4 text-ink-muted">{FUNCTION_LABEL[chord.function]}</td>
               </tr>
             ))}
           </tbody>
@@ -162,19 +167,19 @@ export function KeyModeView({
       <ul className="mt-1">
         {character.progressions.map((progression) => (
           <li key={progression.degrees.join('-')} className="border-b border-rule py-2.5">
-            <p className="text-[15px]">
+            <p className="text-body">
               <span className="font-bold">
                 {progression.degrees
                   .map((d) => romanNumeral(chordOnDegree(keyMode, d)))
                   .join(' – ')}
               </span>
-              <span className="ml-3 text-ink/64">
+              <span className="ml-3 text-ink-muted">
                 {progression.degrees
                   .map((d) => chordOnDegree(keyMode, d).triadSymbol)
                   .join(' – ')}
               </span>
             </p>
-            <p className="text-[13px] text-ink/70">{progression.use}</p>
+            <p className="text-body-sm text-ink-muted">{progression.use}</p>
           </li>
         ))}
       </ul>

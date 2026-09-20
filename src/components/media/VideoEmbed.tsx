@@ -64,9 +64,9 @@ export function VideoEmbed({
         </div>
         <div className="mt-1.5 flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold">{title}</p>
+            <p className="truncate text-body-sm font-semibold">{title}</p>
             {(startSec > 0 || endSec !== undefined) && (
-              <p className="text-[12px] text-ink/64 tabular-nums">
+              <p className="text-meta text-ink-muted tabular-nums">
                 {formatVideoTime(startSec)}
                 {endSec !== undefined ? ` – ${formatVideoTime(endSec)}` : ' on'}
               </p>
