@@ -1,11 +1,10 @@
 # Status — start here
 
-**Last updated:** 2026-09-16, **two rounds of feedback from living with M7a reviewed, merged
-and live** (see "Feedback rounds 1–3"). Nothing is in progress: the next thing is whatever the
-player asks for, starting from "Remaining work".
-Earlier the same day, M7a was reviewed and merged and work paused while the player lived with
-the app. Written as a hand-off: a fresh session should be able to pick up from this
-file, `CLAUDE.md`, and the plan docs it points to. Start with "Paused" and "Remaining work".
+**Last updated:** 2026-09-20, **the architecture-review cleanup is merged, pushed and live**
+(`4ac008a`), and a backing-track ad investigation is closed (it found no regression — see
+"Backing tracks — ads and the YouTube host"). Nothing is in progress. Next is that three-task
+run, **in the order given**, then M7b. Written as a hand-off: a fresh session should be able to
+pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with "Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -23,11 +22,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
-| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
+| Backing tracks — ads and the YouTube host | **next** — three tasks, in order, see "Remaining work" |
+| M7b — Ear training and "hear it" | after the ad work — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. Everything is on `main`; the merged local branch
-`m7-audio` can be deleted. 785 unit tests, 57 E2E, `pnpm check` green.
+M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
+deleted — `main` is the only branch, local and origin in sync at `4ac008a`. 670 unit tests in 46
+files, 57 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -223,13 +224,13 @@ the perfect view of related chords".
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
-## Paused — living with it (since 2026-09-15)
+## The pause is over (2026-09-20)
 
-After M7a the player chose to stop and use the app for a while before adding anything.
-**Do not start M7b, or anything else, until the player asks.** When they come back, the first
-job is to go through "Remaining work" below with them — they want to review it afresh, and
-their priorities may have moved after living with the app. Take any bugs or friction they
-found first; those are the most valuable input a pause produces.
+After M7a the player paused to live with the app; that pause produced feedback rounds 1–3, the
+architecture-review cleanup, and the ad investigation. **The pause is over and the next work is
+agreed:** "Backing tracks — ads and the YouTube host" under "Remaining work", three tasks in the
+order given, then M7b. The milestone gate still applies — build one task, verify it on the
+deploy, report, and wait.
 
 ## Remaining work
 
@@ -277,7 +278,83 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
   (it did, once more, during step 6). The dev-gallery test "returns to Play when a phrase reaches
   its end" is flaky under full-suite load; unrelated to the cleanup.
 
-**M7b — Ear training and "hear it"** (next)
+**Backing tracks — ads and the YouTube host** (next; agreed 2026-09-20)
+
+Three tasks, **in this order** — the order is deliberate, see task 2.
+
+*Background: the investigation that produced these (2026-09-20).* A pre-roll ad began playing on
+the first Play after each page load on the deployed site, and the app then wrongly announced that
+the browser had blocked autoplay. What was established:
+
+- **Not a regression.** `bede19f` (2026-09-17, before the `src/session/` refactor) was deployed to
+  the same github.io origin and showed the same ads. The nine cleanup commits are cleared. The
+  player's first instinct was that step 7 or 8 caused it; the diffs across the whole video and
+  transport path over that range are Prettier reformatting plus an unrelated `definedProps`
+  refactor, and `alignTrack`, `playFrom`, `PlayerSlot` and the playerVars are untouched.
+- **The origin decides whether ads are served at all.** The same commit `4ac008a` served from
+  `localhost` shows no ads; from `jrharmon.github.io` it does. Localhost embeds are not
+  monetizable, so **local testing cannot reproduce ads — every check here happens on the deploy.**
+  The player had been testing on localhost more than they realized, which is why it felt new.
+- **Why ads reach the player at all.** The app embeds `youtube-nocookie.com` (`YouTubePlayer.ts`),
+  which strips the viewer's YouTube session cookies. The player therefore cannot see a signed-in
+  Premium account and serves ads to an anonymous viewer. nocookie has been the host since M7a
+  (`cc08352`, `64cdc42`, `629b5ed`) — it never changed. The player has Premium and sees no ads on
+  youtube.com itself; that subscription simply never reaches the iframe.
+- **Soundslice, for comparison.** A live slice (`soundslice.com/slices/wvbVc`) embeds
+  `https://www.youtube.com/embed/<id>?controls=0&disablekb=1&html5=1&iv_load_policy=3`
+  `&modestbranding=1&origin=https://www.soundslice.com&playsinline=1&rel=0&showinfo=0&enablejsapi=1`.
+  Regular host → the viewer's Premium applies → no ads; `controls=0` → its own overlay transport.
+  `modestbranding` and `showinfo` are deprecated and ignored by YouTube now — don't copy them.
+- **Measured baseline.** With no ad, `playVideo()` reaches state `playing` in ~475–950 ms (probe
+  against `WkIijba-HcU`, a 632 s track). `BLOCKED_AFTER_MS` is 2 500, so any ad overruns it.
+
+**1. Support ads (M) — do this first, while the host is still nocookie.**
+Keeping nocookie for now is the point: it is what lets the player still see ads and verify the
+work. Switching hosts first would hide the very thing being fixed, and users without Premium will
+get ads whatever host we use. Three real bugs, all in code the cleanup never touched:
+
+- **The exercise clock can sync to the advert.** `playAndWait` resolves on state `playing`; during
+  a pre-roll that is the ad, so `VideoBacking.follow()` starts `TrackFollower` against the ad's
+  `currentTime`, and the count-in and bar 1 line up against the ad rather than the track.
+- **We blame the browser wrongly.** The fixed 2.5 s `BLOCKED_AFTER_MS` deadline fires during any
+  ad and sets `needsClick`, showing "Your browser wants the first play to come from the video
+  itself" (`BackingPanel.tsx`) and "Press play on the video" (`TransportBar.tsx`) when autoplay was
+  never blocked. Replace the deadline with real stall detection: no state transitions **and**
+  `currentTime` not advancing. Keep a genuine blocked path — Safari and Firefox really do hold a
+  video with sound back outside the click that asked for it.
+- **The count-in must wait for the track**, not start on the advert.
+
+There is no official ad API on the IFrame player. The usable signal: during a pre-roll
+`getDuration()` returns the **ad's** duration and `getCurrentTime()` the ad's time, flipping to the
+track's values when the real video starts. **Verify that on the deploy before building on it** —
+it is inferred from the API's behaviour, never observed, because no ad could be reproduced locally.
+
+**2. Switch the host to `www.youtube.com` (S) — only once task 1 is confirmed working.**
+One line in `YouTubePlayer.ts`. Also update the file's header comment, which currently argues for
+nocookie ("it is heavy, and it tracks… the privacy-preserving embed"), and any doc repeating it.
+**Trade-off accepted by the player:** YouTube sets cookies and logs viewing from the app; in
+exchange a Premium viewer sees no ads at all. Evidence it will work: Soundslice does exactly this
+and is ad-free in the player's own Chrome, so third-party cookies are not being blocked there.
+The ad-tolerance work from task 1 **stays** — users without Premium still get ads.
+
+**3. Disable YouTube's own controls (S).**
+`YouTubePlayer.ts` passes `controls: 1` for the backing player, so YouTube's controls show.
+Pausing on the video pauses the video but does **not** stop the exercise — the runner plays on.
+Set `controls: 0` so only the app's transport drives playback, as Soundslice does. `disablekb: 1`
+is already set. Two things to resolve while doing it:
+
+- `needsClick` recovery currently depends on the user pressing YouTube's own play button. With the
+  controls gone that route disappears — either keep a way to click through, or make sure task 1's
+  stall path no longer needs one.
+- The player must stay visible and **at least 200×200 px** (YouTube's ToS minimum; Soundslice
+  enforces it with its own "YouTube requires videos to be at least this big" notice). Check the
+  side column and the shrunk state.
+
+**Verification for all three:** ads appear only on the deploy, so each task ends with a push and a
+hands-on check on https://jrharmon.github.io/theoryPad/ — including in a signed-out browser, to
+see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
+
+**M7b — Ear training and "hear it"** (after the ad work)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
   drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
   settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
