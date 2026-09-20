@@ -34,6 +34,13 @@ export interface ScaleShapeOptions {
 }
 
 /**
+ * How far the hand reaches. Three notes a string already asks for a six-fret
+ * stretch, so a move further than that between strings is a leap rather than a
+ * shift, and the shape belongs somewhere else on the neck.
+ */
+const HAND_SPAN = 6;
+
+/**
  * All frets on a string sounding a pitch class, ordered by distance from a
  * reference fret so the hand stays where it is.
  */
@@ -50,6 +57,16 @@ function fretsNear(
     if (chroma(pitchClassAt(instrument, { string, fret })) === target) frets.push(fret);
   }
   return frets.sort((a, b) => Math.abs(a - reference) - Math.abs(b - reference) || a - b);
+}
+
+/** A shape, and whether the run left the hand behind while building it. */
+interface Attempt {
+  positions: ScaleNotePosition[];
+  /**
+   * A string whose note the hand could only reach by leaving the shape
+   * behind — so the shape does not belong at this fret at all.
+   */
+  outOfReach: boolean;
 }
 
 /**
@@ -70,64 +87,94 @@ export function scaleShape(
 
   const notes = scaleNotes(keyMode);
   const rootChroma = chroma(keyMode.tonic);
-  const out: ScaleNotePosition[] = [];
-
-  let degreeIndex = startDegree - 1;
-  // Where the hand sits; each new string aims to stay near the last one's start.
-  let anchor = minFret;
-  let isFirstString = true;
 
   const countFor = (k: number): number =>
     typeof notesPerString === 'number' ? notesPerString : (notesPerString[k] ?? 0);
 
-  for (const [k, string] of strings.entries()) {
-    let previousFret: number | null = null;
+  /** The shape with the hand starting at `startFret`. */
+  const build = (startFret: number): Attempt => {
+    const out: ScaleNotePosition[] = [];
 
-    for (let n = 0; n < countFor(k); n += 1) {
-      const pc = notes[degreeIndex % notes.length]!;
+    let degreeIndex = startDegree - 1;
+    // Where the hand sits; each new string aims to stay near the last one's start.
+    let anchor = startFret;
+    let isFirstString = true;
 
-      // minFret positions the shape; it does not constrain every note. Once the
-      // hand is anchored, a later string may legitimately want a lower fret —
-      // forcing it above minFret sends the shape twelve frets up the neck
-      // instead, which is how this first went wrong.
-      const floor =
-        previousFret !== null
-          ? previousFret + 1
-          : isFirstString
-            ? minFret
-            : lowestFret(instrument);
-      const reference = previousFret === null ? anchor : previousFret;
-      const candidates = fretsNear(instrument, string, pc, reference, floor);
-      const fret = candidates[0];
-      if (fret === undefined) {
-        // The string cannot reach this note within the fret count; stop cleanly
-        // rather than emitting an unplayable position.
-        return out;
+    for (const [k, string] of strings.entries()) {
+      let previousFret: number | null = null;
+      // Has this string moved the hand yet — has it a fretted note?
+      let handPlaced = false;
+
+      for (let n = 0; n < countFor(k); n += 1) {
+        const pc = notes[degreeIndex % notes.length]!;
+
+        // minFret positions the shape; it does not constrain every note. Once the
+        // hand is anchored, a later string may legitimately want a lower fret —
+        // forcing it above minFret sends the shape twelve frets up the neck
+        // instead, which is how this first went wrong.
+        const floor =
+          previousFret !== null
+            ? previousFret + 1
+            : isFirstString
+              ? startFret
+              : lowestFret(instrument);
+        const reference = previousFret === null ? anchor : previousFret;
+        const candidates = fretsNear(instrument, string, pc, reference, floor);
+        const fret = candidates[0];
+        if (fret === undefined) {
+          // The string cannot reach this note within the fret count; stop cleanly
+          // rather than emitting an unplayable position.
+          return { positions: out, outOfReach: false };
+        }
+
+        // The hand moves to a string's first fretted note. An open string asks
+        // nothing of it, so it stays where it was.
+        if (fret > 0 && !handPlaced) {
+          if (!isFirstString && Math.abs(fret - anchor) > HAND_SPAN) {
+            return { positions: out, outOfReach: true };
+          }
+          anchor = fret;
+          handPlaced = true;
+        }
+        if (n === 0) isFirstString = false;
+        previousFret = fret;
+
+        const position: FretPosition = { string, fret };
+        const degree = degreeOf(keyMode, pc);
+        if (!degree) throw new Error(`${pc} is not in ${keyMode.tonic} ${keyMode.mode}`);
+
+        out.push({
+          ...position,
+          pitchClass: pc,
+          note: noteAt(instrument, position),
+          degree,
+          isRoot: chroma(pc) === rootChroma,
+        });
+
+        degreeIndex += 1;
       }
+    }
 
-      if (n === 0) {
-        anchor = fret;
-        isFirstString = false;
-      }
-      previousFret = fret;
+    return { positions: out, outOfReach: false };
+  };
 
-      const position: FretPosition = { string, fret };
-      const degree = degreeOf(keyMode, pc);
-      if (!degree) throw new Error(`${pc} is not in ${keyMode.tonic} ${keyMode.mode}`);
+  const here = build(minFret);
+  if (!here.outOfReach) return here.positions;
 
-      out.push({
-        ...position,
-        pitchClass: pc,
-        note: noteAt(instrument, position),
-        degree,
-        isRoot: chroma(pc) === rootChroma,
-      });
-
-      degreeIndex += 1;
+  // The hand cannot stay with the run from here. Near the nut a low string can
+  // run past the next string's open pitch — in drop D the low string plays 1-2-4
+  // and the next note sits at fret 11 — and the answer is to start the shape
+  // higher, not to spread the hand over half the neck. An octave up the same
+  // notes come round again, so there is nothing beyond that to try.
+  for (let startFret = minFret + 1; startFret <= minFret + 12; startFret += 1) {
+    const higher = build(startFret);
+    if (!higher.outOfReach && higher.positions.length > here.positions.length) {
+      return higher.positions;
     }
   }
 
-  return out;
+  // Nowhere within reach fits: stop where the run left the hand behind.
+  return here.positions;
 }
 
 export interface NeckShape {
@@ -178,6 +225,9 @@ export function shapesUpTheNeck(
 
     // Only take shapes that fit on the neck.
     if (positions.length < notesPerString * stringCount(instrument)) continue;
+    // A shape the hand cannot hold this low starts higher instead, so it is not
+    // this fret's shape at all — the climb reaches it again where it does start.
+    if (positions[0]!.fret !== fret) continue;
 
     shapes.push({ startDegree, startFret: fret, positions });
   }

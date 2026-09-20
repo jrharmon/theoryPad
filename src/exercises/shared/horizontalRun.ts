@@ -74,21 +74,29 @@ export function horizontalRun(options: {
   const upCounts = shiftCounts(stringCount(instrument), shiftOn);
   const downCounts = rotateCounts(upCounts);
 
-  const up = shapeFrom({ instrument, keyMode, fret: minFret, notesPerString: upCounts });
-  if (!up) return null;
+  // Both routes have to fit. The way down shifts on other strings, so it can
+  // need a hand position the way up does not — at the bottom of a drop-D neck
+  // the three-note low string runs past the next string's open pitch — and then
+  // the run starts a shape higher. The caller gets the fret it actually used.
+  for (let fret = minFret; fret <= instrument.fretCount; fret += 1) {
+    const up = shapeFrom({ instrument, keyMode, fret, notesPerString: upCounts });
+    if (!up) continue;
 
-  // The same notes by another route: same first note, shifts on other strings.
-  const down = scaleShape(instrument, {
-    keyMode,
-    startDegree: up.startDegree,
-    minFret: up.startFret,
-    notesPerString: downCounts,
-  });
-  if (down.length !== up.positions.length) return null;
+    // The same notes by another route: same first note, shifts on other strings.
+    const down = scaleShape(instrument, {
+      keyMode,
+      startDegree: up.startDegree,
+      minFret: up.startFret,
+      notesPerString: downCounts,
+    });
+    if (down.length !== up.positions.length || down[0]!.fret !== up.startFret) continue;
 
-  return {
-    startFret: up.startFret,
-    up: markShifts(up.positions, upCounts, 'up'),
-    down: markShifts(down, downCounts, 'down').reverse(),
-  };
+    return {
+      startFret: up.startFret,
+      up: markShifts(up.positions, upCounts, 'up'),
+      down: markShifts(down, downCounts, 'down').reverse(),
+    };
+  }
+
+  return null;
 }

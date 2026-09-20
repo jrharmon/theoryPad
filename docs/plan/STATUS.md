@@ -311,10 +311,15 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 - Step 8: 785 unit tests → 668 (15%, not the 25–30% the review aimed at — the rest are distinct
   behaviours, and the rule was to remove a test only when another would fail for the same bug).
   E2E db helpers now live in `e2e/helpers.ts`.
-- **Found, not fixed — an unplayable shape.** `scaleShape(DROP_D_GUITAR, A lydian, startDegree 4,
-  minFret 1)` spans sixteen frets: the low D string runs 1-2-4, and the next scale note is below
-  the open A string, so it jumps to fret 11. With `minFret` 2 or more the same shape is fine. The
-  invariant test's `minFret` loop starts at 3 because of it.
+- **Fixed — an unplayable shape (2026-09-20).** `scaleShape(DROP_D_GUITAR, A lydian, startDegree
+  4, minFret 1)` spanned sixteen frets: the low D string ran 1-2-4, and the next scale note sits
+  below the open A string, so it jumped to fret 11. A shape now refuses an anchor whose next
+  string the hand could only reach by leaving the shape behind — more than six frets from where
+  it sits — and starts higher up the neck instead, which is the shape `minFret` 2 gave all along.
+  `shapesUpTheNeck` skips an anchor whose shape had to start higher (the climb reaches it again at
+  the fret it really starts on), `shapeFrom` reports the fret it landed on, and `horizontalRun`
+  looks for a start where both routes fit — the way down shifts on other strings, so it can need a
+  hand position the way up does not. The invariant test covers `minFret` 0 and 1 again.
 - Step 9 (A7+S2): params come from each Zod schema's own `.default()`, `estimateRepSeconds` is
   optional for a played exercise, `AxisValues` types `axisValue` by axis id, briefs read from
   named consts, and `definedProps()` replaces stacked conditional spreads.
