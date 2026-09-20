@@ -1,12 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **Tasks 1 and 2 of "Backing tracks — ads and the YouTube host" are
-done**; task 1 is merged and live (`45633bf`), task 2 is at the gate. Task 1 corrected the advert
-signal this whole run was planned around, and task 3 now has a measured blocker — an advert can
-stall in a state only YouTube's own controls can clear, which is exactly what task 3 removes.
-Read both sections before starting it. Written as a hand-off: a fresh session should be able to
-pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with "Remaining
-work".
+**Last updated:** 2026-09-20. **"Backing tracks — ads and the YouTube host" is finished as far as
+it is going:** tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is
+**parked at the player's call** — the gain was cosmetic and it had turned up a reproduced
+failure. Nothing is in progress. **M7b is next.** Task 1 corrected the advert signal the whole
+run was planned around, so read that section before touching backing playback again. Written as a
+hand-off: a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs
+it points to. Start with "Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -24,8 +24,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
-| Backing tracks — ads and the YouTube host | tasks 1–2 done; **task 3 at the gate's discretion** — it has an unresolved blocker, see below |
-| M7b — Ear training and "hear it" | after the ad work — see "Remaining work" |
+| Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -388,7 +388,11 @@ gets adverts.
 - Docs updated: `06-AUDIO.md` decision 3 now records the switch and why, and both file headers
   explain the trade rather than arguing for nocookie.
 
-**3. Disable YouTube's own controls (S).**
+**3. Disable YouTube's own controls (S) — PARKED 2026-09-20, at the player's call.**
+Not wanted for now: the gain is cosmetic and the risk is not. Everything below stays true and
+researched, so picking it up later starts from measurements rather than from scratch — but do not
+start it without reading the `needsClick` bullet, which is a reproduced failure, not a worry.
+
 `YouTubePlayer.ts` passes `controls: 1` for the backing player, so YouTube's controls show.
 Pausing on the video pauses the video but does **not** stop the exercise — the runner plays on.
 Set `controls: 0` so only the app's transport drives playback, as Soundslice does. `disablekb: 1`
@@ -442,6 +446,9 @@ see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 **M10 — Optional sync** — only if wanted after living with export/import (doc 07).
 
 **Parked — in no milestone yet**
+- Turning off YouTube's own controls (`controls: 0`) — task 3 above, parked 2026-09-20. The
+  research is done and recorded there; the blocker is that an advert can stall in a state only
+  YouTube's own controls can clear.
 - Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
 - Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
 - Generated backing — deferred past M9; 75% on a real track was fine, so likely unneeded.
