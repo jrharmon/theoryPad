@@ -34,7 +34,7 @@ export function VideoEmbed({
     <>
       {enlarged && <EnlargeScrim onClose={() => setEnlarged(false)} />}
       <div className={cn(enlarged && cn(ENLARGED, 'sheet p-4'))} data-testid="video-embed">
-        <div className="aspect-video w-full overflow-hidden rounded-[8px] bg-ink/5">
+        <div className="aspect-video w-full overflow-hidden rounded-control bg-ink/5">
           {playing ? (
             <iframe
               title={title}

@@ -21,6 +21,7 @@ import { useExercises } from '@/store/exercises';
 import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { SettingsDialog } from '../practice/SettingsDialog';
+import { LoadingState } from '@/components/ui/page-header';
 
 /** Key and mode belong to the routine: rolled once, shared by every item. */
 const SESSION_AXES: AxisId[] = ['mode', 'key'];
@@ -52,7 +53,7 @@ export function RoutineBuilder() {
     [routine, instrument],
   );
 
-  if (!routines.loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
+  if (!routines.loaded) return <LoadingState />;
   if (!routine) {
     return (
       <div className="px-8 py-8">

@@ -118,10 +118,8 @@ function Option({
         role="option"
         aria-selected={selected}
         onClick={onPick}
-        className={cn(
-          'w-full rounded-[8px] px-2 py-1.5 text-left hover:bg-ink/5',
-          selected && 'bg-toggle-on text-toggle-on-ink hover:bg-toggle-on/85',
-        )}
+        data-toggle={selected ? 'on' : 'off'}
+        className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
       >
         <span className="block text-[13px] font-semibold">{title}</span>
         <span className={cn('block text-[12px]', selected ? 'opacity-80' : 'text-ink/64')}>

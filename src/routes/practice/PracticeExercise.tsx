@@ -11,6 +11,7 @@ import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
 import { useKeyModeView } from '@/store/keyModeView';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
+import { LoadingState } from '@/components/ui/page-header';
 
 /**
  * Opening an exercise puts you straight into it: the variation is rolled and
@@ -53,7 +54,7 @@ export function PracticeExercise() {
     setSettingsOpen(true);
   };
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
+  if (!loaded) return <LoadingState />;
   if (!exercise || !definition) {
     return (
       <div className="px-8 py-8">

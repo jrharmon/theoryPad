@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
 import { Kicker } from '@/components/ui/kicker';
+import { SegmentedControl, ToggleButton } from '@/components/ui/toggle-button';
 import {
   Select,
   SelectContent,
@@ -249,27 +250,14 @@ function AppearanceChoice({
   onChange: (appearance: Appearance) => void;
 }) {
   return (
-    <div className="flex" role="group" aria-label="Appearance">
-      {APPEARANCES.map((option, i) => (
-        <Button
-          key={option.id}
-          size="sm"
-          variant="secondary"
-          aria-pressed={value === option.id}
-          className={[
-            'rounded-toggle',
-            i > 0 ? '-ml-px rounded-l-none' : '',
-            i < APPEARANCES.length - 1 ? 'rounded-r-none' : '',
-            value === option.id
-              ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85'
-              : 'text-toggle-off-ink',
-          ].join(' ')}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </Button>
-      ))}
-    </div>
+    <SegmentedControl
+      label="Appearance"
+      value={value}
+      options={APPEARANCES.map((option) => ({ id: option.id, label: option.label }))}
+      onChange={onChange}
+      attached
+      quietOff
+    />
   );
 }
 
@@ -326,16 +314,9 @@ function OnOff({
   onChange: (on: boolean) => void;
 }) {
   return (
-    <Button
-      size="sm"
-      variant="secondary"
-      aria-label={label}
-      aria-pressed={on}
-      className={`rounded-toggle ${on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}`}
-      onClick={() => onChange(!on)}
-    >
+    <ToggleButton on={on} quietOff aria-label={label} onClick={() => onChange(!on)}>
       {on ? 'On' : 'Off'}
-    </Button>
+    </ToggleButton>
   );
 }
 

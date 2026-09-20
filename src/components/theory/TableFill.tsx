@@ -82,15 +82,15 @@ export function TableFill({
                       type="button"
                       disabled={submitted}
                       aria-pressed={isPicked}
+                      data-toggle={isPicked && !submitted ? 'on' : 'off'}
                       onClick={(e) => {
                         e.stopPropagation();
                         onPick(r, option.id);
                       }}
                       className={[
                         'min-w-12 rounded-full border px-2.5 py-1 text-[14px] font-semibold',
-                        isPicked && !submitted
-                          ? 'border-toggle-on-ring bg-toggle-on text-toggle-on-ink'
-                          : '',
+                        // Picked, before the set is marked: the toggle look.
+                        isPicked && !submitted ? 'border-transparent' : '',
                         isPicked && submitted && right
                           ? 'border-accent bg-accent text-on-accent'
                           : '',

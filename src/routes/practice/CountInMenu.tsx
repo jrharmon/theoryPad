@@ -47,10 +47,8 @@ export function CountInMenu() {
                 type="button"
                 role="option"
                 aria-selected={choice === bars}
-                className={cn(
-                  'w-full rounded-[8px] px-2 py-1.5 text-left hover:bg-ink/5',
-                  choice === bars && 'bg-toggle-on text-toggle-on-ink hover:bg-toggle-on/85',
-                )}
+                data-toggle={choice === bars ? 'on' : 'off'}
+                className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
                 onClick={() => pick(choice)}
               >
                 <span className="block text-[13px] font-semibold">{LABEL[choice]}</span>

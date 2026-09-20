@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { DayKey, RangePreset } from '@/domain/progress';
 import { formatPracticeTime, presetRange } from '@/domain/progress';
 import { Button } from '@/components/ui/button';
+import { ToggleButton } from '@/components/ui/toggle-button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Kicker } from '@/components/ui/kicker';
 import { DayBarChart } from '@/components/charts/DayBarChart';
@@ -145,19 +146,16 @@ export function ReportPage() {
       <div className="flex flex-wrap items-center gap-4 px-8 pb-5">
         <div className="flex gap-1" role="group" aria-label="Date range">
           {PRESETS.map((preset) => (
-            <Button
+            <ToggleButton
               key={preset.id}
-              size="sm"
-              variant="secondary"
-              aria-pressed={choice === preset.id}
-              className={`rounded-toggle ${choice === preset.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
+              on={choice === preset.id}
               onClick={() => {
                 if (preset.id === 'custom' && choice !== 'custom') setCustom(range);
                 setChoice(preset.id);
               }}
             >
               {preset.label}
-            </Button>
+            </ToggleButton>
           ))}
         </div>
         {choice === 'custom' && (

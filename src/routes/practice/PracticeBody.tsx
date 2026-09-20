@@ -13,6 +13,7 @@ import { ImprovBody } from './ImprovBody';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
+import { LoadingState } from '@/components/ui/page-header';
 
 /**
  * What is being played: the brief, the rolled axes, the tab and the neck.
@@ -24,7 +25,7 @@ export function PracticeBody() {
   const instance = usePractice((s) => s.instance);
 
   if (!instance || !snapshot) {
-    return <p className="px-8 py-8 text-[13px] text-ink/64">Rolling a variation…</p>;
+    return <LoadingState>Rolling a variation…</LoadingState>;
   }
 
   return (

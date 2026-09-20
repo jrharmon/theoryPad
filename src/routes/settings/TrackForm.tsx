@@ -344,7 +344,7 @@ function Timing({
   };
 
   return (
-    <div className="space-y-3 rounded-[8px] bg-ink/[0.03] p-4">
+    <div className="space-y-3 rounded-control bg-ink/[0.03] p-4">
       <div className="flex flex-wrap items-end gap-2">
         <Field
           label="Bar 1"
@@ -496,7 +496,7 @@ function WatchRange({
   const now = (field: 'start' | 'end') =>
     player && change({ [field]: formatVideoTime(player.currentTime) });
   return (
-    <div className="flex flex-wrap items-end gap-4 rounded-[8px] bg-ink/[0.03] p-4">
+    <div className="flex flex-wrap items-end gap-4 rounded-control bg-ink/[0.03] p-4">
       <Field label="Start at" htmlFor="watch-start">
         <div className="flex gap-2">
           <Input

@@ -1,5 +1,6 @@
 import { PauseIcon, PlayIcon, RotateCcwIcon, SquareIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ToggleButton } from '@/components/ui/toggle-button';
 import { tickToBarBeat } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
@@ -220,16 +221,14 @@ function Toggle({
   title?: string | undefined;
 }) {
   return (
-    <Button
-      size="sm"
-      variant="secondary"
-      aria-pressed={on}
+    <ToggleButton
+      on={on}
+      quietOff
       disabled={disabled}
       title={title}
-      className={`rounded-toggle ${on ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink'}`}
       onClick={() => onChange(!on)}
     >
       {label}
-    </Button>
+    </ToggleButton>
   );
 }

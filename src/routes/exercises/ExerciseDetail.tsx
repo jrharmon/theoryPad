@@ -13,6 +13,7 @@ import { Kicker } from '@/components/ui/kicker';
 import { Separator } from '@/components/ui/separator';
 import { ParamsEditor } from './ParamsEditor';
 import { BackingCriteriaEditor, ExerciseVideos } from './ExerciseVideos';
+import { LoadingState, PageIntro } from '@/components/ui/page-header';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
@@ -30,7 +31,7 @@ export function ExerciseDetail() {
   const exercise = exercises.find((e) => e.id === exerciseId);
   const definition = exercise ? findExerciseDefinition(exercise.definitionId) : undefined;
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
+  if (!loaded) return <LoadingState />;
   if (!exercise || !definition) {
     return (
       <div className="px-8 py-8">
@@ -49,7 +50,7 @@ export function ExerciseDetail() {
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
           <h1>{definition.name}</h1>
-          <p className="max-w-[640px] text-[15px] text-ink/70">{definition.description}</p>
+          <PageIntro>{definition.description}</PageIntro>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {definition.tags.map((t) => (
               <Badge key={t} variant="secondary">

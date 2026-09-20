@@ -153,22 +153,40 @@
 }
 
 /*
+ * A control that is on: a filled pill, wherever it appears — a transport
+ * toggle, a segment, a chosen menu row, a picked table cell.
+ *
+ * Unlayered so it beats the button variant's own utilities, and keyed on
+ * `data-toggle` rather than aria-pressed, because "Hide info" is pressed and
+ * still drawn as a plain button. ToggleButton in components/ui sets it.
+ */
+[data-toggle='on'] {
+  background: var(--color-toggle-on);
+  color: var(--color-toggle-on-ink);
+  box-shadow:
+    inset 0 0 0 1px var(--color-toggle-on-ring),
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000);
+}
+[data-toggle='on']:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-toggle-on) 85%, transparent);
+}
+
+/*
  * shadcn's secondary button, as Notebook draws it: paper with a pencil edge.
  *
  * Unlayered, so it beats the variant's utilities — which is also why it skips
- * a toggle that is on: every toggle is a secondary button, and its toggle-on
- * classes must win. (Keyed on the class, not aria-pressed: "Hide neck" is
- * pressed but drawn as a plain button.) The box-shadow keeps shadcn's focus
- * ring by composing the ring variables after the edge.
+ * a toggle that is on. The box-shadow keeps shadcn's focus ring by composing
+ * the ring variables after the edge.
  */
-[data-slot='button'][data-variant='secondary']:not(.bg-toggle-on) {
+[data-slot='button'][data-variant='secondary']:not([data-toggle='on']) {
   background: var(--color-paper);
   box-shadow:
     inset 0 0 0 1px var(--color-toggle-edge),
     var(--tw-ring-offset-shadow, 0 0 #0000),
     var(--tw-ring-shadow, 0 0 #0000);
 }
-[data-slot='button'][data-variant='secondary']:not(.bg-toggle-on):not(:disabled):hover {
+[data-slot='button'][data-variant='secondary']:not([data-toggle='on']):not(:disabled):hover {
   background: var(--color-surface);
 }
 

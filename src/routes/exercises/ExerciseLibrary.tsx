@@ -4,11 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
-import { Kicker } from '@/components/ui/kicker';
 import { describePolicies } from '@/exercises/describe';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
+import { LoadingState, PageHeader } from '@/components/ui/page-header';
 
 export function ExerciseLibrary() {
   const { exercises, loaded, load, update } = useExercises();
@@ -49,13 +49,11 @@ export function ExerciseLibrary() {
 
   return (
     <section>
-      <div className="px-8 py-7">
-        <Kicker accent>Exercises</Kicker>
-        <h1>Your library</h1>
-        <p className="max-w-[640px] text-[15px] text-ink/70">
-          Everything you can practice. Open one to set its target tempo and how much it varies.
-        </p>
-      </div>
+      <PageHeader
+        kicker="Exercises"
+        title="Your library"
+        intro="Everything you can practice. Open one to set its target tempo and how much it varies."
+      />
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 px-8 pb-1">
@@ -73,7 +71,7 @@ export function ExerciseLibrary() {
       )}
 
       <div className="px-8 pt-4 pb-6">
-        {!loaded && <p className="text-[13px] text-ink/64">Loading…</p>}
+        {!loaded && <LoadingState inline />}
 
         {loaded && visible.length === 0 && (
           <EmptyState title="Nothing here yet">No exercises match that tag.</EmptyState>

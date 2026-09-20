@@ -19,6 +19,7 @@ import {
   streak,
   weekStart,
 } from '@/domain/progress';
+import { LoadingState, PageIntro } from '@/components/ui/page-header';
 
 /** About how long a routine takes, from its items' own settings. */
 function routineSeconds(routine: Routine, instrument: Instrument): number {
@@ -88,10 +89,10 @@ export function Home() {
         <div>
           <Kicker accent>Practice</Kicker>
           <h1>Your routines</h1>
-          <p className="max-w-[640px] text-[15px] text-ink/70">
+          <PageIntro>
             A routine plays several exercises straight through, each counted in at its own tempo
             — nothing to click once it starts.
-          </p>
+          </PageIntro>
         </div>
         <Button onClick={() => void newRoutine()}>New routine</Button>
       </div>
@@ -99,7 +100,7 @@ export function Home() {
       <PracticeStrip />
 
       <div className="px-8 pt-1 pb-6">
-        {!loaded && <p className="text-[13px] text-ink/64">Loading…</p>}
+        {!loaded && <LoadingState inline />}
 
         {loaded && sorted.length === 0 && (
           <EmptyState title="No routines yet">

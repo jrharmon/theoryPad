@@ -21,7 +21,8 @@ import {
   neckSummary,
 } from '@/domain/progress';
 import { Fretboard, KeyModeView } from '@/components/music';
-import { Button } from '@/components/ui/button';
+import { PageIntro } from '@/components/ui/page-header';
+import { SegmentedControl, ToggleButton } from '@/components/ui/toggle-button';
 import { Kicker } from '@/components/ui/kicker';
 import {
   Select,
@@ -37,35 +38,6 @@ import { KeyModeGrid } from '@/components/music/KeyModeGrid';
 type Layer = 'off' | 'all' | 'recent';
 
 const title = modeTitle;
-
-function Toggle<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { id: T; label: string }[];
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div className="flex gap-1" role="group" aria-label={label}>
-      {options.map((option) => (
-        <Button
-          key={option.id}
-          size="sm"
-          variant="secondary"
-          aria-pressed={value === option.id}
-          className={`rounded-toggle ${value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </Button>
-      ))}
-    </div>
-  );
-}
 
 /**
  * A key and mode across the whole neck, one 3nps shape at a time if you like,
@@ -139,10 +111,10 @@ export function FretboardExplorer() {
         <h1 data-testid="explorer-title">
           {keyMode.tonic} {title(keyMode.mode)}
         </h1>
-        <p className="max-w-[640px] text-[15px] text-ink/70">
+        <PageIntro>
           The whole neck in one key and mode — or one shape of it — with where you have actually
           played laid underneath.
-        </p>
+        </PageIntro>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-8 pb-3">
@@ -181,7 +153,7 @@ export function FretboardExplorer() {
             </SelectContent>
           </Select>
         </div>
-        <Toggle
+        <SegmentedControl
           label="Labels"
           value={labels}
           options={[
@@ -190,7 +162,7 @@ export function FretboardExplorer() {
           ]}
           onChange={setLabels}
         />
-        <Toggle
+        <SegmentedControl
           label="Notes played"
           value={layer}
           options={[
@@ -204,28 +176,19 @@ export function FretboardExplorer() {
 
       <div className="px-8 pb-4">
         <div className="flex flex-wrap gap-1" role="group" aria-label="Shape">
-          <Button
-            size="sm"
-            variant="secondary"
-            aria-pressed={shapeIndex === null}
-            className={`rounded-toggle ${shapeIndex === null ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
-            onClick={() => setShapeIndex(null)}
-          >
+          <ToggleButton on={shapeIndex === null} onClick={() => setShapeIndex(null)}>
             Whole neck
-          </Button>
+          </ToggleButton>
           {shapes.map((s, i) => (
-            <Button
+            <ToggleButton
               key={`${s.startDegree}-${s.startFret}`}
-              size="sm"
-              variant="secondary"
-              aria-pressed={shapeIndex === i}
+              on={shapeIndex === i}
               aria-label={`Shape starting on ${degrees[s.startDegree - 1]!.label} at fret ${s.startFret}`}
-              className={`rounded-toggle ${shapeIndex === i ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : ''}`}
               onClick={() => setShapeIndex(i)}
             >
               <span className="tabular">{degrees[s.startDegree - 1]!.label}</span>
               <span className="tabular text-[11px] opacity-60">fret {s.startFret}</span>
-            </Button>
+            </ToggleButton>
           ))}
         </div>
       </div>

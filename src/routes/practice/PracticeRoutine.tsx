@@ -17,6 +17,7 @@ import { BackingMenu } from './BackingMenu';
 import { useKeyModeView } from '@/store/keyModeView';
 import { ReferenceTrigger } from './ReferenceTrigger';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
+import { LoadingState, PageIntro } from '@/components/ui/page-header';
 
 /**
  * A routine, start to finish. The overview shows everything that was rolled,
@@ -53,7 +54,7 @@ export function PracticeRoutine() {
   const referenceOpen = useKeyModeView((s) => s.popover || s.sheet);
   useRunnerHotkeys({ onLeave: leave, enabled: !referenceOpen });
 
-  if (!loaded) return <p className="px-8 py-8 text-[13px] text-ink/64">Loading…</p>;
+  if (!loaded) return <LoadingState />;
   if (!routine) {
     return (
       <div className="px-8 py-8">
@@ -65,7 +66,7 @@ export function PracticeRoutine() {
       </div>
     );
   }
-  if (!routineSnapshot) return <p className="px-8 py-8 text-[13px] text-ink/64">Rolling…</p>;
+  if (!routineSnapshot) return <LoadingState>Rolling…</LoadingState>;
 
   return (
     <section className="pb-28">
@@ -104,14 +105,14 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
       <div className="px-8 py-7">
         <Kicker accent>Routine · about {formatDuration(total)}</Kicker>
         <h1>{routine.name}</h1>
-        <p className="max-w-[640px] text-[15px] text-ink/70">
+        <PageIntro>
           Everything in{' '}
           <ReferenceTrigger keyMode={snapshot.keyMode}>
             <strong>{key}</strong>
           </ReferenceTrigger>
           . Read it through, re-roll anything you would rather not play, then start — it runs to
           the end on its own.
-        </p>
+        </PageIntro>
       </div>
 
       <ol className="sheet mx-8 px-5">
