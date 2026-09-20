@@ -22,8 +22,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Restyle — Notebook, light and dark | ✅ merged, live — doc 11 |
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
-| Cleanup — architecture review | **next** — `docs/review/ARCHITECTURE-REVIEW.md` |
-| M7b — Ear training and "hear it" | after the cleanup; see "Remaining work" |
+| Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`; the merged local branch
@@ -235,12 +235,11 @@ found first; those are the most valuable input a pause produces.
 
 Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
 
-**Cleanup — architecture review** (next, **before M7b**; agreed 2026-09-17)
-- Work through `docs/review/ARCHITECTURE-REVIEW.md`: its **Work plan** is the task list and its
-  **Decisions** section records what the player settled. One step per commit, stop at the gate.
-- Service and test code first; styling steps 1–4 not started. Steps 5 (A3+A5), 6 (A1+A4+A6+T1 —
-  `src/session/`), 7 (A2 — `PassTiming` in `src/exercises/runner/timing.ts`, `PlayedDefinition |
-  TheoryDefinition`) and 8 (T2–T4) are reviewed and merged to `main`. Next: step 9 (A7+S2).
+**Cleanup — architecture review** (done, 2026-09-20; agreed 2026-09-17)
+- All nine steps of `docs/review/ARCHITECTURE-REVIEW.md`'s work plan are reviewed and merged to
+  `main`, in this order: 5 (A3+A5), 6 (A1+A4+A6+T1 — the new `src/session/` layer), 7 (A2 —
+  `PassTiming`, `PlayedDefinition | TheoryDefinition`), 8 (T2–T4 — 785 unit tests → 670), 9
+  (A7+S2), then the styling steps 1–4.
 - Step 7 fixed a live bug: theory subject weights never reached `generate`, so the circle of
   fifths never leaned toward misses. Reviewed at the gate; a free-time routine item now plays
   every rep it asks for, one per Done, rather than a single pass.
@@ -278,7 +277,7 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
   (it did, once more, during step 6). The dev-gallery test "returns to Play when a phrase reaches
   its end" is flaky under full-suite load; unrelated to the cleanup.
 
-**M7b — Ear training and "hear it"** (after the cleanup)
+**M7b — Ear training and "hear it"** (next)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
   drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
   settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
