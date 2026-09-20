@@ -72,8 +72,13 @@ export interface PlayOptions {
 
 /** How often to read a video that has been told to play and has not said so yet. */
 const WATCH_INTERVAL_MS = 250;
-/** However long an advert runs, stop waiting eventually rather than hang. */
-const CEILING_MS = 180_000;
+/**
+ * Give up on a video that has done nothing at all for this long — counted from
+ * the last sign of life, never from the play. A sponsored pair measured 107 s
+ * on the deploy and the second was labelled 2:35, so a ceiling over the whole
+ * wait would drop a track that was playing perfectly well.
+ */
+const QUIET_CEILING_MS = 180_000;
 
 let loading: Promise<YTNamespace> | null = null;
 
@@ -243,9 +248,9 @@ export class YouTubePlayer {
    * the poll behind it is the safety net, so a reading that arrives a beat
    * late costs a quarter of a second rather than the whole wait.
    *
-   * Nothing here runs on a fixed deadline. An unskippable pre-roll measured
-   * 31.4 s on the deployed site, and every fixed deadline this replaced was
-   * shorter than that.
+   * Nothing here runs on a deadline measured from the play. Adverts measured
+   * 31.4 s and 107 s on the deployed site, and every fixed deadline this
+   * replaced was shorter than either.
    */
   private playAndWait(
     options: PlayOptions,
@@ -281,7 +286,7 @@ export class YouTubePlayer {
       const poll = setInterval(() => {
         if (accept()) return;
         const atMs = Date.now();
-        if (atMs - startedAt >= CEILING_MS) {
+        if (atMs - watch.lastProgressAtMs >= QUIET_CEILING_MS) {
           finish(
             blocked ? new Error('The video was never started.') : new YouTubeUnavailableError(),
           );

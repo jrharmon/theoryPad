@@ -1,10 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-20, **the architecture-review cleanup is merged, pushed and live**
-(`4ac008a`), and a backing-track ad investigation is closed (it found no regression — see
-"Backing tracks — ads and the YouTube host"). Nothing is in progress. Next is that three-task
-run, **in the order given**, then M7b. Written as a hand-off: a fresh session should be able to
-pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with "Remaining work".
+**Last updated:** 2026-09-20. The architecture-review cleanup is merged, pushed and live
+(`4ac008a`). **Task 1 of "Backing tracks — ads and the YouTube host" is built and at the gate**
+on branch `backing-ads` (`04c7167`) — unmerged and undeployed, because adverts only exist on the
+deploy and only `main` deploys. It also corrected the ad signal this whole run was planned
+around: see that section before starting task 2. Written as a hand-off: a fresh session should be
+able to pick up from this file, `CLAUDE.md`, and the plan docs it points to. Start with
+"Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -22,7 +24,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
-| Backing tracks — ads and the YouTube host | **next** — three tasks, in order, see "Remaining work" |
+| Backing tracks — ads and the YouTube host | task 1 built, **at the gate** (`backing-ads`); tasks 2–3 next |
 | M7b — Ear training and "hear it" | after the ad work — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -308,26 +310,63 @@ the browser had blocked autoplay. What was established:
 - **Measured baseline.** With no ad, `playVideo()` reaches state `playing` in ~475–950 ms (probe
   against `WkIijba-HcU`, a 632 s track). `BLOCKED_AFTER_MS` is 2 500, so any ad overruns it.
 
-**1. Support ads (M) — do this first, while the host is still nocookie.**
-Keeping nocookie for now is the point: it is what lets the player still see ads and verify the
-work. Switching hosts first would hide the very thing being fixed, and users without Premium will
-get ads whatever host we use. Three real bugs, all in code the cleanup never touched:
+**1. Support ads (M) — built 2026-09-20, at the gate.** Branch `backing-ads`, commit `04c7167`.
+Not yet merged or deployed: ads only exist on the deploy, and only `main` deploys, so the
+hands-on check needs a push — ask before making one.
 
-- **The exercise clock can sync to the advert.** `playAndWait` resolves on state `playing`; during
-  a pre-roll that is the ad, so `VideoBacking.follow()` starts `TrackFollower` against the ad's
-  `currentTime`, and the count-in and bar 1 line up against the ad rather than the track.
-- **We blame the browser wrongly.** The fixed 2.5 s `BLOCKED_AFTER_MS` deadline fires during any
-  ad and sets `needsClick`, showing "Your browser wants the first play to come from the video
-  itself" (`BackingPanel.tsx`) and "Press play on the video" (`TransportBar.tsx`) when autoplay was
-  never blocked. Replace the deadline with real stall detection: no state transitions **and**
-  `currentTime` not advancing. Keep a genuine blocked path — Safari and Firefox really do hold a
-  video with sound back outside the click that asked for it.
-- **The count-in must wait for the track**, not start on the advert.
+**What the deploy actually reports during an advert.** Measured before any code was written, by
+embedding `WkIijba-HcU` from the deployed page itself with the app's own host and playerVars, and
+again afterwards by replaying the new logic against a live advert. Two adverts caught, one
+unskippable pair of 31.4 s and one sponsored pair of 107 s whose second was labelled 2:35:
 
-There is no official ad API on the IFrame player. The usable signal: during a pre-roll
-`getDuration()` returns the **ad's** duration and `getCurrentTime()` the ad's time, flipping to the
-track's values when the real video starts. **Verify that on the deploy before building on it** —
-it is inferred from the API's behaviour, never observed, because no ad could be reproduced locally.
+| | during the advert | when the track starts |
+| --- | --- | --- |
+| `getPlayerState()` | **`unstarted` (−1) throughout**, skippable or not | 3 → 1 |
+| `onStateChange` | two events in the first 30 ms, then **silent for the whole advert** | fires 3, then 1 |
+| `getCurrentTime()` | the **advert's** clock: leaves the seek target, runs up from 0, resets per advert | snaps back to the seek target |
+| `getDuration()` | the **track's** length, unchanged | the track's length |
+
+**Two of the three bugs did not exist, and the inferred signal was half wrong.**
+`getDuration()` never reports the advert's duration — that half of the signal this task was
+planned around is unusable. `getCurrentTime()` does, and is the whole basis of the fix.
+And because an advert never reports `playing`, `playAndWait` never resolved on one: the clock
+already followed the real track (measured starting at `currentTime` 30.12 against a seek to 30),
+and `ExerciseSession.play` already held the count-in behind it. Bugs 1 and 3 as written were
+inferences from the same wrong premise, not observed behaviour.
+
+**What was actually wrong, and is now fixed.** The fixed 2.5 s `BLOCKED_AFTER_MS` fired during
+every advert and announced "Your browser wants the first play to come from the video itself" —
+for 105 of the 107 seconds, in the longer run.
+
+- `StartWatch` (`src/domain/backing/startWatch.ts`, pure, unit-tested) reads the video every
+  250 ms and says which silence this is. The time moving means something is playing; nothing
+  moving at all means the browser is holding it back. Once the time has moved once it never says
+  stalled again, so the gap between two back-to-back adverts cannot read as one.
+- 1.5 s grace, then stalled after 2.5 s of no progress — so a genuinely blocked video asks for
+  its click at 4.0 s. `BLOCKED_AFTER_MS`, `CLICK_WAIT_MS` and `PLAY_TIMEOUT_MS` are all gone;
+  each was shorter than either advert measured.
+- The one remaining ceiling counts from **the last sign of life**, not from the play. Counted
+  from the play it would have dropped a healthy track: two unskipped 2:35 adverts run past five
+  minutes.
+- `isTrackTime` guards the other side — the defensive guard asked for at the gate. `playing`
+  counts as the track only when the time reported with it is not short of where the video was
+  sent. **Known limit, accepted when it was asked for:** it cannot draw that line when a track
+  starts at 0, because then an advert's clock and the track's read alike; there it says yes,
+  which is what the player did before. It is fail-open on purpose — a wrong no would hang the
+  exercise, a wrong yes only costs what it cost before. The poll re-checks it behind the state
+  event, so a reading that arrives late costs 250 ms rather than the whole wait.
+- The panel says "An ad is playing. The exercise starts when the track does." A silent 30 s wait
+  after Play reads as broken.
+
+**Verified by replaying the shipped logic against a live 107 s advert on the deploy**: 423
+`advert` verdicts, **zero** `stalled`, and the track accepted 84 ms after YouTube reported it, at
+`currentTime` 30.1 against a seek to 30. `pnpm check` green (677 unit tests), all 7 backing E2E
+green including the genuine blocked path.
+
+**Still to check at the gate** — these need the deploy, so they wait on a push:
+- The ad line in both themes, and that it replaces the false blocked message rather than joining it.
+- A signed-out browser, for what a viewer without Premium gets.
+- Safari/Firefox, that the genuine blocked path still asks for its click (now at 4.0 s, not 2.5 s).
 
 **2. Switch the host to `www.youtube.com` (S) — only once task 1 is confirmed working.**
 One line in `YouTubePlayer.ts`. Also update the file's header comment, which currently argues for
@@ -346,6 +385,10 @@ is already set. Two things to resolve while doing it:
 - `needsClick` recovery currently depends on the user pressing YouTube's own play button. With the
   controls gone that route disappears — either keep a way to click through, or make sure task 1's
   stall path no longer needs one.
+- **New, from task 1's measurements: check whether Skip survives `controls: 0`.** A skippable
+  advert's Skip button was seen on the deploy with `controls: 1`. If it goes with the controls, a
+  2:35 sponsored advert becomes unskippable and the exercise waits the whole thing out. Verify on
+  the deploy before settling on `controls: 0`.
 - The player must stay visible and **at least 200×200 px** (YouTube's ToS minimum; Soundslice
   enforces it with its own "YouTube requires videos to be at least this big" notice). Check the
   side column and the shrunk state.

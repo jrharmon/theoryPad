@@ -67,13 +67,23 @@ export class StartWatch {
   private readonly startedAtMs: number;
   private lastState: number | null = null;
   private lastTime = 0;
-  private lastProgressAtMs: number;
+  private progressAtMs: number;
   private timeHasMoved = false;
 
   constructor(startedAtMs: number) {
     this.startedAtMs = startedAtMs;
     // The stall window runs from the end of the grace, not from the play.
-    this.lastProgressAtMs = startedAtMs + GRACE_MS;
+    this.progressAtMs = startedAtMs + GRACE_MS;
+  }
+
+  /**
+   * When the video last did anything. A caller giving up on a video should
+   * count from here rather than from the play: an advert measured 107 s on the
+   * deploy, and a sponsored pair of 2:35 each would run past five minutes.
+   * Something visibly playing is not a video that failed to start.
+   */
+  get lastProgressAtMs(): number {
+    return this.progressAtMs;
   }
 
   observe(sample: PlaybackSample): StartVerdict {
@@ -86,13 +96,13 @@ export class StartWatch {
     // stall — but only the time moving means something is actually playing.
     const timeMoved = Math.abs(sample.currentTime - this.lastTime) > PROGRESS_EPS_SEC;
     if (timeMoved) this.timeHasMoved = true;
-    if (timeMoved || sample.state !== this.lastState) this.lastProgressAtMs = sample.atMs;
+    if (timeMoved || sample.state !== this.lastState) this.progressAtMs = sample.atMs;
     this.lastState = sample.state;
     this.lastTime = sample.currentTime;
 
     if (sample.atMs - this.startedAtMs < GRACE_MS) return 'waiting';
     if (this.timeHasMoved) return 'advert';
-    if (sample.atMs - this.lastProgressAtMs >= STALL_MS) return 'stalled';
+    if (sample.atMs - this.progressAtMs >= STALL_MS) return 'stalled';
     return 'waiting';
   }
 }

@@ -221,6 +221,16 @@ describe('telling an advert from a blocked video', () => {
     expect(verdicts.at(-1)).toBe('advert');
   });
 
+  it('keeps moving the point a caller gives up from, so a long advert survives', () => {
+    // Measured 107 s of advert on the deploy, the second labelled 2:35: a
+    // ceiling counted from the play would have dropped a healthy track.
+    const watch = new StartWatch(0);
+    for (let atMs = 0; atMs <= 200_000; atMs += 250) {
+      watch.observe({ atMs, state: -1, currentTime: atMs / 1_000 });
+    }
+    expect(200_000 - watch.lastProgressAtMs).toBeLessThan(500);
+  });
+
   it('does not read the gap between two adverts as a blocked video', () => {
     // Once something has played, the browser plainly is not holding it back,
     // however long the player sits still between the two.
