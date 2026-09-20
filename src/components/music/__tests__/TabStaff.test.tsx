@@ -5,6 +5,7 @@ import {
   SEVEN_STRING_GUITAR,
   STANDARD_GUITAR,
   TEST_INSTRUMENTS,
+  stringCount,
 } from '@/domain/instrument';
 import { EIGHTH, EIGHTH_TRIPLET, QUARTER, SIXTEENTH, phraseBuilder } from '@/domain/phrase';
 import { TabStaff } from '../TabStaff';
@@ -274,6 +275,29 @@ describe('TabStaff', () => {
     expect(screen.getAllByTestId(/^bar-label-/)).toHaveLength(8);
     expect(screen.getByTestId('tab-note-0-16')).toBeInTheDocument();
     expect(screen.getByTestId('tab-note-0-31')).toBeInTheDocument();
+  });
+
+  it('lays every line out to the same width, so a short last line ends early', () => {
+    // A bar that stretches to fill its line reads as longer than the same bar
+    // on a full line above it. Seven bars, four to a line: the second line
+    // holds three, at the width the first line set.
+    render(
+      <TabStaff phrase={run(QUARTER, 28)} instrument={STANDARD_GUITAR} barsPerSystem={4} />,
+    );
+    const columns = (index: number) =>
+      screen
+        .getByTestId(`tab-system-${index}`)
+        .querySelector<HTMLElement>('[style*="grid-template-columns"]')?.style
+        .gridTemplateColumns;
+    expect(columns(1)).toBe(columns(0));
+    // The short line holds its remaining tracks open rather than spreading
+    // its own bars across them.
+    expect(
+      screen.getByTestId('tab-system-1').querySelectorAll('[data-testid^="tab-line-end-"]'),
+    ).toHaveLength(stringCount(STANDARD_GUITAR));
+    expect(
+      screen.getByTestId('tab-system-0').querySelectorAll('[data-testid^="tab-line-end-"]'),
+    ).toHaveLength(0);
   });
 
   it('scrolls the line being played into view once per line, unless told not to', () => {

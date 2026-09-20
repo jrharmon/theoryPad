@@ -139,6 +139,14 @@ export function TabStaff({
   const systems = chunk(phrase.bars, perSystem);
 
   const columnsPerSystem = perSystem * columnsPerBar;
+  /**
+   * Every line is laid out to the same number of columns, so a bar is the same
+   * width wherever it falls. A short last line ends early instead of stretching
+   * its bars across the page, which read as longer than they were. A phrase
+   * that fits on one line has nothing to be consistent with, so it takes the
+   * full width as before.
+   */
+  const slotColumns = Math.min(perSystem, phrase.bars.length || perSystem) * columnsPerBar;
   const activeSystem =
     playheadColumn === null ? null : Math.floor(playheadColumn / columnsPerSystem);
 
@@ -176,6 +184,7 @@ export function TabStaff({
           fretSize={fretSize}
           ticksPerColumn={ticksPerColumn}
           columnsPerBar={columnsPerBar}
+          slotColumns={slotColumns}
           playheadColumn={playheadColumn}
           showBarLabels={showBarLabels}
           showPickStrokes={showPickStrokes}
@@ -196,6 +205,8 @@ interface TabSystemProps {
   fretSize: number;
   ticksPerColumn: number;
   columnsPerBar: number;
+  /** Columns the line is laid out to — the same on every line, so bars match. */
+  slotColumns: number;
   playheadColumn: number | null;
   showBarLabels: boolean;
   showPickStrokes: boolean;
@@ -212,6 +223,7 @@ function TabSystem({
   fretSize,
   ticksPerColumn,
   columnsPerBar,
+  slotColumns,
   playheadColumn,
   showBarLabels,
   showPickStrokes,
@@ -228,7 +240,10 @@ function TabSystem({
   );
 
   const labelCol = LABEL_COL[size];
-  const gridColumns = `${labelCol}px repeat(${columnCount}, minmax(0, 1fr))`;
+  // Laid out to the full line, not to this line's bars: the tracks past the
+  // last bar are simply left empty.
+  const gridColumns = `${labelCol}px repeat(${slotColumns}, minmax(0, 1fr))`;
+  const unused = Math.max(0, slotColumns - columnCount);
 
   const localPlayhead =
     playheadColumn !== null &&
@@ -253,8 +268,8 @@ function TabSystem({
             style={{
               // Positioned by CSS against the column count so it tracks the grid
               // at any width, and so playback need not re-render the tree.
-              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${localPlayhead / columnCount})`,
-              width: `calc((100% - ${labelCol}px) / ${columnCount})`,
+              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${localPlayhead / slotColumns})`,
+              width: `calc((100% - ${labelCol}px) / ${slotColumns})`,
             }}
           />
         )}
@@ -270,7 +285,7 @@ function TabSystem({
             style={{
               top: rowHeight / 2,
               bottom: rowHeight / 2,
-              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${(k * columnsPerBar) / columnCount})`,
+              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${(k * columnsPerBar) / slotColumns})`,
               ...(k === bars.length ? { transform: 'translateX(-1px)' } : {}),
             }}
           />
@@ -284,6 +299,7 @@ function TabSystem({
               stringIndex={stringIndex}
               firstColumn={firstColumn}
               columnCount={columnCount}
+              unusedColumns={unused}
               placed={placed.get(stringIndex) ?? []}
               rowHeight={rowHeight}
               fretSize={fretSize}
@@ -377,6 +393,8 @@ interface TabRowProps {
   /** Absolute column index this system starts at. */
   firstColumn: number;
   columnCount: number;
+  /** Tracks left over at the end of a short last line. */
+  unusedColumns: number;
   placed: Placed[];
   rowHeight: number;
   fretSize: number;
@@ -389,6 +407,7 @@ function TabRow({
   stringIndex,
   firstColumn,
   columnCount,
+  unusedColumns,
   placed,
   rowHeight,
   fretSize,
@@ -456,6 +475,17 @@ function TabRow({
           </div>
         );
       })}
+
+      {/* A short last line ends here: the tracks past its last bar are held
+          open so the strings below still start in the label column, and they
+          carry no string line, so the staff stops with the music. */}
+      {unusedColumns > 0 && (
+        <div
+          aria-hidden
+          data-testid={`tab-line-end-${stringIndex}`}
+          style={{ height: rowHeight, gridColumn: `span ${unusedColumns}` }}
+        />
+      )}
     </>
   );
 }
