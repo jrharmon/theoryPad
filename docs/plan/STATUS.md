@@ -1,11 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **Feedback round 4 is built and waiting at its gate** — five
-transport and generator fixes from another session with the app in hand, listed under "Feedback
-round 4" below. Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
+**Last updated:** 2026-09-20. **Feedback round 4 is merged and live** — five transport and
+generator fixes from living with the app, listed under "Feedback round 4" below. Nothing is in
+progress. Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
 going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
 at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
-next once round 4 is merged.** The ad task corrected the advert signal that whole run was planned
+next.** The ad task corrected the advert signal that whole run was planned
 around, so read that section before touching backing playback again. Written as a hand-off: a
 fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it points
 to. Start with "Remaining work".
@@ -27,8 +27,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
-| Feedback round 4 — transport and turning notes | built, **at its gate** — see below |
-| M7b — Ear training and "hear it" | **next**, after round 4 — see "Remaining work" |
+| Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -229,10 +229,10 @@ the perfect view of related chords".
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
-## Feedback round 4 — at its gate (2026-09-20)
+## Feedback round 4 — merged (2026-09-20)
 
-Five things from another session with the app in hand. All five are on `feedback-round-4`,
-`pnpm check` is green, and each was driven in the browser and looked at rather than only tested.
+Five things from living with the app. All merged to `main`; `pnpm check` is green, and each was
+driven in the browser and looked at rather than only tested.
 
 - **A routine item's count-in was already its own** — copied from the exercise when the item is
   added and written back to the item, never to the exercise. Checked end to end and pinned by a
