@@ -29,6 +29,8 @@ export interface BackingState {
   started: boolean;
   /** The browser held the video back: it wants a click on the video itself. */
   needsClick: boolean;
+  /** An advert is playing over the track. The exercise waits it out. */
+  advert: boolean;
 }
 
 export const NO_BACKING: BackingState = {
@@ -43,6 +45,7 @@ export const NO_BACKING: BackingState = {
   starting: false,
   started: false,
   needsClick: false,
+  advert: false,
 };
 
 /** The same thing, so a refresh need not rebuild what is already playing. */
@@ -243,9 +246,13 @@ export class BackingController {
     this.setSpeed(speedFor(tempo, resolved.video.bpm));
   }
 
-  /** The browser held a video back: say so, and wait for the click on it. */
-  private readonly askForClick: PlayOptions = {
+  /**
+   * What a video that has not started yet means: an advert to wait out, or a
+   * browser holding it back until the video itself is clicked.
+   */
+  private readonly whileStarting: PlayOptions = {
     onBlocked: () => this.set({ needsClick: true }),
+    onAdvert: () => this.set({ advert: true }),
   };
 
   /**
@@ -258,7 +265,7 @@ export class BackingController {
     this.set({ starting: true });
     try {
       // The play goes out before this awaits — inside the click, if there was one.
-      await source.start(countInTicks, this.askForClick);
+      await source.start(countInTicks, this.whileStarting);
       this.set({ starting: false, started: true, needsClick: false });
     } catch (e) {
       source.dispose();
@@ -270,6 +277,7 @@ export class BackingController {
         starting: false,
         started: false,
         needsClick: false,
+        advert: false,
       });
     }
   }
@@ -297,7 +305,7 @@ export class BackingController {
     const { source, started, starting } = this.current;
     if (!source || (!started && !starting)) return;
     source.stop();
-    this.set({ started: false });
+    this.set({ started: false, advert: false });
   }
 
   pause(): void {
@@ -305,8 +313,9 @@ export class BackingController {
   }
 
   async resume(): Promise<void> {
-    await this.current.source?.resume(this.askForClick).catch(() => undefined);
-    if (this.current.needsClick) this.set({ needsClick: false });
+    await this.current.source?.resume(this.whileStarting).catch(() => undefined);
+    if (this.current.needsClick || this.current.advert)
+      this.set({ needsClick: false, advert: false });
   }
 
   /**
@@ -317,7 +326,7 @@ export class BackingController {
     const { source } = this.current;
     if (!source || !this.underTrack) return;
     source.dispose();
-    this.set({ source: null, player: null, started: false });
+    this.set({ source: null, player: null, started: false, advert: false });
   }
 
   dispose(): void {

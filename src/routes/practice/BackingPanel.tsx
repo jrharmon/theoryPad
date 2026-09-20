@@ -71,6 +71,11 @@ export function BackingPanel() {
                 button — the app lines the track up from there.
               </p>
             )}
+            {backing.advert && !backing.needsClick && (
+              <p className="mt-2 text-body-sm text-ink-muted" data-testid="backing-advert">
+                An ad is playing. The exercise starts when the track does.
+              </p>
+            )}
             <div className="mt-2">
               <PlayerSlot player={backing.player} keepKeys />
             </div>

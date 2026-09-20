@@ -7,12 +7,14 @@ import {
   effectiveTempo,
   followFactor,
   formatVideoTime,
+  isTrackTime,
   loopEndSec,
   parseVideoTime,
   parseYouTubeLink,
   snapSpeed,
   speedFor,
   speedPercent,
+  StartWatch,
   stepSpeed,
   tapTempo,
   tickAtVideoTime,
@@ -179,5 +181,72 @@ describe('the drone', () => {
     expect(
       droneNotes({ tonic: pitchClass('D#'), mode: 'dorian' }).map((n) => n.slice(-1)),
     ).toEqual(['3', '3', '4']);
+  });
+});
+
+describe('telling an advert from a blocked video', () => {
+  /** Poll a watch the way the player does, and collect what it says. */
+  const run = (samples: { atMs: number; state: number; currentTime: number }[]) => {
+    const watch = new StartWatch(0);
+    return samples.map((s) => watch.observe(s));
+  };
+
+  /** Readings every 200 ms from a time that never moves: autoplay was refused. */
+  const frozen = (untilMs: number, at: number) =>
+    Array.from({ length: untilMs / 200 + 1 }, (_, i) => ({
+      atMs: i * 200,
+      state: -1,
+      currentTime: at,
+    }));
+
+  it('says nothing until the grace is up, then calls a motionless video stalled', () => {
+    const verdicts = run(frozen(4_400, 30));
+    // The stall window runs from the end of the grace: 1500 + 2500.
+    expect(verdicts.slice(0, 4_000 / 200)).toEqual(Array(20).fill('waiting'));
+    expect(verdicts.slice(4_000 / 200)).toEqual(Array(3).fill('stalled'));
+  });
+
+  it('calls a pre-roll an advert, and never calls it stalled', () => {
+    // The measured trace: the time leaves the seek target, runs the advert's
+    // clock up from zero, restarts for a second advert, and only then does the
+    // player report playing. State sits at unstarted throughout.
+    const samples = [];
+    for (let atMs = 0; atMs <= 31_400; atMs += 200) {
+      const currentTime =
+        atMs < 1_000 ? 30 : atMs < 15_600 ? (atMs - 1_000) / 1_000 : (atMs - 15_600) / 1_000;
+      samples.push({ atMs, state: -1, currentTime });
+    }
+    const verdicts = run(samples);
+    expect(verdicts).not.toContain('stalled');
+    expect(verdicts.at(-1)).toBe('advert');
+  });
+
+  it('does not read the gap between two adverts as a blocked video', () => {
+    // Once something has played, the browser plainly is not holding it back,
+    // however long the player sits still between the two.
+    const verdicts = run([
+      { atMs: 0, state: -1, currentTime: 30 },
+      { atMs: 2_000, state: -1, currentTime: 4 },
+      ...frozen(20_000, 15).map((s) => ({ ...s, atMs: s.atMs + 3_000 })),
+    ]);
+    expect(verdicts).not.toContain('stalled');
+  });
+});
+
+describe('the advert guard on a reported start', () => {
+  it('turns down an advert counting up under the seek target', () => {
+    expect(isTrackTime(0.2, 30)).toBe(false);
+    expect(isTrackTime(14.8, 30)).toBe(false);
+  });
+
+  it('accepts the track, and anything at or past where it was sent', () => {
+    expect(isTrackTime(30.12, 30)).toBe(true);
+    // YouTube clamping a seek lands past the target, never short of it.
+    expect(isTrackTime(631.6, 30)).toBe(true);
+  });
+
+  it('cannot tell them apart when the track starts at zero, and says so', () => {
+    // Documented limit: an advert's clock and a track from the top read alike.
+    expect(isTrackTime(0.2, 0)).toBe(true);
   });
 });

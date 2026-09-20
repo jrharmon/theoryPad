@@ -7,6 +7,8 @@
  * youtube-nocookie.com, the privacy-preserving embed.
  */
 
+import { StartWatch, isTrackTime } from '@/domain/backing';
+
 interface YTPlayerApi {
   playVideo(): void;
   pauseVideo(): void;
@@ -60,18 +62,18 @@ export class YouTubeUnavailableError extends Error {
   }
 }
 
-/** Told to play, the browser may hold a video with sound back until it is clicked. */
+/** Told to play, a video may be held back by the browser, or sat behind an advert. */
 export interface PlayOptions {
-  /** It has not started after a moment: the browser wants a click on the video itself. */
+  /** Nothing is moving at all: the browser wants a click on the video itself. */
   onBlocked?: () => void;
+  /** Something is playing, but it is not the track yet: a pre-roll advert. */
+  onAdvert?: () => void;
 }
 
-/** How long a play gets before it counts as held back. */
-const BLOCKED_AFTER_MS = 2_500;
-/** How long to wait for the click on the video, once asked for, before giving up. */
-const CLICK_WAIT_MS = 180_000;
-/** Without anyone to ask, how long before giving up. */
-const PLAY_TIMEOUT_MS = 10_000;
+/** How often to read a video that has been told to play and has not said so yet. */
+const WATCH_INTERVAL_MS = 250;
+/** However long an advert runs, stop waiting eventually rather than hang. */
+const CEILING_MS = 180_000;
 
 let loading: Promise<YTNamespace> | null = null;
 
@@ -221,47 +223,89 @@ export class YouTubePlayer {
   playFrom(seconds: number, options: PlayOptions = {}): Promise<void> {
     if (!this.isReady) return this.ready.then(() => this.playFrom(seconds, options));
     this.seekTo(seconds);
-    return this.playAndWait(options, () => this.seekTo(seconds));
+    return this.playAndWait(options, seconds, () => this.seekTo(seconds));
   }
 
   /** Carry on from where it is, settling once it is playing. */
   resume(options: PlayOptions = {}): Promise<void> {
     if (!this.isReady) return this.ready.then(() => this.resume(options));
-    return this.playAndWait(options, null);
+    // Where it already is, is where it should come back: an advert would read
+    // well short of it.
+    return this.playAndWait(options, this.currentTime, null);
   }
 
-  private playAndWait(options: PlayOptions, realign: (() => void) | null): Promise<void> {
+  /**
+   * Wait for the track itself.
+   *
+   * `from` is where the video was sent to. `playing` is taken at face value
+   * only when the time reported with it belongs to the track rather than to an
+   * advert playing over it (`isTrackTime`). The state event is the fast path;
+   * the poll behind it is the safety net, so a reading that arrives a beat
+   * late costs a quarter of a second rather than the whole wait.
+   *
+   * Nothing here runs on a fixed deadline. An unskippable pre-roll measured
+   * 31.4 s on the deployed site, and every fixed deadline this replaced was
+   * shorter than that.
+   */
+  private playAndWait(
+    options: PlayOptions,
+    from: number,
+    realign: (() => void) | null,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const startedAt = Date.now();
+      const watch = new StartWatch(startedAt);
       let blocked = false;
+      let advertSeen = false;
+
       const finish = (error?: Error) => {
-        clearTimeout(blockTimer);
-        clearTimeout(giveUp);
+        clearInterval(poll);
         stop();
         this.cancels.delete(finish);
         if (error) reject(error);
         else resolve();
       };
-      const stop = this.onState((state) => {
-        if (state !== YT_STATE.playing) return;
+      /** Playing, and playing the track: done. */
+      const accept = (): boolean => {
+        if (this.state !== YT_STATE.playing || !isTrackTime(this.currentTime, from))
+          return false;
         if (blocked) realign?.();
         finish();
+        return true;
+      };
+
+      const stop = this.onState((state) => {
+        if (state === YT_STATE.playing) accept();
       });
-      const blockTimer = setTimeout(() => {
-        blocked = true;
-        options.onBlocked?.();
-      }, BLOCKED_AFTER_MS);
-      const giveUp = setTimeout(
-        () =>
+
+      const poll = setInterval(() => {
+        if (accept()) return;
+        const atMs = Date.now();
+        if (atMs - startedAt >= CEILING_MS) {
           finish(
-            blocked && options.onBlocked
-              ? new Error('The video was never started.')
-              : new YouTubeUnavailableError(),
-          ),
-        options.onBlocked ? CLICK_WAIT_MS : PLAY_TIMEOUT_MS,
-      );
+            blocked ? new Error('The video was never started.') : new YouTubeUnavailableError(),
+          );
+          return;
+        }
+        const verdict = watch.observe({
+          atMs,
+          state: this.state,
+          currentTime: this.currentTime,
+        });
+        if (verdict === 'advert' && !advertSeen) {
+          advertSeen = true;
+          options.onAdvert?.();
+        } else if (verdict === 'stalled' && !blocked) {
+          blocked = true;
+          // Nobody to ask for the click: nothing is going to start it.
+          if (options.onBlocked) options.onBlocked();
+          else finish(new YouTubeUnavailableError());
+        }
+      }, WATCH_INTERVAL_MS);
+
       this.cancels.add(finish);
       this.play();
-      if (this.state === YT_STATE.playing) finish();
+      accept();
     });
   }
 
