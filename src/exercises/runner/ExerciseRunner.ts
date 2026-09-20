@@ -17,6 +17,7 @@ import type { TempoConfig, TempoPlan } from '@/domain/tempo';
 import { clampTempo, resolveStartTempo } from '@/domain/tempo';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
 import { passTiming, type PassTiming } from './timing';
+import { definedProps } from '@/lib/definedProps';
 import type { RepOutcome, RepRecord, RunnerSnapshot, RunnerState, SetResult } from './types';
 
 export interface RunnerConfig {
@@ -469,12 +470,14 @@ export class ExerciseRunner {
       axes: definition.axes,
       seed: hashSeed(sessionId, this.config.seedKey ?? exerciseId, 0, this.rollAttempt),
       instrument,
-      ...(policies ? { policies } : {}),
       held,
-      ...(this.config.coverage ? { coverage: this.config.coverage } : {}),
-      ...(definition.allowedValues ? { allowed: definition.allowedValues } : {}),
-      ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
       sessionKeyMode,
+      ...definedProps({
+        policies,
+        coverage: this.config.coverage,
+        allowed: definition.allowedValues,
+        blocked: this.config.blocked,
+      }),
     });
     this.generate();
   }
@@ -631,9 +634,11 @@ export class ExerciseRunner {
         axes: variationKeys(this.variation),
         seed: this.variation.seed,
         status: outcome,
-        ...(options.score ? { score: options.score } : {}),
-        ...(options.answers ? { answers: options.answers } : {}),
-        ...(phrase ? { frets: fretTally(phrase, this.config.instrument.tuning.length) } : {}),
+        ...definedProps({
+          score: options.score,
+          answers: options.answers,
+          frets: phrase ? fretTally(phrase, this.config.instrument.tuning.length) : undefined,
+        }),
       };
       if (options.score) {
         this.lastSet = {

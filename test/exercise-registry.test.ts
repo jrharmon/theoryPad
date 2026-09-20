@@ -85,11 +85,13 @@ describe('the registry', () => {
     }
   });
 
-  it('validates its own default params', () => {
+  it('has a schema that can build its own starting params', () => {
+    // Every param carries a `.default()`, so an exercise added to the library
+    // is configured without anyone writing the defaults out a second time.
     for (const definition of EXERCISE_DEFINITIONS) {
       if (!definition.params) continue;
-      const result = definition.params.safeParse(definition.defaults.params ?? {});
-      expect(result.success, `${definition.id} default params are invalid`).toBe(true);
+      const result = definition.params.safeParse({});
+      expect(result.success, `${definition.id} cannot build params from its schema`).toBe(true);
     }
   });
 

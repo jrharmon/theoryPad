@@ -9,6 +9,7 @@ import {
 } from '@/domain/instrument';
 import { mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
 import type { GenerationContext } from '../../types';
+import { estimateItemSeconds } from '../../estimate';
 import { modesThroughKey, type ModesThroughKeyParams } from '../definition';
 
 const DEFAULTS: ModesThroughKeyParams = { variant: 'plain', shapesPerRep: 7, minFret: 1 };
@@ -136,8 +137,11 @@ describe('modes-through-key', () => {
   });
 
   it('estimates a sensible duration', () => {
-    const instance = generate();
-    const seconds = modesThroughKey.estimateRepSeconds(instance, 70);
+    const seconds = estimateItemSeconds(
+      modesThroughKey,
+      { params: DEFAULTS, tempo: { targetTempo: 70, maxTempo: null }, axisPolicies: {}, reps: 1 },
+      STANDARD_GUITAR,
+    );
     expect(seconds).toBeGreaterThan(30);
     expect(seconds).toBeLessThan(400);
   });

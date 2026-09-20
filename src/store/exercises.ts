@@ -37,11 +37,12 @@ interface ExercisesState {
 
 /** A configured exercise, seeded from its definition's defaults. */
 export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise {
-  // The registry erases each definition's params type, so this is genuinely
-  // unknown here; the definition validates it and the runner hands it straight
-  // back to the same definition.
+  // Straight from the schema: its `.default()` values are the exercise's
+  // starting params, written once. The registry erases each definition's
+  // params type, so this is genuinely unknown here; the definition validates
+  // it and the runner hands it straight back to the same definition.
   const params: unknown = definition.params
-    ? (definition.params.parse(definition.defaults.params ?? {}) as unknown)
+    ? (definition.params.parse({}) as unknown)
     : undefined;
 
   return {

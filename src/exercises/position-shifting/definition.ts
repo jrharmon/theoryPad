@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import type { NeckPosition } from '@/domain/instrument';
 import { STRAIGHT_EIGHTHS, phraseBuilder } from '@/domain/phrase';
-import type { RhythmPattern } from '@/domain/phrase';
-import type { Direction } from '@/domain/variation';
 import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
   axisDisplay,
@@ -13,7 +10,6 @@ import {
   noteOptionsFor,
   orderedHighlights,
   overlayFromPhrase,
-  phraseEstimate,
 } from '../shared';
 
 const params = z.object({
@@ -41,7 +37,6 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
   defaults: {
     targetTempo: 72,
     reps: 2,
-    params: { shiftOn: 'every-other-string' },
     axisPolicies: {
       // Only up-and-back shows both routes; a one-way run is still available.
       direction: { mode: 'roll', from: ['up-down', 'down-up'] },
@@ -52,9 +47,9 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
   timing: 'either',
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
-    const position = axisValue<NeckPosition>(variation, 'neckPosition', { fret: 3, span: 4 });
-    const direction = axisValue<Direction>(variation, 'direction', 'up-down');
-    const rhythm = axisValue<RhythmPattern>(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
+    const position = axisValue(variation, 'neckPosition', { fret: 3, span: 4 });
+    const direction = axisValue(variation, 'direction', 'up-down');
+    const rhythm = axisValue(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
 
     const run = horizontalRun({ instrument, keyMode, minFret: position.fret, shiftOn: config.shiftOn });
     if (!run) throw new Error(`No run of ${keyModeLabel(keyMode)} fits from fret ${position.fret}`);
@@ -88,6 +83,4 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
       ),
     };
   },
-
-  estimateRepSeconds: phraseEstimate(72),
 };

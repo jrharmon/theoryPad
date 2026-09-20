@@ -67,7 +67,7 @@ describe('resolveParams', () => {
   });
 
   it('falls back to the defaults when stored params no longer validate', () => {
-    expect(resolveParams(definition, { variant: 'retired' })).toEqual(definition.defaults.params);
+    expect(resolveParams(definition, { variant: 'retired' })).toEqual(definition.params!.parse({}));
   });
 });
 

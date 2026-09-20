@@ -30,7 +30,7 @@ function generateAny(
     policies: { ...definition.defaults.axisPolicies, ...policies },
   });
   // The registry erases each definition's params type; this is the parsed default.
-  const params: unknown = definition.params?.parse(definition.defaults.params ?? {});
+  const params: unknown = definition.params?.parse({});
   const instance = definition.generate({
     variation,
     keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('D'), mode: 'dorian' },

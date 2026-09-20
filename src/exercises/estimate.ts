@@ -1,11 +1,14 @@
 import type { Instrument } from '@/domain/instrument';
 import { pitchClass } from '@/domain/music';
-import { ticksPerBar, ticksToSeconds } from '@/domain/phrase';
+import { phraseSeconds, ticksPerBar, ticksToSeconds } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
 import { mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import { resolveParams } from './params';
 import type { AnyExerciseDefinition } from './types';
+
+/** For an exercise with no pulse of its own: something to estimate against. */
+const DEFAULT_TEMPO = 90;
 
 /**
  * About how long a routine item takes: one sample roll of its material, times
@@ -40,7 +43,10 @@ export function estimateItemSeconds(
   const tempo = item.tempo.targetTempo;
   const played = definition.generate(context);
   const countIn = tempo !== null ? ticksToSeconds(ticksPerBar(played.phrase.timeSignature), tempo) : 0;
-  return definition.estimateRepSeconds(played, tempo) * reps + countIn;
+  const pass =
+    definition.estimateRepSeconds?.(played, tempo) ??
+    phraseSeconds(played.phrase, tempo ?? definition.defaults.targetTempo ?? DEFAULT_TEMPO);
+  return pass * reps + countIn;
 }
 
 /** "4 min", "45 sec" — a routine's running total. */

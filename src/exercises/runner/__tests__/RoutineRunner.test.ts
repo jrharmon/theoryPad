@@ -11,11 +11,7 @@ import { RoutineRunner, type RoutineRunItem, type RoutineRunnerConfig } from '..
 const BAR = ticksPerBar({ beats: 4, unit: 4 });
 
 /** Short items, so a pass is a bar or two rather than twenty-one. */
-const tiny: AnyExerciseDefinition = {
-  ...modesThroughKey,
-  id: 'tiny',
-  defaults: { ...modesThroughKey.defaults, params: { variant: 'plain', shapesPerRep: 1, minFret: 1 } },
-};
+const tiny: AnyExerciseDefinition = { ...modesThroughKey, id: 'tiny' };
 
 function item(id: string, overrides: Partial<RoutineRunItem> = {}): RoutineRunItem {
   return {

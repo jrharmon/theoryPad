@@ -102,5 +102,5 @@ export function resolveParams(definition: AnyExerciseDefinition, stored: unknown
   if (!definition.params) return undefined;
   const parsed = definition.params.safeParse(stored ?? {});
   if (parsed.success) return parsed.data as unknown;
-  return definition.params.parse(definition.defaults.params ?? {}) as unknown;
+  return definition.params.parse({}) as unknown;
 }

@@ -33,11 +33,6 @@ export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
   defaults: {
     targetTempo: null,
     reps: 1,
-    params: {
-      questionTypes: ['name-notes', 'name-chords', 'spell-chord', 'chord-function'],
-      chordDepth: 'both',
-      questionCount: 8,
-    },
   },
 
   generate({ keyMode, rng, variation, params: config }): TheoryInstance {

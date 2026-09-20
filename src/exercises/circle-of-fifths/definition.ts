@@ -50,18 +50,6 @@ export const circleOfFifths: TheoryDefinition<CircleOfFifthsParams> = {
   defaults: {
     targetTempo: null,
     reps: 1,
-    params: {
-      questionTypes: [
-        'signature-to-key',
-        'key-to-signature',
-        'relative-minor',
-        'relative-major',
-        'neighbour-key',
-        'mode-signature',
-      ],
-      questionCount: 10,
-      includeModes: true,
-    },
   },
 
   generate({ rng, params: config, subjectWeights = {} }): TheoryInstance {

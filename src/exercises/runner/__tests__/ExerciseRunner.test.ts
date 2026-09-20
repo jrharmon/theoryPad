@@ -11,11 +11,7 @@ import { ExerciseRunner, type RunnerConfig } from '../ExerciseRunner';
 const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
 
 /** A tiny exercise, so a rep is one bar rather than twenty-one. */
-const tinyExercise: AnyExerciseDefinition = {
-  ...modesThroughKey,
-  id: 'tiny',
-  defaults: { ...modesThroughKey.defaults, params: { variant: 'plain', shapesPerRep: 1, minFret: 1 } },
-};
+const tinyExercise: AnyExerciseDefinition = { ...modesThroughKey, id: 'tiny' };
 
 function makeRunner(overrides: Partial<RunnerConfig> = {}) {
   const clock = new FakeClock(120);

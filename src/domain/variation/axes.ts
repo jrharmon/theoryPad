@@ -67,7 +67,27 @@ function positionName(position: NeckPosition): string {
   return `${position.fret}${suffix} position`;
 }
 
-const modeAxis: AxisDefinition<ModeName> = {
+/**
+ * What each axis rolls.
+ *
+ * One place says an axis's type, so a generator reading `neckPosition` gets a
+ * NeckPosition without saying so — and an axis whose definition rolls
+ * something else does not compile.
+ */
+export interface AxisValues {
+  mode: ModeName;
+  key: PitchClass;
+  neckPosition: NeckPosition;
+  stringSet: StringSet;
+  targetScaleDegree: DegreeNumber;
+  rhythmPattern: RhythmPattern;
+  direction: Direction;
+  shapeSystem: ShapeSystem;
+  intervalPattern: IntervalPattern;
+  intervalPairing: IntervalPairing;
+}
+
+const modeAxis: AxisDefinition<AxisValues['mode']> = {
   id: 'mode',
   scope: 'session',
   label: 'Mode',
@@ -82,7 +102,7 @@ const modeAxis: AxisDefinition<ModeName> = {
  * phrygian is written C#. So it depends on `mode` being resolved first, which
  * is why session axes roll in a defined order.
  */
-const keyAxis: AxisDefinition<PitchClass> = {
+const keyAxis: AxisDefinition<AxisValues['key']> = {
   id: 'key',
   scope: 'session',
   label: 'Key',
@@ -101,7 +121,7 @@ const keyAxis: AxisDefinition<PitchClass> = {
   identity: (key) => (/^[A-G](#|b)?$/.test(key) ? String(chroma(pitchClass(key))) : key),
 };
 
-const neckPositionAxis: AxisDefinition<NeckPosition> = {
+const neckPositionAxis: AxisDefinition<AxisValues['neckPosition']> = {
   id: 'neckPosition',
   scope: 'exercise',
   label: 'Position',
@@ -112,7 +132,7 @@ const neckPositionAxis: AxisDefinition<NeckPosition> = {
   parse: (key) => NECK_POSITIONS.find((p) => String(p.fret) === key) ?? null,
 };
 
-const stringSetAxis: AxisDefinition<StringSet> = {
+const stringSetAxis: AxisDefinition<AxisValues['stringSet']> = {
   id: 'stringSet',
   scope: 'exercise',
   label: 'String set',
@@ -129,7 +149,7 @@ const stringSetAxis: AxisDefinition<StringSet> = {
  * Weighted toward the mode's signature degree — the note that makes the mode
  * sound like itself is the most useful thing to be asked to land on.
  */
-const targetScaleDegreeAxis: AxisDefinition<DegreeNumber> = {
+const targetScaleDegreeAxis: AxisDefinition<AxisValues['targetScaleDegree']> = {
   id: 'targetScaleDegree',
   scope: 'exercise',
   label: 'Land on',
@@ -142,7 +162,7 @@ const targetScaleDegreeAxis: AxisDefinition<DegreeNumber> = {
   },
 };
 
-const rhythmPatternAxis: AxisDefinition<RhythmPattern> = {
+const rhythmPatternAxis: AxisDefinition<AxisValues['rhythmPattern']> = {
   id: 'rhythmPattern',
   scope: 'exercise',
   label: 'Rhythm',
@@ -158,7 +178,7 @@ const rhythmPatternAxis: AxisDefinition<RhythmPattern> = {
   },
 };
 
-const directionAxis: AxisDefinition<Direction> = {
+const directionAxis: AxisDefinition<AxisValues['direction']> = {
   id: 'direction',
   scope: 'exercise',
   label: 'Direction',
@@ -173,7 +193,7 @@ const directionAxis: AxisDefinition<Direction> = {
  * fingerings rather than derivable and arrive as tables in milestone 8, so the
  * axis exists with one candidate rather than offering something that throws.
  */
-const shapeSystemAxis: AxisDefinition<ShapeSystem> = {
+const shapeSystemAxis: AxisDefinition<AxisValues['shapeSystem']> = {
   id: 'shapeSystem',
   scope: 'exercise',
   label: 'Shapes',
@@ -183,7 +203,7 @@ const shapeSystemAxis: AxisDefinition<ShapeSystem> = {
   parse: (key) => (key === '3nps' || key === 'positional' ? key : null),
 };
 
-const intervalPatternAxis: AxisDefinition<IntervalPattern> = {
+const intervalPatternAxis: AxisDefinition<AxisValues['intervalPattern']> = {
   id: 'intervalPattern',
   scope: 'exercise',
   label: 'Interval',
@@ -193,7 +213,7 @@ const intervalPatternAxis: AxisDefinition<IntervalPattern> = {
   parse: (key) => INTERVAL_PATTERNS.find((p) => p.id === key) ?? null,
 };
 
-const intervalPairingAxis: AxisDefinition<IntervalPairing> = {
+const intervalPairingAxis: AxisDefinition<AxisValues['intervalPairing']> = {
   id: 'intervalPairing',
   scope: 'exercise',
   label: 'Pairing',

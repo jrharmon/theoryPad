@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { StringSet } from '@/domain/instrument';
 import { allStrings, stringLabel } from '@/domain/instrument';
 import { QUARTER, phraseBuilder } from '@/domain/phrase';
 import type { PlayedDefinition, PlayedInstance } from '../types';
@@ -9,7 +8,6 @@ import {
   makeBrief,
   oneNotePerString as sweep,
   orderedHighlights,
-  phraseEstimate,
   roleFor,
 } from '../shared';
 
@@ -41,13 +39,12 @@ export const oneNotePerString: PlayedDefinition<OneNotePerStringParams> = {
   defaults: {
     targetTempo: 35,
     reps: 2,
-    params: { stopCondition: 'return-to-root', cycles: 4, step: 'next-scale-degree' },
     // String set: every string, the axis's own default. A set is still a choice.
   },
   timing: 'either',
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
-    const set = axisValue<StringSet>(variation, 'stringSet', allStrings(instrument));
+    const set = axisValue(variation, 'stringSet', allStrings(instrument));
     const notes = sweep({
       instrument,
       keyMode,
@@ -78,6 +75,4 @@ export const oneNotePerString: PlayedDefinition<OneNotePerStringParams> = {
       ),
     };
   },
-
-  estimateRepSeconds: phraseEstimate(35),
 };

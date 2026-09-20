@@ -76,7 +76,7 @@ export interface ExerciseRendererProps {
   instrument: Instrument;
 }
 
-export interface ExerciseDefaults<P> {
+export interface ExerciseDefaults {
   /** Null for theory exercises and anything with no pulse. */
   targetTempo: number | null;
   /**
@@ -87,7 +87,6 @@ export interface ExerciseDefaults<P> {
   /** Bars of count-in before the first pass. One unless the exercise wants less, or none. */
   countInBars?: CountInBars;
   tempoPlan?: TempoPlan;
-  params?: P;
   /** Per-axis overrides. Anything omitted rolls freely. */
   axisPolicies?: AxisPolicies;
 }
@@ -127,7 +126,7 @@ interface DefinitionBase<P> {
   /** Per-instance configuration. A Zod schema gives typed params and a form. */
   params?: z.ZodType<P>;
 
-  defaults: ExerciseDefaults<P>;
+  defaults: ExerciseDefaults;
 
   /** Replace the default runner body entirely. The escape hatch. */
   Renderer?: ComponentType<ExerciseRendererProps>;
@@ -139,8 +138,12 @@ export interface PlayedDefinition<P = void> extends DefinitionBase<P> {
   timing?: ExerciseTiming;
   /** The function. Pure: same context in, same instance out. */
   generate(context: GenerationContext<P>): PlayedInstance;
-  /** How long one rep takes, for routine duration estimates. */
-  estimateRepSeconds(instance: PlayedInstance, tempo: number | null): number;
+  /**
+   * How long one rep takes, for routine duration estimates. Omitted, it is
+   * how long the phrase lasts — at the given tempo, or this exercise's own
+   * default.
+   */
+  estimateRepSeconds?(instance: PlayedInstance, tempo: number | null): number;
 }
 
 /** Answered, not played: a set of questions, with no clock at all. */

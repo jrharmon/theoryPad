@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { DegreeNumber } from '@/domain/music';
 import { noteAtDegree } from '@/domain/music';
-import { EIGHTH, QUARTER, phraseBuilder, phraseSeconds, rhythmById } from '@/domain/phrase';
+import { EIGHTH, QUARTER, phraseBuilder, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { AxisId, Direction } from '@/domain/variation';
 import type { PlayedDefinition, GenerationContext, PlayedInstance } from '../types';
@@ -50,7 +50,6 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
   defaults: {
     targetTempo: 70,
     reps: 2,
-    params: { variant: 'plain', shapesPerRep: 7, minFret: 1 },
   },
 
   timing: 'either',
@@ -130,6 +129,4 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       brief: makeBrief(headline, instruction, orderedHighlights(variation, highlights)),
     };
   },
-
-  estimateRepSeconds: (instance, tempo) => phraseSeconds(instance.phrase, tempo ?? 70),
 };

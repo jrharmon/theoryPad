@@ -7,6 +7,7 @@ import { ExerciseRunner, type Reconfiguration } from '@/exercises/runner';
 import { resolveParams } from '@/exercises/params';
 import { exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
+import { definedProps } from '@/lib/definedProps';
 import type { SessionDeps } from './ports';
 import {
   FALLBACK_KEY_MODE,
@@ -152,11 +153,7 @@ export class ExerciseSession extends PracticeSession {
   async reconfigure(changes: Reconfiguration): Promise<void> {
     this.exercise.reconfigure(changes);
     this.backing.refresh();
-    await this.deps.saveExercise(this.exerciseId, {
-      ...(changes.params !== undefined ? { params: changes.params } : {}),
-      ...(changes.tempo ? { tempo: changes.tempo } : {}),
-      ...(changes.axisPolicies ? { axisPolicies: changes.axisPolicies } : {}),
-    });
+    await this.deps.saveExercise(this.exerciseId, definedProps(changes));
   }
 
   async setCountIn(bars: CountInBars): Promise<void> {

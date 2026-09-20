@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import type { DegreeNumber } from '@/domain/music';
 import { noteAtDegree } from '@/domain/music';
-import type { NeckPosition, StringSet } from '@/domain/instrument';
 import { allStrings, scaleOnNeck } from '@/domain/instrument';
 import { FOUR_FOUR, phraseBuilder, ticksPerBar } from '@/domain/phrase';
 import type { PlayedDefinition, PlayedInstance } from '../types';
@@ -53,15 +51,14 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
   defaults: {
     targetTempo: 90,
     reps: 1,
-    params: { phraseLengthBars: 4, phraseCount: 8, constrainToPosition: false, showTargetOnNeck: true },
   },
   // The clock counts the phrases, so it runs — the click can be muted.
   timing: 'either',
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
-    const target = (variation.axes.targetScaleDegree?.value ?? 1) as DegreeNumber;
-    const position = optionalAxis<NeckPosition>(variation, 'neckPosition');
-    const set = axisValue<StringSet>(variation, 'stringSet', allStrings(instrument));
+    const target = optionalAxis(variation, 'targetScaleDegree') ?? 1;
+    const position = optionalAxis(variation, 'neckPosition');
+    const set = axisValue(variation, 'stringSet', allStrings(instrument));
     const note = noteAtDegree(keyMode, target);
 
     const range =
@@ -85,6 +82,8 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
     const where = position
       ? `${config.constrainToPosition ? 'in' : 'starting around'} ${named}`
       : 'anywhere on the neck';
+    const bars = `${config.phraseLengthBars} ${config.phraseLengthBars === 1 ? 'bar' : 'bars'}`;
+    const howMany = `${config.phraseCount} phrases of ${bars}`;
     return {
       kind: 'played',
       phrase: builder.build(),
@@ -94,12 +93,10 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
       }),
       brief: makeBrief(
         `Improvise in ${keyModeLabel(keyMode)}, ending every phrase on ${note}.`,
-        `${config.phraseCount} phrases of ${config.phraseLengthBars} ${config.phraseLengthBars === 1 ? 'bar' : 'bars'}, ${where}. ` +
+        `${howMany}, ${where}. ` +
           `Play what you like, but land the last note of each on ${note} — the ${ordinal(target)}.`,
         orderedHighlights(variation, ['key', 'targetScaleDegree', 'neckPosition']),
       ),
     };
   },
-
-  estimateRepSeconds: (instance, tempo) => (instance.phrase.totalTicks / 480) * (60 / (tempo ?? 90)),
 };

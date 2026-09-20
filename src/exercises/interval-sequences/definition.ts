@@ -1,9 +1,6 @@
-import type { DegreeNumber } from '@/domain/music';
 import { noteAtDegree } from '@/domain/music';
-import type { NeckPosition } from '@/domain/instrument';
 import { STRAIGHT_EIGHTHS, phraseBuilder } from '@/domain/phrase';
-import type { RhythmPattern } from '@/domain/phrase';
-import type { Direction, IntervalPairing, IntervalPattern } from '@/domain/variation';
+import type { AxisId } from '@/domain/variation';
 import { INTERVAL_PATTERNS } from '@/domain/variation';
 import type { PlayedDefinition, PlayedInstance } from '../types';
 import {
@@ -17,9 +14,18 @@ import {
   ordinal,
   orderedHighlights,
   overlayFromPositions,
-  phraseEstimate,
   shapeFrom,
 } from '../shared';
+
+/** The axes worth naming in the strip, in the order the brief reads them. */
+const HIGHLIGHTS: AxisId[] = [
+  'key',
+  'intervalPattern',
+  'intervalPairing',
+  'neckPosition',
+  'direction',
+  'targetScaleDegree',
+];
 
 export const intervalSequences: PlayedDefinition = {
   id: 'interval-sequences',
@@ -43,12 +49,12 @@ export const intervalSequences: PlayedDefinition = {
   timing: 'either',
 
   generate({ keyMode, instrument, variation }): PlayedInstance {
-    const position = axisValue<NeckPosition>(variation, 'neckPosition', { fret: 5, span: 4 });
-    const pattern = axisValue<IntervalPattern>(variation, 'intervalPattern', INTERVAL_PATTERNS[0]!);
-    const pairing = axisValue<IntervalPairing>(variation, 'intervalPairing', 'same-direction');
-    const direction = axisValue<Direction>(variation, 'direction', 'up-down');
-    const rhythm = axisValue<RhythmPattern>(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
-    const target = optionalAxis<DegreeNumber>(variation, 'targetScaleDegree');
+    const position = axisValue(variation, 'neckPosition', { fret: 5, span: 4 });
+    const pattern = axisValue(variation, 'intervalPattern', INTERVAL_PATTERNS[0]!);
+    const pairing = axisValue(variation, 'intervalPairing', 'same-direction');
+    const direction = axisValue(variation, 'direction', 'up-down');
+    const rhythm = axisValue(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
+    const target = optionalAxis(variation, 'targetScaleDegree');
 
     const shape = shapeFrom({ instrument, keyMode, fret: position.fret });
     if (!shape) throw new Error(`No shape of ${keyModeLabel(keyMode)} fits at fret ${position.fret}`);
@@ -59,6 +65,16 @@ export const intervalSequences: PlayedDefinition = {
       .withRhythm(positions, rhythm, (_p, i) => noteOptionsFor(positions[i]!, target))
       .build();
 
+    const where = axisDisplay(variation, 'neckPosition').toLowerCase();
+    const headline = `${pattern.name} in ${keyModeLabel(keyMode)}, ${where}.`;
+    const eachFigure = pairing === 'alternating' ? 'Alternating' : 'Every figure the same way';
+    const how = axisDisplay(variation, 'direction', 'up then down').toLowerCase();
+    const leaning =
+      target === undefined
+        ? '.'
+        : `, leaning on the ${ordinal(target)} (${noteAtDegree(keyMode, target)}) wherever it falls.`;
+    const instruction = `${eachFigure}, ${how}${leaning}`;
+
     return {
       kind: 'played',
       phrase,
@@ -66,17 +82,7 @@ export const intervalSequences: PlayedDefinition = {
         ...(target !== undefined ? { targetDegree: target } : {}),
         emphasisFrets: [shape.startFret],
       }),
-      brief: makeBrief(
-        `${pattern.name} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'neckPosition').toLowerCase()}.`,
-        `${pairing === 'alternating' ? 'Alternating' : 'Every figure the same way'}, ` +
-          `${axisDisplay(variation, 'direction', 'up then down').toLowerCase()}` +
-          (target === undefined
-            ? '.'
-            : `, leaning on the ${ordinal(target)} (${noteAtDegree(keyMode, target)}) wherever it falls.`),
-        orderedHighlights(variation, ['key', 'intervalPattern', 'intervalPairing', 'neckPosition', 'direction', 'targetScaleDegree']),
-      ),
+      brief: makeBrief(headline, instruction, orderedHighlights(variation, HIGHLIGHTS)),
     };
   },
-
-  estimateRepSeconds: phraseEstimate(80),
 };
