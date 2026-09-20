@@ -25,25 +25,18 @@ import {
 import { phraseBuilder } from '../builder';
 
 describe('PPQ', () => {
-  it('divides cleanly into every subdivision we use', () => {
+  it('divides cleanly into every note value, triplets included', () => {
     // This is the whole reason for integer ticks: no float comparisons.
     for (const divisor of [1, 2, 3, 4, 5, 6, 8, 10, 12, 16]) {
       expect(PPQ % divisor, `PPQ / ${divisor}`).toBe(0);
     }
-  });
-
-  it('makes triplets exact', () => {
-    // Three eighth-note triplets fill one quarter.
-    expect(EIGHTH_TRIPLET * 3).toBe(QUARTER);
-    expect(Number.isInteger(EIGHTH_TRIPLET)).toBe(true);
-    // The thing float beats get wrong: 1/3 + 1/3 + 1/3 !== 1.
-    expect(EIGHTH_TRIPLET + EIGHTH_TRIPLET + EIGHTH_TRIPLET).toBe(QUARTER);
-  });
-
-  it('keeps note values consistent', () => {
     expect(WHOLE).toBe(QUARTER * 4);
     expect(EIGHTH * 2).toBe(QUARTER);
     expect(SIXTEENTH * 4).toBe(QUARTER);
+    // Three eighth-note triplets fill one quarter exactly — the thing float
+    // beats get wrong: 1/3 + 1/3 + 1/3 !== 1.
+    expect(Number.isInteger(EIGHTH_TRIPLET)).toBe(true);
+    expect(EIGHTH_TRIPLET + EIGHTH_TRIPLET + EIGHTH_TRIPLET).toBe(QUARTER);
   });
 });
 
@@ -61,21 +54,11 @@ describe('ticksPerBeat / ticksPerBar', () => {
 describe('tick <-> bar/beat', () => {
   const phrase = phraseBuilder().rest(QUARTER * 16).build();
 
-  it('locates the start', () => {
+  it('locates a tick as a bar, a beat and an offset into it', () => {
     expect(tickToBarBeat(phrase, 0)).toEqual({ bar: 0, beat: 0, offsetTicks: 0 });
-  });
-
-  it('locates a beat inside a bar', () => {
     expect(tickToBarBeat(phrase, QUARTER * 2)).toEqual({ bar: 0, beat: 2, offsetTicks: 0 });
-  });
-
-  it('locates the mockup’s "bar 2, beat 3"', () => {
-    // Bar 2 beat 3 in one-based terms is bar index 1, beat index 2.
-    const tick = QUARTER * 4 + QUARTER * 2;
-    expect(tickToBarBeat(phrase, tick)).toEqual({ bar: 1, beat: 2, offsetTicks: 0 });
-  });
-
-  it('reports the offset within a beat', () => {
+    // "Bar 2, beat 3" in one-based terms is bar index 1, beat index 2.
+    expect(tickToBarBeat(phrase, QUARTER * 6)).toEqual({ bar: 1, beat: 2, offsetTicks: 0 });
     expect(tickToBarBeat(phrase, QUARTER * 4 + EIGHTH)).toEqual({
       bar: 1,
       beat: 0,
@@ -98,19 +81,10 @@ describe('tick <-> bar/beat', () => {
 });
 
 describe('ticks <-> seconds', () => {
-  it('makes a quarter note one second at 60 bpm', () => {
+  it('converts by the tempo, both ways', () => {
     expect(ticksToSeconds(QUARTER, 60)).toBe(1);
-  });
-
-  it('halves the duration at double the tempo', () => {
     expect(ticksToSeconds(QUARTER, 120)).toBe(0.5);
-  });
-
-  it('makes a 4/4 bar two seconds at 120 bpm', () => {
     expect(ticksToSeconds(ticksPerBar(FOUR_FOUR), 120)).toBe(2);
-  });
-
-  it('round-trips', () => {
     for (const bpm of [60, 76, 92, 120, 180]) {
       for (const ticks of [QUARTER, EIGHTH, ticksPerBar(FOUR_FOUR)]) {
         expect(secondsToTicks(ticksToSeconds(ticks, bpm), bpm)).toBe(ticks);
@@ -142,25 +116,18 @@ describe('makeBars', () => {
 });
 
 describe('requiredSubdivision', () => {
-  it('needs only quarters for a quarter-note phrase', () => {
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence([
-      { string: 0, fret: 3 }, { string: 0, fret: 5 },
-    ]).build();
-    expect(requiredSubdivision(phrase)).toBe(1);
-  });
-
-  it('needs four for sixteenths', () => {
-    const phrase = phraseBuilder().rhythm(SIXTEENTH).sequence([
-      { string: 0, fret: 3 }, { string: 0, fret: 5 }, { string: 0, fret: 7 },
-    ]).build();
-    expect(requiredSubdivision(phrase)).toBe(4);
-  });
-
-  it('needs three for triplets', () => {
-    const phrase = phraseBuilder().rhythm(EIGHTH_TRIPLET).sequence([
-      { string: 0, fret: 3 }, { string: 0, fret: 5 }, { string: 0, fret: 7 },
-    ]).build();
-    expect(requiredSubdivision(phrase)).toBe(3);
+  it('is as fine as the phrase needs and no finer', () => {
+    for (const [rhythm, subdivision] of [
+      [QUARTER, 1],
+      [EIGHTH_TRIPLET, 3],
+      [SIXTEENTH, 4],
+    ] as const) {
+      const phrase = phraseBuilder()
+        .rhythm(rhythm)
+        .sequence([{ string: 0, fret: 3 }, { string: 0, fret: 5 }, { string: 0, fret: 7 }])
+        .build();
+      expect(requiredSubdivision(phrase), String(rhythm)).toBe(subdivision);
+    }
   });
 
   it('needs twelve when a phrase lands on both grids', () => {

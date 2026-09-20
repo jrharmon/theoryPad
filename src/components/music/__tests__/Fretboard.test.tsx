@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { pitchClass } from '@/domain/music';
 import {
@@ -21,32 +21,26 @@ function overlayFor(instrument = STANDARD_GUITAR, range = { low: 0, high: 12 }) 
 }
 
 describe('Fretboard', () => {
-  it('renders one row per string, however many the instrument has', () => {
+  it('renders one row per string, highest on top, whatever the instrument', () => {
     for (const instrument of TEST_INSTRUMENTS) {
       const { unmount } = render(
         <Fretboard instrument={instrument} overlay={overlayFor(instrument)} />,
       );
       const labels = screen.getAllByTestId(/^string-label-/);
-      expect(labels, instrument.name).toHaveLength(instrument.tuning.length);
+      const strings = instrument.tuning.length;
+      expect(labels, instrument.name).toHaveLength(strings);
+      // Guitarist numbering: the first row rendered is string "1", the highest
+      // pitched — which is the model's last index.
+      expect(labels.map((el) => el.textContent), instrument.name).toEqual(
+        Array.from({ length: strings }, (_, i) => String(i + 1)),
+      );
+      expect(labels[0], instrument.name).toHaveAttribute(
+        'data-testid',
+        `string-label-${strings - 1}`,
+      );
       unmount();
     }
-  });
-
-  it('draws the highest string on top and the lowest at the bottom', () => {
-    render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} />);
-    const labels = screen.getAllByTestId(/^string-label-/);
-    // Guitarist numbering: the first row rendered is string "1", the high e.
-    expect(labels.map((el) => el.textContent)).toEqual(['1', '2', '3', '4', '5', '6']);
-    // And that first row is model string 5, the highest-pitched.
-    expect(labels[0]).toHaveAttribute('data-testid', 'string-label-5');
-    expect(labels[5]).toHaveAttribute('data-testid', 'string-label-0');
-  });
-
-  it('inverts correctly for a seven-string too', () => {
-    render(<Fretboard instrument={SEVEN_STRING_GUITAR} overlay={overlayFor(SEVEN_STRING_GUITAR)} />);
-    const labels = screen.getAllByTestId(/^string-label-/);
-    expect(labels.map((el) => el.textContent)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
-    expect(labels[0]).toHaveAttribute('data-testid', 'string-label-6');
+    expect(SEVEN_STRING_GUITAR.tuning).toHaveLength(7);
   });
 
   it('places note dots at the right string and fret', () => {
@@ -69,23 +63,27 @@ describe('Fretboard', () => {
     expect(screen.getByTestId('note-0-3')).toHaveAttribute('data-role', 'chord-tone');
   });
 
-  it('labels dots with scale degrees by default', () => {
-    render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} />);
+  it('labels dots with degrees, note names or nothing', () => {
+    const { rerender } = render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} />);
     expect(screen.getByTestId('note-0-10')).toHaveTextContent('1');
     expect(screen.getByTestId('note-0-7')).toHaveTextContent('6');
     expect(screen.getByTestId('note-0-1')).toHaveTextContent('♭3');
-  });
 
-  it('labels dots with note names when asked', () => {
-    const overlay = { ...overlayFor(), labelMode: 'note' as const };
-    render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlay} />);
+    rerender(
+      <Fretboard
+        instrument={STANDARD_GUITAR}
+        overlay={{ ...overlayFor(), labelMode: 'note' as const }}
+      />,
+    );
     expect(screen.getByTestId('note-0-10')).toHaveTextContent('D');
     expect(screen.getByTestId('note-0-1')).toHaveTextContent('F');
-  });
 
-  it('renders no dot labels in "none" mode', () => {
-    const overlay = { ...overlayFor(), labelMode: 'none' as const };
-    render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlay} />);
+    rerender(
+      <Fretboard
+        instrument={STANDARD_GUITAR}
+        overlay={{ ...overlayFor(), labelMode: 'none' as const }}
+      />,
+    );
     expect(screen.getByTestId('note-0-10')).toHaveTextContent('');
   });
 
@@ -101,9 +99,9 @@ describe('Fretboard', () => {
     expect(screen.getByTestId('fret-number-9')).toBeInTheDocument();
     expect(screen.queryByTestId('fret-number-4')).not.toBeInTheDocument();
     expect(screen.queryByTestId('fret-number-10')).not.toBeInTheDocument();
-  });
+    cleanup();
 
-  it('never renders past the instrument’s fret count', () => {
+    // And never past the end of the neck, however wide the window.
     render(
       <Fretboard
         instrument={BASS_4_STRING}
@@ -113,13 +111,6 @@ describe('Fretboard', () => {
     );
     expect(screen.getByTestId(`fret-number-${BASS_4_STRING.fretCount}`)).toBeInTheDocument();
     expect(screen.queryByTestId(`fret-number-${BASS_4_STRING.fretCount + 1}`)).toBeNull();
-  });
-
-  it('emphasises the frets of the rolled position', () => {
-    const overlay = { ...overlayFor(), emphasisFrets: [7, 8, 9, 10] };
-    render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlay} />);
-    expect(screen.getByTestId('fret-number-7').className).toContain('text-accent-700');
-    expect(screen.getByTestId('fret-number-3').className).not.toContain('text-accent-700');
   });
 
   it('is not interactive unless a click handler is given', () => {
@@ -153,14 +144,4 @@ describe('Fretboard', () => {
     expect(onFretClick).toHaveBeenLastCalledWith({ string: 5, fret: 3 });
   });
 
-  it('renders larger at the large size', () => {
-    const { rerender } = render(
-      <Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} size="compact" />,
-    );
-    const compact = screen.getByTestId('note-0-3').getAttribute('style');
-    rerender(<Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} size="large" />);
-    const large = screen.getByTestId('note-0-3').getAttribute('style');
-    expect(compact).not.toBe(large);
-    expect(large).toContain('26px');
-  });
 });

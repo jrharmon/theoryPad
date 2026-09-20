@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { answerSet, open } from './helpers';
+import { answerSet, open, readStore, writeRow } from './helpers';
 
 /**
  * A stand-in for YouTube's IFrame API, so these tests never touch the network.
@@ -212,49 +212,36 @@ test('a routine starts its track with the first item, and brings it back after a
   await page.goto('/#/exercises');
   await expect(page.getByRole('link', { name: 'Modes up the neck', exact: true })).toBeVisible();
   // Straight into the database: the routine builder's own flow is tested elsewhere.
-  const routineId = await page.evaluate(async () => {
-    const db = await new Promise<IDBDatabase>((resolve) => {
-      const open = indexedDB.open('theorypad');
-      open.onsuccess = () => resolve(open.result);
-    });
-    const exercises = await new Promise<{ id: string; definitionId: string; params: unknown }[]>(
-      (resolve) => {
-        const all = db.transaction('exercises').objectStore('exercises').getAll();
-        all.onsuccess = () => resolve(all.result as never);
-      },
-    );
-    const item = (definitionId: string) => {
-      const exercise = exercises.find((e) => e.definitionId === definitionId)!;
-      return {
-        id: crypto.randomUUID(),
-        exerciseId: exercise.id,
-        definitionId,
-        reps: 1,
-        params: exercise.params,
-        tempo: { targetTempo: 80, maxTempo: null },
-        countInBars: 1,
-        axisPolicies: {},
-        heldAxisValues: {},
-      };
-    };
-    const routine = {
+  const exercises = await readStore<{ id: string; definitionId: string; params: unknown }>(
+    page,
+    'exercises',
+  );
+  const item = (definitionId: string) => {
+    const exercise = exercises.find((e) => e.definitionId === definitionId)!;
+    return {
       id: crypto.randomUUID(),
-      name: 'With a track',
-      items: [item('modes-through-key'), item('circle-of-fifths'), item('modes-through-key')],
-      sessionAxisPolicies: {
-        key: { mode: 'fixed', value: 'A' },
-        mode: { mode: 'fixed', value: 'aeolian' },
-      },
-      backing: { kind: 'video', id: '6d0f3f5e-7a51-4c1e-9a55-0a1b2c3d4e5f' },
-      createdAt: 1,
-      updatedAt: 1,
+      exerciseId: exercise.id,
+      definitionId,
+      reps: 1,
+      params: exercise.params,
+      tempo: { targetTempo: 80, maxTempo: null },
+      countInBars: 1,
+      axisPolicies: {},
+      heldAxisValues: {},
     };
-    await new Promise((resolve) => {
-      const tx = db.transaction('routines', 'readwrite');
-      tx.objectStore('routines').put(routine);
-      tx.oncomplete = resolve;
-    });
-    return routine.id;
+  };
+  const routineId = crypto.randomUUID();
+  await writeRow(page, 'routines', {
+    id: routineId,
+    name: 'With a track',
+    items: [item('modes-through-key'), item('circle-of-fifths'), item('modes-through-key')],
+    sessionAxisPolicies: {
+      key: { mode: 'fixed', value: 'A' },
+      mode: { mode: 'fixed', value: 'aeolian' },
+    },
+    backing: { kind: 'video', id: '6d0f3f5e-7a51-4c1e-9a55-0a1b2c3d4e5f' },
+    createdAt: 1,
+    updatedAt: 1,
   });
 
   await page.goto(`/#/practice/routine/${routineId}`);

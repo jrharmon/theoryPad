@@ -26,22 +26,17 @@ describe('rollVariation', () => {
     expect(variationKeys(rolled)).toEqual({});
   });
 
-  it('is deterministic in its seed', () => {
-    const a = rollVariation({ ...base, axes: ALL });
-    const b = rollVariation({ ...base, axes: ALL });
-    expect(variationKeys(a)).toEqual(variationKeys(b));
-  });
+  it('replays a seed exactly, varies with the seed, and carries it through', () => {
+    expect(variationKeys(rollVariation({ ...base, axes: ALL }))).toEqual(
+      variationKeys(rollVariation({ ...base, axes: ALL })),
+    );
+    expect(rollVariation({ ...base, seed: 77, axes: ALL }).seed).toBe(77);
 
-  it('gives different variations for different seeds', () => {
     const seen = new Set<string>();
     for (let seed = 0; seed < 40; seed += 1) {
       seen.add(JSON.stringify(variationKeys(rollVariation({ ...base, seed, axes: ALL }))));
     }
     expect(seen.size).toBeGreaterThan(20);
-  });
-
-  it('carries the seed through', () => {
-    expect(rollVariation({ ...base, seed: 77, axes: ALL }).seed).toBe(77);
   });
 
   it('always resolves to a legal candidate', () => {
@@ -105,35 +100,31 @@ describe('axis policies', () => {
     }
   });
 
-  it('rolls a held axis that has nothing to hold yet', () => {
-    const rolled = rollVariation({
+  it('falls back to a free roll when what was asked for cannot happen', () => {
+    // Better than throwing part-way through a practice session.
+    const nothingHeldYet = rollVariation({
       ...base,
       axes: ['direction'],
       policies: { direction: { mode: 'hold' } },
     });
-    expect(rolled.axes.direction!.source).toBe('roll');
-  });
+    expect(nothingHeldYet.axes.direction!.source).toBe('roll');
 
-  it('rolls rather than failing when a held value is no longer valid', () => {
     // Changing instrument can invalidate a string set that was being held.
-    const rolled = rollVariation({
+    const staleHold = rollVariation({
       ...base,
       instrument: SEVEN_STRING_GUITAR,
       axes: ['stringSet'],
       policies: { stringSet: { mode: 'hold' } },
       held: { stringSet: 'no-such-set' },
     });
-    expect(rolled.axes.stringSet!.source).toBe('roll');
-  });
+    expect(staleHold.axes.stringSet!.source).toBe('roll');
 
-  it('rolls from everything when a subset matches nothing', () => {
-    // Better than throwing part-way through a practice session.
-    const rolled = rollVariation({
+    const emptySubset = rollVariation({
       ...base,
       axes: ['neckPosition'],
       policies: { neckPosition: { mode: 'roll', from: ['999'] } },
     });
-    expect(rolled.axes.neckPosition).toBeDefined();
+    expect(emptySubset.axes.neckPosition).toBeDefined();
   });
 
   it('refuses a fixed value that does not exist', () => {
@@ -339,7 +330,7 @@ describe('instrument awareness', () => {
 });
 
 describe('display', () => {
-  it('formats values for the brief', () => {
+  it('formats values for the brief, ordinalising positions', () => {
     const rolled = rollVariation({
       ...base,
       axes: ['mode', 'neckPosition', 'direction'],
@@ -352,16 +343,13 @@ describe('display', () => {
     expect(rolled.axes.mode!.display).toBe('Dorian');
     expect(rolled.axes.neckPosition!.display).toBe('7th position');
     expect(rolled.axes.direction!.display).toBe('Up then down');
-  });
 
-  it('ordinalises positions correctly', () => {
     const display = (fret: string) =>
       rollVariation({
         ...base,
         axes: ['neckPosition'],
         policies: { neckPosition: { mode: 'fixed', value: fret } },
       }).axes.neckPosition!.display;
-
     expect(display('0')).toBe('Open position');
     expect(display('3')).toBe('3rd position');
     expect(display('5')).toBe('5th position');
@@ -388,20 +376,12 @@ describe('every axis', () => {
 describe('toggleSubset', () => {
   const all = ['a', 'b', 'c'];
 
-  it('leaves a value out of a free roll', () => {
+  it('toggles values in and out, in candidate order, never emptying the set', () => {
     expect(toggleSubset(all, undefined, 'b')).toEqual({ mode: 'roll', from: ['a', 'c'] });
-  });
-
-  it('goes back to a free roll once everything is selected again', () => {
+    // Clicked back in any order, the subset stays in candidate order.
+    expect(toggleSubset(all, ['c'], 'a')).toEqual({ mode: 'roll', from: ['a', 'c'] });
     // Stored as no subset rather than a full one, so a candidate added later is included.
     expect(toggleSubset(all, ['a', 'c'], 'b')).toEqual({ mode: 'roll' });
-  });
-
-  it('keeps candidate order whatever order they were clicked in', () => {
-    expect(toggleSubset(all, ['c'], 'a')).toEqual({ mode: 'roll', from: ['a', 'c'] });
-  });
-
-  it('will not remove the last value', () => {
     expect(toggleSubset(all, ['b'], 'b')).toEqual({ mode: 'roll', from: ['b'] });
   });
 });

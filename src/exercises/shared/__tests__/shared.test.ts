@@ -19,26 +19,18 @@ const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
 describe('applyDirection', () => {
   const items = [1, 2, 3, 4];
 
-  it('ascends and descends', () => {
+  it('runs each way, turning without repeating the turning note', () => {
     expect(applyDirection(items, 'ascending')).toEqual([1, 2, 3, 4]);
     expect(applyDirection(items, 'descending')).toEqual([4, 3, 2, 1]);
-  });
-
-  it('does not repeat the turning note', () => {
     // 1 2 3 4 3 2 1, not 1 2 3 4 4 3 2 1 — a run should not stutter where it
     // changes direction.
     expect(applyDirection(items, 'up-down')).toEqual([1, 2, 3, 4, 3, 2, 1]);
     expect(applyDirection(items, 'down-up')).toEqual([4, 3, 2, 1, 2, 3, 4]);
-  });
 
-  it('leaves the input alone', () => {
-    applyDirection(items, 'descending');
-    expect(items).toEqual([1, 2, 3, 4]);
-  });
-
-  it('handles a single item', () => {
     expect(applyDirection([1], 'up-down')).toEqual([1]);
     expect(applyDirection([], 'up-down')).toEqual([]);
+    // The caller's array is never reordered under it.
+    expect(items).toEqual([1, 2, 3, 4]);
   });
 });
 
@@ -228,18 +220,12 @@ describe('overlays', () => {
 });
 
 describe('brief helpers', () => {
-  it('labels a key and mode readably', () => {
+  it('write a brief in words, not values', () => {
     expect(keyModeLabel(D_DORIAN)).toBe('D Dorian');
     expect(keyModeLabel({ tonic: pitchClass('Bb'), mode: 'mixolydian' })).toBe('Bb Mixolydian');
-  });
-
-  it('phrases reps and tempo', () => {
     expect(repsAndTempo(1, 76)).toBe('One pass at 76 bpm');
     expect(repsAndTempo(2, 76)).toBe('Two passes at 76 bpm');
     expect(repsAndTempo(3, null)).toBe('3 passes, in free time');
-  });
-
-  it('ordinalises', () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21].map(ordinal)).toEqual([
       '1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st',
     ]);

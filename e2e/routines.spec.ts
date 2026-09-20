@@ -1,20 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { storedReps } from './helpers';
 
 /** Reps as they were written to IndexedDB. */
-async function storedReps(page: Page) {
-  return page.evaluate<{ exerciseId: string; routineItemId?: string; status: string }[]>(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('theorypad');
-        open.onerror = () => reject(new Error('cannot open db'));
-        open.onsuccess = () => {
-          const request = open.result.transaction('reps').objectStore('reps').getAll();
-          request.onsuccess = () => resolve(request.result as never);
-          request.onerror = () => reject(new Error('cannot read reps'));
-        };
-      }),
-  );
-}
 
 async function newRoutine(page: Page, name: string, exercises: string[]) {
   await page.goto('/#/exercises');

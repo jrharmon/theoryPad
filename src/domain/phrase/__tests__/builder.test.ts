@@ -40,19 +40,22 @@ describe('PhraseBuilder', () => {
     expect(phrase.notes[2]!.startTick).toBe(QUARTER);
   });
 
-  it('rounds the phrase up to a whole bar', () => {
+  it('grows in whole bars, never ending mid-bar', () => {
     // Three quarters in 4/4 still occupies one full bar.
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence([p(0, 1), p(0, 2), p(0, 3)]).build();
-    expect(phrase.totalTicks).toBe(ticksPerBar(FOUR_FOUR));
-    expect(phrase.bars).toHaveLength(1);
-  });
+    const short = phraseBuilder().rhythm(QUARTER).sequence([p(0, 1), p(0, 2), p(0, 3)]).build();
+    expect(short.totalTicks).toBe(ticksPerBar(FOUR_FOUR));
+    expect(short.bars).toHaveLength(1);
 
-  it('adds bars as the phrase grows', () => {
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence(
-      Array.from({ length: 9 }, (_, i) => p(0, i)),
-    ).build();
-    expect(phrase.bars).toHaveLength(3);
-    expect(phrase.bars.map((b) => b.startTick)).toEqual([0, QUARTER * 4, QUARTER * 8]);
+    const longer = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence(Array.from({ length: 9 }, (_, i) => p(0, i)))
+      .build();
+    expect(longer.bars).toHaveLength(3);
+    expect(longer.bars.map((b) => b.startTick)).toEqual([0, QUARTER * 4, QUARTER * 8]);
+
+    // Even a note that overhangs the bar line rounds the phrase up.
+    const overhang = phraseBuilder().note(p(0, 3), {}, QUARTER * 5).build();
+    expect(overhang.totalTicks).toBe(QUARTER * 8);
   });
 
   it('respects an alternate time signature', () => {
@@ -62,12 +65,6 @@ describe('PhraseBuilder', () => {
       .build();
     expect(phrase.bars).toHaveLength(2);
     expect(phrase.totalTicks).toBe(QUARTER * 6);
-  });
-
-  it('never ends mid-bar, even when a note overhangs', () => {
-    const phrase = phraseBuilder().note(p(0, 3), {}, QUARTER * 5).build();
-    expect(phrase.totalTicks % ticksPerBar(FOUR_FOUR)).toBe(0);
-    expect(phrase.totalTicks).toBe(QUARTER * 8);
   });
 
   it('rests without sounding anything', () => {

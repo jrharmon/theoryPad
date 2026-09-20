@@ -1,20 +1,6 @@
-import { expect, test, type Page } from '@playwright/test';
-import { answerSet, open } from './helpers';
+import { expect, test } from '@playwright/test';
+import { answerSet, open, storedReps } from './helpers';
 
-async function storedReps(page: Page) {
-  return page.evaluate<{ status: string; score?: { correct: number; total: number }; answers?: unknown[] }[]>(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('theorypad');
-        open.onerror = () => reject(new Error('cannot open db'));
-        open.onsuccess = () => {
-          const request = open.result.transaction('reps').objectStore('reps').getAll();
-          request.onsuccess = () => resolve(request.result as never);
-          request.onerror = () => reject(new Error('cannot read reps'));
-        };
-      }),
-  );
-}
 
 
 test('a circle-of-fifths set is answered from the keyboard and scored', async ({ page }) => {

@@ -49,34 +49,22 @@ function playPass(runner: ExerciseRunner, clock: FakeClock) {
 }
 
 describe('ExerciseRunner', () => {
-  it('starts idle and does nothing until started', () => {
+  it('waits at the brief, plays when told to, and comes back ready', () => {
     const { runner, clock } = makeRunner();
+    // Idle until started, and the player reads the whole rolled variation
+    // before anything moves: a running clock alone changes nothing.
     expect(runner.snapshot.state).toBe('idle');
     clock.start();
     clock.advanceTicks(QUARTER * 100);
     expect(runner.snapshot.state).toBe('idle');
-  });
 
-  it('rolls a variation and shows the brief', () => {
-    const { runner } = makeRunner();
     runner.start();
     expect(runner.snapshot.state).toBe('brief');
     expect(runner.snapshot.variation).not.toBeNull();
     expect(runner.currentInstance?.kind).toBe('played');
-  });
-
-  it('never advances off the brief on its own', () => {
-    // The player reads the whole rolled variation before anything moves.
-    const { runner, clock } = makeRunner();
-    runner.start();
-    clock.start();
     clock.advanceTicks(QUARTER * 200);
     expect(runner.snapshot.state).toBe('brief');
-  });
 
-  it('plays when told to, and comes back ready at the end of the pass', () => {
-    const { runner, clock } = makeRunner();
-    runner.start();
     runner.begin();
     expect(runner.snapshot.state).toBe('playing');
 
@@ -132,19 +120,6 @@ describe('ExerciseRunner', () => {
     for (let i = 0; i < 3; i += 1) playPass(runner, clock);
     expect(runner.snapshot.state).toBe('done');
     expect(runner.completedReps).toHaveLength(3);
-  });
-
-  it('runs a whole exercise in no time at all', () => {
-    // The point of driving everything from an injected clock.
-    const { runner, clock } = makeRunner({
-      passes: 3,
-      endWhenFinished: true,
-      definition: modesThroughKey,
-    });
-    runner.start();
-    runner.begin();
-    for (let i = 0; i < 3; i += 1) playPass(runner, clock);
-    expect(runner.snapshot.state).toBe('done');
   });
 
   it('is deterministic in the session and exercise ids', () => {
@@ -264,6 +239,9 @@ describe('pause', () => {
   it('freezes everything, and resumes where it stopped', () => {
     const { runner, clock } = makeRunner();
     runner.start();
+    // Nothing to freeze at the brief.
+    runner.pause();
+    expect(runner.snapshot.state).toBe('brief');
     runner.begin();
     clock.advanceTicks(QUARTER * 2);
 

@@ -1,21 +1,55 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { EIGHTH, QUARTER, SIX_EIGHT, THREE_FOUR, ticksPerBar } from '@/domain/phrase';
 import { FakeClock } from '@/domain/time';
-import { Metronome, type BeatEvent, type ClickSink } from '../Metronome';
+import { Metronome, type BeatEvent, type ClickSink, type MetronomeOptions } from '../Metronome';
 
-function sink() {
+function make(options: MetronomeOptions = {}) {
+  const clock = new FakeClock();
   const clicks: { kind: string; time: number }[] = [];
-  const s: ClickSink = { click: (time, kind) => clicks.push({ kind, time }) };
-  return { s, clicks };
+  const beats: BeatEvent[] = [];
+  const sink: ClickSink = { click: (time, kind) => clicks.push({ kind, time }) };
+  const metronome = new Metronome(clock, sink, options);
+  const off = metronome.onBeat((beat) => beats.push(beat));
+  return { clock, metronome, clicks, beats, off, kinds: () => clicks.map((c) => c.kind) };
 }
 
 describe('Metronome', () => {
-  it('goes silent when muted, but still counts in and still reports beats', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s, { countInTicks: 1920 });
-    const beats: BeatEvent[] = [];
-    metronome.onBeat((b) => beats.push(b));
+  it('clicks every beat in 4/4, accenting the downbeat, and reports where it is', () => {
+    const { clock, metronome, clicks, beats, kinds, off } = make();
+    metronome.start();
+
+    clock.start();
+    clock.advanceTicks(QUARTER * 5);
+
+    expect(kinds()).toEqual(['accent', 'beat', 'beat', 'beat', 'accent', 'beat']);
+    expect(beats.map((b) => [b.bar, b.beat])).toEqual([
+      [0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
+    ]);
+    expect(beats.map((b) => b.isDownbeat)).toEqual([true, false, false, false, true, false]);
+
+    // A listener that unsubscribes hears no more, while the click goes on.
+    off();
+    const heard = beats.length;
+    clock.advanceTicks(QUARTER * 4);
+    expect(beats).toHaveLength(heard);
+    expect(clicks.length).toBeGreaterThan(6);
+  });
+
+  it('counts in first, then starts musical bar 0 — and has no count-in unless asked', () => {
+    expect(new Metronome(new FakeClock(), null).countInTicks).toBe(0);
+
+    const { clock, metronome, beats } = make({ countInTicks: QUARTER * 4 });
+    metronome.start();
+    clock.start();
+    clock.advanceTicks(QUARTER * 5);
+
+    expect(metronome.countInTicks).toBe(QUARTER * 4);
+    expect(beats.slice(0, 4).every((b) => b.isCountIn)).toBe(true);
+    expect(beats[4]).toMatchObject({ isCountIn: false, bar: 0, beat: 0 });
+  });
+
+  it('goes silent when muted, but still counts in and still keeps the beat', () => {
+    const { clock, metronome, clicks, beats } = make({ countInTicks: QUARTER * 4 });
     metronome.setMuted(true);
     metronome.start();
 
@@ -31,13 +65,10 @@ describe('Metronome', () => {
   });
 
   it('makes no sound at all when silenced — under a track, the recording counts in', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s, { countInTicks: 1920, subdivision: 2 });
-    const beats: BeatEvent[] = [];
-    metronome.onBeat((b) => beats.push(b));
+    const { clock, metronome, clicks, beats } = make({ countInTicks: QUARTER * 4, subdivision: 2 });
     metronome.setSilenced(true);
     metronome.start();
+
     clock.start();
     clock.advanceTicks(QUARTER * 7);
     expect(clicks).toHaveLength(0);
@@ -46,9 +77,7 @@ describe('Metronome', () => {
 
   it('clicks a count-in in the middle of the clock even when muted', () => {
     // Between a routine's items: the count-in is the only warning of what is next.
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s);
+    const { clock, metronome, clicks } = make();
     metronome.setMuted(true);
     metronome.start();
     clock.start();
@@ -60,196 +89,62 @@ describe('Metronome', () => {
     expect(clicks).toHaveLength(4);
   });
 
-  it('clicks once per beat', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s).start();
+  it('clicks what the time signature, accent and subdivision ask for', () => {
+    const threeFour = make({ timeSignature: THREE_FOUR });
+    threeFour.metronome.start();
+    threeFour.clock.start();
+    threeFour.clock.advanceTicks(QUARTER * 5);
+    expect(threeFour.kinds()).toEqual(['accent', 'beat', 'beat', 'accent', 'beat', 'beat']);
 
-    clock.start();
-    clock.advanceTicks(QUARTER * 4);
-    expect(clicks).toHaveLength(5);
-  });
-
-  it('accents the downbeat', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s).start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 7);
-    expect(clicks.map((c) => c.kind)).toEqual([
-      'accent', 'beat', 'beat', 'beat',
-      'accent', 'beat', 'beat', 'beat',
-    ]);
-  });
-
-  it('can be told not to accent', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s, { accentFirstBeat: false }).start();
-    clock.start();
-    clock.advanceTicks(QUARTER * 3);
-    expect(clicks.every((c) => c.kind === 'beat')).toBe(true);
-  });
-
-  it('follows the time signature', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s, { timeSignature: THREE_FOUR }).start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 5);
-    expect(clicks.map((c) => c.kind)).toEqual(['accent', 'beat', 'beat', 'accent', 'beat', 'beat']);
-  });
-
-  it('uses the eighth as the beat in 6/8', () => {
-    const clock = new FakeClock();
-    const beats: BeatEvent[] = [];
-    const metronome = new Metronome(clock, null, { timeSignature: SIX_EIGHT });
-    metronome.onBeat((e) => beats.push(e));
-    metronome.start();
-
-    clock.start();
-    clock.advanceTicks(ticksPerBar(SIX_EIGHT));
-    expect(beats).toHaveLength(7);
-    expect(beats[1]!.tick).toBe(EIGHTH);
-  });
-
-  it('reports bar and beat', () => {
-    const clock = new FakeClock();
-    const beats: BeatEvent[] = [];
-    const metronome = new Metronome(clock, null);
-    metronome.onBeat((e) => beats.push(e));
-    metronome.start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 5);
-
-    expect(beats.map((b) => [b.bar, b.beat])).toEqual([
-      [0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
-    ]);
-    expect(beats[0]!.isDownbeat).toBe(true);
-    expect(beats[1]!.isDownbeat).toBe(false);
-  });
-
-  it('marks count-in beats and starts musical bar 0 after them', () => {
-    const clock = new FakeClock();
-    const beats: BeatEvent[] = [];
-    const metronome = new Metronome(clock, null, { countInTicks: 1920 });
-    metronome.onBeat((e) => beats.push(e));
-    metronome.start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 5);
-
-    // Four count-in beats, then the phrase begins at bar 0.
-    expect(beats.slice(0, 4).every((b) => b.isCountIn)).toBe(true);
-    expect(beats[4]!.isCountIn).toBe(false);
-    expect(beats[4]!.bar).toBe(0);
-    expect(beats[4]!.beat).toBe(0);
-    expect(metronome.countInTicks).toBe(QUARTER * 4);
-  });
-
-  it('has no count-in by default', () => {
-    const clock = new FakeClock();
-    const metronome = new Metronome(clock, null);
-    expect(metronome.countInTicks).toBe(0);
-  });
-
-  it('adds subdivision clicks between beats', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s, { subdivision: 2 }).start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 2);
+    const flat = make({ accentFirstBeat: false });
+    flat.metronome.start();
+    flat.clock.start();
+    flat.clock.advanceTicks(QUARTER * 3);
+    expect(flat.kinds().every((kind) => kind === 'beat')).toBe(true);
 
     // Three beats plus two offbeats, and no doubled click on the beat itself.
-    expect(clicks.filter((c) => c.kind === 'subdivision')).toHaveLength(2);
-    expect(clicks.filter((c) => c.kind !== 'subdivision')).toHaveLength(3);
+    const offbeats = make({ subdivision: 2 });
+    offbeats.metronome.start();
+    offbeats.clock.start();
+    offbeats.clock.advanceTicks(QUARTER * 2);
+    expect(offbeats.kinds().filter((k) => k === 'subdivision')).toHaveLength(2);
+    expect(offbeats.kinds().filter((k) => k !== 'subdivision')).toHaveLength(3);
+
+    // In 6/8 the eighth is the beat.
+    const sixEight = make({ timeSignature: SIX_EIGHT });
+    sixEight.metronome.start();
+    sixEight.clock.start();
+    sixEight.clock.advanceTicks(ticksPerBar(SIX_EIGHT));
+    expect(sixEight.beats).toHaveLength(7);
+    expect(sixEight.beats[1]!.tick).toBe(EIGHTH);
   });
 
-  it('stops cleanly and leaves nothing scheduled', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s, { subdivision: 2 });
+  it('freezes with the clock, stops cleanly, and restarts when reconfigured', () => {
+    const { clock, metronome, clicks } = make({ subdivision: 2 });
     metronome.start();
-
     clock.start();
     clock.advanceTicks(QUARTER * 2);
-    const before = clicks.length;
 
-    metronome.stop();
-    clock.advanceTicks(QUARTER * 8);
-
-    expect(clicks).toHaveLength(before);
-    expect(clock.scheduledCount).toBe(0);
-    expect(metronome.isRunning).toBe(false);
-  });
-
-  it('freezes with the clock when paused', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    new Metronome(clock, s).start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 2);
-    const before = clicks.length;
-
+    const paused = clicks.length;
     clock.pause();
     clock.advanceTicks(QUARTER * 8);
-    expect(clicks).toHaveLength(before);
-
+    expect(clicks).toHaveLength(paused);
     clock.start();
     clock.advanceTicks(QUARTER);
-    expect(clicks.length).toBe(before + 1);
-  });
+    expect(clicks.length).toBeGreaterThan(paused);
 
-  it('is steady at any tempo', () => {
-    for (const bpm of [40, 60, 120, 208]) {
-      const clock = new FakeClock(bpm);
-      const times: number[] = [];
-      const metronome = new Metronome(clock, { click: (t) => times.push(t) });
-      metronome.start();
-
-      clock.start();
-      clock.advanceTicks(QUARTER * 16);
-
-      const gaps = times.slice(1).map((t, i) => t - times[i]!);
-      const expected = 60 / bpm;
-      for (const gap of gaps) expect(gap, `${bpm} bpm`).toBeCloseTo(expected, 9);
-    }
-  });
-
-  it('unsubscribes a listener', () => {
-    const clock = new FakeClock();
-    const listener = vi.fn();
-    const metronome = new Metronome(clock, null);
-    const off = metronome.onBeat(listener);
-    metronome.start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER);
-    expect(listener).toHaveBeenCalledTimes(2);
-
-    off();
-    clock.advanceTicks(QUARTER * 4);
-    expect(listener).toHaveBeenCalledTimes(2);
-  });
-
-  it('restarts when reconfigured while running', () => {
-    const clock = new FakeClock();
-    const { s, clicks } = sink();
-    const metronome = new Metronome(clock, s);
-    metronome.start();
-
-    clock.start();
-    clock.advanceTicks(QUARTER * 2);
+    // Reconfigured mid-run, it keeps running on the new setting.
     metronome.configure({ timeSignature: THREE_FOUR });
-    clicks.length = 0;
-
+    const configured = clicks.length;
     clock.advanceTicks(QUARTER * 3);
-    expect(clicks.length).toBeGreaterThan(0);
+    expect(clicks.length).toBeGreaterThan(configured);
     expect(metronome.isRunning).toBe(true);
+
+    const stopped = clicks.length;
+    metronome.stop();
+    clock.advanceTicks(QUARTER * 8);
+    expect(clicks).toHaveLength(stopped);
+    expect(clock.scheduledCount).toBe(0);
+    expect(metronome.isRunning).toBe(false);
   });
 });

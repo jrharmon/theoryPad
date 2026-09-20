@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readStore, storedReps, writeRow } from './helpers';
 
 /** The exercise these tests drive, by its display name. The library seeds others too. */
 const EXERCISE = 'Modes up the neck';
@@ -12,21 +13,6 @@ const row = (page: Page) => page.locator('li', { hasText: EXERCISE });
  */
 
 /** Reps as they were actually written to IndexedDB. */
-async function storedReps(page: Page) {
-  return page.evaluate<{ tempo: number | null; freeTime: boolean; axes: Record<string, string>; status: string }[]>(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('theorypad');
-        open.onerror = () => reject(new Error('cannot open db'));
-        open.onsuccess = () => {
-          const database = open.result;
-          const request = database.transaction('reps').objectStore('reps').getAll();
-          request.onsuccess = () => resolve(request.result as never);
-          request.onerror = () => reject(new Error('cannot read reps'));
-        };
-      }),
-  );
-}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/#/exercises');
@@ -39,26 +25,8 @@ test('clears up identical unplayed copies of one exercise', async ({ page }) => 
   // Two instances of a definition are a fine thing to want, but two with the
   // same configuration and no history cannot be told apart, because there is
   // nothing to tell apart.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('theorypad');
-        open.onerror = () => reject(new Error('cannot open db'));
-        open.onsuccess = () => {
-          const store = open.result
-            .transaction('exercises', 'readwrite')
-            .objectStore('exercises');
-          const all = store.getAll();
-          all.onsuccess = () => {
-            const first = (all.result as { id: string }[])[0]!;
-            const copy = { ...first, id: 'duplicate-row', createdAt: Date.now() };
-            const put = store.put(copy);
-            put.onsuccess = () => resolve();
-            put.onerror = () => reject(new Error('cannot write'));
-          };
-        };
-      }),
-  );
+  const [first] = await readStore<{ id: string }>(page, 'exercises');
+  await writeRow(page, 'exercises', { ...first, id: 'duplicate-row', createdAt: Date.now() });
 
   await page.reload();
   await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);

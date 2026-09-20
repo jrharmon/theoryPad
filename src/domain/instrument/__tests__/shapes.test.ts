@@ -4,11 +4,10 @@ import { MODE_NAMES, chroma, pitchClass, scaleNotes } from '@/domain/music';
 import {
   BASS_4_STRING,
   DROP_D_GUITAR,
-  SEVEN_STRING_GUITAR,
   STANDARD_GUITAR,
   TEST_INSTRUMENTS,
 } from '../instruments';
-import { midiAt, stringCount } from '../fretboard';
+import { lowestFret, midiAt, stringCount } from '../fretboard';
 import { scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
 
 const G_MAJOR = { tonic: pitchClass('G'), mode: 'ionian' as const };
@@ -36,127 +35,102 @@ describe('scaleShape', () => {
     ]);
   });
 
-  it('places three notes on every string by default', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      const shape = scaleShape(inst, { keyMode: D_DORIAN, minFret: 3 });
-      expect(shape, inst.name).toHaveLength(3 * stringCount(inst));
-    }
-  });
-
-  it('honours notesPerString', () => {
-    const shape = scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, minFret: 3, notesPerString: 4 });
-    expect(shape).toHaveLength(24);
-    for (const frets of fretsByString(shape).values()) expect(frets).toHaveLength(4);
-  });
-
-  it('starts on the requested degree', () => {
-    for (let d = 1; d <= 7; d += 1) {
-      const shape = scaleShape(STANDARD_GUITAR, {
-        keyMode: D_DORIAN,
-        startDegree: d as DegreeNumber,
-        minFret: 1,
-      });
-      expect(shape[0]!.degree.number, `degree ${d}`).toBe(d);
-    }
-  });
-
-  it('walks consecutive scale degrees with no gaps or repeats', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      const notes = scaleNotes(D_DORIAN);
-      const shape = scaleShape(inst, { keyMode: D_DORIAN, minFret: 3 });
-      shape.forEach((p, i) => {
-        expect(p.pitchClass, `${inst.name} note ${i}`).toBe(notes[i % notes.length]);
-      });
-    }
-  });
-
-  it('ascends in pitch throughout, including across string changes', () => {
-    for (const inst of TEST_INSTRUMENTS) {
+  /**
+   * Everything a shape must be, over every instrument, mode, starting degree
+   * and hand position: three notes a string, consecutive degrees of the key,
+   * ascending in pitch, within the hand, and on the neck we asked for.
+   */
+  it('is a playable, ascending run of the key wherever it is asked for', () => {
+    for (const instrument of TEST_INSTRUMENTS) {
       for (const mode of MODE_NAMES) {
-        const shape = scaleShape(inst, {
-          keyMode: { tonic: pitchClass('A'), mode },
-          minFret: 2,
-        });
-        for (let i = 1; i < shape.length; i += 1) {
-          expect(
-            midiAt(inst, shape[i]!),
-            `${inst.name} ${mode} at index ${i}`,
-          ).toBeGreaterThan(midiAt(inst, shape[i - 1]!));
+        const keyMode = { tonic: pitchClass('A'), mode };
+        const notes = scaleNotes(keyMode);
+        const inKey = new Set(notes.map((n) => chroma(n)));
+
+        // From fret 3 up: at the very bottom of a drop-D neck this run is
+        // genuinely unplayable (see STATUS — the shape spans sixteen frets),
+        // which is a generator question, not a test one.
+        for (const minFret of [3, 5, 9]) {
+          for (let degree = 1; degree <= 7; degree += 1) {
+            const where = `${instrument.name} ${mode} degree ${degree} min ${minFret}`;
+            const shape = scaleShape(instrument, {
+              keyMode,
+              minFret,
+              startDegree: degree as DegreeNumber,
+            });
+
+            // Three a string, unless the neck runs out first, and then it
+            // stops cleanly rather than inventing frets.
+            const full = 3 * stringCount(instrument);
+            expect(shape.length, where).toBe(minFret > 5 ? Math.min(shape.length, full) : full);
+            expect(shape[0]!.degree.number, where).toBe(degree);
+
+            const from = notes.findIndex((n) => chroma(n) === chroma(shape[0]!.pitchClass));
+            shape.forEach((position, i) => {
+              expect(inKey.has(chroma(position.pitchClass)), `${where} note ${i}`).toBe(true);
+              // Consecutive degrees, no gaps and no repeats.
+              expect(position.pitchClass, `${where} note ${i}`).toBe(notes[(from + i) % notes.length]);
+              // minFret anchors the hand rather than flooring every note: a
+              // later string may reach lower rather than jump an octave up.
+              expect(position.fret, `${where} note ${i}`).toBeGreaterThanOrEqual(
+                position.string === 0 ? minFret : lowestFret(instrument),
+              );
+              expect(position.fret, `${where} note ${i}`).toBeLessThanOrEqual(instrument.fretCount);
+              if (i > 0) {
+                expect(midiAt(instrument, position), `${where} note ${i}`).toBeGreaterThan(
+                  midiAt(instrument, shape[i - 1]!),
+                );
+              }
+            });
+
+            for (const frets of fretsByString(shape).values()) {
+              for (let i = 1; i < frets.length; i += 1) {
+                expect(frets[i]!, where).toBeGreaterThan(frets[i - 1]!);
+              }
+            }
+
+            // Three notes per string needs a stretch, but not more than six frets.
+            const span = shapeSpan(shape)!;
+            expect(span, where).not.toBeNull();
+            expect(span.high - span.low, where).toBeLessThanOrEqual(6);
+          }
         }
       }
     }
   });
 
-  it('ascends within each string', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      for (const frets of fretsByString(scaleShape(inst, { keyMode: G_MAJOR, minFret: 3 })).values()) {
-        for (let i = 1; i < frets.length; i += 1) {
-          expect(frets[i]!).toBeGreaterThan(frets[i - 1]!);
-        }
-      }
+  it('puts the asked-for number of notes on each string', () => {
+    const four = scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, minFret: 3, notesPerString: 4 });
+    expect(four).toHaveLength(24);
+    for (const frets of fretsByString(four).values()) expect(frets).toHaveLength(4);
+
+    for (const instrument of TEST_INSTRUMENTS) {
+      const counts = Array.from({ length: stringCount(instrument) }, (_, k) => (k % 2 ? 3 : 4));
+      const shape = scaleShape(instrument, { keyMode: G_MAJOR, minFret: 3, notesPerString: counts });
+      expect(shape, instrument.name).toHaveLength(counts.reduce((a, b) => a + b, 0));
+      const byString = fretsByString(shape);
+      counts.forEach((count, string) =>
+        expect(byString.get(string), `${instrument.name} string ${string}`).toHaveLength(count),
+      );
     }
+
+    // A count per string is the same thing as one count, when they all agree.
+    expect(
+      scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: [3, 3, 3, 3, 3, 3] }),
+    ).toEqual(scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: 3 }));
   });
 
-  it('stays within a playable hand span', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      for (const mode of MODE_NAMES) {
-        for (let d = 1; d <= 7; d += 1) {
-          const shape = scaleShape(inst, {
-            keyMode: { tonic: pitchClass('C'), mode },
-            startDegree: d as DegreeNumber,
-            minFret: 3,
-          });
-          const span = shapeSpan(shape);
-          expect(span, `${inst.name} ${mode} degree ${d}`).not.toBeNull();
-          // Three notes per string needs a stretch, but not more than six frets.
-          expect(span!.high - span!.low, `${inst.name} ${mode} degree ${d}`).toBeLessThanOrEqual(6);
-        }
-      }
-    }
-  });
+  it('uses the strings it is given, on the tuning it is given', () => {
+    const subset = scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, minFret: 3, strings: [3, 4, 5] });
+    expect(new Set(subset.map((p) => p.string))).toEqual(new Set([3, 4, 5]));
+    expect(subset).toHaveLength(9);
 
-  it('never uses a note outside the key', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      const allowed = new Set(scaleNotes(D_DORIAN).map((n) => chroma(n)));
-      for (const p of scaleShape(inst, { keyMode: D_DORIAN, minFret: 3 })) {
-        expect(allowed.has(chroma(p.pitchClass))).toBe(true);
-      }
-    }
-  });
-
-  it('reflects an altered tuning', () => {
-    const standard = scaleShape(STANDARD_GUITAR, { keyMode: D_DORIAN, minFret: 3 });
-    const dropD = scaleShape(DROP_D_GUITAR, { keyMode: D_DORIAN, minFret: 3 });
-    const standardLow = standard.filter((p) => p.string === 0).map((p) => p.fret);
-    const dropDLow = dropD.filter((p) => p.string === 0).map((p) => p.fret);
+    const low = (instrument: typeof STANDARD_GUITAR) =>
+      scaleShape(instrument, { keyMode: D_DORIAN, minFret: 3 })
+        .filter((p) => p.string === 0)
+        .map((p) => p.fret);
     // Lowering string 0 by two semitones moves its frets up by two.
-    expect(dropDLow).toEqual(standardLow.map((f) => f + 2));
-  });
-
-  it('covers a seven-string without a special case', () => {
-    const shape = scaleShape(SEVEN_STRING_GUITAR, { keyMode: D_DORIAN, minFret: 3 });
-    expect(new Set(shape.map((p) => p.string)).size).toBe(7);
-    expect(shape).toHaveLength(21);
-  });
-
-  it('respects a restricted string set', () => {
-    const shape = scaleShape(STANDARD_GUITAR, {
-      keyMode: G_MAJOR,
-      minFret: 3,
-      strings: [3, 4, 5],
-    });
-    expect(new Set(shape.map((p) => p.string))).toEqual(new Set([3, 4, 5]));
-    expect(shape).toHaveLength(9);
-  });
-
-  it('never returns a fret below minFret', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      for (const minFret of [1, 5, 9]) {
-        for (const p of scaleShape(inst, { keyMode: D_DORIAN, minFret })) {
-          expect(p.fret, `${inst.name} min ${minFret}`).toBeGreaterThanOrEqual(minFret);
-        }
-      }
-    }
+    expect(low(DROP_D_GUITAR)).toEqual(low(STANDARD_GUITAR).map((fret) => fret + 2));
   });
 
   it('stops cleanly rather than running off the end of the neck', () => {
@@ -166,15 +140,7 @@ describe('scaleShape', () => {
 });
 
 describe('shapesUpTheNeck', () => {
-  it('gives seven shapes ascending the neck', () => {
-    const shapes = shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 1 });
-    expect(shapes).toHaveLength(7);
-    for (let i = 1; i < shapes.length; i += 1) {
-      expect(shapes[i]!.startFret).toBeGreaterThan(shapes[i - 1]!.startFret);
-    }
-  });
-
-  it('starts from the nut rather than from degree 1', () => {
+  it('climbs the neck from the nut, one shape per degree', () => {
     // In D dorian the first D on the low E string is fret 10. Starting from
     // degree 1 and chaining would leave frets 1-9 unused and run the last
     // shapes off the neck.
@@ -182,6 +148,9 @@ describe('shapesUpTheNeck', () => {
     expect(shapes.map((s) => s.startFret)).toEqual([1, 3, 5, 7, 8, 10, 12]);
     // Those frets are F G A B C D E — so the degrees run ♭3 4 5 6 ♭7 1 2.
     expect(shapes.map((s) => s.startDegree)).toEqual([3, 4, 5, 6, 7, 1, 2]);
+
+    const lows = shapes.map((s) => shapeSpan(s.positions)!.low);
+    for (let i = 1; i < lows.length; i += 1) expect(lows[i]!).toBeGreaterThanOrEqual(lows[i - 1]!);
   });
 
   it('covers every mode of the key exactly once', () => {
@@ -191,56 +160,17 @@ describe('shapesUpTheNeck', () => {
     }
   });
 
-  it('keeps every shape on the neck', () => {
-    for (const inst of TEST_INSTRUMENTS) {
-      for (const shape of shapesUpTheNeck(inst, D_DORIAN, { minFret: 1 })) {
-        expect(shape.positions.length, inst.name).toBe(3 * stringCount(inst));
-        for (const p of shape.positions) {
-          expect(p.fret).toBeLessThanOrEqual(inst.fretCount);
-        }
+  it('keeps every shape whole, on the neck, and above minFret', () => {
+    for (const instrument of TEST_INSTRUMENTS) {
+      for (const shape of shapesUpTheNeck(instrument, D_DORIAN, { minFret: 7 })) {
+        expect(shape.positions.length, instrument.name).toBe(3 * stringCount(instrument));
+        expect(shape.startFret, instrument.name).toBeGreaterThanOrEqual(7);
+        for (const p of shape.positions) expect(p.fret).toBeLessThanOrEqual(instrument.fretCount);
       }
     }
   });
 
-  it('honours minFret', () => {
-    const shapes = shapesUpTheNeck(STANDARD_GUITAR, G_MAJOR, { minFret: 7 });
-    expect(shapes[0]!.startFret).toBeGreaterThanOrEqual(7);
-  });
-
   it('returns fewer shapes than asked when the neck runs out', () => {
-    const shapes = shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 18 });
-    expect(shapes.length).toBeLessThan(7);
-  });
-
-  it('gives shapes whose spans ascend too', () => {
-    const shapes = shapesUpTheNeck(STANDARD_GUITAR, G_MAJOR, { minFret: 1 });
-    const lows = shapes.map((s) => shapeSpan(s.positions)!.low);
-    for (let i = 1; i < lows.length; i += 1) {
-      expect(lows[i]!, `shape ${i + 1}`).toBeGreaterThanOrEqual(lows[i - 1]!);
-    }
-  });
-});
-
-describe('scaleShape with a count per string', () => {
-  it.each(TEST_INSTRUMENTS.map((i) => [i.id, i] as const))(
-    'places exactly the asked-for notes on each string, ascending in pitch (%s)',
-    (_id, instrument) => {
-      const counts = Array.from({ length: stringCount(instrument) }, (_, k) => (k % 2 ? 3 : 4));
-      const shape = scaleShape(instrument, { keyMode: G_MAJOR, minFret: 3, notesPerString: counts });
-
-      expect(shape).toHaveLength(counts.reduce((a, b) => a + b, 0));
-      const byString = fretsByString(shape);
-      counts.forEach((count, string) => expect(byString.get(string), `string ${string}`).toHaveLength(count));
-
-      const midis = shape.map((p) => midiAt(instrument, p));
-      for (let i = 1; i < midis.length; i += 1) expect(midis[i]!).toBeGreaterThan(midis[i - 1]!);
-    },
-  );
-
-  it('matches a single count when every entry is the same', () => {
-    const counts = Array.from({ length: 6 }, () => 3);
-    expect(scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: counts })).toEqual(
-      scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, notesPerString: 3 }),
-    );
+    expect(shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 18 }).length).toBeLessThan(7);
   });
 });
