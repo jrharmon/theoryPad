@@ -120,8 +120,23 @@ export class FakeClock implements Clock {
     this.currentTick = 0;
   }
 
+  /**
+   * Jump the transport. Scheduling is positional, as Tone's is: what lies
+   * ahead of the new position is due again, and what lies behind it is not.
+   * Without that, seeking back over a phrase would never replay its notes
+   * here while it does in the browser.
+   */
   seek(tick: number): void {
     this.currentTick = tick;
+    for (const entry of this.entries) {
+      if (entry.intervalTicks === null) {
+        entry.done = entry.fromTick < tick;
+        entry.nextTick = entry.fromTick;
+        continue;
+      }
+      const steps = Math.ceil((tick - entry.fromTick) / entry.intervalTicks);
+      entry.nextTick = entry.fromTick + Math.max(0, steps) * entry.intervalTicks;
+    }
   }
 
   /**

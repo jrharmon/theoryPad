@@ -62,8 +62,9 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
     const notes = {
       ascending: run.up,
       descending: run.down,
-      'up-down': [...run.up, ...run.down.slice(1)],
-      'down-up': [...run.down, ...run.up.slice(1)],
+      // The turning note is played twice: up to the top and back down from it.
+      'up-down': [...run.up, ...run.down],
+      'down-up': [...run.down, ...run.up],
     }[direction];
 
     const phrase = phraseBuilder()

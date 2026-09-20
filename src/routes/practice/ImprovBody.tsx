@@ -40,7 +40,7 @@ export function ImprovBody({
 }) {
   const snapshot = usePractice((s) => s.snapshot);
   const state = snapshot?.state;
-  const tick = usePhraseTick(state === 'playing');
+  const tick = usePhraseTick(state === 'playing' || state === 'count-in');
   const videoColumn = useVideoColumn();
   const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
   const side = useSettings((s) => s.settings.ui.showInfoColumn !== false);

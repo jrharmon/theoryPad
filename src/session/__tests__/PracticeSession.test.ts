@@ -40,6 +40,7 @@ class FakeTrack implements TrackSource {
   speed = 1;
   status: Status = 'loaded';
   startedFrom: number | null = null;
+  reanchored = 0;
 
   constructor(track: VideoTrack, failWith: Error | null) {
     this.bpm = track.bpm;
@@ -70,6 +71,9 @@ class FakeTrack implements TrackSource {
   }
   setRate(speed: number) {
     this.speed = speed;
+  }
+  reanchor() {
+    this.reanchored += 1;
   }
   dispose() {
     this.status = 'disposed';
@@ -506,5 +510,68 @@ describe('RoutineSession', () => {
     expect(saved.items[0]!.heldAxisValues).toEqual(
       reps[0]!.find((r) => r.routineItemId === items[0]!.id)!.axes,
     );
+  });
+
+  it('counts each item in by its own, and never by the exercise it came from', async () => {
+    const { deps, repos, audio } = world();
+    // One exercise, in the routine twice, counted in differently each time.
+    const exercise = await addExercise(repos, 'modes-through-key', { countInBars: 1 });
+    const items = [
+      { ...itemFromExercise(exercise), reps: 1, countInBars: 2 as const },
+      { ...itemFromExercise(exercise), reps: 1, countInBars: 0.5 as const },
+    ];
+    const stored = await repos.routines.add({
+      name: 'Two ways in',
+      items,
+      sessionAxisPolicies: IN_G,
+    });
+    const session = await RoutineSession.open(stored, deps);
+
+    await session.play();
+    const { timeSignature } = session.runner!.currentPhrase!;
+    expect(session.state.snapshot).toMatchObject({
+      state: 'count-in',
+      countInRemaining: countInTicks(timeSignature, 2),
+    });
+
+    // The second item counts itself in on the same running clock — half a bar,
+    // its own, not the first item's two bars and not the exercise's one.
+    playOut(session, audio.clock);
+    await settle();
+    expect(session.state.snapshot).toMatchObject({
+      state: 'count-in',
+      countInRemaining: countInTicks(timeSignature, 0.5),
+    });
+
+    // Changing it here belongs to the item being played. The exercise in the
+    // library keeps its own, as does the routine's other copy.
+    await session.setCountIn(1);
+    const saved = (await repos.routines.byId(stored.id))!;
+    expect(saved.items.map((item) => item.countInBars)).toEqual([2, 1]);
+    expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(1);
+  });
+
+  it('seeks under a backing track, leaving the track playing where it is', async () => {
+    const inG = track();
+    const { deps, repos, audio } = world([inG]);
+    const exercise = await addExercise(repos, 'modes-through-key', { countInBars: 1 });
+    const stored = await repos.routines.add({
+      name: 'Along with it',
+      items: [{ ...itemFromExercise(exercise), reps: 1 }],
+      sessionAxisPolicies: IN_G,
+      backing: { kind: 'video', id: inG.id },
+    });
+    const session = await RoutineSession.open(stored, deps);
+    await session.play();
+    await settle();
+
+    audio.clock.advanceTicks(session.runner!.snapshot.countInRemaining + 960);
+    expect(session.runner!.snapshot.phraseTick).toBe(960);
+
+    // The exercise moves; the recording plays on from where it is and takes
+    // the clock's new position as the one to stay in step with.
+    session.seekTo(480);
+    expect(session.runner!.snapshot.phraseTick).toBe(480);
+    expect(audio.tracks[0]).toMatchObject({ status: 'playing', reanchored: 1 });
   });
 });

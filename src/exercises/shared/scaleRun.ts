@@ -18,21 +18,22 @@ export interface ScaleRunOptions {
 /**
  * Turn a shape into a playable order.
  *
- * `up-down` and `down-up` deliberately drop the repeated turning note, so a run
- * does not stutter on the note it changes direction at.
+ * `up-down` and `down-up` play the turning note twice — up to the 7th and
+ * straight back down from it. That is how the run is practised: the turn is a
+ * change of picking direction on the same note, not a note to skip.
  */
 export function applyDirection<T>(items: T[], direction: Direction): T[] {
+  const reversed = [...items].reverse();
   switch (direction) {
     case 'ascending':
       return [...items];
     case 'descending':
-      return [...items].reverse();
+      return reversed;
+    // A single note is not a turn, so it is not doubled.
     case 'up-down':
-      return [...items, ...[...items].reverse().slice(1)];
-    case 'down-up': {
-      const down = [...items].reverse();
-      return [...down, ...items.slice(1)];
-    }
+      return items.length <= 1 ? [...items] : [...items, ...reversed];
+    case 'down-up':
+      return items.length <= 1 ? [...items] : [...reversed, ...items];
   }
 }
 

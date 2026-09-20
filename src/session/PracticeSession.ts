@@ -176,6 +176,20 @@ export abstract class PracticeSession {
     await this.play();
   }
 
+  /**
+   * Move the playhead to a note the player clicked, and carry on from there.
+   *
+   * A backing track cannot be dragged along with it — YouTube seeks in its own
+   * time — so the track simply plays on from where it is. The exercise moves
+   * anyway, and the track is re-anchored to the clock's new position: without
+   * that, the follower would spend the next few seconds hauling the clock back
+   * to the recording and the click would undo itself.
+   */
+  seekTo(phraseTick: number): void {
+    if (this.backing.state.starting) return;
+    if (this.runner?.seekTo(phraseTick)) this.backing.reanchor();
+  }
+
   setTempo(bpm: number): void {
     if (!this.backing.setTempo(bpm)) this.runner?.setTempo(bpm);
   }

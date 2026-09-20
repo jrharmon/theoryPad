@@ -50,7 +50,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
             size="icon-lg"
             onClick={() => void practice.play()}
             aria-label="Play"
-            title="Play  ( Enter )"
+            title="Play  ( Space )"
             data-testid="play"
           >
             <PlayIcon className="size-5 fill-current" />

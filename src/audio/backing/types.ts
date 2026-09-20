@@ -20,6 +20,13 @@ export interface BackingSource {
   start(countInTicks: number, options?: PlayOptions): Promise<void>;
   pause(): void;
   resume(options?: PlayOptions): Promise<void>;
+  /**
+   * The clock was moved out from under this — the player clicked a note in the
+   * tab. Keep sounding where you are, and take the clock's new position as the
+   * one to stay in step with. Only a source with a timeline of its own has
+   * anything to do here.
+   */
+  reanchor?(): void;
   stop(): void;
   setRate(speed: number): void;
   dispose(): void;

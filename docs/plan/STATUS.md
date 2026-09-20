@@ -1,12 +1,14 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **"Backing tracks — ads and the YouTube host" is finished as far as
-it is going:** tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is
-**parked at the player's call** — the gain was cosmetic and it had turned up a reproduced
-failure. Nothing is in progress. **M7b is next.** Task 1 corrected the advert signal the whole
-run was planned around, so read that section before touching backing playback again. Written as a
-hand-off: a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs
-it points to. Start with "Remaining work".
+**Last updated:** 2026-09-20. **Feedback round 4 is merged and live** — five transport and
+generator fixes from living with the app, listed under "Feedback round 4" below. Nothing is in
+progress. Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
+going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
+at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
+next.** The ad task corrected the advert signal that whole run was planned
+around, so read that section before touching backing playback again. Written as a hand-off: a
+fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it points
+to. Start with "Remaining work".
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -25,6 +27,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
+| Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -225,6 +228,54 @@ the perfect view of related chords".
   back (`ui.showInfoColumn`); the panels' own minimize buttons stay for one at a time.
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
+
+## Feedback round 4 — merged (2026-09-20)
+
+Five things from living with the app. All merged to `main`; `pnpm check` is green, and each was
+driven in the browser and looked at rather than only tested.
+
+- **A routine item's count-in was already its own** — copied from the exercise when the item is
+  added and written back to the item, never to the exercise. Checked end to end and pinned by a
+  test in `PracticeSession.test.ts`: one exercise in a routine twice, counted in two bars and
+  then half a bar, with the library's copy untouched. Nothing needed fixing. The one thing to
+  know is that an item saved before the field existed has no `countInBars` and falls back to the
+  app-wide setting until it is set once from the transport.
+- **Restart puts the playhead back to the top while it counts in.** It used to sit wherever the
+  abandoned pass fell apart, because the tick was only polled while `playing`. `usePhraseTick`
+  now runs for as long as there is a playhead to draw — count-in and pause included — and the
+  count-in draws the playhead at tick 0 outright, so there is no stale frame.
+- **Space starts playback**, as well as pausing and resuming it: from an exercise's brief, from a
+  routine's overview, and from a theory drill's. Enter still does what it did.
+- **Up-then-down and down-then-up play the turning note twice.** Up the strings to 3, 5, 7 and
+  straight back 7, 5, 3 — the turn is a change of picking direction on the same note, not a note
+  to skip. Changed in all three places that turn a run round: `applyDirection` (scale runs and
+  shape runs), `intervalRun` (the turning figure is answered by the same notes coming back), and
+  position shifting's own up/down splice. Three golden files moved with it. `stringSweep` in
+  `oneNotePerString` was left alone: it is a repeating cycle, not a direction axis, and its
+  period arithmetic depends on the ends not repeating.
+- **Clicking a note moves the playhead to it**, playing or paused, and playback carries on from
+  there. `ExerciseRunner.seekTo` moves the clock within the pass; the count-in is not somewhere a
+  click can land or skip past, and landing past the end lands on the last tick so the pass is
+  played out rather than finished by the click. The whole grid cell is the target, not the digit,
+  and the note buttons are deliberately out of the tab order: a phrase can run to hundreds of
+  notes and tabbing through them to reach the transport would be worse than the shortcut is worth.
+- **It works under a backing track too, with the track playing on.** YouTube cannot be dragged to
+  the new position, so the exercise moves and the recording does not. That needed `TrackFollower`
+  to hold an offset: it exists to haul the clock back into step with the video several times a
+  second, so without re-anchoring it the click undid itself over the next few seconds.
+  `reanchor()` takes where the clock is now as where it belongs and keeps the two that far apart,
+  still correcting the drift that is its job. It runs down through `BackingController.reanchor`
+  and an optional `reanchor?()` on `BackingSource` — only a source with a timeline of its own has
+  anything to do. Verified against the real seeded YouTube track: the playhead stays where it was
+  put and runs on from there at tempo.
+
+`FakeClock.seek` was made positional to match Tone's transport — what lies ahead of the new
+position is due again, what lies behind it is not. Without that, seeking back over a phrase
+replayed its notes in the browser and not in tests.
+
+**Known, and not from this round:** `e2e/gallery.spec.ts` "returns to Play when a phrase reaches
+its end" fails in a full `pnpm test:e2e` run and passes on its own. It does the same on an
+unmodified tree, so it is a pre-existing flake in the dev gallery, not a regression.
 
 ## The pause is over (2026-09-20)
 

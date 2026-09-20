@@ -36,7 +36,7 @@ export function useRunnerHotkeys({
 
       // A routine's overview and summary have no transport, only these.
       if (phase === 'overview' || phase === 'done') {
-        if (event.key === 'Enter' && phase === 'overview') {
+        if ((event.key === 'Enter' || event.key === ' ') && phase === 'overview') {
           event.preventDefault();
           void practice.play();
         } else if (event.key === 'k' || event.key === 'K') {
@@ -58,9 +58,14 @@ export function useRunnerHotkeys({
       }
 
       switch (event.key) {
+        // Space is play/pause, as it is everywhere else: from the brief it
+        // starts, and from there on it pauses and resumes. `preventDefault`
+        // also stops a focused button being pressed a second time by the
+        // browser, and stops the page scrolling under the transport.
         case ' ':
           event.preventDefault();
-          if (state === 'paused') practice.resume();
+          if (state === 'brief') void practice.play();
+          else if (state === 'paused') practice.resume();
           else if (state === 'playing' || state === 'count-in') practice.pause();
           break;
         case 'Enter':
