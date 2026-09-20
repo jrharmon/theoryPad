@@ -141,7 +141,12 @@ describe('modes-through-key', () => {
   it('estimates a sensible duration', () => {
     const seconds = estimateItemSeconds(
       modesThroughKey,
-      { params: DEFAULTS, tempo: { targetTempo: 70, maxTempo: null }, axisPolicies: {}, reps: 1 },
+      {
+        params: DEFAULTS,
+        tempo: { targetTempo: 70, maxTempo: null },
+        axisPolicies: {},
+        reps: 1,
+      },
       STANDARD_GUITAR,
     );
     expect(seconds).toBeGreaterThan(30);

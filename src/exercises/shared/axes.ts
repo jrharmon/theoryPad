@@ -22,4 +22,3 @@ export function optionalAxis<Id extends AxisId>(
 ): AxisValues[Id] | undefined {
   return variation.axes[id]?.value as AxisValues[Id] | undefined;
 }
-

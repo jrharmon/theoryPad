@@ -6,7 +6,9 @@
  * `...(x ? { x } : {})`. That is fine once and noise where three or four of
  * them stack up — this says the same thing in one place.
  */
-export function definedProps<T extends object>(source: T): { [K in keyof T]?: Exclude<T[K], undefined> } {
+export function definedProps<T extends object>(
+  source: T,
+): { [K in keyof T]?: Exclude<T[K], undefined> } {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(source)) {
     if (value !== undefined) out[key] = value;
