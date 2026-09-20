@@ -38,7 +38,9 @@ export function describePolicies(
     }
 
     const value = definition.parse(policy.value, { instrument, resolved: {} });
-    out.push(`${definition.label}: ${value === null ? policy.value : definition.format(value)}`);
+    out.push(
+      `${definition.label}: ${value === null ? policy.value : definition.format(value)}`,
+    );
   }
 
   return out;

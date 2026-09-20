@@ -32,7 +32,10 @@ export function Gallery() {
       <Header />
       <TransportBar transport={transport} />
 
-      <Section title="Fretboard · D Dorian across the neck" note="Root · target 6th · other degrees">
+      <Section
+        title="Fretboard · D Dorian across the neck"
+        note="Root · target 6th · other degrees"
+      >
         <Fretboard
           instrument={STANDARD_GUITAR}
           overlay={fullNeckOverlay()}
@@ -62,10 +65,7 @@ export function Gallery() {
         <ArticulationLegend />
       </Section>
 
-      <Section
-        title="Tab · articulation marks"
-        note="Every written mark the renderer supports"
-      >
+      <Section title="Tab · articulation marks" note="Every written mark the renderer supports">
         <TabExample
           id="articulations"
           phrase={articulationPhrase()}

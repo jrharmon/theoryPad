@@ -36,7 +36,8 @@ test('settings are kept, and change what the exercises use', async ({ page }) =>
   await expect
     .poll(async () => {
       const rows = await snapshot(page);
-      return (rows.settings?.[0] as { instrument?: { id?: string } } | undefined)?.instrument?.id;
+      return (rows.settings?.[0] as { instrument?: { id?: string } } | undefined)?.instrument
+        ?.id;
     })
     .toBe('guitar-7-string');
 
@@ -50,7 +51,10 @@ test('settings are kept, and change what the exercises use', async ({ page }) =>
     .getByRole('link', { name: 'Practice', exact: true })
     .click();
   await expect(page.getByTestId(/^tab-string-label-/).first()).toBeVisible();
-  const labels = await page.getByTestId('tab-system-0').getByTestId(/^tab-string-label-/).count();
+  const labels = await page
+    .getByTestId('tab-system-0')
+    .getByTestId(/^tab-string-label-/)
+    .count();
   expect(labels).toBe(7);
 });
 
@@ -79,7 +83,9 @@ test('keys and modes struck out in Settings never come up', async ({ page }) => 
   await page.getByRole('button', { name: 'Settings' }).click();
   await expect(page.getByTestId('blocked-note')).toBeVisible();
   await expect(
-    page.getByRole('group', { name: 'Key rolls from' }).getByRole('button', { name: 'C', exact: true }),
+    page
+      .getByRole('group', { name: 'Key rolls from' })
+      .getByRole('button', { name: 'C', exact: true }),
   ).toBeDisabled();
 });
 
@@ -107,7 +113,10 @@ test('the count-in is the exercise’s own, chosen from its transport', async ({
 
   await expect
     .poll(async () => {
-      const rows = (await snapshot(page)).exercises as { definitionId: string; countInBars?: number }[];
+      const rows = (await snapshot(page)).exercises as {
+        definitionId: string;
+        countInBars?: number;
+      }[];
       return rows.find((e) => e.definitionId === 'modes-through-key')?.countInBars;
     })
     .toBe(0.5);
@@ -120,7 +129,10 @@ test('an export, wiped and imported again, comes back exactly', async ({ page },
   await page.getByRole('link', { name: 'Home' }).click();
   await page.getByRole('button', { name: 'New routine' }).click();
   await page.getByRole('button', { name: 'Add exercise' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /Interval sequences/ }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /Interval sequences/ })
+    .click();
   await page.goto('/#/exercises');
   await page
     .locator('li', { hasText: 'Modes up the neck' })

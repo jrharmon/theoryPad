@@ -25,7 +25,9 @@ export function BackingTracksSection() {
   }, [load]);
 
   const tracks = sharedTracks(videos);
-  const shown = filter ? tracks.filter((t) => t.keyMode && sameKeyMode(t.keyMode, filter)) : tracks;
+  const shown = filter
+    ? tracks.filter((t) => t.keyMode && sameKeyMode(t.keyMode, filter))
+    : tracks;
 
   const pick = (keyMode: KeyMode) => {
     const matching = tracks.filter((t) => t.keyMode && sameKeyMode(t.keyMode, keyMode));
@@ -89,7 +91,11 @@ export function BackingTracksSection() {
                   .join(' · ')}
               </p>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => setEditing({ video: track, scope: track.scope })}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setEditing({ video: track, scope: track.scope })}
+            >
               Edit
             </Button>
           </li>

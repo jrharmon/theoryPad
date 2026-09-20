@@ -107,9 +107,11 @@ describe('reading a YouTube link', () => {
       videoId: 'WkIijba-HcU',
       startSec: 40,
     });
-    expect(parseYouTubeLink('https://m.youtube.com/watch?feature=share&v=WkIijba-HcU')).toEqual({
-      videoId: 'WkIijba-HcU',
-    });
+    expect(parseYouTubeLink('https://m.youtube.com/watch?feature=share&v=WkIijba-HcU')).toEqual(
+      {
+        videoId: 'WkIijba-HcU',
+      },
+    );
     expect(parseYouTubeLink('https://www.youtube.com/shorts/WkIijba-HcU')).toEqual({
       videoId: 'WkIijba-HcU',
     });
@@ -169,11 +171,13 @@ describe('tapping along', () => {
 describe('the drone', () => {
   it('sounds root, fifth and octave, low in the guitar’s range', () => {
     expect(droneNotes({ tonic: pitchClass('A'), mode: 'aeolian' })).toEqual(['A2', 'E3', 'A3']);
-    expect(droneNotes({ tonic: pitchClass('E'), mode: 'phrygian' })).toEqual(['E2', 'B2', 'E3']);
-    expect(droneNotes({ tonic: pitchClass('D#'), mode: 'dorian' }).map((n) => n.slice(-1))).toEqual([
-      '3',
-      '3',
-      '4',
+    expect(droneNotes({ tonic: pitchClass('E'), mode: 'phrygian' })).toEqual([
+      'E2',
+      'B2',
+      'E3',
     ]);
+    expect(
+      droneNotes({ tonic: pitchClass('D#'), mode: 'dorian' }).map((n) => n.slice(-1)),
+    ).toEqual(['3', '3', '4']);
   });
 });

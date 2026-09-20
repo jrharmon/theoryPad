@@ -37,11 +37,15 @@ describe('the track form’s draft', () => {
   });
 
   it('says what is missing rather than saving half a track', () => {
-    expect(draftToVideo({ ...emptyDraft(shared), link: 'nope', start: 'soon' }).problems).toEqual([
-      'Paste a YouTube link.',
-      'Bar 1 needs a time, like 3:36 or 216.5.',
-    ]);
-    const noKey = draftToVideo({ ...emptyDraft(shared), link: 'WkIijba-HcU', title: 'x', bpm: '90' });
+    expect(
+      draftToVideo({ ...emptyDraft(shared), link: 'nope', start: 'soon' }).problems,
+    ).toEqual(['Paste a YouTube link.', 'Bar 1 needs a time, like 3:36 or 216.5.']);
+    const noKey = draftToVideo({
+      ...emptyDraft(shared),
+      link: 'WkIijba-HcU',
+      title: 'x',
+      bpm: '90',
+    });
     expect(noKey.problems).toEqual(['A shared track needs a key and mode.']);
   });
 

@@ -61,9 +61,15 @@ export function RunningChrome({ name }: { name: string }) {
             : `${passesPlayed} passes`}
       </span>
 
-      <div className={`h-1.5 flex-1 overflow-hidden rounded-full ${theory ? '' : 'bg-track'}`} aria-hidden>
+      <div
+        className={`h-1.5 flex-1 overflow-hidden rounded-full ${theory ? '' : 'bg-track'}`}
+        aria-hidden
+      >
         {!theory && (
-          <div className="h-full rounded-full bg-fill" style={{ width: `${progress * 100}%` }} />
+          <div
+            className="h-full rounded-full bg-fill"
+            style={{ width: `${progress * 100}%` }}
+          />
         )}
       </div>
 

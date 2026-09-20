@@ -2,12 +2,23 @@ import type { KeyMode } from '@/domain/music';
 import { scaleDegrees, scaleNotes } from '@/domain/music';
 
 /** A key's seven notes with their degrees, the ones in question filled. */
-export function NoteRow({ keyMode, highlight }: { keyMode: KeyMode; highlight: readonly number[] }) {
+export function NoteRow({
+  keyMode,
+  highlight,
+}: {
+  keyMode: KeyMode;
+  highlight: readonly number[];
+}) {
   const notes = scaleNotes(keyMode);
   const degrees = scaleDegrees(keyMode);
   const all = highlight.length === notes.length;
   return (
-    <div className="flex overflow-hidden rounded-control border border-rule" data-testid="note-row" role="img" aria-label="Notes of the key">
+    <div
+      className="flex overflow-hidden rounded-control border border-rule"
+      data-testid="note-row"
+      role="img"
+      aria-label="Notes of the key"
+    >
       {notes.map((note, i) => {
         // Every degree highlighted is the whole scale — show it plainly instead.
         const on = !all && highlight.includes(i + 1);
@@ -21,7 +32,9 @@ export function NoteRow({ keyMode, highlight }: { keyMode: KeyMode; highlight: r
             ].join(' ')}
           >
             <span className="text-[15px] font-extrabold">{note}</span>
-            <span className={`text-[11px] ${on ? 'text-on-accent/85' : 'text-ink/64'}`}>{degrees[i]!.label}</span>
+            <span className={`text-[11px] ${on ? 'text-on-accent/85' : 'text-ink/64'}`}>
+              {degrees[i]!.label}
+            </span>
           </div>
         );
       })}

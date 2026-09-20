@@ -44,7 +44,14 @@ declare global {
 }
 
 /** YouTube's player states, by the numbers its API reports. */
-export const YT_STATE = { unstarted: -1, ended: 0, playing: 1, paused: 2, buffering: 3, cued: 5 };
+export const YT_STATE = {
+  unstarted: -1,
+  ended: 0,
+  playing: 1,
+  paused: 2,
+  buffering: 3,
+  cued: 5,
+};
 
 /** Thrown when YouTube cannot be reached — offline, or blocked. */
 export class YouTubeUnavailableError extends Error {
@@ -144,7 +151,8 @@ export class YouTubePlayer {
               onStateChange: (event) => {
                 for (const listener of this.listeners) listener(event.data);
               },
-              onError: (event) => reject(new Error(`YouTube could not play this video (${event.data}).`)),
+              onError: (event) =>
+                reject(new Error(`YouTube could not play this video (${event.data}).`)),
             },
           });
         }),
@@ -244,7 +252,11 @@ export class YouTubePlayer {
       }, BLOCKED_AFTER_MS);
       const giveUp = setTimeout(
         () =>
-          finish(blocked && options.onBlocked ? new Error('The video was never started.') : new YouTubeUnavailableError()),
+          finish(
+            blocked && options.onBlocked
+              ? new Error('The video was never started.')
+              : new YouTubeUnavailableError(),
+          ),
         options.onBlocked ? CLICK_WAIT_MS : PLAY_TIMEOUT_MS,
       );
       this.cancels.add(finish);

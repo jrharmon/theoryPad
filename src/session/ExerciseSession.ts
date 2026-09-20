@@ -97,7 +97,9 @@ export class ExerciseSession extends PracticeSession {
     this.update({ runner: this.exercise });
     this.backing.open(exercise.backing ?? { kind: 'none' }, {
       exerciseId: exercise.id,
-      ...criteriaQuery(withRequiredTags(exercise.backingCriteria, definition.backing?.requiredTags)),
+      ...criteriaQuery(
+        withRequiredTags(exercise.backingCriteria, definition.backing?.requiredTags),
+      ),
     });
   }
 

@@ -7,3 +7,6 @@ test-results
 
 # Hand-formatted planning prose
 docs/plan
+
+# Golden output: compared byte for byte
+test/golden

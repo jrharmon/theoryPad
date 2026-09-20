@@ -99,14 +99,17 @@ export const storedReps = (page: Page) => readStore<StoredRep>(page, 'reps');
  */
 export async function savedSettings(
   page: Page,
-  matches: (settings: { ui: Record<string, unknown>; audio: Record<string, unknown> }) => boolean,
+  matches: (settings: {
+    ui: Record<string, unknown>;
+    audio: Record<string, unknown>;
+  }) => boolean,
 ): Promise<void> {
   await expect
     .poll(async () => {
-      const [row] = await readStore<{ ui: Record<string, unknown>; audio: Record<string, unknown> }>(
-        page,
-        'settings',
-      );
+      const [row] = await readStore<{
+        ui: Record<string, unknown>;
+        audio: Record<string, unknown>;
+      }>(page, 'settings');
       return row ? matches(row) : false;
     })
     .toBe(true);

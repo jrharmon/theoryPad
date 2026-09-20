@@ -43,7 +43,9 @@ describe('distractors', () => {
       expect(new Set(wrong).size).toBe(3);
       expect(wrong).toContain('A#');
       expect(wrong.some((p) => p[0] === 'B')).toBe(true);
-      expect(wrong.some((p) => Math.abs(chroma(p) - chroma(pitchClass('Bb'))) % 11 === 1)).toBe(true);
+      expect(wrong.some((p) => Math.abs(chroma(p) - chroma(pitchClass('Bb'))) % 11 === 1)).toBe(
+        true,
+      );
       for (const p of wrong) expect(p).toMatch(/^[A-G][#b]?$/);
     }
   });
@@ -83,10 +85,22 @@ describe('diatonic questions', () => {
 
   it('knows the quality of every chord in a key', () => {
     expect(nameChords(C_MAJOR, 'triads', 'q').rows.map((r) => r.correctOptionId)).toEqual([
-      'maj', 'min', 'min', 'maj', 'maj', 'min', 'dim',
+      'maj',
+      'min',
+      'min',
+      'maj',
+      'maj',
+      'min',
+      'dim',
     ]);
     expect(nameChords(D_DORIAN, 'sevenths', 'q').rows.map((r) => r.correctOptionId)).toEqual([
-      'min7', 'min7', 'maj7', 'dom7', 'min7', 'min7b5', 'maj7',
+      'min7',
+      'min7',
+      'maj7',
+      'dom7',
+      'min7',
+      'min7b5',
+      'maj7',
     ]);
   });
 
@@ -150,11 +164,17 @@ describe('the circle', () => {
   const questions = (type: CircleQuestionType, seed: number) =>
     circleQuestions({ rng: mulberry32(seed), types: [type], count: 12, includeModes: true });
 
-  const answer = (q: SinglePickQuestion) => q.options.find((o) => o.id === q.correctOptionId)!.label;
+  const answer = (q: SinglePickQuestion) =>
+    q.options.find((o) => o.id === q.correctOptionId)!.label;
 
   it('always has one right answer among distinct options, all placed on the circle', () => {
     const types: CircleQuestionType[] = [
-      'signature-to-key', 'key-to-signature', 'relative-minor', 'relative-major', 'neighbour-key', 'mode-signature',
+      'signature-to-key',
+      'key-to-signature',
+      'relative-minor',
+      'relative-major',
+      'neighbour-key',
+      'mode-signature',
     ];
     for (const type of types) {
       for (const q of questions(type, 3)) {
@@ -178,7 +198,12 @@ describe('the circle', () => {
 
   it('sets its trap now and then, not on most questions', () => {
     // The mirror count — 3 sharps for 3 flats — is the trap here.
-    const set = circleQuestions({ rng: mulberry32(21), types: ['key-to-signature'], count: 200, includeModes: false });
+    const set = circleQuestions({
+      rng: mulberry32(21),
+      types: ['key-to-signature'],
+      count: 200,
+      includeModes: false,
+    });
     const trapped = set.filter((q) => {
       const p = positionOfMajor(pitchClass(/does (\S+) major/.exec(q.prompt)![1]!));
       return p !== 0 && q.options.some((o) => o.label === signatureLabel(-p));
@@ -208,7 +233,12 @@ describe('the circle', () => {
       const major = pitchClass(/of (\S+) major/.exec(q.prompt)![1]!);
       expect(answer(q)).toBe(`${minorAt(positionOfMajor(major))} minor`);
     }
-    const set = circleQuestions({ rng: mulberry32(0), types: ['relative-minor'], count: 200, includeModes: false });
+    const set = circleQuestions({
+      rng: mulberry32(0),
+      types: ['relative-minor'],
+      count: 200,
+      includeModes: false,
+    });
     const trapped = set.filter((q) => {
       const major = /of (\S+) major/.exec(q.prompt)![1]!;
       return q.options.some((o) => o.label === `${major} minor`);
@@ -227,7 +257,12 @@ describe('the circle', () => {
   });
 
   it('leaves out mode questions when asked to', () => {
-    const set = circleQuestions({ rng: mulberry32(1), types: ['mode-signature', 'key-to-signature'], count: 10, includeModes: false });
+    const set = circleQuestions({
+      rng: mulberry32(1),
+      types: ['mode-signature', 'key-to-signature'],
+      count: 10,
+      includeModes: false,
+    });
     expect(set.every((q) => !q.subject.startsWith('mode:'))).toBe(true);
   });
 });
@@ -240,17 +275,31 @@ describe('a key on the circle', () => {
     const circle = keyOnCircle(D_DORIAN);
     expect(circle.position).toBe(0);
     expect(roots(D_DORIAN)).toEqual({
-      IV: 'F@-1', I: 'C@0', V: 'G@1', ii: 'D@-1', vi: 'A@0', iii: 'E@1', 'vii°': 'B@0',
+      IV: 'F@-1',
+      I: 'C@0',
+      V: 'G@1',
+      ii: 'D@-1',
+      vi: 'A@0',
+      iii: 'E@1',
+      'vii°': 'B@0',
     });
     expect(circle.tonic).toMatchObject({ role: 'ii', ring: 'minor', root: 'D' });
   });
 
   it('puts every mode’s tonic on the ring its chord belongs to', () => {
     const expected: Record<ModeName, [string, string]> = {
-      ionian: ['I', 'major'], dorian: ['ii', 'minor'], phrygian: ['iii', 'minor'], lydian: ['IV', 'major'],
-      mixolydian: ['V', 'major'], aeolian: ['vi', 'minor'], locrian: ['vii°', 'diminished'],
+      ionian: ['I', 'major'],
+      dorian: ['ii', 'minor'],
+      phrygian: ['iii', 'minor'],
+      lydian: ['IV', 'major'],
+      mixolydian: ['V', 'major'],
+      aeolian: ['vi', 'minor'],
+      locrian: ['vii°', 'diminished'],
     };
-    for (const [mode, [role, ring]] of Object.entries(expected) as [ModeName, [string, string]][]) {
+    for (const [mode, [role, ring]] of Object.entries(expected) as [
+      ModeName,
+      [string, string],
+    ][]) {
       const tonic = keyOnCircle(km('A', mode)).tonic;
       expect([tonic.role, tonic.ring, tonic.root]).toEqual([role, ring, 'A']);
     }

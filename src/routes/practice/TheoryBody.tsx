@@ -45,7 +45,12 @@ export function TheoryBody({ instance }: { instance: TheoryInstance }) {
   }
 
   // Keyed by the set, so a new set starts clean.
-  return <QuestionRun key={`${snapshot.variation?.seed}-${snapshot.passesPlayed}`} questions={instance.questions} />;
+  return (
+    <QuestionRun
+      key={`${snapshot.variation?.seed}-${snapshot.passesPlayed}`}
+      questions={instance.questions}
+    />
+  );
 }
 
 function formatSeconds(seconds: number): string {
@@ -166,7 +171,10 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
           Question {index + 1} of {questions.length}
         </Kicker>
         {phase === 'right' && (
-          <span className="text-[13px] font-semibold text-accent-text" data-testid="theory-right">
+          <span
+            className="text-[13px] font-semibold text-accent-text"
+            data-testid="theory-right"
+          >
             Right
           </span>
         )}

@@ -9,7 +9,9 @@ import { cn } from 'cn';
 import { usePractice } from '@/store/practice';
 
 /** What the transport says is playing under the exercise. */
-function label(resolved: ReturnType<typeof usePractice.getState>['backing']['resolved']): string {
+function label(
+  resolved: ReturnType<typeof usePractice.getState>['backing']['resolved'],
+): string {
   if (resolved.kind === 'drone') return 'Drone';
   if (resolved.kind === 'video') return resolved.video.title;
   return 'None';
@@ -65,7 +67,9 @@ export function BackingMenu() {
           {backing.options.map((video) => (
             <Option
               key={video.id}
-              selected={backing.resolved.kind === 'video' && backing.resolved.video.id === video.id}
+              selected={
+                backing.resolved.kind === 'video' && backing.resolved.video.id === video.id
+              }
               title={video.title}
               detail={trackDetail(video)}
               onPick={() => pick({ kind: 'video', id: video.id })}
@@ -120,7 +124,9 @@ function Option({
         )}
       >
         <span className="block text-[13px] font-semibold">{title}</span>
-        <span className={cn('block text-[12px]', selected ? 'opacity-80' : 'text-ink/64')}>{detail}</span>
+        <span className={cn('block text-[12px]', selected ? 'opacity-80' : 'text-ink/64')}>
+          {detail}
+        </span>
       </button>
     </li>
   );

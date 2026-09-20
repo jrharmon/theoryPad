@@ -66,7 +66,10 @@ export function respell(tonic: string, mode: ModeName | ''): string {
 }
 
 /** The video a draft describes, and everything stopping it being saved. */
-export function draftToVideo(draft: TrackDraft): { video: NewVideo | null; problems: string[] } {
+export function draftToVideo(draft: TrackDraft): {
+  video: NewVideo | null;
+  problems: string[];
+} {
   const problems: string[] = [];
   const link = parseYouTubeLink(draft.link);
   if (!link) problems.push('Paste a YouTube link.');
@@ -78,7 +81,8 @@ export function draftToVideo(draft: TrackDraft): { video: NewVideo | null; probl
   const bpm = draft.bpm.trim() ? Number(draft.bpm) : undefined;
   if (bpm !== undefined && !(bpm > 0)) problems.push('The bpm has to be a number.');
   const beats = Number(draft.beats);
-  if ((draft.tonic === '') !== (draft.mode === '')) problems.push('Choose both a key and a mode, or neither.');
+  if ((draft.tonic === '') !== (draft.mode === ''))
+    problems.push('Choose both a key and a mode, or neither.');
 
   if (!link || startSec === null || endSec === null || problems.length > 0) {
     return { video: null, problems };
@@ -92,7 +96,14 @@ export function draftToVideo(draft: TrackDraft): { video: NewVideo | null; probl
     playAlong: shared || draft.playAlong,
     startSec,
     beatsPerBar: Number.isInteger(beats) ? beats : 0,
-    tags: [...new Set(draft.tags.split(',').map((t) => t.trim()).filter(Boolean))],
+    tags: [
+      ...new Set(
+        draft.tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+      ),
+    ],
   };
   if (endSec !== undefined) video.endSec = endSec;
   if (bpm !== undefined) video.bpm = bpm;

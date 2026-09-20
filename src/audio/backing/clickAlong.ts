@@ -30,7 +30,10 @@ export async function clickAlong(
   clock.stop();
   clock.seek(0);
   clock.setBpm(track.bpm);
-  engine.configureMetronome({ timeSignature: { beats: track.beatsPerBar, unit: 4 }, countInTicks: 0 });
+  engine.configureMetronome({
+    timeSignature: { beats: track.beatsPerBar, unit: 4 },
+    countInTicks: 0,
+  });
   metronome.setMuted(false);
   metronome.setSilenced(false);
   await playing;

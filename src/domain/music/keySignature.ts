@@ -18,8 +18,20 @@ const FLAT_ORDER = ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'].map((s) => pitchCl
 /** Accidentals in each major key, by tonic. */
 const MAJOR_ALTERATION: Record<string, number> = {
   C: 0,
-  G: 1, D: 2, A: 3, E: 4, B: 5, 'F#': 6, 'C#': 7,
-  F: -1, Bb: -2, Eb: -3, Ab: -4, Db: -5, Gb: -6, Cb: -7,
+  G: 1,
+  D: 2,
+  A: 3,
+  E: 4,
+  B: 5,
+  'F#': 6,
+  'C#': 7,
+  F: -1,
+  Bb: -2,
+  Eb: -3,
+  Ab: -4,
+  Db: -5,
+  Gb: -6,
+  Cb: -7,
 };
 
 /** The major key a mode is a rotation of: D dorian -> C major. */
@@ -36,7 +48,9 @@ export function keySignature(km: KeyMode): KeySignature {
   const major = relativeMajor(km);
   const alteration = MAJOR_ALTERATION[major];
   if (alteration === undefined) {
-    throw new Error(`No key signature for relative major ${major} (from ${km.tonic} ${km.mode})`);
+    throw new Error(
+      `No key signature for relative major ${major} (from ${km.tonic} ${km.mode})`,
+    );
   }
 
   const sharps = alteration > 0 ? alteration : 0;

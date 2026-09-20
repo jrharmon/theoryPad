@@ -48,7 +48,11 @@ export function ExerciseVideos({ exercise, played }: { exercise: Exercise; playe
               startSec={video.playAlong ? 0 : video.startSec}
               endSec={video.playAlong ? undefined : video.endSec}
             >
-              <Button variant="secondary" size="xs" onClick={() => setEditing({ video, scope })}>
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={() => setEditing({ video, scope })}
+              >
                 Edit
               </Button>
             </VideoEmbed>
@@ -91,15 +95,19 @@ export function BackingCriteriaEditor({
     const min = which === 'min' ? n : low;
     const max = which === 'max' ? n : high;
     const { bpm: _drop, ...rest } = criteria;
-    save(min === null && max === null ? rest : { ...rest, bpm: { min: min ?? 0, max: max ?? 999 } });
+    save(
+      min === null && max === null
+        ? rest
+        : { ...rest, bpm: { min: min ?? 0, max: max ?? 999 } },
+    );
   };
 
   return (
     <div className="sheet px-5 py-4" data-testid="backing-criteria">
       <Kicker>Backing tracks offered</Kicker>
       <p className="mt-1 text-[12px] text-ink/64">
-        Shared tracks in the session’s key and mode. Narrow them here; this exercise’s own tracks
-        are always offered.
+        Shared tracks in the session’s key and mode. Narrow them here; this exercise’s own
+        tracks are always offered.
       </p>
       <div className="mt-3 space-y-3">
         {requiredTags.length > 0 && (
@@ -114,13 +122,27 @@ export function BackingCriteriaEditor({
             <span className="text-ink/64">.</span>
           </p>
         )}
-        <Field label="With these tags" htmlFor="criteria-tags" hint="Separated by commas. Empty offers every track.">
+        <Field
+          label="With these tags"
+          htmlFor="criteria-tags"
+          hint="Separated by commas. Empty offers every track."
+        >
           <Input
             id="criteria-tags"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             onBlur={() =>
-              save({ ...criteria, tags: [...new Set(tags.split(',').map((t) => t.trim()).filter(Boolean))] })
+              save({
+                ...criteria,
+                tags: [
+                  ...new Set(
+                    tags
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter(Boolean),
+                  ),
+                ],
+              })
             }
           />
         </Field>

@@ -37,7 +37,10 @@ describe('PhrasePlayer', () => {
   it('plays each note at its pitch and tick', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence([p(0, 3), p(0, 5), p(1, 0)]).build();
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([p(0, 3), p(0, 5), p(1, 0)])
+      .build();
 
     new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
     clock.start();
@@ -51,7 +54,10 @@ describe('PhrasePlayer', () => {
   it('reflects the tuning it is given', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence([p(0, 0)]).build();
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([p(0, 0)])
+      .build();
 
     const dropD = { ...STANDARD_GUITAR, tuning: [...STANDARD_GUITAR.tuning] };
     dropD.tuning[0] = 'D2' as NoteName;
@@ -63,10 +69,16 @@ describe('PhrasePlayer', () => {
   });
 
   it('scales durations with the tempo', () => {
-    for (const [bpm, expected] of [[60, 1], [120, 0.5]] as const) {
+    for (const [bpm, expected] of [
+      [60, 1],
+      [120, 0.5],
+    ] as const) {
       const clock = new FakeClock(bpm);
       const { voice, played } = recordingVoice();
-      const phrase = phraseBuilder().rhythm(QUARTER).sequence([p(0, 3)]).build();
+      const phrase = phraseBuilder()
+        .rhythm(QUARTER)
+        .sequence([p(0, 3)])
+        .build();
 
       new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
       clock.start();
@@ -148,7 +160,10 @@ describe('PhrasePlayer', () => {
   it('starts from an offset tick', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    const phrase = phraseBuilder().rhythm(QUARTER).sequence([p(0, 3)]).build();
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([p(0, 3)])
+      .build();
 
     new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR, QUARTER * 4);
     clock.start();
@@ -164,7 +179,12 @@ describe('PhrasePlayer', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
     const player = new PhrasePlayer(clock, voice);
-    player.load(phraseBuilder().rest(QUARTER * 4).build(), STANDARD_GUITAR);
+    player.load(
+      phraseBuilder()
+        .rest(QUARTER * 4)
+        .build(),
+      STANDARD_GUITAR,
+    );
 
     clock.start();
     clock.advanceTicks(QUARTER * 8);
@@ -176,7 +196,13 @@ describe('PhrasePlayer', () => {
     const clock = new FakeClock(60);
     const { voice, played, releases } = recordingVoice();
     const player = new PhrasePlayer(clock, voice);
-    player.load(phraseBuilder().rhythm(QUARTER).sequence([p(0, 3), p(0, 5)]).build(), STANDARD_GUITAR);
+    player.load(
+      phraseBuilder()
+        .rhythm(QUARTER)
+        .sequence([p(0, 3), p(0, 5)])
+        .build(),
+      STANDARD_GUITAR,
+    );
 
     // load() releases too, so a previous phrase cannot ring on under a new one.
     const beforeClear = releases();
@@ -195,8 +221,20 @@ describe('PhrasePlayer', () => {
     const { voice, played } = recordingVoice();
     const player = new PhrasePlayer(clock, voice);
 
-    player.load(phraseBuilder().rhythm(QUARTER).sequence([p(0, 3), p(0, 5)]).build(), STANDARD_GUITAR);
-    player.load(phraseBuilder().rhythm(QUARTER).sequence([p(0, 7)]).build(), STANDARD_GUITAR);
+    player.load(
+      phraseBuilder()
+        .rhythm(QUARTER)
+        .sequence([p(0, 3), p(0, 5)])
+        .build(),
+      STANDARD_GUITAR,
+    );
+    player.load(
+      phraseBuilder()
+        .rhythm(QUARTER)
+        .sequence([p(0, 7)])
+        .build(),
+      STANDARD_GUITAR,
+    );
 
     clock.start();
     clock.advanceTicks(QUARTER * 4);
@@ -208,7 +246,10 @@ describe('PhrasePlayer', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
     new PhrasePlayer(clock, voice).load(
-      phraseBuilder().rhythm(QUARTER).sequence([p(0, 3), p(0, 5), p(0, 7), p(0, 8)]).build(),
+      phraseBuilder()
+        .rhythm(QUARTER)
+        .sequence([p(0, 3), p(0, 5), p(0, 7), p(0, 8)])
+        .build(),
       STANDARD_GUITAR,
     );
 

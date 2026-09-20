@@ -50,7 +50,12 @@ export function VideoEmbed({
               aria-label={`Play ${title}`}
               onClick={() => setPlaying(true)}
             >
-              <img src={thumbnailUrl(videoId)} alt="" className="h-full w-full object-cover" loading="lazy" />
+              <img
+                src={thumbnailUrl(videoId)}
+                alt=""
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
               <span className="absolute inset-0 m-auto flex h-11 w-16 items-center justify-center rounded-[12px] bg-accent text-paper shadow-(--shadow-float) group-hover:bg-accent/85">
                 ▶
               </span>
@@ -68,7 +73,12 @@ export function VideoEmbed({
             )}
           </div>
           {children}
-          <Button variant="secondary" size="xs" aria-pressed={enlarged} onClick={() => setEnlarged(!enlarged)}>
+          <Button
+            variant="secondary"
+            size="xs"
+            aria-pressed={enlarged}
+            onClick={() => setEnlarged(!enlarged)}
+          >
             {enlarged ? 'Shrink' : 'Enlarge'}
           </Button>
         </div>

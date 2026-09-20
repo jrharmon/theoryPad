@@ -71,7 +71,12 @@ export function reportSummary(reps: readonly LoggedRep[]): ReportSummary {
     seconds += repSeconds(rep);
     if (rep.status === 'completed') variations.add(`${rep.exerciseId}:${rep.seed}`);
   }
-  return { sessions: sessions.size, seconds, variations: variations.size, exercises: exercises.size };
+  return {
+    sessions: sessions.size,
+    seconds,
+    variations: variations.size,
+    exercises: exercises.size,
+  };
 }
 
 /** Tempos of an exercise's finished metered passes, oldest first. */

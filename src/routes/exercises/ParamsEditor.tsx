@@ -42,7 +42,12 @@ export function ParamsEditor({
         const id = `param-${field.key}`;
         const value = values[field.key];
         return (
-          <Field key={field.key} label={field.label} htmlFor={id} {...(field.hint ? { hint: field.hint } : {})}>
+          <Field
+            key={field.key}
+            label={field.label}
+            htmlFor={id}
+            {...(field.hint ? { hint: field.hint } : {})}
+          >
             {field.kind === 'choice' && (
               <Select
                 value={String(value)}

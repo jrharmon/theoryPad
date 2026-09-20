@@ -26,7 +26,11 @@ export function PracticeSettingsDialog({
       title={definition.name}
       description="Applied when you close this. Changing what varies rolls just that axis again."
       definition={definition}
-      initial={{ tempo: exercise.tempo, params: exercise.params, axisPolicies: exercise.axisPolicies }}
+      initial={{
+        tempo: exercise.tempo,
+        params: exercise.params,
+        axisPolicies: exercise.axisPolicies,
+      }}
       held={exercise.heldAxisValues}
       onApply={(changed) => void usePractice.getState().reconfigure(changed)}
     />

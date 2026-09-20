@@ -31,7 +31,11 @@ export class RoutineSession extends PracticeSession {
       if (!definition) continue;
       items.push(
         definition.kind === 'theory'
-          ? { ...item, definition, subjectWeights: await loadSubjectWeights(deps, item.exerciseId) }
+          ? {
+              ...item,
+              definition,
+              subjectWeights: await loadSubjectWeights(deps, item.exerciseId),
+            }
           : { ...item, definition },
       );
     }
@@ -87,7 +91,10 @@ export class RoutineSession extends PracticeSession {
         this.backing.fitTo(current);
       }
       const state = snapshot.current?.state;
-      if (current.currentInstance?.kind === 'theory' && (state === 'count-in' || state === 'playing')) {
+      if (
+        current.currentInstance?.kind === 'theory' &&
+        (state === 'count-in' || state === 'playing')
+      ) {
         this.backing.shelveTrack();
       }
     });
@@ -179,7 +186,12 @@ export class RoutineSession extends PracticeSession {
     if (current.currentInstance?.kind === 'theory') return;
     const state = current.snapshot.state;
     const { started, starting, resolved } = this.backing.state;
-    if ((state === 'count-in' || state === 'playing') && !started && !starting && resolved.kind !== 'none') {
+    if (
+      (state === 'count-in' || state === 'playing') &&
+      !started &&
+      !starting &&
+      resolved.kind !== 'none'
+    ) {
       this.persist(this.backing.catchUp(current));
     }
   }

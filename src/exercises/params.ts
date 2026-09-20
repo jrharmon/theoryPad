@@ -54,7 +54,10 @@ function fieldFor(key: string, schema: z.ZodType): ParamField | null {
   if (inner instanceof z.ZodArray) {
     const element = unwrap(inner.element as z.ZodType);
     if (element instanceof z.ZodEnum) {
-      const options = (element.options as string[]).map((value) => ({ value, label: humanize(value) }));
+      const options = (element.options as string[]).map((value) => ({
+        value,
+        label: humanize(value),
+      }));
       // Zod gathers a schema's constraints into its bag: `.min(1)` is minimum 1.
       const min = (inner._zod.bag as { minimum?: number }).minimum ?? 0;
       return { ...base, kind: 'multi', options, min };

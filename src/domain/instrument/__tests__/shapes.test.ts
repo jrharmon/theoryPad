@@ -69,13 +69,17 @@ describe('scaleShape', () => {
             shape.forEach((position, i) => {
               expect(inKey.has(chroma(position.pitchClass)), `${where} note ${i}`).toBe(true);
               // Consecutive degrees, no gaps and no repeats.
-              expect(position.pitchClass, `${where} note ${i}`).toBe(notes[(from + i) % notes.length]);
+              expect(position.pitchClass, `${where} note ${i}`).toBe(
+                notes[(from + i) % notes.length],
+              );
               // minFret anchors the hand rather than flooring every note: a
               // later string may reach lower rather than jump an octave up.
               expect(position.fret, `${where} note ${i}`).toBeGreaterThanOrEqual(
                 position.string === 0 ? minFret : lowestFret(instrument),
               );
-              expect(position.fret, `${where} note ${i}`).toBeLessThanOrEqual(instrument.fretCount);
+              expect(position.fret, `${where} note ${i}`).toBeLessThanOrEqual(
+                instrument.fretCount,
+              );
               if (i > 0) {
                 expect(midiAt(instrument, position), `${where} note ${i}`).toBeGreaterThan(
                   midiAt(instrument, shape[i - 1]!),
@@ -100,13 +104,21 @@ describe('scaleShape', () => {
   });
 
   it('puts the asked-for number of notes on each string', () => {
-    const four = scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, minFret: 3, notesPerString: 4 });
+    const four = scaleShape(STANDARD_GUITAR, {
+      keyMode: G_MAJOR,
+      minFret: 3,
+      notesPerString: 4,
+    });
     expect(four).toHaveLength(24);
     for (const frets of fretsByString(four).values()) expect(frets).toHaveLength(4);
 
     for (const instrument of TEST_INSTRUMENTS) {
       const counts = Array.from({ length: stringCount(instrument) }, (_, k) => (k % 2 ? 3 : 4));
-      const shape = scaleShape(instrument, { keyMode: G_MAJOR, minFret: 3, notesPerString: counts });
+      const shape = scaleShape(instrument, {
+        keyMode: G_MAJOR,
+        minFret: 3,
+        notesPerString: counts,
+      });
       expect(shape, instrument.name).toHaveLength(counts.reduce((a, b) => a + b, 0));
       const byString = fretsByString(shape);
       counts.forEach((count, string) =>
@@ -121,7 +133,11 @@ describe('scaleShape', () => {
   });
 
   it('uses the strings it is given, on the tuning it is given', () => {
-    const subset = scaleShape(STANDARD_GUITAR, { keyMode: G_MAJOR, minFret: 3, strings: [3, 4, 5] });
+    const subset = scaleShape(STANDARD_GUITAR, {
+      keyMode: G_MAJOR,
+      minFret: 3,
+      strings: [3, 4, 5],
+    });
     expect(new Set(subset.map((p) => p.string))).toEqual(new Set([3, 4, 5]));
     expect(subset).toHaveLength(9);
 
@@ -150,7 +166,8 @@ describe('shapesUpTheNeck', () => {
     expect(shapes.map((s) => s.startDegree)).toEqual([3, 4, 5, 6, 7, 1, 2]);
 
     const lows = shapes.map((s) => shapeSpan(s.positions)!.low);
-    for (let i = 1; i < lows.length; i += 1) expect(lows[i]!).toBeGreaterThanOrEqual(lows[i - 1]!);
+    for (let i = 1; i < lows.length; i += 1)
+      expect(lows[i]!).toBeGreaterThanOrEqual(lows[i - 1]!);
   });
 
   it('covers every mode of the key exactly once', () => {
@@ -165,7 +182,8 @@ describe('shapesUpTheNeck', () => {
       for (const shape of shapesUpTheNeck(instrument, D_DORIAN, { minFret: 7 })) {
         expect(shape.positions.length, instrument.name).toBe(3 * stringCount(instrument));
         expect(shape.startFret, instrument.name).toBeGreaterThanOrEqual(7);
-        for (const p of shape.positions) expect(p.fret).toBeLessThanOrEqual(instrument.fretCount);
+        for (const p of shape.positions)
+          expect(p.fret).toBeLessThanOrEqual(instrument.fretCount);
       }
     }
   });

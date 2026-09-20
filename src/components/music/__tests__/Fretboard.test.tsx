@@ -31,9 +31,10 @@ describe('Fretboard', () => {
       expect(labels, instrument.name).toHaveLength(strings);
       // Guitarist numbering: the first row rendered is string "1", the highest
       // pitched — which is the model's last index.
-      expect(labels.map((el) => el.textContent), instrument.name).toEqual(
-        Array.from({ length: strings }, (_, i) => String(i + 1)),
-      );
+      expect(
+        labels.map((el) => el.textContent),
+        instrument.name,
+      ).toEqual(Array.from({ length: strings }, (_, i) => String(i + 1)));
       expect(labels[0], instrument.name).toHaveAttribute(
         'data-testid',
         `string-label-${strings - 1}`,
@@ -64,7 +65,9 @@ describe('Fretboard', () => {
   });
 
   it('labels dots with degrees, note names or nothing', () => {
-    const { rerender } = render(<Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} />);
+    const { rerender } = render(
+      <Fretboard instrument={STANDARD_GUITAR} overlay={overlayFor()} />,
+    );
     expect(screen.getByTestId('note-0-10')).toHaveTextContent('1');
     expect(screen.getByTestId('note-0-7')).toHaveTextContent('6');
     expect(screen.getByTestId('note-0-1')).toHaveTextContent('♭3');
@@ -143,5 +146,4 @@ describe('Fretboard', () => {
     await user.click(screen.getByRole('button', { name: 'String 1, fret 3' }));
     expect(onFretClick).toHaveBeenLastCalledWith({ string: 5, fret: 3 });
   });
-
 });

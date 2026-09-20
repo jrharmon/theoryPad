@@ -28,7 +28,11 @@ export function policyFor(policies: AxisPolicies | undefined, id: AxisId): AxisP
 }
 
 /** Whether a value key is in a list, by the axis's notion of the same value. */
-export function includesValue(id: AxisId, keys: readonly string[] | undefined, key: string): boolean {
+export function includesValue(
+  id: AxisId,
+  keys: readonly string[] | undefined,
+  key: string,
+): boolean {
   if (!keys || keys.length === 0) return false;
   const identity = axisDefinition(id).identity ?? ((k: string) => k);
   const target = identity(key);
@@ -36,7 +40,11 @@ export function includesValue(id: AxisId, keys: readonly string[] | undefined, k
 }
 
 /** Whether an exercise allows a value on an axis. No list allows everything. */
-export function isAllowed(id: AxisId, allowed: AxisValueKeys | undefined, key: string): boolean {
+export function isAllowed(
+  id: AxisId,
+  allowed: AxisValueKeys | undefined,
+  key: string,
+): boolean {
   const list = allowed?.[id];
   return !list || list.length === 0 || includesValue(id, list, key);
 }

@@ -96,9 +96,7 @@ describe('rebuildStats', () => {
         startedAt: 1_000 + rng.int(500_000),
         status: rng.pick(statuses),
         axes: { neckPosition: rng.pick(positions), key: rng.pick(['C', 'D', 'G']) },
-        ...(rng.next() > 0.7
-          ? { score: { correct: rng.int(9), total: 8 } }
-          : {}),
+        ...(rng.next() > 0.7 ? { score: { correct: rng.int(9), total: 8 } } : {}),
       }),
     );
 

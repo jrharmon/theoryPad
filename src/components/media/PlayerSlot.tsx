@@ -28,7 +28,8 @@ export function PlayerSlot({
     const onBlur = () =>
       setTimeout(() => {
         const active = document.activeElement;
-        if (active instanceof HTMLIFrameElement && host.current?.contains(active)) active.blur();
+        if (active instanceof HTMLIFrameElement && host.current?.contains(active))
+          active.blur();
       }, 0);
     window.addEventListener('blur', onBlur);
     return () => window.removeEventListener('blur', onBlur);

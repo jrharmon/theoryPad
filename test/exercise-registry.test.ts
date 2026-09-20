@@ -7,7 +7,11 @@ import { join } from 'node:path';
  * than src/ because it reads the filesystem, and src has no Node types on
  * purpose — app code must not reach for fs.
  */
-import { EXERCISE_DEFINITIONS, allExerciseTags, exerciseDefinition } from '@/exercises/registry';
+import {
+  EXERCISE_DEFINITIONS,
+  allExerciseTags,
+  exerciseDefinition,
+} from '@/exercises/registry';
 import { KNOWN_TAGS } from '@/exercises/types';
 
 const EXERCISES_DIR = join(process.cwd(), 'src/exercises');
@@ -58,7 +62,9 @@ describe('the registry', () => {
 
     const known = JSON.parse(readFileSync(MANIFEST, 'utf8')) as string[];
     for (const id of known) {
-      expect(current, `"${id}" was removed or renamed; rep history references it`).toContain(id);
+      expect(current, `"${id}" was removed or renamed; rep history references it`).toContain(
+        id,
+      );
     }
 
     if (current.length !== known.length) {

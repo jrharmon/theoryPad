@@ -42,7 +42,8 @@ export function estimateItemSeconds(
   }
   const tempo = item.tempo.targetTempo;
   const played = definition.generate(context);
-  const countIn = tempo !== null ? ticksToSeconds(ticksPerBar(played.phrase.timeSignature), tempo) : 0;
+  const countIn =
+    tempo !== null ? ticksToSeconds(ticksPerBar(played.phrase.timeSignature), tempo) : 0;
   const pass =
     definition.estimateRepSeconds?.(played, tempo) ??
     phraseSeconds(played.phrase, tempo ?? definition.defaults.targetTempo ?? DEFAULT_TEMPO);

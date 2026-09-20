@@ -7,10 +7,7 @@ import type { NoteRole } from '@/domain/phrase';
  * What a note is doing, so the tab and the neck diagram can colour it.
  * The target degree is what the player is being asked to land on.
  */
-export function roleFor(
-  position: ScaleNotePosition,
-  targetDegree?: DegreeNumber,
-): NoteRole {
+export function roleFor(position: ScaleNotePosition, targetDegree?: DegreeNumber): NoteRole {
   if (position.isRoot) return 'root';
   if (targetDegree !== undefined && position.degree.number === targetDegree) return 'target';
   return 'none';

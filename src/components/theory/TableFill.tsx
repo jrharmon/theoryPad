@@ -30,7 +30,11 @@ export function TableFill({
 
   return (
     <div>
-      <div className="overflow-hidden rounded-control border border-rule" role="table" aria-label={question.prompt}>
+      <div
+        className="overflow-hidden rounded-control border border-rule"
+        role="table"
+        aria-label={question.prompt}
+      >
         <div className="flex border-b border-rule bg-ink/5 px-3 py-1.5" role="row">
           {givenColumns.map((c) => (
             <span key={c.id} className="kicker w-20 shrink-0" role="columnheader">
@@ -60,7 +64,11 @@ export function TableFill({
               ].join(' ')}
             >
               {givenColumns.map((c) => (
-                <span key={c.id} className="w-20 shrink-0 text-[15px] font-extrabold" role="cell">
+                <span
+                  key={c.id}
+                  className="w-20 shrink-0 text-[15px] font-extrabold"
+                  role="cell"
+                >
                   {row.given[c.id]}
                 </span>
               ))}
@@ -80,11 +88,19 @@ export function TableFill({
                       }}
                       className={[
                         'min-w-12 rounded-full border px-2.5 py-1 text-[14px] font-semibold',
-                        isPicked && !submitted ? 'border-toggle-on-ring bg-toggle-on text-toggle-on-ink' : '',
-                        isPicked && submitted && right ? 'border-accent bg-accent text-on-accent' : '',
-                        isPicked && submitted && !right ? 'border-2 border-ink line-through' : '',
+                        isPicked && !submitted
+                          ? 'border-toggle-on-ring bg-toggle-on text-toggle-on-ink'
+                          : '',
+                        isPicked && submitted && right
+                          ? 'border-accent bg-accent text-on-accent'
+                          : '',
+                        isPicked && submitted && !right
+                          ? 'border-2 border-ink line-through'
+                          : '',
                         showCorrect ? 'border-accent bg-accent text-on-accent' : '',
-                        !isPicked && !showCorrect ? 'border-toggle-edge bg-paper hover:border-ink disabled:text-ink/35 disabled:hover:border-toggle-edge' : '',
+                        !isPicked && !showCorrect
+                          ? 'border-toggle-edge bg-paper hover:border-ink disabled:text-ink/35 disabled:hover:border-toggle-edge'
+                          : '',
                       ].join(' ')}
                     >
                       {active && <span className="mr-1 text-[10px] text-ink/45">{i + 1}</span>}
@@ -93,7 +109,9 @@ export function TableFill({
                   );
                 })}
                 {submitted && (
-                  <span className={`ml-2 text-[13px] font-semibold ${right ? 'text-ink/50' : 'text-destructive'}`}>
+                  <span
+                    className={`ml-2 text-[13px] font-semibold ${right ? 'text-ink/50' : 'text-destructive'}`}
+                  >
                     {right ? '✓' : '✗'}
                   </span>
                 )}
@@ -109,7 +127,9 @@ export function TableFill({
             Submit
           </Button>
           <span className="text-[12px] text-ink/50">
-            {complete ? 'Enter submits.' : 'Number keys fill the highlighted row. Nothing is marked until you submit.'}
+            {complete
+              ? 'Enter submits.'
+              : 'Number keys fill the highlighted row. Nothing is marked until you submit.'}
           </span>
         </div>
       )}

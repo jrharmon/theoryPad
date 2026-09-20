@@ -42,7 +42,9 @@ const at = (day: string, hour = 19, minute = 0) => {
   return new Date(y!, m! - 1, d, hour, minute).getTime();
 };
 
-function rep(overrides: Partial<LoggedRep> & { day?: string; minutes?: number } = {}): LoggedRep {
+function rep(
+  overrides: Partial<LoggedRep> & { day?: string; minutes?: number } = {},
+): LoggedRep {
   const { day = '2026-09-07', minutes = 5, ...rest } = overrides;
   const startedAt = at(day);
   return {
@@ -89,9 +91,18 @@ describe('days', () => {
   });
 
   it('names report ranges that end today', () => {
-    expect(presetRange('last-7', '2026-09-12')).toEqual({ from: '2026-09-06', to: '2026-09-12' });
-    expect(presetRange('last-30', '2026-09-12')).toEqual({ from: '2026-08-14', to: '2026-09-12' });
-    expect(presetRange('this-month', '2026-09-12')).toEqual({ from: '2026-09-01', to: '2026-09-12' });
+    expect(presetRange('last-7', '2026-09-12')).toEqual({
+      from: '2026-09-06',
+      to: '2026-09-12',
+    });
+    expect(presetRange('last-30', '2026-09-12')).toEqual({
+      from: '2026-08-14',
+      to: '2026-09-12',
+    });
+    expect(presetRange('this-month', '2026-09-12')).toEqual({
+      from: '2026-09-01',
+      to: '2026-09-12',
+    });
   });
 });
 
@@ -125,7 +136,11 @@ describe('fretTally', () => {
 
 describe('neck heat', () => {
   it('scales each spot against the busiest, gently', () => {
-    expect(heatLevels({ '0:5': 100, '1:7': 25, '2:9': 1 })).toEqual({ '0:5': 1, '1:7': 0.5, '2:9': 0.1 });
+    expect(heatLevels({ '0:5': 100, '1:7': 25, '2:9': 1 })).toEqual({
+      '0:5': 1,
+      '1:7': 0.5,
+      '2:9': 0.1,
+    });
     expect(heatLevels({})).toEqual({});
   });
 
@@ -186,7 +201,10 @@ describe('rollup', () => {
         minutes: rng.int(20),
         status: rng.pick(statuses),
         axes: { key: rng.pick(['C', 'D', 'Bb']), mode: rng.pick(['dorian', 'lydian']) },
-        frets: { strings: rng.pick([6, 7]), counts: { [`${rng.int(6)}:${rng.int(15)}`]: 1 + rng.int(4) } },
+        frets: {
+          strings: rng.pick([6, 7]),
+          counts: { [`${rng.int(6)}:${rng.int(15)}`]: 1 + rng.int(4) },
+        },
       }),
     );
 
@@ -316,10 +334,7 @@ describe('log', () => {
   });
 
   it('lists an exercise’s finished metered tempos, oldest first', () => {
-    const history = tempoHistory(
-      [rep({ day: '2026-09-09', tempo: 84 }), ...reps],
-      'ex-modes',
-    );
+    const history = tempoHistory([rep({ day: '2026-09-09', tempo: 84 }), ...reps], 'ex-modes');
     expect(history.map((h) => h.tempo)).toEqual([72, 80, 84]);
   });
 });
@@ -352,19 +367,17 @@ describe('coverage', () => {
   it('leans toward subjects missed, away from ones answered right', () => {
     const answers = (list: [string, boolean][]) =>
       rep({ answers: list.map(([subject, correct]) => ({ subject, correct })) });
-    const weights = answerWeights(
-      [
-        answers([
-          ['key:Eb', false],
-          ['key:G', true],
-          ['mode:D dorian', false],
-        ]),
-        answers([
-          ['key:Eb', true],
-          ['key:G', true],
-        ]),
-      ],
-    );
+    const weights = answerWeights([
+      answers([
+        ['key:Eb', false],
+        ['key:G', true],
+        ['mode:D dorian', false],
+      ]),
+      answers([
+        ['key:Eb', true],
+        ['key:G', true],
+      ]),
+    ]);
     expect(weights).toEqual({ 'key:Eb': 1, 'key:G': 1 / 3, 'mode:D dorian': 3 / 2 });
   });
 });

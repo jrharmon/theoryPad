@@ -31,7 +31,10 @@ export interface TheoryPadExport {
   };
 }
 
-export async function exportData(database: TheoryPadDB, now = Date.now()): Promise<TheoryPadExport> {
+export async function exportData(
+  database: TheoryPadDB,
+  now = Date.now(),
+): Promise<TheoryPadExport> {
   return database.transaction(
     'r',
     [
@@ -80,7 +83,9 @@ const schema = z.object({
   app: z.object({ name: z.literal('theorypad') }).passthrough(),
   data: z.object({
     exercises: z.array(row.extend({ definitionId: z.string() })),
-    routines: z.array(row.extend({ name: z.string(), items: z.array(z.unknown()) })).default([]),
+    routines: z
+      .array(row.extend({ name: z.string(), items: z.array(z.unknown()) }))
+      .default([]),
     sessions: z.array(row.extend({ startedAt: z.number() })),
     reps: z.array(
       row.extend({
@@ -90,8 +95,18 @@ const schema = z.object({
         startedAt: z.number(),
       }),
     ),
-    settings: z.object({ key: z.literal('settings') }).passthrough().nullable(),
-    videos: z.array(row.extend({ videoId: z.string(), scope: z.object({ kind: z.string() }).passthrough() })).optional(),
+    settings: z
+      .object({ key: z.literal('settings') })
+      .passthrough()
+      .nullable(),
+    videos: z
+      .array(
+        row.extend({
+          videoId: z.string(),
+          scope: z.object({ kind: z.string() }).passthrough(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -101,7 +116,9 @@ export function parseExport(json: unknown): TheoryPadExport {
   if (!result.success) {
     const issue = result.error.issues[0];
     const where = issue?.path.join('.') || 'the file';
-    throw new Error(`This is not a TheoryPad export (${where}: ${issue?.message ?? 'invalid'}).`);
+    throw new Error(
+      `This is not a TheoryPad export (${where}: ${issue?.message ?? 'invalid'}).`,
+    );
   }
   return result.data as unknown as TheoryPadExport;
 }
@@ -141,7 +158,11 @@ function summarize(existing: Row[], incoming: Row[], mode: ImportMode): TableSum
   for (const row of incoming) {
     const have = current.get(row.id);
     if (!have) added += 1;
-    else if (mode === 'replace' ? JSON.stringify(have) !== JSON.stringify(row) : row.updatedAt > have.updatedAt)
+    else if (
+      mode === 'replace'
+        ? JSON.stringify(have) !== JSON.stringify(row)
+        : row.updatedAt > have.updatedAt
+    )
       updated += 1;
   }
   const removed = mode === 'replace' ? existing.filter((r) => !fileIds.has(r.id)).length : 0;
@@ -174,7 +195,11 @@ export async function planImport(
     const existing = (await (database as Tables)[table].toArray()) as Row[];
     summary[table] = summarize(existing, incoming, mode);
   }
-  summary.settings = settingsOutcome(await database.settings.get('settings'), file.data.settings, mode);
+  summary.settings = settingsOutcome(
+    await database.settings.get('settings'),
+    file.data.settings,
+    mode,
+  );
   return summary;
 }
 

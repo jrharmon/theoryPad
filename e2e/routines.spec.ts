@@ -5,7 +5,9 @@ import { storedReps } from './helpers';
 
 async function newRoutine(page: Page, name: string, exercises: string[]) {
   await page.goto('/#/exercises');
-  await expect(page.getByRole('link', { name: 'Modes up the neck', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Modes up the neck', exact: true }),
+  ).toBeVisible();
   await page.getByRole('link', { name: 'Home' }).click();
   await page.getByRole('button', { name: 'New routine' }).click();
   const field = page.getByLabel('Routine name');
@@ -13,14 +15,21 @@ async function newRoutine(page: Page, name: string, exercises: string[]) {
   await field.press('Enter');
   for (const exercise of exercises) {
     await page.getByRole('button', { name: 'Add exercise' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: new RegExp(exercise) }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: new RegExp(exercise) })
+      .click();
     await expect(page.getByRole('dialog')).toBeHidden();
   }
   await expect(page.getByTestId('routine-item')).toHaveCount(exercises.length);
 }
 
 test('a routine is built from the library, the same exercise twice', async ({ page }) => {
-  await newRoutine(page, 'Morning', ['Interval sequences', 'Modes up the neck', 'Interval sequences']);
+  await newRoutine(page, 'Morning', [
+    'Interval sequences',
+    'Modes up the neck',
+    'Interval sequences',
+  ]);
 
   await page.getByRole('button', { name: 'More passes' }).first().click();
   await expect(page.getByTestId('item-passes').first()).toHaveText('3 passes');
@@ -32,7 +41,10 @@ test('a routine is built from the library, the same exercise twice', async ({ pa
   await page.getByRole('link', { name: 'Home' }).click();
   await expect(page.getByTestId('routine-row')).toContainText('Morning');
   await page.getByRole('button', { name: 'Favorite Morning' }).click();
-  await expect(page.getByRole('button', { name: 'Favorite Morning' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Favorite Morning' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });
 
 test('an item’s settings are its own copy', async ({ page }) => {
@@ -49,7 +61,9 @@ test('an item’s settings are its own copy', async ({ page }) => {
   await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
 
-test('a routine shows its overview, then runs and logs against its exercises', async ({ page }) => {
+test('a routine shows its overview, then runs and logs against its exercises', async ({
+  page,
+}) => {
   await newRoutine(page, 'Run', ['Interval sequences', 'Modes up the neck']);
   await page.getByRole('link', { name: 'Start' }).click();
 
@@ -76,7 +90,9 @@ test('a routine shows its overview, then runs and logs against its exercises', a
   expect(exerciseIds.size).toBe(2);
 });
 
-test('a routine item can be stopped and played again, staying where it is', async ({ page }) => {
+test('a routine item can be stopped and played again, staying where it is', async ({
+  page,
+}) => {
   await newRoutine(page, 'Stop', ['Modes up the neck', 'Interval sequences']);
   await page.getByRole('link', { name: 'Start' }).click();
   await expect(page.getByTestId('overview-item')).toHaveCount(2);

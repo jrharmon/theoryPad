@@ -47,7 +47,10 @@ export function timeByDay(
   to: DayKey,
 ): { date: DayKey; seconds: number }[] {
   const found = byDate(days);
-  return daysBetween(from, to).map((date) => ({ date, seconds: found.get(date)?.seconds ?? 0 }));
+  return daysBetween(from, to).map((date) => ({
+    date,
+    seconds: found.get(date)?.seconds ?? 0,
+  }));
 }
 
 export function secondsBetween(days: readonly PracticeDay[], from: DayKey, to: DayKey): number {

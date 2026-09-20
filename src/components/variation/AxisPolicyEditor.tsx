@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 import type { Instrument } from '@/domain/instrument';
-import { axisDefinition, includesValue, isAllowed, policyFor, toggleSubset } from '@/domain/variation';
+import {
+  axisDefinition,
+  includesValue,
+  isAllowed,
+  policyFor,
+  toggleSubset,
+} from '@/domain/variation';
 import type { AxisDefinition, AxisId, AxisPolicy, AxisValueKeys } from '@/domain/variation';
 import type { ModeName, PitchClass } from '@/domain/music';
 import { MODE_NAMES, modeTitle } from '@/domain/music';
@@ -37,12 +43,17 @@ export function AxisPolicyEditor({
   onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
   const practice = useSettings((s) => s.settings.practice);
-  const blocked: AxisValueKeys = { key: practice.blockedKeys ?? [], mode: practice.blockedModes ?? [] };
+  const blocked: AxisValueKeys = {
+    key: practice.blockedKeys ?? [],
+    mode: practice.blockedModes ?? [],
+  };
   // The key reads first: "G, in Dorian" is how a player says it. The roller
   // still resolves the mode first, for the spelling.
   const ordered =
     axes.includes('key') && axes.includes('mode')
-      ? axes.flatMap((id) => (id === 'mode' ? [] : id === 'key' ? (['key', 'mode'] as AxisId[]) : [id]))
+      ? axes.flatMap((id) =>
+          id === 'mode' ? [] : id === 'key' ? (['key', 'mode'] as AxisId[]) : [id],
+        )
       : axes;
 
   // A key and a mode both settled — fixed, or held with a value — have a
@@ -76,12 +87,19 @@ export function AxisPolicyEditor({
         />
       ))}
       {ordered.some((id) => (blocked[id]?.length ?? 0) > 0) && (
-        <p className="border-t border-rule px-3 py-2 text-[12px] text-ink/64" data-testid="blocked-note">
-          Struck-out keys and modes are off in Settings: a roll never picks them. Fixed still can.
+        <p
+          className="border-t border-rule px-3 py-2 text-[12px] text-ink/64"
+          data-testid="blocked-note"
+        >
+          Struck-out keys and modes are off in Settings: a roll never picks them. Fixed still
+          can.
         </p>
       )}
       {keyMode && (
-        <div className="border-t border-rule px-3 py-2 text-[13px] text-ink/70" data-testid="key-mode-reference">
+        <div
+          className="border-t border-rule px-3 py-2 text-[13px] text-ink/70"
+          data-testid="key-mode-reference"
+        >
           Notes and chords of{' '}
           <KeyModeTrigger keyMode={keyMode}>
             {keyMode.tonic} {modeTitle(keyMode.mode)}
@@ -156,7 +174,10 @@ function AxisRow({
       </Select>
 
       {policy.mode === 'fixed' && candidates.length > 0 && (
-        <Select value={policy.value} onValueChange={(value) => onChange({ mode: 'fixed', value })}>
+        <Select
+          value={policy.value}
+          onValueChange={(value) => onChange({ mode: 'fixed', value })}
+        >
           <SelectTrigger size="sm" aria-label={`${definition.label} value`}>
             <SelectValue />
           </SelectTrigger>
@@ -171,7 +192,11 @@ function AxisRow({
       )}
 
       {policy.mode === 'roll' && (
-        <div className="flex flex-wrap gap-1" role="group" aria-label={`${definition.label} rolls from`}>
+        <div
+          className="flex flex-wrap gap-1"
+          role="group"
+          aria-label={`${definition.label} rolls from`}
+        >
           {candidates.map((c) => {
             const on = !policy.from || policy.from.length === 0 || policy.from.includes(c.key);
             const off = includesValue(id, blocked, c.key);

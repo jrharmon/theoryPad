@@ -193,7 +193,10 @@ export function phraseBuilder(options?: PhraseBuilderOptions): PhraseBuilder {
 }
 
 /** An empty phrase of `barCount` bars — for exercises with no written notes. */
-export function emptyPhrase(barCount: number, timeSignature: TimeSignature = FOUR_FOUR): Phrase {
+export function emptyPhrase(
+  barCount: number,
+  timeSignature: TimeSignature = FOUR_FOUR,
+): Phrase {
   return phraseBuilder({ timeSignature })
     .rest(ticksPerBar(timeSignature) * barCount)
     .build();

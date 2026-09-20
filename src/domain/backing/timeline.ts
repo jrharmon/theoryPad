@@ -43,7 +43,8 @@ export function alignTrack(
   const room = track.startSec >= leadSec - 1e-9;
   const endSec = track.endSec ?? durationSec;
   const barSec = (track.beatsPerBar * 60) / track.bpm;
-  const loopBars = endSec === undefined ? null : Math.floor((endSec - track.startSec) / barSec + 1e-9);
+  const loopBars =
+    endSec === undefined ? null : Math.floor((endSec - track.startSec) / barSec + 1e-9);
   return {
     bar1Tick: room ? countInTicks : 0,
     playFromSec: room ? track.startSec - leadSec : track.startSec,
@@ -68,7 +69,11 @@ export function tickAtVideoTime(
   loops = 0,
 ): number {
   const loopTicks = (alignment.loopBars ?? 0) * track.beatsPerBar * PPQ;
-  return alignment.bar1Tick + loops * loopTicks + (videoSec - track.startSec) / secondsPerTick(track.bpm);
+  return (
+    alignment.bar1Tick +
+    loops * loopTicks +
+    (videoSec - track.startSec) / secondsPerTick(track.bpm)
+  );
 }
 
 /** Past this, the clock is nudged toward the video; within it, left alone. */

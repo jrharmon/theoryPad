@@ -7,7 +7,8 @@ import type { LoggedRep, PracticeDay } from './types';
 export function keyModeCounts(days: readonly PracticeDay[]): Record<string, number> {
   const out: Record<string, number> = {};
   for (const day of days) {
-    for (const [keyMode, n] of Object.entries(day.keyModes)) out[keyMode] = (out[keyMode] ?? 0) + n;
+    for (const [keyMode, n] of Object.entries(day.keyModes))
+      out[keyMode] = (out[keyMode] ?? 0) + n;
   }
   return out;
 }
@@ -17,10 +18,9 @@ export function keyModeCounts(days: readonly PracticeDay[]): Record<string, numb
  * rather than spelling, so A# dorian and Bb dorian are the same cell.
  */
 export function keyModeGrid(counts: Record<string, number>): Record<ModeName, number[]> {
-  const grid = Object.fromEntries(MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)])) as Record<
-    ModeName,
-    number[]
-  >;
+  const grid = Object.fromEntries(
+    MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)]),
+  ) as Record<ModeName, number[]>;
   for (const [keyMode, n] of Object.entries(counts)) {
     const [tonic, mode] = keyMode.split(' ') as [string, ModeName];
     const row = grid[mode];

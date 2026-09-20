@@ -3,7 +3,10 @@ import type { ScaleNotePosition } from '@/domain/instrument';
 
 /** The scale degrees of the diatonic chord built on `root`: 1 → 1 3 5 7. */
 export function chordDegrees(root: DegreeNumber, tones: 3 | 4 = 4): DegreeNumber[] {
-  return Array.from({ length: tones }, (_, k) => (((root - 1 + 2 * k) % 7) + 1) as DegreeNumber);
+  return Array.from(
+    { length: tones },
+    (_, k) => (((root - 1 + 2 * k) % 7) + 1) as DegreeNumber,
+  );
 }
 
 /**

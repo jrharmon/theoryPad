@@ -4,7 +4,12 @@ import type { CountInBars, Phrase } from '@/domain/phrase';
 import { countInTicks } from '@/domain/phrase';
 import { fretTally } from '@/domain/progress';
 import type { Clock } from '@/domain/time';
-import type { AxisPolicies, AxisValueKeys, CoverageCounts, RolledVariation } from '@/domain/variation';
+import type {
+  AxisPolicies,
+  AxisValueKeys,
+  CoverageCounts,
+  RolledVariation,
+} from '@/domain/variation';
 import {
   hashSeed,
   mulberry32,
@@ -602,7 +607,10 @@ export class ExerciseRunner {
     if (!phrase) return;
     const length = phrase.totalTicks * (phrase.repeat ?? 1);
     this.handles.push(
-      this.config.clock.schedule(() => this.finishPass('completed'), this.passStartTick + length),
+      this.config.clock.schedule(
+        () => this.finishPass('completed'),
+        this.passStartTick + length,
+      ),
     );
   }
 
@@ -615,7 +623,11 @@ export class ExerciseRunner {
 
   private finishPass(
     outcome: RepOutcome,
-    options: { stop?: boolean; score?: RepRecord['score']; answers?: RepRecord['answers'] } = {},
+    options: {
+      stop?: boolean;
+      score?: RepRecord['score'];
+      answers?: RepRecord['answers'];
+    } = {},
   ): void {
     this.clearScheduled();
 

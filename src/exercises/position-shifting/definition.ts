@@ -51,8 +51,14 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
     const direction = axisValue(variation, 'direction', 'up-down');
     const rhythm = axisValue(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
 
-    const run = horizontalRun({ instrument, keyMode, minFret: position.fret, shiftOn: config.shiftOn });
-    if (!run) throw new Error(`No run of ${keyModeLabel(keyMode)} fits from fret ${position.fret}`);
+    const run = horizontalRun({
+      instrument,
+      keyMode,
+      minFret: position.fret,
+      shiftOn: config.shiftOn,
+    });
+    if (!run)
+      throw new Error(`No run of ${keyModeLabel(keyMode)} fits from fret ${position.fret}`);
     const notes = {
       ascending: run.up,
       descending: run.down,
@@ -64,7 +70,9 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
       .labelBar(`From fret ${run.startFret}`)
       .withRhythm(notes, rhythm, (_p, i) => ({
         ...noteOptionsFor(notes[i]!),
-        ...(notes[i]!.shift ? { articulation: notes[i]!.shift === 'up' ? 'slide-up' : 'slide-down' } : {}),
+        ...(notes[i]!.shift
+          ? { articulation: notes[i]!.shift === 'up' ? 'slide-up' : 'slide-down' }
+          : {}),
       }))
       .build();
 

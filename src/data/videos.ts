@@ -80,7 +80,9 @@ export function backingTracks(videos: readonly Video[], query: BackingQuery): Vi
 /** An exercise's reference videos: its own, with play-along off. */
 export function referenceVideos(videos: readonly Video[], exerciseId: Uuid): Video[] {
   return videos
-    .filter((v) => v.scope.kind === 'exercise' && v.scope.exerciseId === exerciseId && !v.playAlong)
+    .filter(
+      (v) => v.scope.kind === 'exercise' && v.scope.exerciseId === exerciseId && !v.playAlong,
+    )
     .sort(byTitle);
 }
 
@@ -100,10 +102,9 @@ export function sharedTracks(videos: readonly Video[]): Video[] {
  * counts by chroma — spelling-blind, so A♯ and B♭ Dorian are one cell.
  */
 export function coverage(videos: readonly Video[]): Record<ModeName, number[]> {
-  const grid = Object.fromEntries(MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)])) as Record<
-    ModeName,
-    number[]
-  >;
+  const grid = Object.fromEntries(
+    MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)]),
+  ) as Record<ModeName, number[]>;
   for (const video of sharedTracks(videos)) {
     if (!video.keyMode) continue;
     const row = grid[video.keyMode.mode];
@@ -124,9 +125,7 @@ export function tagsInUse(videos: readonly Video[]): string[] {
 }
 
 export type ResolvedBacking =
-  | { kind: 'none'; dropped: boolean }
-  | { kind: 'drone' }
-  | { kind: 'video'; video: Video };
+  { kind: 'none'; dropped: boolean } | { kind: 'drone' } | { kind: 'video'; video: Video };
 
 /**
  * What a remembered choice means now. A track that no longer fits — a re-roll

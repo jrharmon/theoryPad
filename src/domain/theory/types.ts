@@ -76,6 +76,9 @@ export interface Answer {
 }
 
 /** Whether a table's answers, one option id per row, are all right. */
-export function tableIsCorrect(question: TableFillQuestion, picks: readonly (string | null)[]): boolean {
+export function tableIsCorrect(
+  question: TableFillQuestion,
+  picks: readonly (string | null)[],
+): boolean {
   return question.rows.every((row, i) => picks[i] === row.correctOptionId);
 }

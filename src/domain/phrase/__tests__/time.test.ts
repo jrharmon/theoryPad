@@ -52,7 +52,9 @@ describe('ticksPerBeat / ticksPerBar', () => {
 });
 
 describe('tick <-> bar/beat', () => {
-  const phrase = phraseBuilder().rest(QUARTER * 16).build();
+  const phrase = phraseBuilder()
+    .rest(QUARTER * 16)
+    .build();
 
   it('locates a tick as a bar, a beat and an offset into it', () => {
     expect(tickToBarBeat(phrase, 0)).toEqual({ bar: 0, beat: 0, offsetTicks: 0 });
@@ -124,7 +126,11 @@ describe('requiredSubdivision', () => {
     ] as const) {
       const phrase = phraseBuilder()
         .rhythm(rhythm)
-        .sequence([{ string: 0, fret: 3 }, { string: 0, fret: 5 }, { string: 0, fret: 7 }])
+        .sequence([
+          { string: 0, fret: 3 },
+          { string: 0, fret: 5 },
+          { string: 0, fret: 7 },
+        ])
         .build();
       expect(requiredSubdivision(phrase), String(rhythm)).toBe(subdivision);
     }
@@ -136,7 +142,10 @@ describe('requiredSubdivision', () => {
     // all three.
     const phrase = phraseBuilder()
       .rhythm(SIXTEENTH)
-      .sequence([{ string: 0, fret: 3 }, { string: 0, fret: 5 }])
+      .sequence([
+        { string: 0, fret: 3 },
+        { string: 0, fret: 5 },
+      ])
       .rest(SIXTEENTH * 2 - EIGHTH_TRIPLET)
       .rhythm(EIGHTH_TRIPLET)
       .sequence([{ string: 0, fret: 7 }])

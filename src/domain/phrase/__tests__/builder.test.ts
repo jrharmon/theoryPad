@@ -29,12 +29,19 @@ describe('PhraseBuilder', () => {
       .build();
 
     expect(phrase.notes.map((n) => [n.startTick, n.string])).toEqual([
-      [0, 1], [0, 2], [0, 3], [QUARTER, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [QUARTER, 0],
     ]);
   });
 
   it('sounds a chord’s notes together and advances once', () => {
-    const phrase = phraseBuilder().rhythm(QUARTER).chord([p(3, 5), p(4, 5)]).note(p(0, 3)).build();
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .chord([p(3, 5), p(4, 5)])
+      .note(p(0, 3))
+      .build();
     expect(phrase.notes[0]!.startTick).toBe(0);
     expect(phrase.notes[1]!.startTick).toBe(0);
     expect(phrase.notes[2]!.startTick).toBe(QUARTER);
@@ -42,7 +49,10 @@ describe('PhraseBuilder', () => {
 
   it('grows in whole bars, never ending mid-bar', () => {
     // Three quarters in 4/4 still occupies one full bar.
-    const short = phraseBuilder().rhythm(QUARTER).sequence([p(0, 1), p(0, 2), p(0, 3)]).build();
+    const short = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([p(0, 1), p(0, 2), p(0, 3)])
+      .build();
     expect(short.totalTicks).toBe(ticksPerBar(FOUR_FOUR));
     expect(short.bars).toHaveLength(1);
 
@@ -54,7 +64,9 @@ describe('PhraseBuilder', () => {
     expect(longer.bars.map((b) => b.startTick)).toEqual([0, QUARTER * 4, QUARTER * 8]);
 
     // Even a note that overhangs the bar line rounds the phrase up.
-    const overhang = phraseBuilder().note(p(0, 3), {}, QUARTER * 5).build();
+    const overhang = phraseBuilder()
+      .note(p(0, 3), {}, QUARTER * 5)
+      .build();
     expect(overhang.totalTicks).toBe(QUARTER * 8);
   });
 
@@ -74,7 +86,9 @@ describe('PhraseBuilder', () => {
   });
 
   it('fills to the next bar line, and does nothing when already on one', () => {
-    const b = phraseBuilder().rhythm(QUARTER).sequence([p(0, 1), p(0, 2)]);
+    const b = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([p(0, 1), p(0, 2)]);
     expect(b.position).toBe(QUARTER * 2);
     b.fillBar();
     expect(b.position).toBe(QUARTER * 4);
@@ -130,10 +144,20 @@ describe('withRhythm', () => {
     const phrase = phraseBuilder().withRhythm(positions, GALLOP).build();
     // Gallop is eighth, sixteenth, sixteenth — one beat per cycle.
     expect(phrase.notes.map((n) => n.durationTicks)).toEqual([
-      EIGHTH, SIXTEENTH, SIXTEENTH, EIGHTH, SIXTEENTH, SIXTEENTH,
+      EIGHTH,
+      SIXTEENTH,
+      SIXTEENTH,
+      EIGHTH,
+      SIXTEENTH,
+      SIXTEENTH,
     ]);
     expect(phrase.notes.map((n) => n.startTick)).toEqual([
-      0, EIGHTH, EIGHTH + SIXTEENTH, QUARTER, QUARTER + EIGHTH, QUARTER + EIGHTH + SIXTEENTH,
+      0,
+      EIGHTH,
+      EIGHTH + SIXTEENTH,
+      QUARTER,
+      QUARTER + EIGHTH,
+      QUARTER + EIGHTH + SIXTEENTH,
     ]);
   });
 

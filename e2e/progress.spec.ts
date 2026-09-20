@@ -38,11 +38,16 @@ test('the explorer shows a key and mode, and the grid picks another', async ({ p
   await expect(page.getByTestId('key-mode-full')).toContainText('Dm7');
 
   // One 3nps shape: three notes on every string.
-  await page.getByRole('button', { name: /^Shape starting/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Shape starting/ })
+    .first()
+    .click();
   await expect(page.getByTestId('fretboard').locator('[data-testid^="note-"]')).toHaveCount(18);
 });
 
-test('the key and mode reference opens mid-exercise, and Escape closes only it', async ({ page }) => {
+test('the key and mode reference opens mid-exercise, and Escape closes only it', async ({
+  page,
+}) => {
   await open(page, 'Modes up the neck');
   await page.getByTestId('play').click();
   await expect(page.getByTestId('pause')).toBeVisible();

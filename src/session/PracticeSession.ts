@@ -32,7 +32,10 @@ export interface SessionState {
  * Standalone practice has no routine to inherit a key from, so the exercise's
  * own key axis decides. This is only the key for exercises that do not roll one.
  */
-export const FALLBACK_KEY_MODE: KeyMode = canonicalKeyMode({ tonic: pitchClass('C'), mode: 'ionian' });
+export const FALLBACK_KEY_MODE: KeyMode = canonicalKeyMode({
+  tonic: pitchClass('C'),
+  mode: 'ionian',
+});
 
 /** The session row every rep is logged under. */
 export function openSessionRow(deps: SessionDeps, routineId: string | null): Promise<Session> {
@@ -48,7 +51,10 @@ export function openSessionRow(deps: SessionDeps, routineId: string | null): Pro
 }
 
 /** Recent rolls, so the roller can push toward ground you have not covered. */
-export async function loadCoverage(deps: SessionDeps, exerciseId: string): Promise<CoverageCounts> {
+export async function loadCoverage(
+  deps: SessionDeps,
+  exerciseId: string,
+): Promise<CoverageCounts> {
   const recent = await deps.repos.reps.byExercise(exerciseId, 60);
   const counts: CoverageCounts = {};
   for (const axis of AXIS_IDS) {

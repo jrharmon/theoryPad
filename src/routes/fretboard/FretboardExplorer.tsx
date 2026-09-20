@@ -23,7 +23,13 @@ import {
 import { Fretboard, KeyModeView } from '@/components/music';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useProgress } from '@/store/progress';
 import { useSettings } from '@/store/settings';
 import { KeyModeGrid } from '@/components/music/KeyModeGrid';
@@ -79,7 +85,9 @@ export function FretboardExplorer() {
     void loadSettings();
   }, [load, loadSettings]);
 
-  const keyMode = canonicalKeyMode(picked ?? lastKeyMode ?? { tonic: 'C' as never, mode: 'ionian' });
+  const keyMode = canonicalKeyMode(
+    picked ?? lastKeyMode ?? { tonic: 'C' as never, mode: 'ionian' },
+  );
   const choose = (next: KeyMode) => {
     setPicked(canonicalKeyMode(next));
     setShapeIndex(null);
@@ -97,7 +105,12 @@ export function FretboardExplorer() {
       targetDegree: signature,
       labelMode: labels,
       ...(span
-        ? { emphasisFrets: Array.from({ length: span.high - span.low + 1 }, (_, i) => span.low + i) }
+        ? {
+            emphasisFrets: Array.from(
+              { length: span.high - span.low + 1 },
+              (_, i) => span.low + i,
+            ),
+          }
         : {}),
     });
   }, [shape, instrument, keyMode, signature, labels]);
@@ -108,10 +121,16 @@ export function FretboardExplorer() {
     [days, layer, today],
   );
   const counts = useMemo(() => neckCounts(windowDays, strings), [windowDays, strings]);
-  const heat = useMemo(() => (layer === 'off' ? undefined : heatLevels(counts)), [counts, layer]);
+  const heat = useMemo(
+    () => (layer === 'off' ? undefined : heatLevels(counts)),
+    [counts, layer],
+  );
   const summary = neckSummary(counts, strings, instrument.fretCount);
   const grid = useMemo(() => keyModeGrid(keyModeCounts(windowDays)), [windowDays]);
-  const keyModesPlayed = MODE_NAMES.reduce((n, m) => n + grid[m].filter((x) => x > 0).length, 0);
+  const keyModesPlayed = MODE_NAMES.reduce(
+    (n, m) => n + grid[m].filter((x) => x > 0).length,
+    0,
+  );
 
   return (
     <section>
@@ -121,8 +140,8 @@ export function FretboardExplorer() {
           {keyMode.tonic} {title(keyMode.mode)}
         </h1>
         <p className="max-w-[640px] text-[15px] text-ink/70">
-          The whole neck in one key and mode — or one shape of it — with where you have
-          actually played laid underneath.
+          The whole neck in one key and mode — or one shape of it — with where you have actually
+          played laid underneath.
         </p>
       </div>
 
@@ -146,7 +165,10 @@ export function FretboardExplorer() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={keyMode.mode} onValueChange={(mode) => choose({ tonic: keyMode.tonic, mode: mode as ModeName })}>
+          <Select
+            value={keyMode.mode}
+            onValueChange={(mode) => choose({ tonic: keyMode.tonic, mode: mode as ModeName })}
+          >
             <SelectTrigger aria-label="Mode" className="w-[140px]">
               <SelectValue />
             </SelectTrigger>
@@ -216,13 +238,16 @@ export function FretboardExplorer() {
           size="large"
           {...(heat ? { heat, heatCounts: counts } : {})}
         />
-        <div className="mt-4 flex flex-wrap items-center gap-6 text-[12px] text-ink/70" data-testid="legend">
+        <div
+          className="mt-4 flex flex-wrap items-center gap-6 text-[12px] text-ink/70"
+          data-testid="legend"
+        >
           <span className="flex items-center gap-2">
             <span className="size-3.5 rounded-full bg-dot-root" /> Root
           </span>
           <span className="flex items-center gap-2">
-            <span className="size-3.5 rounded-full bg-dot-target" /> {signature.label} — the note that makes{' '}
-            {title(keyMode.mode)}
+            <span className="size-3.5 rounded-full bg-dot-target" /> {signature.label} — the
+            note that makes {title(keyMode.mode)}
           </span>
           <span className="flex items-center gap-2">
             <span className="size-3.5 rounded-full bg-dot-chord" /> The rest of the key

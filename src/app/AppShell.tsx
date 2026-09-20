@@ -8,7 +8,10 @@ export function AppShell() {
   return (
     <div className="min-h-screen bg-graph text-ink">
       <header className="flex items-center gap-6 border-b border-rule bg-nav px-6 py-3 text-nav-ink">
-        <NavLink to="/home" className="face-title mr-auto text-[22px] font-extrabold tracking-[-.035em] lowercase">
+        <NavLink
+          to="/home"
+          className="face-title mr-auto text-[22px] font-extrabold tracking-[-.035em] lowercase"
+        >
           THEORYPAD
         </NavLink>
 
@@ -20,7 +23,9 @@ export function AppShell() {
               className={({ isActive }) =>
                 [
                   'rounded-full px-[11px] py-[3px] text-[14px] transition-colors',
-                  isActive ? 'bg-accent-tint font-semibold text-nav-active' : 'hover:text-nav-active',
+                  isActive
+                    ? 'bg-accent-tint font-semibold text-nav-active'
+                    : 'hover:text-nav-active',
                 ].join(' ')
               }
             >

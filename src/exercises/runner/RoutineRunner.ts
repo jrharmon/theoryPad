@@ -4,7 +4,12 @@ import type { Instrument } from '@/domain/instrument';
 import type { Clock } from '@/domain/time';
 import type { CountInBars } from '@/domain/phrase';
 import type { AxisPolicies, AxisValueKeys, RolledVariation } from '@/domain/variation';
-import { SESSION_AXIS_ORDER, hashSeed, rollVariation, variationKeyMode } from '@/domain/variation';
+import {
+  SESSION_AXIS_ORDER,
+  hashSeed,
+  rollVariation,
+  variationKeyMode,
+} from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import { resolveParams } from '../params';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';

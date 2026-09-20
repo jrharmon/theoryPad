@@ -1,11 +1,5 @@
 import { create } from 'zustand';
-import {
-  repos,
-  newId,
-  type Exercise,
-  type Routine,
-  type RoutineItem,
-} from '@/data';
+import { repos, newId, type Exercise, type Routine, type RoutineItem } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { serialWrites } from './util';
 
@@ -25,7 +19,9 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     countInBars: exercise.countInBars ?? 1,
     // Key and mode belong to the routine, so the item does not carry them.
     axisPolicies: Object.fromEntries(
-      Object.entries(exercise.axisPolicies).filter(([axis]) => axis !== 'key' && axis !== 'mode'),
+      Object.entries(exercise.axisPolicies).filter(
+        ([axis]) => axis !== 'key' && axis !== 'mode',
+      ),
     ),
     heldAxisValues: {},
   };
@@ -102,13 +98,17 @@ export const useRoutines = create<RoutinesState>((set, get) => {
     rename: (id, name) => mutate(id, () => ({ name })),
     setFavorite: (id, favorite) => mutate(id, () => ({ favorite })),
     setSessionPolicy: (id, axis, policy) =>
-      mutate(id, (r) => ({ sessionAxisPolicies: { ...r.sessionAxisPolicies, [axis]: policy } })),
-    addItem: (id, exercise) => mutate(id, (r) => ({ items: [...r.items, itemFromExercise(exercise)] })),
+      mutate(id, (r) => ({
+        sessionAxisPolicies: { ...r.sessionAxisPolicies, [axis]: policy },
+      })),
+    addItem: (id, exercise) =>
+      mutate(id, (r) => ({ items: [...r.items, itemFromExercise(exercise)] })),
     updateItem: (id, itemId, changes) =>
       mutate(id, (r) => ({
         items: r.items.map((item) => (item.id === itemId ? { ...item, ...changes } : item)),
       })),
-    moveItem: (id, itemId, delta) => mutate(id, (r) => ({ items: moveItem(r.items, itemId, delta) })),
+    moveItem: (id, itemId, delta) =>
+      mutate(id, (r) => ({ items: moveItem(r.items, itemId, delta) })),
     removeItem: (id, itemId) =>
       mutate(id, (r) => ({ items: r.items.filter((item) => item.id !== itemId) })),
     update: (id, changes) => mutate(id, () => changes),

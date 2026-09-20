@@ -21,10 +21,10 @@ export const TARGET_SIXTH = { number: 6 as const, alteration: 0 as const, label:
  * seven-string diagram would look plausible and be wrong.
  */
 export function fullNeckOverlay(instrument: Instrument = STANDARD_GUITAR) {
-  return overlayFromScalePositions(
-    scaleOnNeck(instrument, D_DORIAN, { low: 0, high: 12 }),
-    { targetDegree: TARGET_SIXTH, labelMode: 'degree' },
-  );
+  return overlayFromScalePositions(scaleOnNeck(instrument, D_DORIAN, { low: 0, high: 12 }), {
+    targetDegree: TARGET_SIXTH,
+    labelMode: 'degree',
+  });
 }
 
 /** One 3nps shape, as an exercise would show it, with its own span emphasised. */
@@ -93,10 +93,7 @@ export function legatoComparisonPhrase() {
 
   builder.labelBar('Picked');
   pattern.forEach((fret, i) => {
-    builder.note(
-      { string, fret },
-      { pickStroke: i % 2 === 0 ? 'down' : 'up', velocity: 0.85 },
-    );
+    builder.note({ string, fret }, { pickStroke: i % 2 === 0 ? 'down' : 'up', velocity: 0.85 });
   });
 
   builder.labelBar('Legato — only the first note is picked');
@@ -156,12 +153,15 @@ export function sevenShapesPhrase() {
 export function chordPhrase() {
   return phraseBuilder()
     .rhythm(QUARTER)
-    .chord([
-      { string: 1, fret: 5 },
-      { string: 2, fret: 7 },
-      { string: 3, fret: 7 },
-      { string: 4, fret: 6 },
-    ], { role: 'root' })
+    .chord(
+      [
+        { string: 1, fret: 5 },
+        { string: 2, fret: 7 },
+        { string: 3, fret: 7 },
+        { string: 4, fret: 6 },
+      ],
+      { role: 'root' },
+    )
     .rest(QUARTER)
     .chord([
       { string: 1, fret: 7 },

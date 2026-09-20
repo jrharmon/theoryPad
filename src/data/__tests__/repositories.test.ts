@@ -44,7 +44,11 @@ function repFixture(overrides: Partial<NewRep> = {}): NewRep {
 }
 
 /** The repository contract, run against Dexie over `fake-indexeddb`. */
-function suite(name: string, make: () => Promise<Repositories>, teardown?: () => Promise<void>) {
+function suite(
+  name: string,
+  make: () => Promise<Repositories>,
+  teardown?: () => Promise<void>,
+) {
   describe(name, () => {
     let repos: Repositories;
 
@@ -79,7 +83,10 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
         expect(await repos.routines.byId(saved.id)).toEqual(saved);
         expect(await repos.routines.all()).toHaveLength(1);
 
-        const renamed = await repos.routines.update(saved.id, { name: 'Evening', favorite: true });
+        const renamed = await repos.routines.update(saved.id, {
+          name: 'Evening',
+          favorite: true,
+        });
         expect(renamed).toMatchObject({ name: 'Evening', favorite: true });
         expect(renamed.items).toEqual(routine.items);
       });
@@ -233,11 +240,23 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
       it('rolls each rep into its day as it is written', async () => {
         const frets = { strings: 6, counts: { '0:5': 2, '1:7': 1 } };
         await repos.reps.add(
-          repFixture({ startedAt: day(7), endedAt: day(7) + 60_000, frets, axes: { key: 'D', mode: 'dorian' } }),
+          repFixture({
+            startedAt: day(7),
+            endedAt: day(7) + 60_000,
+            frets,
+            axes: { key: 'D', mode: 'dorian' },
+          }),
         );
-        await repos.reps.add(repFixture({ startedAt: day(7, 20), endedAt: day(7, 20) + 30_000, frets }));
         await repos.reps.add(
-          repFixture({ startedAt: day(9), endedAt: day(9) + 30_000, frets, status: 'abandoned' }),
+          repFixture({ startedAt: day(7, 20), endedAt: day(7, 20) + 30_000, frets }),
+        );
+        await repos.reps.add(
+          repFixture({
+            startedAt: day(9),
+            endedAt: day(9) + 30_000,
+            frets,
+            status: 'abandoned',
+          }),
         );
 
         const days = await repos.days.all();
@@ -247,9 +266,9 @@ function suite(name: string, make: () => Promise<Repositories>, teardown?: () =>
         ]);
         expect(days[0]!.frets).toEqual({ 6: { '0:5': 4, '1:7': 2 } });
         expect(days[0]!.keyModes).toEqual({ 'D dorian': 1 });
-        expect((await repos.days.inRange('2026-09-08', '2026-09-30')).map((d) => d.date)).toEqual([
-          '2026-09-09',
-        ]);
+        expect(
+          (await repos.days.inRange('2026-09-08', '2026-09-30')).map((d) => d.date),
+        ).toEqual(['2026-09-09']);
       });
 
       it('rebuilds to exactly what incremental maintenance produced', async () => {
@@ -374,7 +393,11 @@ describe('the v4 migration', () => {
     await before.open();
     const startedAt = new Date(2026, 8, 10, 18).getTime();
     await before.table('reps').add({
-      ...repFixture({ startedAt, endedAt: startedAt + 120_000, axes: { key: 'A', mode: 'aeolian' } }),
+      ...repFixture({
+        startedAt,
+        endedAt: startedAt + 120_000,
+        axes: { key: 'A', mode: 'aeolian' },
+      }),
       id: 'old-rep',
       createdAt: 1,
       updatedAt: 1,
@@ -424,7 +447,9 @@ describe('the first-run track', () => {
       practiceDays: 'date',
     });
     await before.open();
-    await before.table('exercises').add({ ...exerciseFixture, id: 'kept', createdAt: 1, updatedAt: 1 });
+    await before
+      .table('exercises')
+      .add({ ...exerciseFixture, id: 'kept', createdAt: 1, updatedAt: 1 });
     before.close();
 
     const after = new TheoryPadDB(name);
@@ -470,7 +495,10 @@ describe('settings saved before a field existed', () => {
     const repos = createRepositories(database);
     const current = await repos.settings.get();
     const { appearance: _dropped, ...oldUi } = current.ui;
-    await database.settings.put({ ...current, ui: { ...oldUi, showNeck: false } as typeof current.ui });
+    await database.settings.put({
+      ...current,
+      ui: { ...oldUi, showNeck: false } as typeof current.ui,
+    });
 
     const loaded = await repos.settings.get();
     expect(loaded.ui.appearance).toBe('system');

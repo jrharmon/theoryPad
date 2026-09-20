@@ -55,7 +55,11 @@ export interface SessionDeps {
   saveAudioSettings: (changes: Partial<Settings['audio']>) => Promise<void>;
   saveExercise: (id: string, changes: Partial<Exercise>) => Promise<void>;
   saveRoutine: (id: string, changes: Partial<Routine>) => Promise<void>;
-  saveRoutineItem: (routineId: string, itemId: string, changes: Partial<RoutineItem>) => Promise<void>;
+  saveRoutineItem: (
+    routineId: string,
+    itemId: string,
+    changes: Partial<RoutineItem>,
+  ) => Promise<void>;
   now: () => number;
   /** A write that failed after the fact, with nobody left waiting on it. */
   onError?: (error: unknown) => void;

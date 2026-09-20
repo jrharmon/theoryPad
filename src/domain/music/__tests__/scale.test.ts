@@ -73,7 +73,10 @@ describe('scaleDegrees', () => {
       );
       for (const c of ALL_CHROMAS) {
         const km = { tonic: preferredTonic(c, mode), mode };
-        expect(scaleDegrees(km).map((d) => d.label), `${km.tonic} ${km.mode}`).toEqual(reference);
+        expect(
+          scaleDegrees(km).map((d) => d.label),
+          `${km.tonic} ${km.mode}`,
+        ).toEqual(reference);
       }
     }
   });
@@ -122,11 +125,15 @@ describe('signature degree', () => {
 
 describe('stepPattern', () => {
   it('gives the major scale W-W-H-W-W-W-H', () => {
-    expect(stepPattern({ tonic: pitchClass('C'), mode: 'ionian' })).toEqual([2, 2, 1, 2, 2, 2, 1]);
+    expect(stepPattern({ tonic: pitchClass('C'), mode: 'ionian' })).toEqual([
+      2, 2, 1, 2, 2, 2, 1,
+    ]);
   });
 
   it('gives dorian W-H-W-W-W-H-W', () => {
-    expect(stepPattern({ tonic: pitchClass('D'), mode: 'dorian' })).toEqual([2, 1, 2, 2, 2, 1, 2]);
+    expect(stepPattern({ tonic: pitchClass('D'), mode: 'dorian' })).toEqual([
+      2, 1, 2, 2, 2, 1, 2,
+    ]);
   });
 
   it('always sums to an octave', () => {

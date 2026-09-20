@@ -20,7 +20,10 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
       private loaded = false;
       private readonly stand: HTMLElement;
       private readonly events: Events;
-      constructor(element: HTMLElement, options: { playerVars: { start?: number }; events: Events }) {
+      constructor(
+        element: HTMLElement,
+        options: { playerVars: { start?: number }; events: Events },
+      ) {
         this.events = options.events;
         this.base = options.playerVars.start ?? 0;
         const stand = document.createElement('div');
@@ -44,7 +47,9 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
         if (!this.loaded) throw new TypeError('YouTube player method called before onReady');
       }
       private get time() {
-        return this.startedAt === null ? this.base : this.base + ((performance.now() - this.startedAt) / 1000) * this.rate;
+        return this.startedAt === null
+          ? this.base
+          : this.base + ((performance.now() - this.startedAt) / 1000) * this.rate;
       }
       private set(state: number) {
         this.state = state;
@@ -112,7 +117,9 @@ test.beforeEach(async ({ page }, testInfo) => {
   await fakeYouTube(page, { blocking: testInfo.title.includes('holds the video back') });
 });
 
-test('a backing track takes the tempo over, and the metronome waits it out', async ({ page }) => {
+test('a backing track takes the tempo over, and the metronome waits it out', async ({
+  page,
+}) => {
   await inAMinor(page, 'Modes up the neck');
   await expect(page.getByTestId('backing-menu')).toContainText('None');
 
@@ -158,14 +165,18 @@ test('a key with no track offers none, and says where to add one', async ({ page
   await expect(page.getByRole('option')).toHaveCount(2);
 });
 
-test('a shared track is added from Settings, and fills its cell of the grid', async ({ page }) => {
+test('a shared track is added from Settings, and fills its cell of the grid', async ({
+  page,
+}) => {
   await page.goto('/#/settings');
   const grid = page.getByTestId('coverage-grid');
   await expect(grid.getByRole('button', { name: 'A Aeolian, 1 track' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Add a track' }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('YouTube link').fill('https://www.youtube.com/watch?v=abcdefghijk&t=12s');
+  await dialog
+    .getByLabel('YouTube link')
+    .fill('https://www.youtube.com/watch?v=abcdefghijk&t=12s');
   await expect(dialog.getByLabel('Bar 1', { exact: true })).toHaveValue('0:12');
   await expect(dialog.getByTestId('fake-youtube')).toBeVisible();
   await dialog.getByLabel('Title', { exact: true }).fill('D Dorian funk');
@@ -192,7 +203,9 @@ test('improvising counts phrases and names the note to land on', async ({ page }
   await expect(page.getByTestId('phrase-counter')).toContainText('Bar 1 of 4');
 });
 
-test('a browser that holds the video back asks for a click on it, then plays', async ({ page }) => {
+test('a browser that holds the video back asks for a click on it, then plays', async ({
+  page,
+}) => {
   await inAMinor(page, 'Modes up the neck');
   await page.getByTestId('backing-menu').click();
   await page.getByRole('option', { name: /A minor backing track/ }).click();
@@ -210,7 +223,9 @@ test('a routine starts its track with the first item, and brings it back after a
   page,
 }) => {
   await page.goto('/#/exercises');
-  await expect(page.getByRole('link', { name: 'Modes up the neck', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Modes up the neck', exact: true }),
+  ).toBeVisible();
   // Straight into the database: the routine builder's own flow is tested elsewhere.
   const exercises = await readStore<{ id: string; definitionId: string; params: unknown }>(
     page,

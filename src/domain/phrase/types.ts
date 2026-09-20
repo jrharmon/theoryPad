@@ -15,10 +15,10 @@ export const QUARTER = PPQ;
 export const EIGHTH = PPQ / 2;
 export const SIXTEENTH = PPQ / 4;
 export const THIRTY_SECOND = PPQ / 8;
-export const QUARTER_TRIPLET = PPQ * 2 / 3;
+export const QUARTER_TRIPLET = (PPQ * 2) / 3;
 export const EIGHTH_TRIPLET = PPQ / 3;
 export const SIXTEENTH_TRIPLET = PPQ / 6;
-export const EIGHTH_QUINTUPLET = PPQ * 2 / 5;
+export const EIGHTH_QUINTUPLET = (PPQ * 2) / 5;
 
 export type Articulation =
   | 'hammer-on'

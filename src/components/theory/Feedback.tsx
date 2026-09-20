@@ -30,7 +30,9 @@ export function TheoryFeedback({
             : {})}
         />
       )}
-      {visual?.kind === 'note-row' && <NoteRow keyMode={visual.keyMode} highlight={visual.highlight} />}
+      {visual?.kind === 'note-row' && (
+        <NoteRow keyMode={visual.keyMode} highlight={visual.highlight} />
+      )}
     </div>
   );
 }

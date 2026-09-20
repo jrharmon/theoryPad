@@ -32,18 +32,27 @@ import { accidentalCount, chroma, hasDoubleAccidental, pitchClass } from './pitc
  * what a guitarist would expect to read.
  */
 const SPELLING_PREFERENCE = [
-  'C', 'B#',
-  'Db', 'C#',
+  'C',
+  'B#',
+  'Db',
+  'C#',
   'D',
-  'Eb', 'D#',
-  'E', 'Fb',
-  'F', 'E#',
-  'F#', 'Gb',
+  'Eb',
+  'D#',
+  'E',
+  'Fb',
+  'F',
+  'E#',
+  'F#',
+  'Gb',
   'G',
-  'Ab', 'G#',
+  'Ab',
+  'G#',
   'A',
-  'Bb', 'A#',
-  'B', 'Cb',
+  'Bb',
+  'A#',
+  'B',
+  'Cb',
 ].map((s) => pitchClass(s));
 
 function scaleAccidentalTotal(tonic: PitchClass, mode: ModeName): number | null {

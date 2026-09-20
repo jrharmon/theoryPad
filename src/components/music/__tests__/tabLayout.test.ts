@@ -12,8 +12,14 @@ import {
 } from '../tabLayout';
 
 const p = (fret: number) => ({ string: 0, fret });
-const eighths = phraseBuilder().rhythm(EIGHTH).sequence(Array.from({ length: 16 }, (_, i) => p(i))).build();
-const sixteenths = phraseBuilder().rhythm(SIXTEENTH).sequence(Array.from({ length: 16 }, (_, i) => p(i))).build();
+const eighths = phraseBuilder()
+  .rhythm(EIGHTH)
+  .sequence(Array.from({ length: 16 }, (_, i) => p(i)))
+  .build();
+const sixteenths = phraseBuilder()
+  .rhythm(SIXTEENTH)
+  .sequence(Array.from({ length: 16 }, (_, i) => p(i)))
+  .build();
 
 describe('tab layout', () => {
   it('fits as many bars as the width allows without columns getting too narrow', () => {

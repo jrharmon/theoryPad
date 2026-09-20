@@ -1,13 +1,7 @@
 import type { ModeName } from '@/domain/music';
 import { MODE_NAMES, circlePosition, keySignature, tonicsForMode } from '@/domain/music';
 import type { Rng } from '@/domain/variation';
-import {
-  CIRCLE_POSITIONS,
-  majorAt,
-  minorAt,
-  signatureLabel,
-  wrapPosition,
-} from './circle';
+import { CIRCLE_POSITIONS, majorAt, minorAt, signatureLabel, wrapPosition } from './circle';
 import { keyModeName } from './diatonic';
 import { wantsTrick, withCorrect } from './distractors';
 import type { SinglePickQuestion } from './types';
@@ -41,7 +35,8 @@ function pick(
   },
 ): SinglePickQuestion {
   const distinct = wrong.filter(
-    (w, i) => label(w) !== label(correct) && wrong.findIndex((x) => label(x) === label(w)) === i,
+    (w, i) =>
+      label(w) !== label(correct) && wrong.findIndex((x) => label(x) === label(w)) === i,
   );
   const { items, index } = withCorrect(correct, distinct.slice(0, 3), rng);
   const options = items.map((value, i) => ({ id: `${id}-${i}`, label: label(value) }));
@@ -61,18 +56,32 @@ function pick(
     feedback: {
       rule: rest.rule,
       ...(rest.whatItIs ? { whatItIs } : {}),
-      visual: { kind: 'circle-of-fifths', correct: wrapPosition(rest.circleAt ?? correct), positions },
+      visual: {
+        kind: 'circle-of-fifths',
+        correct: wrapPosition(rest.circleAt ?? correct),
+        positions,
+      },
     },
   };
 }
 
 function signatureToKey(p: number, rng: Rng, id: string): SinglePickQuestion {
-  return pick(id, rng, p, rng.shuffle([p - 1, p + 1, p - 2, p + 2]).map(wrapPosition), (q) => `${majorAt(q)} major`, {
-    prompt: p === 0 ? 'Which major key has no sharps or flats?' : `Which major key has ${signatureLabel(p).toLowerCase()}?`,
-    subject: `key:${majorAt(p)}`,
-    rule: `${majorAt(p)} major has ${signatureLabel(p).toLowerCase()} — ${Math.abs(p)} step${Math.abs(p) === 1 ? '' : 's'} ${p >= 0 ? 'clockwise' : 'anticlockwise'} from C.`,
-    whatItIs: (q) => `${majorAt(q)} major has ${signatureLabel(q).toLowerCase()}.`,
-  });
+  return pick(
+    id,
+    rng,
+    p,
+    rng.shuffle([p - 1, p + 1, p - 2, p + 2]).map(wrapPosition),
+    (q) => `${majorAt(q)} major`,
+    {
+      prompt:
+        p === 0
+          ? 'Which major key has no sharps or flats?'
+          : `Which major key has ${signatureLabel(p).toLowerCase()}?`,
+      subject: `key:${majorAt(p)}`,
+      rule: `${majorAt(p)} major has ${signatureLabel(p).toLowerCase()} — ${Math.abs(p)} step${Math.abs(p) === 1 ? '' : 's'} ${p >= 0 ? 'clockwise' : 'anticlockwise'} from C.`,
+      whatItIs: (q) => `${majorAt(q)} major has ${signatureLabel(q).toLowerCase()}.`,
+    },
+  );
 }
 
 /**
@@ -100,7 +109,12 @@ function relativeMinor(p: number, rng: Rng, id: string): SinglePickQuestion {
   const major = majorAt(p);
   // The parallel minor — same letter — is the answer people reach for.
   const parallel = CIRCLE_POSITIONS.find((q) => minorAt(q) === major);
-  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [p + 1, p - 1, p + 2, p - 2]).map(wrapPosition);
+  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [
+    p + 1,
+    p - 1,
+    p + 2,
+    p - 2,
+  ]).map(wrapPosition);
   return pick(id, rng, p, wrong, (q) => `${minorAt(q)} minor`, {
     prompt: `What is the relative minor of ${major} major?`,
     subject: `key:${major}`,
@@ -112,7 +126,12 @@ function relativeMinor(p: number, rng: Rng, id: string): SinglePickQuestion {
 function relativeMajor(p: number, rng: Rng, id: string): SinglePickQuestion {
   const minor = minorAt(p);
   const parallel = CIRCLE_POSITIONS.find((q) => majorAt(q) === minor);
-  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [p + 1, p - 1, p + 2, p - 2]).map(wrapPosition);
+  const wrong = traps(rng, parallel !== undefined ? [parallel] : [], [
+    p + 1,
+    p - 1,
+    p + 2,
+    p - 2,
+  ]).map(wrapPosition);
   return pick(id, rng, p, wrong, (q) => `${majorAt(q)} major`, {
     prompt: `What is the relative major of ${minor} minor?`,
     subject: `key:${majorAt(p)}`,
@@ -126,7 +145,9 @@ function neighbourKey(p: number, rng: Rng, id: string): SinglePickQuestion {
   const step = clockwise ? 1 : -1;
   const target = wrapPosition(p + step);
   // Going the wrong way round is the trap.
-  const wrong = traps(rng, [p - step], [p + 2 * step, p + 3 * step, p - 2 * step]).map(wrapPosition);
+  const wrong = traps(rng, [p - step], [p + 2 * step, p + 3 * step, p - 2 * step]).map(
+    wrapPosition,
+  );
   return pick(id, rng, target, wrong, (q) => `${majorAt(q)} major`, {
     prompt: clockwise
       ? `One step clockwise from ${majorAt(p)} major — one more sharp or one fewer flat — is which key?`
@@ -167,7 +188,10 @@ export function circleQuestions(options: {
   keyWeights?: Readonly<Record<string, number>>;
 }): SinglePickQuestion[] {
   const { rng, count, includeModes, keyWeights = {} } = options;
-  const positions = CIRCLE_POSITIONS.map((p) => ({ value: p, weight: keyWeights[majorAt(p)] ?? 1 }));
+  const positions = CIRCLE_POSITIONS.map((p) => ({
+    value: p,
+    weight: keyWeights[majorAt(p)] ?? 1,
+  }));
   const types = options.types.filter((t) => includeModes || t !== 'mode-signature');
   const pool = types.length > 0 ? types : (['signature-to-key'] as const);
   const start = rng.int(pool.length);
@@ -196,9 +220,9 @@ export function circleQuestions(options: {
     const type = pool[(start + i) % pool.length]!;
     const id = `q${i + 1}`;
     let question = make(type, id);
-    for (let tries = 0; seen.has(question.prompt) && tries < 8; tries += 1) question = make(type, id);
+    for (let tries = 0; seen.has(question.prompt) && tries < 8; tries += 1)
+      question = make(type, id);
     seen.add(question.prompt);
     return question;
   });
 }
-

@@ -1,5 +1,14 @@
 import type { DayKey, PracticeDay } from '@/domain/progress';
-import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Uuid, Video } from '../entities';
+import type {
+  Exercise,
+  ExerciseStats,
+  Rep,
+  Routine,
+  Session,
+  Settings,
+  Uuid,
+  Video,
+} from '../entities';
 
 export type NewExercise = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewRoutine = Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>;

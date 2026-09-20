@@ -6,13 +6,7 @@ import {
   STANDARD_GUITAR,
   TEST_INSTRUMENTS,
 } from '@/domain/instrument';
-import {
-  EIGHTH,
-  EIGHTH_TRIPLET,
-  QUARTER,
-  SIXTEENTH,
-  phraseBuilder,
-} from '@/domain/phrase';
+import { EIGHTH, EIGHTH_TRIPLET, QUARTER, SIXTEENTH, phraseBuilder } from '@/domain/phrase';
 import { TabStaff } from '../TabStaff';
 
 const p = (string: number, fret: number) => ({ string, fret });
@@ -44,9 +38,10 @@ describe('TabStaff', () => {
       expect(labels, instrument.name).toHaveLength(strings);
       // Tab is written with string 1 — the highest — on top, so the model's
       // index order is reversed for display and never in the model.
-      expect(labels.map((el) => el.textContent), instrument.name).toEqual(
-        Array.from({ length: strings }, (_, i) => String(i + 1)),
-      );
+      expect(
+        labels.map((el) => el.textContent),
+        instrument.name,
+      ).toEqual(Array.from({ length: strings }, (_, i) => String(i + 1)));
       expect(labels[0], instrument.name).toHaveAttribute(
         'data-testid',
         `tab-string-label-${strings - 1}`,
@@ -64,7 +59,10 @@ describe('TabStaff', () => {
       .note(p(3, 5))
       .build();
     render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} />);
-    expect(screen.getAllByTestId(/^tab-note-/).map((el) => el.textContent)).toEqual(['F#', '5']);
+    expect(screen.getAllByTestId(/^tab-note-/).map((el) => el.textContent)).toEqual([
+      'F#',
+      '5',
+    ]);
   });
 
   it('puts every note in the column its tick falls in, at any rhythm', () => {
@@ -86,7 +84,9 @@ describe('TabStaff', () => {
       [EIGHTH_TRIPLET, 3, 12],
       [SIXTEENTH, 16, 16],
     ] as const) {
-      const { unmount } = render(<TabStaff phrase={run(rhythm, count)} instrument={STANDARD_GUITAR} />);
+      const { unmount } = render(
+        <TabStaff phrase={run(rhythm, count)} instrument={STANDARD_GUITAR} />,
+      );
       expect(screen.getAllByTestId(/^tab-note-0-/), String(rhythm)).toHaveLength(count);
       expect(screen.getByTestId('tab-staff')).toHaveAttribute(
         'data-columns',
@@ -122,7 +122,9 @@ describe('TabStaff', () => {
   });
 
   it('shows the playhead only when given a tick', () => {
-    const { rerender } = render(<TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} />);
+    const { rerender } = render(
+      <TabStaff phrase={FOUR_QUARTERS} instrument={STANDARD_GUITAR} />,
+    );
     expect(screen.queryByTestId('playhead')).not.toBeInTheDocument();
 
     rerender(
@@ -166,7 +168,12 @@ describe('TabStaff', () => {
       .build();
 
     const { rerender } = render(
-      <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={1} playheadTick={QUARTER} />,
+      <TabStaff
+        phrase={phrase}
+        instrument={STANDARD_GUITAR}
+        subdivision={1}
+        playheadTick={QUARTER}
+      />,
     );
     expect(screen.getByTestId('playhead')).toHaveAttribute('data-column', '1');
 
@@ -229,19 +236,16 @@ describe('TabStaff', () => {
     expect(screen.getByTestId('tab-note-0-0')).not.toHaveTextContent('⊓');
 
     rerender(
-      <TabStaff
-        phrase={phrase}
-        instrument={STANDARD_GUITAR}
-        subdivision={2}
-        showPickStrokes
-      />,
+      <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} showPickStrokes />,
     );
     expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent('⊓');
     expect(screen.getByTestId('tab-note-0-1')).toHaveTextContent('V');
   });
 
   it('renders a phrase with no notes', () => {
-    const empty = phraseBuilder().rest(QUARTER * 4).build();
+    const empty = phraseBuilder()
+      .rest(QUARTER * 4)
+      .build();
     render(<TabStaff phrase={empty} instrument={BASS_4_STRING} />);
     expect(screen.getByTestId('tab-staff')).toBeInTheDocument();
     expect(screen.queryAllByTestId(/^tab-note-/)).toHaveLength(0);
@@ -261,7 +265,9 @@ describe('TabStaff', () => {
       unmount();
     }
 
-    render(<TabStaff phrase={run(QUARTER, 32)} instrument={STANDARD_GUITAR} barsPerSystem={4} />);
+    render(
+      <TabStaff phrase={run(QUARTER, 32)} instrument={STANDARD_GUITAR} barsPerSystem={4} />,
+    );
     expect(screen.getByTestId('tab-staff')).toHaveAttribute('data-systems', '2');
     // Every bar is still labelled across both lines, and a note keeps one
     // identity wherever it wraps to: bar 5 beat 1 is column 16, not column 0.
@@ -278,7 +284,12 @@ describe('TabStaff', () => {
     const eight = run(QUARTER, 32);
 
     const { rerender, unmount } = render(
-      <TabStaff phrase={eight} instrument={STANDARD_GUITAR} barsPerSystem={4} playheadTick={0} />,
+      <TabStaff
+        phrase={eight}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={4}
+        playheadTick={0}
+      />,
     );
     expect(scroll).toHaveBeenCalledTimes(1);
 

@@ -97,7 +97,8 @@ export function expandRhythm(
     const swing = pattern.swingTicks ?? 0;
     const isOffbeat = i % 2 === 1;
     const startTick = tick + (isOffbeat ? swing : 0);
-    const durationTicks = swing === 0 ? duration : isOffbeat ? duration - swing : duration + swing;
+    const durationTicks =
+      swing === 0 ? duration : isOffbeat ? duration - swing : duration + swing;
 
     out.push({ startTick, durationTicks, velocity });
     tick += duration;

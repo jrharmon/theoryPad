@@ -11,7 +11,13 @@ describe('modeCharacter', () => {
     expect(Object.keys(MODE_CHARACTER).sort()).toEqual([...MODE_NAMES].sort());
     for (const mode of MODE_NAMES) {
       const entry = modeCharacter(mode);
-      for (const text of [entry.summary, entry.soundsLike, entry.signatureNote, entry.avoid, entry.compare]) {
+      for (const text of [
+        entry.summary,
+        entry.soundsLike,
+        entry.signatureNote,
+        entry.avoid,
+        entry.compare,
+      ]) {
         expect(text.trim().length, mode).toBeGreaterThan(0);
       }
       expect(entry.progressions.length, mode).toBeGreaterThan(0);
@@ -22,7 +28,9 @@ describe('modeCharacter', () => {
     for (const mode of MODE_NAMES) {
       const km = { tonic: preferredTonic(0 as Chroma, mode), mode };
       const label = signatureDegree(km).label;
-      expect(modeCharacter(mode).signatureNote, mode).toContain(label === '7' ? 'major 7th' : label);
+      expect(modeCharacter(mode).signatureNote, mode).toContain(
+        label === '7' ? 'major 7th' : label,
+      );
     }
   });
 

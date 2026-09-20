@@ -29,7 +29,10 @@ export function resolveTheme(appearance: Appearance, systemDark: boolean): Theme
 /** Stamp the resolved theme on <html> and write the mirror the boot script reads. */
 export function applyAppearance(appearance: Appearance): void {
   try {
-    document.documentElement.dataset.theme = resolveTheme(appearance, systemQuery()?.matches ?? false);
+    document.documentElement.dataset.theme = resolveTheme(
+      appearance,
+      systemQuery()?.matches ?? false,
+    );
   } catch {
     // No document: nothing to stamp.
   }

@@ -41,7 +41,9 @@ function playThrough(runner: ExerciseRunner, clock: FakeClock) {
 /** Exactly one pass, count-in included — for loops, where overshooting plays into the next. */
 function playPass(runner: ExerciseRunner, clock: FakeClock) {
   const phrase = runner.currentPhrase!;
-  clock.advanceTicks(runner.snapshot.countInRemaining + phrase.totalTicks * (phrase.repeat ?? 1));
+  clock.advanceTicks(
+    runner.snapshot.countInRemaining + phrase.totalTicks * (phrase.repeat ?? 1),
+  );
 }
 
 describe('ExerciseRunner', () => {
@@ -611,11 +613,16 @@ describe('lifecycle hooks', () => {
     runner.begin();
     playPass(runner, clock);
 
-    const [first, second] = onRepStart.mock.calls.map((c) => c[0] as { continuation: boolean; countInTicks: number });
+    const [first, second] = onRepStart.mock.calls.map(
+      (c) => c[0] as { continuation: boolean; countInTicks: number },
+    );
     const bar = ticksPerBar({ beats: 4, unit: 4 });
     expect(first).toMatchObject({ continuation: false, countInTicks: bar });
     // Straight on from where the first pass ended.
-    expect(second).toMatchObject({ continuation: true, countInTicks: bar + runner.currentPhrase!.totalTicks });
+    expect(second).toMatchObject({
+      continuation: true,
+      countInTicks: bar + runner.currentPhrase!.totalTicks,
+    });
   });
 });
 
@@ -705,7 +712,8 @@ describe('theory', () => {
     runner.begin();
     runner.submitSet({ answers: answers(8, 8) });
     expect(generate).toHaveBeenCalledTimes(2);
-    for (const [context] of generate.mock.calls) expect(context.subjectWeights).toEqual(subjectWeights);
+    for (const [context] of generate.mock.calls)
+      expect(context.subjectWeights).toEqual(subjectWeights);
   });
 
   it('plays a routine’s passes as consecutive sets, then finishes, ignoring loop', () => {

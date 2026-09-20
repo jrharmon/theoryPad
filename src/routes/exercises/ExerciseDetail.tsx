@@ -130,7 +130,12 @@ export function ExerciseDetail() {
             </div>
           )}
           <ExerciseVideos exercise={exercise} played={definition.kind === 'played'} />
-          {definition.kind === 'played' && <BackingCriteriaEditor exercise={exercise} requiredTags={definition.backing?.requiredTags} />}
+          {definition.kind === 'played' && (
+            <BackingCriteriaEditor
+              exercise={exercise}
+              requiredTags={definition.backing?.requiredTags}
+            />
+          )}
         </div>
 
         <div>
@@ -149,10 +154,10 @@ export function ExerciseDetail() {
 
           <Kicker>What varies</Kicker>
           <p className="mb-3 max-w-[560px] text-[13px] text-ink/64">
-            <strong>Roll</strong> picks a new value each time you open it or re-roll. <strong>Fixed</strong> pins one.{' '}
-            <strong>Hold</strong> keeps whatever came up last and stays there until you press
-            re-roll — for working one key for a while without pinning it forever. When rolling,
-            click values to leave them out.
+            <strong>Roll</strong> picks a new value each time you open it or re-roll.{' '}
+            <strong>Fixed</strong> pins one. <strong>Hold</strong> keeps whatever came up last
+            and stays there until you press re-roll — for working one key for a while without
+            pinning it forever. When rolling, click values to leave them out.
           </p>
           <AxisPolicyEditor
             axes={definition.axes}

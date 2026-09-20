@@ -199,8 +199,14 @@ test('the transport toggles are remembered', async ({ page }) => {
 
   await savedSettings(page, (s) => s.audio.loop === true && s.audio.metronomeEnabled === false);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Loop', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('button', { name: 'Metronome', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Loop', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'Metronome', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
 });
 
 test('settings can be changed without leaving the exercise', async ({ page }) => {
@@ -269,7 +275,9 @@ test('re-rolling stops, and waits with a fresh variation', async ({ page }) => {
   expect((await storedReps(page)).map((r) => r.status)).toEqual(['abandoned']);
 });
 
-test('stop goes back to the top, and restart plays it again from the count-in', async ({ page }) => {
+test('stop goes back to the top, and restart plays it again from the count-in', async ({
+  page,
+}) => {
   await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   const headline = await page.getByRole('heading', { level: 2 }).textContent();
   await page.getByTestId('play').click();
@@ -334,8 +342,14 @@ test('a roll can leave values out, and the run honours it', async ({ page }) => 
   for (const key of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'Bb', 'B']) {
     await keys.getByRole('button', { name: key, exact: true }).click();
   }
-  await expect(keys.getByRole('button', { name: 'A', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(keys.getByRole('button', { name: 'C', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await expect(keys.getByRole('button', { name: 'A', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(keys.getByRole('button', { name: 'C', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
 
   await page.getByRole('link', { name: 'Practice this' }).click();
   // "A Dorian", not "Ab Dorian".

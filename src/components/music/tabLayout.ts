@@ -47,7 +47,11 @@ export function fallbackBarsPerLine(columns: number): number {
 }
 
 /** As many bars as fit `available` pixels at this fret size, and at least one. */
-export function barsPerLine(columns: number, available: number | null, fretSize: number): number {
+export function barsPerLine(
+  columns: number,
+  available: number | null,
+  fretSize: number,
+): number {
   if (!available || available <= 0) return fallbackBarsPerLine(columns);
   const fit = Math.floor(available / (Math.max(1, columns) * minColumnWidth(fretSize)));
   return Math.min(MAX_BARS_PER_LINE, Math.max(1, fit));

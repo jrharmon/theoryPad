@@ -39,7 +39,7 @@ export function tapTempo(taps: readonly number[]): TapResult | null {
   });
   const beat = num / den;
   return {
-    bpm: Math.round((600 / beat)) / 10,
+    bpm: Math.round(600 / beat) / 10,
     bar1Sec: Math.round((meanT - beat * meanI) * 100) / 100,
   };
 }

@@ -71,7 +71,10 @@ describe('findRedundantExercises', () => {
   });
 
   it('ignores stats for exercises that are gone', () => {
-    const rows = [exercise('a', 'modes-through-key', 1_000), exercise('b', 'modes-through-key', 2_000)];
+    const rows = [
+      exercise('a', 'modes-through-key', 1_000),
+      exercise('b', 'modes-through-key', 2_000),
+    ];
     const { remove } = findRedundantExercises(rows, [played('vanished', 9)]);
     expect(remove.map((e) => e.id)).toEqual(['b']);
   });

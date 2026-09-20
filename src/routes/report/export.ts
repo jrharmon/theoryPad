@@ -76,7 +76,11 @@ export interface Palette {
 }
 
 const escape = (text: string) =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
 /**
  * The report as one self-contained file: styles inline, no scripts, nothing
@@ -85,7 +89,10 @@ const escape = (text: string) =>
 export function reportHtml(report: Report, palette: Palette): string {
   const range = formatRange(report.from, report.to);
   const max = Math.max(1, ...report.days.map((d) => d.seconds));
-  const barWidth = Math.max(4, Math.min(24, Math.floor(680 / Math.max(1, report.days.length)) - 2));
+  const barWidth = Math.max(
+    4,
+    Math.min(24, Math.floor(680 / Math.max(1, report.days.length)) - 2),
+  );
   const bars = report.days
     .map((day) => {
       const height = day.seconds > 0 ? Math.max(2, Math.round((day.seconds / max) * 90)) : 1;

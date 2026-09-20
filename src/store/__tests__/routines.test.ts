@@ -56,8 +56,15 @@ describe('moveItem', () => {
 });
 
 describe('sortRoutines', () => {
-  const r = (id: string, extra: Partial<Routine>): Routine =>
-    ({ id, name: id, items: [], sessionAxisPolicies: {}, createdAt: 1, updatedAt: 1, ...extra });
+  const r = (id: string, extra: Partial<Routine>): Routine => ({
+    id,
+    name: id,
+    items: [],
+    sessionAxisPolicies: {},
+    createdAt: 1,
+    updatedAt: 1,
+    ...extra,
+  });
 
   it('puts favorites first, then the most recently played', () => {
     const sorted = sortRoutines([

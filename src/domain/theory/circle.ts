@@ -1,5 +1,11 @@
 import type { KeyMode, KeySignature, ModeName, PitchClass } from '@/domain/music';
-import { circlePosition, keySignature, pitchClass, relativeMajor, scaleNotes } from '@/domain/music';
+import {
+  circlePosition,
+  keySignature,
+  pitchClass,
+  relativeMajor,
+  scaleNotes,
+} from '@/domain/music';
 
 /**
  * The circle of fifths as the twelve major keys, by position: C is 0, each
@@ -8,13 +14,33 @@ import { circlePosition, keySignature, pitchClass, relativeMajor, scaleNotes } f
  * the spellings a guitarist reads.
  */
 const MAJORS: Record<number, string> = {
-  [-5]: 'Db', [-4]: 'Ab', [-3]: 'Eb', [-2]: 'Bb', [-1]: 'F',
-  0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'B', 6: 'F#',
+  [-5]: 'Db',
+  [-4]: 'Ab',
+  [-3]: 'Eb',
+  [-2]: 'Bb',
+  [-1]: 'F',
+  0: 'C',
+  1: 'G',
+  2: 'D',
+  3: 'A',
+  4: 'E',
+  5: 'B',
+  6: 'F#',
 };
 
 const MINORS: Record<number, string> = {
-  [-5]: 'Bb', [-4]: 'F', [-3]: 'C', [-2]: 'G', [-1]: 'D',
-  0: 'A', 1: 'E', 2: 'B', 3: 'F#', 4: 'C#', 5: 'G#', 6: 'D#',
+  [-5]: 'Bb',
+  [-4]: 'F',
+  [-3]: 'C',
+  [-2]: 'G',
+  [-1]: 'D',
+  0: 'A',
+  1: 'E',
+  2: 'B',
+  3: 'F#',
+  4: 'C#',
+  5: 'G#',
+  6: 'D#',
 };
 
 export const CIRCLE_POSITIONS = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6] as const;
@@ -97,7 +123,12 @@ export function keyOnCircle(keyMode: KeyMode): KeyOnCircle {
   const major = relativeMajor(keyMode);
   const notes = scaleNotes({ tonic: major, mode: 'ionian' });
   const p = wrapPosition(circlePosition(keyMode));
-  const cell = (role: ChordRole, ring: CircleRing, offset: number, degree: number): CircleCell => ({
+  const cell = (
+    role: ChordRole,
+    ring: CircleRing,
+    offset: number,
+    degree: number,
+  ): CircleCell => ({
     role,
     ring,
     position: wrapPosition(p + offset),

@@ -41,10 +41,7 @@ function PracticeStrip() {
 
   if (!loaded) return null;
   return (
-    <div
-      className="flex items-center gap-10 px-8 pt-0 pb-5"
-      data-testid="practice-strip"
-    >
+    <div className="flex items-center gap-10 px-8 pt-0 pb-5" data-testid="practice-strip">
       <HeatmapGrid cells={cells} today={today} cellSize={13} />
       <div>
         <Kicker>Streak</Kicker>
@@ -92,8 +89,8 @@ export function Home() {
           <Kicker accent>Practice</Kicker>
           <h1>Your routines</h1>
           <p className="max-w-[640px] text-[15px] text-ink/70">
-            A routine plays several exercises straight through, each counted in at its own
-            tempo — nothing to click once it starts.
+            A routine plays several exercises straight through, each counted in at its own tempo
+            — nothing to click once it starts.
           </p>
         </div>
         <Button onClick={() => void newRoutine()}>New routine</Button>

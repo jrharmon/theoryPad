@@ -47,12 +47,18 @@ function makeRoutine(items: RoutineRunItem[], overrides: Partial<RoutineRunnerCo
 function playPass(routine: RoutineRunner, clock: FakeClock) {
   const runner = routine.current!;
   const phrase = runner.currentPhrase!;
-  clock.advanceTicks(runner.snapshot.countInRemaining + phrase.totalTicks - runner.snapshot.phraseTick);
+  clock.advanceTicks(
+    runner.snapshot.countInRemaining + phrase.totalTicks - runner.snapshot.phraseTick,
+  );
 }
 
 describe('RoutineRunner', () => {
   it('rolls everything up front, sharing one key and mode', () => {
-    const { routine } = makeRoutine([item('a'), item('b'), item('c', { definition: intervalSequences, params: undefined })]);
+    const { routine } = makeRoutine([
+      item('a'),
+      item('b'),
+      item('c', { definition: intervalSequences, params: undefined }),
+    ]);
     const { phase, items, keyMode } = routine.snapshot;
     expect(phase).toBe('overview');
     expect(items).toHaveLength(3);
@@ -99,7 +105,9 @@ describe('RoutineRunner', () => {
     expect(clock.state).toBe('stopped');
 
     expect(routine.snapshot.items.map((i) => i.completed)).toEqual([2, 1, 1]);
-    const reps = onRepEnd.mock.calls.map((c) => c[0] as { routineItemId: string; exerciseId: string; status: string });
+    const reps = onRepEnd.mock.calls.map(
+      (c) => c[0] as { routineItemId: string; exerciseId: string; status: string },
+    );
     expect(reps.map((r) => r.routineItemId)).toEqual(['a', 'a', 'b', 'c']);
     // Logged against the exercise each item was copied from.
     expect(reps[0]!.exerciseId).toBe('exercise-a');
@@ -116,14 +124,20 @@ describe('RoutineRunner', () => {
     playPass(routine, clock);
 
     expect(clock.bpm).toBe(100);
-    const next = onRepStart.mock.calls[1]![0] as { continuation: boolean; countInFrom: number; countInTicks: number };
+    const next = onRepStart.mock.calls[1]![0] as {
+      continuation: boolean;
+      countInFrom: number;
+      countInTicks: number;
+    };
     expect(next.continuation).toBe(true);
     expect(next.countInTicks - next.countInFrom).toBe(BAR);
   });
 
   it('skips to the next item, counting it in if something was playing', () => {
     const onRepEnd = vi.fn();
-    const { routine, clock } = makeRoutine([item('a'), item('b', { countInBars: 1 })], { onRepEnd });
+    const { routine, clock } = makeRoutine([item('a'), item('b', { countInBars: 1 })], {
+      onRepEnd,
+    });
     routine.play();
     clock.advanceTicks(QUARTER);
     routine.skip();
@@ -176,7 +190,10 @@ describe('RoutineRunner', () => {
 
   it('honours the routine’s key policy', () => {
     const { routine } = makeRoutine([item('a')], {
-      sessionAxisPolicies: { key: { mode: 'fixed', value: 'G' }, mode: { mode: 'fixed', value: 'dorian' } },
+      sessionAxisPolicies: {
+        key: { mode: 'fixed', value: 'G' },
+        mode: { mode: 'fixed', value: 'dorian' },
+      },
     });
     expect(routine.snapshot.keyMode).toMatchObject({ tonic: 'G', mode: 'dorian' });
   });
@@ -187,7 +204,9 @@ describe('RoutineRunner', () => {
     routine.play();
     clock.advanceTicks(QUARTER);
     routine.end();
-    expect(onRepEnd.mock.calls.map((c) => (c[0] as { status: string }).status)).toEqual(['abandoned']);
+    expect(onRepEnd.mock.calls.map((c) => (c[0] as { status: string }).status)).toEqual([
+      'abandoned',
+    ]);
     expect(routine.snapshot.index).toBe(0);
     expect(clock.state).toBe('stopped');
   });
@@ -196,7 +215,11 @@ describe('RoutineRunner', () => {
     const onRepStart = vi.fn();
     const { routine, clock } = makeRoutine(
       [
-        item('quiz', { definition: circleOfFifths, params: undefined, tempo: { targetTempo: null, maxTempo: null } }),
+        item('quiz', {
+          definition: circleOfFifths,
+          params: undefined,
+          tempo: { targetTempo: null, maxTempo: null },
+        }),
         item('play', { countInBars: 1 }),
       ],
       { onRepStart },
@@ -232,7 +255,11 @@ describe('stopping and each item\u2019s own count-in', () => {
 
   it('counts each item in with its own setting, between items as well', () => {
     const { routine, clock } = makeRoutine(
-      [item('a', { countInBars: 0.5 }), item('b', { countInBars: 2 }), item('c', { countInBars: 0 })],
+      [
+        item('a', { countInBars: 0.5 }),
+        item('b', { countInBars: 2 }),
+        item('c', { countInBars: 0 }),
+      ],
       { countInBars: 1 },
     );
     routine.play();

@@ -6,13 +6,7 @@ import { rollVariation } from '@/domain/variation';
 import { applyDirection, scaleRun, shapeRuns } from '../scaleRun';
 import { noteOptionsFor, roleFor, signatureDegreeNumber } from '../roles';
 import { overlayFromPhrase, overlayFromPositions, overlayFullScale } from '../overlay';
-import {
-  axisDisplay,
-  keyModeLabel,
-  ordinal,
-  orderedHighlights,
-  repsAndTempo,
-} from '../brief';
+import { axisDisplay, keyModeLabel, ordinal, orderedHighlights, repsAndTempo } from '../brief';
 
 const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
 
@@ -43,7 +37,9 @@ describe('scaleRun', () => {
       minFret: 5,
     });
     for (let i = 1; i < run.length; i += 1) {
-      expect(midiAt(STANDARD_GUITAR, run[i]!)).toBeGreaterThan(midiAt(STANDARD_GUITAR, run[i - 1]!));
+      expect(midiAt(STANDARD_GUITAR, run[i]!)).toBeGreaterThan(
+        midiAt(STANDARD_GUITAR, run[i - 1]!),
+      );
     }
   });
 
@@ -84,7 +80,11 @@ describe('scaleRun', () => {
 
 describe('shapeRuns', () => {
   it('gives seven shapes ascending the neck', () => {
-    const runs = shapeRuns({ instrument: STANDARD_GUITAR, keyMode: D_DORIAN, direction: 'ascending' });
+    const runs = shapeRuns({
+      instrument: STANDARD_GUITAR,
+      keyMode: D_DORIAN,
+      direction: 'ascending',
+    });
     expect(runs).toHaveLength(7);
     for (let i = 1; i < runs.length; i += 1) {
       expect(runs[i]!.startFret).toBeGreaterThan(runs[i - 1]!.startFret);
@@ -92,7 +92,11 @@ describe('shapeRuns', () => {
   });
 
   it('applies the direction within each shape', () => {
-    const up = shapeRuns({ instrument: STANDARD_GUITAR, keyMode: D_DORIAN, direction: 'ascending' });
+    const up = shapeRuns({
+      instrument: STANDARD_GUITAR,
+      keyMode: D_DORIAN,
+      direction: 'ascending',
+    });
     const down = shapeRuns({
       instrument: STANDARD_GUITAR,
       keyMode: D_DORIAN,
@@ -164,7 +168,10 @@ describe('overlays', () => {
       direction: 'ascending',
       minFret: 5,
     });
-    const overlay = overlayFromPositions(positions, { targetDegree: 6, emphasisFrets: [5, 6, 7] });
+    const overlay = overlayFromPositions(positions, {
+      targetDegree: 6,
+      emphasisFrets: [5, 6, 7],
+    });
     expect(overlay.notes.length).toBe(positions.length);
     expect(overlay.notes.some((n) => n.role === 'root')).toBe(true);
     expect(overlay.notes.some((n) => n.role === 'target')).toBe(true);
@@ -227,7 +234,14 @@ describe('brief helpers', () => {
     expect(repsAndTempo(2, 76)).toBe('Two passes at 76 bpm');
     expect(repsAndTempo(3, null)).toBe('3 passes, in free time');
     expect([1, 2, 3, 4, 11, 12, 13, 21].map(ordinal)).toEqual([
-      '1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st',
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '11th',
+      '12th',
+      '13th',
+      '21st',
     ]);
   });
 
@@ -255,7 +269,11 @@ describe('brief helpers', () => {
   });
 
   it('drops axes the exercise did not roll', () => {
-    const variation = rollVariation({ axes: ['direction'], seed: 1, instrument: STANDARD_GUITAR });
+    const variation = rollVariation({
+      axes: ['direction'],
+      seed: 1,
+      instrument: STANDARD_GUITAR,
+    });
     expect(orderedHighlights(variation, ['direction', 'stringSet'])).toEqual(['direction']);
   });
 });

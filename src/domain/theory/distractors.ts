@@ -90,7 +90,9 @@ export function noteDistractors(
 
   const enharmonic = keep(enharmonics(correct));
   const sameLetter = keep(
-    [pitchClass(letter), pitchClass(`${letter}#`), pitchClass(`${letter}b`)].filter((p) => p !== correct),
+    [pitchClass(letter), pitchClass(`${letter}#`), pitchClass(`${letter}b`)].filter(
+      (p) => p !== correct,
+    ),
   );
   const neighbours = keep([...spellingsOf((c + 1) % 12), ...spellingsOf((c + 11) % 12)]);
 
@@ -135,7 +137,11 @@ export function spellingDistractors(
 }
 
 /** Put the right answer among the wrong ones, in a seeded order. */
-export function withCorrect<T>(correct: T, distractors: readonly T[], rng: Rng): { items: T[]; index: number } {
+export function withCorrect<T>(
+  correct: T,
+  distractors: readonly T[],
+  rng: Rng,
+): { items: T[]; index: number } {
   const items = rng.shuffle([correct, ...distractors]);
   return { items, index: items.indexOf(correct) };
 }

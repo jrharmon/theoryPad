@@ -42,8 +42,14 @@ export const intervalSequences: PlayedDefinition = {
   ].join(' '),
 
   axes: [
-    'mode', 'key', 'neckPosition', 'intervalPattern', 'intervalPairing',
-    'direction', 'rhythmPattern', 'targetScaleDegree',
+    'mode',
+    'key',
+    'neckPosition',
+    'intervalPattern',
+    'intervalPairing',
+    'direction',
+    'rhythmPattern',
+    'targetScaleDegree',
   ],
   defaults: { targetTempo: 80, reps: 2 },
   timing: 'either',
@@ -57,7 +63,8 @@ export const intervalSequences: PlayedDefinition = {
     const target = optionalAxis(variation, 'targetScaleDegree');
 
     const shape = shapeFrom({ instrument, keyMode, fret: position.fret });
-    if (!shape) throw new Error(`No shape of ${keyModeLabel(keyMode)} fits at fret ${position.fret}`);
+    if (!shape)
+      throw new Error(`No shape of ${keyModeLabel(keyMode)} fits at fret ${position.fret}`);
     const positions = intervalRun({ positions: shape.positions, pattern, pairing, direction });
 
     const phrase = phraseBuilder()

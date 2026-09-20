@@ -13,7 +13,8 @@ async function themeAtLoad(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     document.addEventListener('DOMContentLoaded', () => {
-      (window as unknown as { themeAtLoad?: string }).themeAtLoad = document.documentElement.dataset.theme;
+      (window as unknown as { themeAtLoad?: string }).themeAtLoad =
+        document.documentElement.dataset.theme;
     });
   });
 });
@@ -26,7 +27,9 @@ test.describe('on a light system', () => {
     await expect(html(page)).toHaveAttribute('data-theme', 'light');
   });
 
-  test('choosing Dark turns dark at once, and stays dark from the first paint after a reload', async ({ page }) => {
+  test('choosing Dark turns dark at once, and stays dark from the first paint after a reload', async ({
+    page,
+  }) => {
     await page.goto('/#/settings');
     await expect(choice(page, 'System')).toHaveAttribute('aria-pressed', 'true');
 

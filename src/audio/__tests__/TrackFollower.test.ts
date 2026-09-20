@@ -53,7 +53,8 @@ function setup(options: { lead?: number; rate?: number; endSec?: number } = {}) 
     }
   };
   const gapSec = (loops = 0) =>
-    ((tickAtVideoTime(track, alignment, video.currentTime, loops) - clock.ticks) / PPQ) * (60 / clock.bpm);
+    ((tickAtVideoTime(track, alignment, video.currentTime, loops) - clock.ticks) / PPQ) *
+    (60 / clock.bpm);
   return { track, alignment, video, clock, follower, run, gapSec };
 }
 

@@ -17,7 +17,12 @@ const row = (overrides: Partial<ReportRow>): ReportRow => ({
 describe('report model', () => {
   const rows = [
     row({ name: 'Modes up the neck', tempos: { low: 72, high: 80 }, target: 76, seconds: 900 }),
-    row({ name: 'Circle of fifths', theory: true, score: { correct: 14, total: 20 }, seconds: 300 }),
+    row({
+      name: 'Circle of fifths',
+      theory: true,
+      score: { correct: 14, total: 20 },
+      seconds: 300,
+    }),
     row({ name: 'Legato', tempos: { low: 96, high: 108 }, target: 100, seconds: 1200 }),
   ];
 

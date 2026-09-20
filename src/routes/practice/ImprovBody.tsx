@@ -31,7 +31,13 @@ function phraseShape(instance: PlayedInstance) {
  * which phrase this is, how far through it, and the note to land on — big
  * enough to read from the guitar. The neck shows the whole mode.
  */
-export function ImprovBody({ instance, instrument }: { instance: PlayedInstance; instrument: Instrument }) {
+export function ImprovBody({
+  instance,
+  instrument,
+}: {
+  instance: PlayedInstance;
+  instrument: Instrument;
+}) {
   const snapshot = usePractice((s) => s.snapshot);
   const state = snapshot?.state;
   const tick = usePhraseTick(state === 'playing');
@@ -78,7 +84,10 @@ export function ImprovBody({ instance, instrument }: { instance: PlayedInstance;
           {target && (
             <div
               // The last bar of a phrase is "you are here": the playhead's yellow.
-              className={cn('rounded-[12px] px-5 py-4', landing ? 'bg-playhead' : 'bg-ink/[0.03]')}
+              className={cn(
+                'rounded-[12px] px-5 py-4',
+                landing ? 'bg-playhead' : 'bg-ink/[0.03]',
+              )}
               data-testid="landing-target"
             >
               <Kicker>{landing ? 'Land it' : 'End each phrase on'}</Kicker>

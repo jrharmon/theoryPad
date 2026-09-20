@@ -42,12 +42,27 @@ export function CircleOfFifths({ keyMode }: { keyMode: KeyMode }) {
   const { sharps, flats, relativeMajor } = circle.signature;
   const count = sharps > 0 ? `${sharps}♯` : flats > 0 ? `${flats}♭` : '0';
 
-  const cells: { ring: CircleRing; position: number; label: string; cell?: CircleCell | undefined }[] = [];
+  const cells: {
+    ring: CircleRing;
+    position: number;
+    label: string;
+    cell?: CircleCell | undefined;
+  }[] = [];
   for (const position of CIRCLE_POSITIONS) {
     const major = inKey('major', position);
     const minor = inKey('minor', position);
-    cells.push({ ring: 'major', position, label: major?.root ?? majorAt(position), cell: major });
-    cells.push({ ring: 'minor', position, label: minor?.root ?? minorAt(position), cell: minor });
+    cells.push({
+      ring: 'major',
+      position,
+      label: major?.root ?? majorAt(position),
+      cell: major,
+    });
+    cells.push({
+      ring: 'minor',
+      position,
+      label: minor?.root ?? minorAt(position),
+      cell: minor,
+    });
   }
   const dim = circle.cells.find((c) => c.ring === 'diminished')!;
   cells.push({ ring: 'diminished', position: dim.position, label: dim.root, cell: dim });
@@ -65,7 +80,10 @@ export function CircleOfFifths({ keyMode }: { keyMode: KeyMode }) {
         const [outer, inner] = RINGS[ring];
         const [x, y] = point(position, (outer + inner) / 2);
         return (
-          <g key={`${ring}-${position}`} data-testid={tonic ? 'circle-tonic' : cell ? 'circle-in-key' : undefined}>
+          <g
+            key={`${ring}-${position}`}
+            data-testid={tonic ? 'circle-tonic' : cell ? 'circle-in-key' : undefined}
+          >
             <path
               d={segment(position, ring)}
               className={`stroke-rule ${tonic ? 'fill-accent' : cell ? 'fill-accent-tint' : 'fill-paper'}`}
@@ -91,10 +109,24 @@ export function CircleOfFifths({ keyMode }: { keyMode: KeyMode }) {
           </g>
         );
       })}
-      <text x={C} y={C - 6} textAnchor="middle" dominantBaseline="central" className="num fill-ink font-extrabold" fontSize={18}>
+      <text
+        x={C}
+        y={C - 6}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="num fill-ink font-extrabold"
+        fontSize={18}
+      >
         {count}
       </text>
-      <text x={C} y={C + 14} textAnchor="middle" dominantBaseline="central" className="fill-ink/64" fontSize={10}>
+      <text
+        x={C}
+        y={C + 14}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-ink/64"
+        fontSize={10}
+      >
         {relativeMajor} major
       </text>
     </svg>

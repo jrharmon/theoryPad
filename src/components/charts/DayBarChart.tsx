@@ -33,7 +33,9 @@ export function DayBarChart({
           >
             <div
               className={day.seconds > 0 ? 'bg-heat-3' : 'bg-heat-0'}
-              style={{ height: day.seconds > 0 ? Math.max(2, (day.seconds / max) * height) : 1 }}
+              style={{
+                height: day.seconds > 0 ? Math.max(2, (day.seconds / max) * height) : 1,
+              }}
             />
           </div>
         ))}

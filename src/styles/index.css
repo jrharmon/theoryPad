@@ -92,7 +92,6 @@
   ::selection {
     background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
-
 }
 
 /*

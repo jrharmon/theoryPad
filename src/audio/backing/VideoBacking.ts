@@ -45,11 +45,14 @@ export class VideoBacking implements BackingSource {
   /** Loaded, the play goes out before this returns — inside the click, where browsers want it. */
   start(countInTicks: number, options: PlayOptions = {}): Promise<void> {
     this.follower?.stop();
-    if (!this.player.isReady) return this.player.ready.then(() => this.start(countInTicks, options));
+    if (!this.player.isReady)
+      return this.player.ready.then(() => this.start(countInTicks, options));
     const duration = this.player.duration;
     const alignment = alignTrack(this.track, countInTicks, duration > 0 ? duration : undefined);
     this.player.setRate(this.speed);
-    return this.player.playFrom(alignment.playFromSec, options).then(() => this.follow(alignment));
+    return this.player
+      .playFrom(alignment.playFromSec, options)
+      .then(() => this.follow(alignment));
   }
 
   private follow(alignment: TrackAlignment): void {

@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { chroma, pitchClass, scaleNotes } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
-import { STANDARD_GUITAR, TEST_INSTRUMENTS, isValidPosition, pitchClassAt } from '@/domain/instrument';
+import {
+  STANDARD_GUITAR,
+  TEST_INSTRUMENTS,
+  isValidPosition,
+  pitchClassAt,
+} from '@/domain/instrument';
 import type { AxisPolicies } from '@/domain/variation';
-import { axisDefinition, mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
+import {
+  axisDefinition,
+  mulberry32,
+  rollVariation,
+  variationKeyMode,
+} from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '../registry';
 import type { AnyExerciseDefinition, ExerciseInstance, PlayedInstance } from '../types';
 
@@ -107,9 +117,13 @@ describe.each(['interval-sequences', 'one-note-per-string', 'position-shifting']
             headline: instance.brief.headline,
             instruction: instance.brief.instruction,
             bars: instance.phrase.bars.filter((b) => b.label).map((b) => [b.index, b.label]),
-            notes: instance.phrase.notes.map((n) =>
-              [n.string, n.fret, n.startTick, n.role, n.display ?? n.articulation ?? null],
-            ),
+            notes: instance.phrase.notes.map((n) => [
+              n.string,
+              n.fret,
+              n.startTick,
+              n.role,
+              n.display ?? n.articulation ?? null,
+            ]),
           },
           null,
           2,
@@ -181,7 +195,9 @@ describe.each(THEORY.map((d) => [d.id, d] as const))('%s', (_id, definition) => 
 
   it('is the same for the same seed, and new for a new one', () => {
     expect(JSON.stringify(questions(4))).toBe(JSON.stringify(questions(4)));
-    expect(JSON.stringify(questions(4).questions)).not.toBe(JSON.stringify(questions(5).questions));
+    expect(JSON.stringify(questions(4).questions)).not.toBe(
+      JSON.stringify(questions(5).questions),
+    );
   });
 
   it('declares no tempo', () => {
@@ -201,7 +217,10 @@ describe('free-improv-target', () => {
   });
 
   it('marks the target degree on the neck, and names it in the brief', () => {
-    const policies: AxisPolicies = { ...D_DORIAN, targetScaleDegree: { mode: 'fixed', value: '6' } };
+    const policies: AxisPolicies = {
+      ...D_DORIAN,
+      targetScaleDegree: { mode: 'fixed', value: '6' },
+    };
     const { neck, brief } = generate(definition, 3, STANDARD_GUITAR, policies);
     expect(brief.headline).toBe('Improvise in D Dorian, ending every phrase on B.');
     expect(neck.notes.some((n) => n.role === 'target' && n.degree.number === 6)).toBe(true);
@@ -210,8 +229,18 @@ describe('free-improv-target', () => {
 
   it('keeps to the position only when asked', () => {
     const policies: AxisPolicies = { ...D_DORIAN, neckPosition: { mode: 'fixed', value: '7' } };
-    const params = { phraseLengthBars: 2, phraseCount: 4, constrainToPosition: true, showTargetOnNeck: true };
-    const variation = rollVariation({ axes: definition.axes, seed: 1, instrument: STANDARD_GUITAR, policies });
+    const params = {
+      phraseLengthBars: 2,
+      phraseCount: 4,
+      constrainToPosition: true,
+      showTargetOnNeck: true,
+    };
+    const variation = rollVariation({
+      axes: definition.axes,
+      seed: 1,
+      instrument: STANDARD_GUITAR,
+      policies,
+    });
     const instance = definition.generate({
       variation,
       keyMode: { tonic: pitchClass('D'), mode: 'dorian' },

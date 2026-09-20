@@ -70,7 +70,8 @@ export function KeyModeGrid({
                     'h-[22px] text-[10px] tabular-nums hover:outline-1 hover:outline-ink',
                     shade(n, max),
                     share(n, max) >= 0.67 ? 'text-paper' : 'text-ink',
-                    isSelected && 'outline-2 outline-offset-1 outline-accent hover:outline-2 hover:outline-accent',
+                    isSelected &&
+                      'outline-2 outline-offset-1 outline-accent hover:outline-2 hover:outline-accent',
                   )}
                 >
                   {showCounts && n > 0 ? n : null}

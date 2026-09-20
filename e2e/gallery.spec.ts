@@ -56,7 +56,13 @@ test.describe('dev gallery', () => {
   });
 
   test('every tab example is independently playable', async ({ page }) => {
-    for (const heading of ['SCALE RUN', 'PICKED VS LEGATO', 'ARTICULATION MARKS', 'SIXTEENTH-NOTE RUN', 'CHORDS']) {
+    for (const heading of [
+      'SCALE RUN',
+      'PICKED VS LEGATO',
+      'ARTICULATION MARKS',
+      'SIXTEENTH-NOTE RUN',
+      'CHORDS',
+    ]) {
       const section = page.locator('section').filter({ hasText: heading });
       await section.getByRole('button', { name: 'Play' }).click();
       await expect(section.getByTestId('playhead')).toBeVisible();

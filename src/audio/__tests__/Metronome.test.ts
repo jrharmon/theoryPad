@@ -23,7 +23,12 @@ describe('Metronome', () => {
 
     expect(kinds()).toEqual(['accent', 'beat', 'beat', 'beat', 'accent', 'beat']);
     expect(beats.map((b) => [b.bar, b.beat])).toEqual([
-      [0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [1, 1],
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [1, 0],
+      [1, 1],
     ]);
     expect(beats.map((b) => b.isDownbeat)).toEqual([true, false, false, false, true, false]);
 
@@ -65,7 +70,10 @@ describe('Metronome', () => {
   });
 
   it('makes no sound at all when silenced — under a track, the recording counts in', () => {
-    const { clock, metronome, clicks, beats } = make({ countInTicks: QUARTER * 4, subdivision: 2 });
+    const { clock, metronome, clicks, beats } = make({
+      countInTicks: QUARTER * 4,
+      subdivision: 2,
+    });
     metronome.setSilenced(true);
     metronome.start();
 

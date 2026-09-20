@@ -143,7 +143,11 @@ function Draft({
               />
             </Field>
           )}
-          <ParamsEditor definition={definition} stored={params} onChange={(next) => setParams(next)} />
+          <ParamsEditor
+            definition={definition}
+            stored={params}
+            onChange={(next) => setParams(next)}
+          />
         </div>
 
         {axes.length > 0 && (

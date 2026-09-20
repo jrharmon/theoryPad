@@ -32,11 +32,7 @@ export function repsAndTempo(reps: number, tempo: number | null): string {
 }
 
 /** The value of an axis as it should read, or a fallback. */
-export function axisDisplay(
-  variation: RolledVariation,
-  id: AxisId,
-  fallback = '',
-): string {
+export function axisDisplay(variation: RolledVariation, id: AxisId, fallback = ''): string {
   return variation.axes[id]?.display ?? fallback;
 }
 
@@ -65,10 +61,7 @@ export function makeBrief(
  * The axes worth showing in the strip: the ones the exercise nominated, with
  * anything freshly rolled brought to the front so a change is noticed.
  */
-export function orderedHighlights(
-  variation: RolledVariation,
-  preferred: AxisId[],
-): AxisId[] {
+export function orderedHighlights(variation: RolledVariation, preferred: AxisId[]): AxisId[] {
   const present = preferred.filter((id) => variation.axes[id] !== undefined);
   const fresh = present.filter((id) => variation.axes[id]!.fresh);
   const rest = present.filter((id) => !variation.axes[id]!.fresh);

@@ -114,7 +114,10 @@ export const MODE_CHARACTER: Record<ModeName, ModeCharacter> = {
     progressions: [
       { degrees: [1, 6, 7, 1], use: 'The climb home. Put ♭6 → 5 over the ♭VI.' },
       { degrees: [1, 4, 5, 1], use: 'All minor chords — target each root on the change.' },
-      { degrees: [1, 7, 6, 7], use: 'Rock between ♭VII and ♭VI; land on ♭6 as the ♭VI arrives.' },
+      {
+        degrees: [1, 7, 6, 7],
+        use: 'Rock between ♭VII and ♭VI; land on ♭6 as the ♭VI arrives.',
+      },
     ],
   },
   locrian: {
@@ -127,7 +130,10 @@ export const MODE_CHARACTER: Record<ModeName, ModeCharacter> = {
       'Treating the ♭5 as a 5th, and ending long phrases on the root — they rarely sound final. It works best over a m7♭5 chord, which is where it belongs.',
     compare: 'Phrygian with the 5th lowered. The darkest of the seven.',
     progressions: [
-      { degrees: [1, 2], use: 'Half-step chords; resolve ♭2 → 1 against the diminished tonic.' },
+      {
+        degrees: [1, 2],
+        use: 'Half-step chords; resolve ♭2 → 1 against the diminished tonic.',
+      },
       { degrees: [1, 4, 2], use: 'Lean on the ♭5 over the i°, the root over the iv.' },
     ],
   },

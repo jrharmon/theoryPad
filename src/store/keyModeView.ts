@@ -23,7 +23,8 @@ export const useKeyModeView = create<KeyModeViewState>((set) => ({
   sheet: false,
   available: false,
   // Leaving the screen closes the reference, so it is not waiting on return.
-  setAvailable: (available) => set(available ? { available } : { available, popover: false, sheet: false }),
+  setAvailable: (available) =>
+    set(available ? { available } : { available, popover: false, sheet: false }),
   setPopover: (popover) => set({ popover }),
   setSheet: (sheet) => set(sheet ? { sheet, popover: false } : { sheet }),
   togglePopover: () => set((s) => (s.available ? { popover: !s.popover } : {})),

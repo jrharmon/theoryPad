@@ -198,7 +198,9 @@ function world(videos: Video[] = []) {
       queued(id, async () => {
         const routine = (await repos.routines.byId(id))!;
         await repos.routines.update(id, {
-          items: routine.items.map((item) => (item.id === itemId ? { ...item, ...changes } : item)),
+          items: routine.items.map((item) =>
+            item.id === itemId ? { ...item, ...changes } : item,
+          ),
         });
       }),
     now: () => (time += 1_000),
@@ -209,8 +211,15 @@ function world(videos: Video[] = []) {
   return { deps, repos, audio, settings };
 }
 
-function addExercise(repos: Repositories, definitionId: string, changes: Partial<NewExercise> = {}) {
-  return repos.exercises.add({ ...newExerciseFrom(exerciseDefinition(definitionId)), ...changes });
+function addExercise(
+  repos: Repositories,
+  definitionId: string,
+  changes: Partial<NewExercise> = {},
+) {
+  return repos.exercises.add({
+    ...newExerciseFrom(exerciseDefinition(definitionId)),
+    ...changes,
+  });
 }
 
 /** Let fire-and-forget writes and a track's start settle. */
@@ -278,7 +287,11 @@ describe('ExerciseSession', () => {
 
     const reps = await repos.reps.byExercise(exercise.id, 10);
     expect(reps).toHaveLength(1);
-    expect(reps[0]).toMatchObject({ sessionId: session.sessionId, status: 'completed', tempo: 80 });
+    expect(reps[0]).toMatchObject({
+      sessionId: session.sessionId,
+      status: 'completed',
+      tempo: 80,
+    });
     expect(reps[0]!.frets).toBeDefined();
     expect((await repos.exercises.byId(exercise.id))!.heldAxisValues).toEqual(reps[0]!.axes);
 
@@ -302,10 +315,15 @@ describe('ExerciseSession', () => {
     audio.clock.advanceTicks(countIn + 480);
     session.stop();
     await settle();
-    expect((await repos.reps.byExercise(exercise.id, 10)).map((r) => r.status)).toEqual(['abandoned']);
+    expect((await repos.reps.byExercise(exercise.id, 10)).map((r) => r.status)).toEqual([
+      'abandoned',
+    ]);
 
     await session.restart();
-    expect(session.state.snapshot).toMatchObject({ state: 'count-in', countInRemaining: countIn });
+    expect(session.state.snapshot).toMatchObject({
+      state: 'count-in',
+      countInRemaining: countIn,
+    });
     expect(audio.sound.clicking).toBe(true);
   });
 
@@ -323,12 +341,18 @@ describe('ExerciseSession', () => {
     await session.chooseBacking({ kind: 'video', id: own.id });
     expect(session.state.backing).toMatchObject({ resolved: { kind: 'video' }, speed: 0.7 });
     expect(session.state.snapshot?.currentTempo).toBe(70);
-    expect((await repos.exercises.byId(exercise.id))!.backing).toEqual({ kind: 'video', id: own.id });
+    expect((await repos.exercises.byId(exercise.id))!.backing).toEqual({
+      kind: 'video',
+      id: own.id,
+    });
 
     // The track is the click and the count-in; the notes are not played over it.
     await session.play();
     const phrase = session.runner.currentPhrase!;
-    expect(audio.tracks[0]).toMatchObject({ status: 'playing', startedFrom: countInTicks(phrase.timeSignature, 1) });
+    expect(audio.tracks[0]).toMatchObject({
+      status: 'playing',
+      startedFrom: countInTicks(phrase.timeSignature, 1),
+    });
     expect(audio.sound).toMatchObject({ notes: null, silenced: true });
 
     session.setTempo(90);
@@ -353,13 +377,17 @@ describe('ExerciseSession', () => {
     await session.chooseBacking({ kind: 'video', id: inG.id });
     expect(session.state.snapshot?.currentTempo).toBe(70);
 
-    await session.reconfigure({ axisPolicies: { ...IN_G, key: { mode: 'fixed', value: 'A' } } });
+    await session.reconfigure({
+      axisPolicies: { ...IN_G, key: { mode: 'fixed', value: 'A' } },
+    });
     expect(session.state.backing.resolved).toEqual({ kind: 'none', dropped: true });
     expect(audio.tracks[0]!.status).toBe('disposed');
     expect(session.state.snapshot?.currentTempo).toBe(72);
 
     await session.chooseBacking({ kind: 'drone' });
-    await session.reconfigure({ axisPolicies: { ...IN_G, key: { mode: 'fixed', value: 'C' } } });
+    await session.reconfigure({
+      axisPolicies: { ...IN_G, key: { mode: 'fixed', value: 'C' } },
+    });
     expect(audio.drones).toHaveLength(1);
     expect(String(audio.drones[0]!.keyMode.tonic)).toBe('C');
   });
@@ -367,7 +395,10 @@ describe('ExerciseSession', () => {
   it('drops a track that will not start, says why, and plays the notes instead', async () => {
     const inG = track();
     const { deps, repos, audio } = world([inG]);
-    const exercise = await addExercise(repos, 'modes-through-key', { axisPolicies: IN_G, countInBars: 1 });
+    const exercise = await addExercise(repos, 'modes-through-key', {
+      axisPolicies: IN_G,
+      countInBars: 1,
+    });
     const session = await ExerciseSession.open(exercise, deps);
     audio.failTracks = new Error('YouTube could not be reached');
     await session.chooseBacking({ kind: 'video', id: inG.id });
@@ -394,7 +425,11 @@ describe('ExerciseSession', () => {
     await single.end();
 
     const item = itemFromExercise(exercise);
-    const stored = await repos.routines.add({ name: 'R', items: [item], sessionAxisPolicies: {} });
+    const stored = await repos.routines.add({
+      name: 'R',
+      items: [item],
+      sessionAxisPolicies: {},
+    });
     const routine = await RoutineSession.open(stored, deps);
     await routine.setCountIn(0);
     await routine.chooseBacking({ kind: 'drone' });
@@ -436,7 +471,10 @@ describe('RoutineSession', () => {
     await session.play();
     await settle();
     expect(session.state.snapshot?.state).toBe('count-in');
-    expect(audio.tracks[0]).toMatchObject({ status: 'playing', startedFrom: session.state.snapshot!.countInRemaining });
+    expect(audio.tracks[0]).toMatchObject({
+      status: 'playing',
+      startedFrom: session.state.snapshot!.countInRemaining,
+    });
 
     // A theory set puts the track away.
     playOut(session, audio.clock);
@@ -454,10 +492,19 @@ describe('RoutineSession', () => {
     expect(session.state.routineSnapshot?.phase).toBe('done');
     expect(audio.tracks[1]!.status).toBe('stopped');
 
-    const reps = await Promise.all([scales, circle].map((e) => repos.reps.byExercise(e.id, 10)));
-    expect(reps.flat().map((r) => r.routineItemId).sort()).toEqual(items.map((i) => i.id).sort());
+    const reps = await Promise.all(
+      [scales, circle].map((e) => repos.reps.byExercise(e.id, 10)),
+    );
+    expect(
+      reps
+        .flat()
+        .map((r) => r.routineItemId)
+        .sort(),
+    ).toEqual(items.map((i) => i.id).sort());
     const saved = (await repos.routines.byId(stored.id))!;
     expect(saved.lastPlayedAt).toBeDefined();
-    expect(saved.items[0]!.heldAxisValues).toEqual(reps[0]!.find((r) => r.routineItemId === items[0]!.id)!.axes);
+    expect(saved.items[0]!.heldAxisValues).toEqual(
+      reps[0]!.find((r) => r.routineItemId === items[0]!.id)!.axes,
+    );
   });
 });

@@ -29,7 +29,9 @@ export function ExerciseLibrary() {
           return definition ? [{ exercise, definition }] : [];
         })
         // Favorites pinned to the top; otherwise the order they were added.
-        .sort((a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false)),
+        .sort(
+          (a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false),
+        ),
     [exercises],
   );
 
@@ -79,7 +81,10 @@ export function ExerciseLibrary() {
 
         <ul className="sheet px-5 empty:hidden">
           {visible.map(({ exercise, definition }) => (
-            <li key={exercise.id} className="flex items-baseline gap-4 border-b border-rule py-4 last:border-b-0">
+            <li
+              key={exercise.id}
+              className="flex items-baseline gap-4 border-b border-rule py-4 last:border-b-0"
+            >
               <FavoriteToggle
                 on={exercise.favorite ?? false}
                 label={definition.name}
@@ -97,7 +102,11 @@ export function ExerciseLibrary() {
                 {/* Two instances of one definition share a name and summary,
                     so what differs has to be on the row. */}
                 {(() => {
-                  const policies = describePolicies(exercise.axisPolicies, definition.axes, instrument);
+                  const policies = describePolicies(
+                    exercise.axisPolicies,
+                    definition.axes,
+                    instrument,
+                  );
                   return policies.length > 0 ? (
                     <p className="mt-1 text-[12px] text-ink/50">{policies.join(' · ')}</p>
                   ) : null;
@@ -140,7 +149,12 @@ function TagFilter({
   onClick: () => void;
 }) {
   return (
-    <Button variant={active ? 'default' : 'secondary'} size="xs" className="rounded-full" onClick={onClick}>
+    <Button
+      variant={active ? 'default' : 'secondary'}
+      size="xs"
+      className="rounded-full"
+      onClick={onClick}
+    >
       {label}
     </Button>
   );

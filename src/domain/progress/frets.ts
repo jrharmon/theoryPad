@@ -33,7 +33,10 @@ export function addCounts(into: Record<string, number>, counts: Record<string, n
 }
 
 /** Notes played at each fret over some days, for one instrument's string count. */
-export function neckCounts(days: readonly PracticeDay[], strings: number): Record<string, number> {
+export function neckCounts(
+  days: readonly PracticeDay[],
+  strings: number,
+): Record<string, number> {
   const out: Record<string, number> = {};
   for (const day of days) addCounts(out, day.frets[strings] ?? {});
   return out;
@@ -77,7 +80,7 @@ export function neckSummary(
 export function fretRuns(frets: readonly number[]): string {
   const runs: string[] = [];
   const sorted = [...frets].sort((a, b) => a - b);
-  for (let i = 0; i < sorted.length; ) {
+  for (let i = 0; i < sorted.length;) {
     let j = i;
     while (j + 1 < sorted.length && sorted[j + 1] === sorted[j]! + 1) j += 1;
     runs.push(i === j ? `${sorted[i]}` : `${sorted[i]}–${sorted[j]}`);

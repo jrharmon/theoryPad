@@ -31,7 +31,9 @@ describe('string indexing', () => {
       }
       expect(stringCount(inst), inst.name).toBe(inst.tuning.length);
     }
-    expect([STANDARD_GUITAR, SEVEN_STRING_GUITAR, BASS_4_STRING].map(stringCount)).toEqual([6, 7, 4]);
+    expect([STANDARD_GUITAR, SEVEN_STRING_GUITAR, BASS_4_STRING].map(stringCount)).toEqual([
+      6, 7, 4,
+    ]);
 
     // Past the end of the tuning is an error, not a silent wrong note.
     expect(() => midiAt(STANDARD_GUITAR, { string: 6, fret: 0 })).toThrow();
@@ -141,12 +143,17 @@ describe('scaleOnNeck', () => {
       const positions = scaleOnNeck(inst, km, { low: 5, high: 9 });
       expect(new Set(positions.map((p) => p.string)).size, inst.name).toBe(stringCount(inst));
       for (const p of positions) {
-        expect(allowed.has(p.pitchClass), `${p.pitchClass} at ${p.string}/${p.fret}`).toBe(true);
+        expect(allowed.has(p.pitchClass), `${p.pitchClass} at ${p.string}/${p.fret}`).toBe(
+          true,
+        );
         expect(p.isRoot).toBe(p.pitchClass === 'D');
         expect(p.fret).toBeGreaterThanOrEqual(5);
         expect(p.fret).toBeLessThanOrEqual(9);
       }
-      expect(positions.some((p) => p.isRoot), inst.name).toBe(true);
+      expect(
+        positions.some((p) => p.isRoot),
+        inst.name,
+      ).toBe(true);
     }
   });
 
@@ -164,7 +171,9 @@ describe('spelling', () => {
     expect(spellInKey(eb, pitchClass('G#'))).toBe('Ab');
     expect(spellInKey({ tonic: pitchClass('C'), mode: 'ionian' }, pitchClass('F#'))).toBe('F#');
 
-    const spellings = new Set(scaleOnNeck(STANDARD_GUITAR, eb, { low: 0, high: 5 }).map((p) => p.pitchClass));
+    const spellings = new Set(
+      scaleOnNeck(STANDARD_GUITAR, eb, { low: 0, high: 5 }).map((p) => p.pitchClass),
+    );
     expect(spellings.has(pitchClass('Ab'))).toBe(true);
     expect(spellings.has(pitchClass('G#'))).toBe(false);
   });

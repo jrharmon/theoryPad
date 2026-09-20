@@ -1,5 +1,11 @@
 import type { Chroma, DegreeNumber, ModeName, PitchClass } from '@/domain/music';
-import { MODE_NAMES, chroma, pitchClass, preferredTonic, signatureDegree } from '@/domain/music';
+import {
+  MODE_NAMES,
+  chroma,
+  pitchClass,
+  preferredTonic,
+  signatureDegree,
+} from '@/domain/music';
 import type { NeckPosition, StringSet } from '@/domain/instrument';
 import { defaultStringSets } from '@/domain/instrument';
 import type { RhythmPattern } from '@/domain/phrase';
@@ -139,7 +145,8 @@ const stringSetAxis: AxisDefinition<AxisValues['stringSet']> = {
   candidates: (context) => defaultStringSets(context.instrument),
   key: (set) => set.id,
   format: (set) => set.name,
-  parse: (key, context) => defaultStringSets(context.instrument).find((s) => s.id === key) ?? null,
+  parse: (key, context) =>
+    defaultStringSets(context.instrument).find((s) => s.id === key) ?? null,
   // Every string unless an exercise or the player says otherwise: a set is a
   // deliberate choice, not something to be surprised by.
   defaultPolicy: { mode: 'fixed', value: 'all' },

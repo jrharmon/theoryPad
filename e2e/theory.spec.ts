@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { answerSet, open, storedReps } from './helpers';
 
-
-
 test('a circle-of-fifths set is answered from the keyboard and scored', async ({ page }) => {
   await open(page, 'Circle of fifths');
   await expect(page.getByTestId('play')).toHaveText('Start');
@@ -57,7 +55,9 @@ test('a table is submitted whole, and only once every row is filled', async ({ p
   await page.getByTestId('submit-table').click();
 
   // One question, one answer — right or wrong as a whole.
-  await expect(page.getByTestId('theory-continue').or(page.getByTestId('theory-ready'))).toBeVisible();
+  await expect(
+    page.getByTestId('theory-continue').or(page.getByTestId('theory-ready')),
+  ).toBeVisible();
   if (await page.getByTestId('theory-continue').isVisible()) await page.keyboard.press('Enter');
   await expect(page.getByTestId('theory-score')).toHaveText(/[01] of 1/);
 });
@@ -69,7 +69,10 @@ test('a routine moves on from a theory set to the next exercise', async ({ page 
   await page.getByRole('button', { name: 'New routine' }).click();
   for (const name of ['Circle of fifths', 'Modes up the neck']) {
     await page.getByRole('button', { name: 'Add exercise' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: new RegExp(name) }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: new RegExp(name) })
+      .click();
     await expect(page.getByRole('dialog')).toBeHidden();
   }
   await page.getByRole('link', { name: 'Start' }).click();

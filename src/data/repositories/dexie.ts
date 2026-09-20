@@ -23,12 +23,16 @@ let current: { database: TheoryPadDB; repositories: Repositories } | null = null
  */
 export function repos(): Repositories {
   const database = db();
-  if (current?.database !== database) current = { database, repositories: createRepositories(database) };
+  if (current?.database !== database)
+    current = { database, repositories: createRepositories(database) };
   return current.repositories;
 }
 
 /** Everything the app persists, backed by IndexedDB. */
-export function createRepositories(database: TheoryPadDB, now = () => Date.now()): Repositories {
+export function createRepositories(
+  database: TheoryPadDB,
+  now = () => Date.now(),
+): Repositories {
   const stamp = () => now();
 
   const live = <T extends { deletedAt?: number }>(rows: T[]): T[] =>
@@ -53,7 +57,9 @@ export function createRepositories(database: TheoryPadDB, now = () => Date.now()
       },
 
       async byDefinition(definitionId) {
-        return live(await database.exercises.where('definitionId').equals(definitionId).toArray());
+        return live(
+          await database.exercises.where('definitionId').equals(definitionId).toArray(),
+        );
       },
 
       async update(id, changes) {

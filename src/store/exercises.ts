@@ -1,10 +1,5 @@
 import { create } from 'zustand';
-import {
-  repos,
-  findRedundantExercises,
-  type Exercise,
-  type NewExercise,
-} from '@/data';
+import { repos, findRedundantExercises, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
@@ -103,7 +98,9 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   },
 
   async addFromDefinition(definitionId) {
-    const created = await repos().exercises.add(newExerciseFrom(exerciseDefinition(definitionId)));
+    const created = await repos().exercises.add(
+      newExerciseFrom(exerciseDefinition(definitionId)),
+    );
     set({ exercises: [...get().exercises, created] });
     return created;
   },

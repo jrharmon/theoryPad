@@ -18,7 +18,9 @@ describe('diatonicChords', () => {
       expect(chords).toHaveLength(7);
       for (const chord of chords) {
         for (const note of chord.notes.seventh) {
-          expect(inScale.has(note), `${chord.seventhSymbol} in ${km.tonic} ${km.mode}`).toBe(true);
+          expect(inScale.has(note), `${chord.seventhSymbol} in ${km.tonic} ${km.mode}`).toBe(
+            true,
+          );
         }
       }
     }
@@ -31,7 +33,10 @@ describe('diatonicChords', () => {
       );
       for (let i = 0; i < 12; i += 1) {
         const km = { tonic: preferredTonic(i as Chroma, mode), mode };
-        expect(diatonicChords(km).map((c) => c.seventh), `${km.tonic} ${mode}`).toEqual(reference);
+        expect(
+          diatonicChords(km).map((c) => c.seventh),
+          `${km.tonic} ${mode}`,
+        ).toEqual(reference);
       }
     }
   });
@@ -40,7 +45,13 @@ describe('diatonicChords', () => {
     const chords = diatonicChords({ tonic: pitchClass('C'), mode: 'ionian' });
     expect(chords.map((c) => c.triadSymbol)).toEqual(['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim']);
     expect(chords.map((c) => c.seventhSymbol)).toEqual([
-      'Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5',
+      'Cmaj7',
+      'Dm7',
+      'Em7',
+      'Fmaj7',
+      'G7',
+      'Am7',
+      'Bm7b5',
     ]);
   });
 
@@ -48,7 +59,13 @@ describe('diatonicChords', () => {
     const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
     expect(chords.map((c) => c.triadSymbol)).toEqual(['Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'C']);
     expect(chords.map((c) => c.seventhSymbol)).toEqual([
-      'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5', 'Cmaj7',
+      'Dm7',
+      'Em7',
+      'Fmaj7',
+      'G7',
+      'Am7',
+      'Bm7b5',
+      'Cmaj7',
     ]);
     // The subdominant being major is exactly what makes it Dorian rather than Aeolian.
     const subdominant = chords.find((c) => c.function === 'subdominant');
@@ -59,7 +76,13 @@ describe('diatonicChords', () => {
   it('marks tonic, subdominant and dominant, and nothing else', () => {
     const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
     expect(chords.map((c) => c.function)).toEqual([
-      'tonic', 'other', 'other', 'subdominant', 'dominant', 'other', 'other',
+      'tonic',
+      'other',
+      'other',
+      'subdominant',
+      'dominant',
+      'other',
+      'other',
     ]);
   });
 
@@ -80,7 +103,13 @@ describe('diatonicChords', () => {
   it('spells the ninth chords of C major', () => {
     const chords = diatonicChords({ tonic: pitchClass('C'), mode: 'ionian' });
     expect(chords.map((c) => c.ninthSymbol)).toEqual([
-      'Cmaj9', 'Dm9', null, 'Fmaj9', 'G9', 'Am9', null,
+      'Cmaj9',
+      'Dm9',
+      null,
+      'Fmaj9',
+      'G9',
+      'Am9',
+      null,
     ]);
   });
 
@@ -109,7 +138,9 @@ describe('chordTones', () => {
       for (const quality of ['maj', 'min', 'dim', 'maj7', 'min7', 'dom7'] as const) {
         const tones = chordTones(pitchClass(root), quality);
         const letters = tones.map((t) => t[0]);
-        expect(new Set(letters).size, `${root}${quality} -> ${tones.join(' ')}`).toBe(tones.length);
+        expect(new Set(letters).size, `${root}${quality} -> ${tones.join(' ')}`).toBe(
+          tones.length,
+        );
       }
     }
   });

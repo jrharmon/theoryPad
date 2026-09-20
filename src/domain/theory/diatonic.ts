@@ -1,5 +1,12 @@
 import type { KeyMode, SeventhQuality, TriadQuality } from '@/domain/music';
-import { chordOnDegree, diatonicChords, keySignature, scaleDegrees, scaleNotes, semitonesBetween } from '@/domain/music';
+import {
+  chordOnDegree,
+  diatonicChords,
+  keySignature,
+  scaleDegrees,
+  scaleNotes,
+  semitonesBetween,
+} from '@/domain/music';
 import type { Rng } from '@/domain/variation';
 import {
   noteDistractors,
@@ -10,7 +17,8 @@ import {
 } from './distractors';
 import type { SinglePickQuestion, TableFillQuestion, TheoryQuestion } from './types';
 
-export type DiatonicQuestionType = 'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function';
+export type DiatonicQuestionType =
+  'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function';
 export type ChordDepth = 'triads' | 'sevenths' | 'both';
 
 export function keyModeName(km: KeyMode): string {
@@ -27,7 +35,12 @@ export function degreeName(km: KeyMode, degree: number): string {
   return semitonesBetween(seventh, km.tonic) === 1 ? 'leading tone' : 'subtonic';
 }
 
-const TRIAD_LABEL: Record<TriadQuality, string> = { maj: 'maj', min: 'min', dim: 'dim', aug: 'aug' };
+const TRIAD_LABEL: Record<TriadQuality, string> = {
+  maj: 'maj',
+  min: 'min',
+  dim: 'dim',
+  aug: 'aug',
+};
 const SEVENTH_LABEL: Record<SeventhQuality, string> = {
   maj7: 'maj7',
   min7: 'm7',
@@ -72,7 +85,11 @@ export function nameNotes(km: KeyMode, rng: Rng, id: string): TableFillQuestion 
       // now and then a spelling trap.
       const wrong = wantsTrick(rng)
         ? noteDistractors(note, rng)
-        : plainDistractors(note, notes.filter((n) => n !== note && n !== km.tonic), rng);
+        : plainDistractors(
+            note,
+            notes.filter((n) => n !== note && n !== km.tonic),
+            rng,
+          );
       const { items, index } = withCorrect(note, wrong, rng);
       return {
         id: `${id}-${i + 2}`,
@@ -89,7 +106,11 @@ export function nameNotes(km: KeyMode, rng: Rng, id: string): TableFillQuestion 
 }
 
 /** "Pick the quality of each chord. The root is given." */
-export function nameChords(km: KeyMode, depth: 'triads' | 'sevenths', id: string): TableFillQuestion {
+export function nameChords(
+  km: KeyMode,
+  depth: 'triads' | 'sevenths',
+  id: string,
+): TableFillQuestion {
   const chords = diatonicChords(km);
   const options =
     depth === 'triads'
@@ -143,7 +164,11 @@ export function spellChord(
     .map((d) => chordFor(km, d, sevenths));
   const wrong = trick
     ? spellingDistractors(notes, rng)
-    : plainDistractors(notes, others.map((o) => o.notes), rng);
+    : plainDistractors(
+        notes,
+        others.map((o) => o.notes),
+        rng,
+      );
   const { items, index } = withCorrect(notes, wrong, rng);
   const options = items.map((spelled, i) => ({ id: `${id}-${i}`, label: spelled.join(' ') }));
 
@@ -169,7 +194,11 @@ export function spellChord(
     feedback: {
       rule: `${symbol} is ${notes.join(' ')}: the ${ORDINAL[degree - 1]} degree of ${keyModeName(km)} with every other note of the key stacked on it.`,
       whatItIs,
-      visual: { kind: 'note-row', keyMode: km, highlight: [0, 2, 4, 6].slice(0, notes.length).map((k) => ((degree - 1 + k) % 7) + 1) },
+      visual: {
+        kind: 'note-row',
+        keyMode: km,
+        highlight: [0, 2, 4, 6].slice(0, notes.length).map((k) => ((degree - 1 + k) % 7) + 1),
+      },
     },
   };
 }
@@ -184,12 +213,17 @@ export function chordFunction(
 ): SinglePickQuestion {
   const others = rng.shuffle([1, 2, 3, 4, 5, 6, 7].filter((d) => d !== degree)).slice(0, 3);
   const { items, index } = withCorrect(degree, others, rng);
-  const options = items.map((d) => ({ id: `${id}-${d}`, label: chordFor(km, d, sevenths).symbol }));
+  const options = items.map((d) => ({
+    id: `${id}-${d}`,
+    label: chordFor(km, d, sevenths).symbol,
+  }));
   const name = degreeName(km, degree);
 
   const whatItIs: Record<string, string> = {};
   items.forEach((d, i) => {
-    if (i !== index) whatItIs[options[i]!.id] = `That’s the ${degreeName(km, d)}, on the ${ORDINAL[d - 1]} degree.`;
+    if (i !== index)
+      whatItIs[options[i]!.id] =
+        `That’s the ${degreeName(km, d)}, on the ${ORDINAL[d - 1]} degree.`;
   });
 
   return {

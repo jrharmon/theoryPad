@@ -24,7 +24,10 @@ const rep = (overrides: Partial<Rep> = {}): Rep => ({
 
 describe('reportCsv', () => {
   it('writes a row per pass with the key, mode and the other settings apart', () => {
-    const csv = reportCsv([rep()], { exercise: () => 'Modes up the neck', routine: () => null });
+    const csv = reportCsv([rep()], {
+      exercise: () => 'Modes up the neck',
+      routine: () => null,
+    });
     const [header, line] = csv.trim().split('\r\n');
     expect(header).toBe(
       'date,started,exercise,routine,status,tempo,free_time,seconds,key,mode,other_settings,correct,questions',
@@ -67,7 +70,13 @@ describe('reportHtml', () => {
       },
     ],
   };
-  const palette = { ink: '#201e1d', bg: '#f3f2f2', rule: '#d7d3d3', muted: '#7d7979', accent: '#ec3013' };
+  const palette = {
+    ink: '#201e1d',
+    bg: '#f3f2f2',
+    rule: '#d7d3d3',
+    muted: '#7d7979',
+    accent: '#ec3013',
+  };
 
   it('is one self-contained file: inline styles, no scripts, nothing fetched', () => {
     const html = reportHtml(report, palette);

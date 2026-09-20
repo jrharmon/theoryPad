@@ -32,8 +32,12 @@ export function usePhraseTick(playing: boolean): number {
  * player must stay visible) or this exercise's reference videos.
  */
 export function useVideoColumn(): boolean {
-  const hasTrack = usePractice((s) => s.backing.resolved.kind === 'video' || s.backing.error !== null);
+  const hasTrack = usePractice(
+    (s) => s.backing.resolved.kind === 'video' || s.backing.error !== null,
+  );
   const exerciseId = usePractice((s) => s.exerciseId);
-  const lessons = useVideos((s) => (exerciseId ? referenceVideos(s.videos, exerciseId).length : 0));
+  const lessons = useVideos((s) =>
+    exerciseId ? referenceVideos(s.videos, exerciseId).length : 0,
+  );
   return hasTrack || lessons > 0;
 }

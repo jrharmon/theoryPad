@@ -95,7 +95,8 @@ async function sessionDeps(): Promise<SessionDeps> {
     // database left the library holding a stale copy.
     saveExercise: (id, changes) => useExercises.getState().update(id, changes),
     saveRoutine: (id, changes) => useRoutines.getState().update(id, changes),
-    saveRoutineItem: (id, itemId, changes) => useRoutines.getState().updateItem(id, itemId, changes),
+    saveRoutineItem: (id, itemId, changes) =>
+      useRoutines.getState().updateItem(id, itemId, changes),
     now: () => Date.now(),
   };
 }

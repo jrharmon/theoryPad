@@ -76,7 +76,10 @@ export function RoutineBuilder() {
               label={routine.name}
               onChange={(on) => void routines.setFavorite(routine.id, on)}
             />
-            <NameField routine={routine} onRename={(name) => void routines.rename(routine.id, name)} />
+            <NameField
+              routine={routine}
+              onRename={(name) => void routines.rename(routine.id, name)}
+            />
           </div>
           <p className="mt-1 text-[13px] text-ink/64 tabular-nums">
             {routine.items.length === 0
@@ -112,7 +115,9 @@ export function RoutineBuilder() {
             policies={routine.sessionAxisPolicies}
             held={{}}
             instrument={instrument}
-            onChange={(axis, policy) => void routines.setSessionPolicy(routine.id, axis, policy)}
+            onChange={(axis, policy) =>
+              void routines.setSessionPolicy(routine.id, axis, policy)
+            }
           />
         </div>
       </div>
@@ -159,7 +164,13 @@ export function RoutineBuilder() {
 }
 
 /** Saved on blur or Enter, not on every keystroke. */
-function NameField({ routine, onRename }: { routine: Routine; onRename: (name: string) => void }) {
+function NameField({
+  routine,
+  onRename,
+}: {
+  routine: Routine;
+  onRename: (name: string) => void;
+}) {
   const [draft, setDraft] = useState(routine.name);
   const commit = () => {
     const name = draft.trim();
@@ -201,7 +212,11 @@ function ItemRow({
     return (
       <li className="flex items-center gap-3 border-b border-rule px-3 py-3 text-[13px] text-ink/64">
         An exercise that no longer exists ({item.definitionId}) — it will be left out.
-        <Button variant="secondary" size="xs" onClick={() => void routines.removeItem(routine.id, item.id)}>
+        <Button
+          variant="secondary"
+          size="xs"
+          onClick={() => void routines.removeItem(routine.id, item.id)}
+        >
           Remove
         </Button>
       </li>
@@ -232,7 +247,9 @@ function ItemRow({
             size="icon-xs"
             aria-label="Fewer passes"
             disabled={item.reps <= 1}
-            onClick={() => void routines.updateItem(routine.id, item.id, { reps: item.reps - 1 })}
+            onClick={() =>
+              void routines.updateItem(routine.id, item.id, { reps: item.reps - 1 })
+            }
           >
             −
           </Button>
@@ -244,7 +261,9 @@ function ItemRow({
             size="icon-xs"
             aria-label="More passes"
             disabled={item.reps >= 9}
-            onClick={() => void routines.updateItem(routine.id, item.id, { reps: item.reps + 1 })}
+            onClick={() =>
+              void routines.updateItem(routine.id, item.id, { reps: item.reps + 1 })
+            }
           >
             +
           </Button>
@@ -312,7 +331,9 @@ function AddExerciseDialog({
           const definition = findExerciseDefinition(exercise.definitionId);
           return definition ? [{ exercise, definition }] : [];
         })
-        .sort((a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false)),
+        .sort(
+          (a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false),
+        ),
     [exercises],
   );
 

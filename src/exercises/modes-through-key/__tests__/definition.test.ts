@@ -65,7 +65,9 @@ describe('modes-through-key', () => {
       for (let seed = 0; seed < 25; seed += 1) {
         const instance = generate(seed, { instrument });
         for (const note of instance.phrase.notes) {
-          expect(isValidPosition(instrument, note), `${instrument.name} seed ${seed}`).toBe(true);
+          expect(isValidPosition(instrument, note), `${instrument.name} seed ${seed}`).toBe(
+            true,
+          );
         }
       }
     }
@@ -147,7 +149,8 @@ describe('modes-through-key', () => {
   });
 
   describe('arpeggio-then-scale', () => {
-    const instance = () => generate(1, { params: { ...DEFAULTS, variant: 'arpeggio-then-scale' } });
+    const instance = () =>
+      generate(1, { params: { ...DEFAULTS, variant: 'arpeggio-then-scale' } });
 
     it('arpeggiates each shape’s 7th chord up, then runs the scale down', () => {
       const { phrase } = instance();
@@ -162,7 +165,8 @@ describe('modes-through-key', () => {
       // Four chord tones across a two-octave shape: eight to ten of them.
       expect(arpeggio.length).toBeGreaterThanOrEqual(8);
       expect(arpeggio.length).toBeLessThanOrEqual(10);
-      for (let i = 1; i < arpeggio.length; i += 1) expect(arpeggio[i]!).toBeGreaterThan(arpeggio[i - 1]!);
+      for (let i = 1; i < arpeggio.length; i += 1)
+        expect(arpeggio[i]!).toBeGreaterThan(arpeggio[i - 1]!);
       for (let i = 1; i < scale.length; i += 1) expect(scale[i]!).toBeLessThan(scale[i - 1]!);
       // The chord is built on the shape's own first note, not the key's root.
       expect(arpeggio[0]).toBe(scale[scale.length - 1]);

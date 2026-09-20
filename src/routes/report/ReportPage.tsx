@@ -167,7 +167,9 @@ export function ReportPage() {
               aria-label="From"
               value={custom.from}
               max={custom.to}
-              onChange={(e) => e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))}
+              onChange={(e) =>
+                e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))
+              }
               className="border border-rule bg-paper px-2 py-1"
             />
             <span className="text-ink/64">to</span>
@@ -177,7 +179,9 @@ export function ReportPage() {
               value={custom.to}
               min={custom.from}
               max={today}
-              onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))}
+              onChange={(e) =>
+                e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))
+              }
               className="border border-rule bg-paper px-2 py-1"
             />
           </div>
@@ -195,10 +199,26 @@ export function ReportPage() {
       {report && (
         <>
           <div className="sheet mx-8 mb-4 flex flex-wrap gap-12 px-5 py-4">
-            <Stat label="Sessions" value={String(report.summary.sessions)} testId="stat-sessions" />
-            <Stat label="Time" value={formatPracticeTime(report.summary.seconds)} testId="stat-time" />
-            <Stat label="Variations" value={String(report.summary.variations)} testId="stat-variations" />
-            <Stat label="Exercises" value={String(report.summary.exercises)} testId="stat-exercises" />
+            <Stat
+              label="Sessions"
+              value={String(report.summary.sessions)}
+              testId="stat-sessions"
+            />
+            <Stat
+              label="Time"
+              value={formatPracticeTime(report.summary.seconds)}
+              testId="stat-time"
+            />
+            <Stat
+              label="Variations"
+              value={String(report.summary.variations)}
+              testId="stat-variations"
+            />
+            <Stat
+              label="Exercises"
+              value={String(report.summary.exercises)}
+              testId="stat-exercises"
+            />
           </div>
 
           <div className="sheet mx-8 mb-4 px-5 py-4">
@@ -213,7 +233,10 @@ export function ReportPage() {
               </EmptyState>
             ) : (
               <div className="sheet overflow-x-auto px-5 pb-1">
-                <table className="w-full border-collapse text-left text-[14px]" data-testid="report-table">
+                <table
+                  className="w-full border-collapse text-left text-[14px]"
+                  data-testid="report-table"
+                >
                   <thead>
                     <tr className="border-b-(length:--rule-section-w) border-divider">
                       {COLUMNS.map((column) => (
@@ -246,7 +269,11 @@ export function ReportPage() {
                   </thead>
                   <tbody>
                     {rows.map((row) => (
-                      <tr key={row.exerciseId} className="border-b border-rule last:border-b-0" data-testid="report-row">
+                      <tr
+                        key={row.exerciseId}
+                        className="border-b border-rule last:border-b-0"
+                        data-testid="report-row"
+                      >
                         <td className="py-3 pr-6">{row.name}</td>
                         <td className="tabular py-3 pr-6">{row.played}</td>
                         <td className="tabular py-3 pr-6">{formatTempos(row)}</td>

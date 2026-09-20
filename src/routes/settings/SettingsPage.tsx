@@ -88,8 +88,15 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Sound">
-        <Row label="Metronome" hint="On when you open an exercise. The transport can switch it any time.">
-          <OnOff on={audio.metronomeEnabled} label="Metronome" onChange={(on) => void save({ audio: { ...audio, metronomeEnabled: on } })} />
+        <Row
+          label="Metronome"
+          hint="On when you open an exercise. The transport can switch it any time."
+        >
+          <OnOff
+            on={audio.metronomeEnabled}
+            label="Metronome"
+            onChange={(on) => void save({ audio: { ...audio, metronomeEnabled: on } })}
+          />
         </Row>
         {/* The count-in belongs to each exercise now, and is set from its transport. */}
         <Row label="Volume" hint="The notes and the click together.">
@@ -114,8 +121,8 @@ export function SettingsPage() {
 
       <Section title="Keys and modes">
         <p className="text-[13px] text-ink/64">
-          Strike out any you don&rsquo;t want to practice. They never come up when a key or mode is
-          rolled, in any exercise or routine. One you pin or hold on purpose still plays.
+          Strike out any you don&rsquo;t want to practice. They never come up when a key or mode
+          is rolled, in any exercise or routine. One you pin or hold on purpose still plays.
         </p>
         <Row label="Keys" hint="By pitch: striking out Db strikes out C# too.">
           <Blockable
@@ -130,30 +137,61 @@ export function SettingsPage() {
             label="Modes"
             options={MODE_NAMES.map((m) => ({ id: m, label: modeTitle(m) }))}
             blocked={practice.blockedModes ?? []}
-            onChange={(blocked) => void save({ practice: { ...practice, blockedModes: blocked as ModeName[] } })}
+            onChange={(blocked) =>
+              void save({ practice: { ...practice, blockedModes: blocked as ModeName[] } })
+            }
           />
         </Row>
       </Section>
 
       <Section title="Display">
         <Row label="Appearance" hint="System follows your computer's light or dark setting.">
-          <AppearanceChoice value={ui.appearance} onChange={(appearance) => void save({ ui: { ...ui, appearance } })} />
+          <AppearanceChoice
+            value={ui.appearance}
+            onChange={(appearance) => void save({ ui: { ...ui, appearance } })}
+          />
         </Row>
-        <Row label="Neck diagram" hint="Beside the tab while practicing. Minimize it there, or here, to give the tab the room.">
-          <OnOff on={ui.showNeck} label="Neck diagram" onChange={(on) => void save({ ui: { ...ui, showNeck: on } })} />
+        <Row
+          label="Neck diagram"
+          hint="Beside the tab while practicing. Minimize it there, or here, to give the tab the room."
+        >
+          <OnOff
+            on={ui.showNeck}
+            label="Neck diagram"
+            onChange={(on) => void save({ ui: { ...ui, showNeck: on } })}
+          />
         </Row>
-        <Row label="Circle of fifths" hint="Under the neck while practicing, marking the key and its chords. Minimize it there, or here.">
-          <OnOff on={ui.showCircle ?? true} label="Circle of fifths" onChange={(on) => void save({ ui: { ...ui, showCircle: on } })} />
+        <Row
+          label="Circle of fifths"
+          hint="Under the neck while practicing, marking the key and its chords. Minimize it there, or here."
+        >
+          <OnOff
+            on={ui.showCircle ?? true}
+            label="Circle of fifths"
+            onChange={(on) => void save({ ui: { ...ui, showCircle: on } })}
+          />
         </Row>
         <Row label="Tab size" hint="Also - and = while practicing.">
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="icon-sm" aria-label="Smaller" disabled={clampZoom(ui.tabZoom) <= ZOOM_MIN} onClick={() => nudgeTabZoom(-1)}>
+            <Button
+              variant="secondary"
+              size="icon-sm"
+              aria-label="Smaller"
+              disabled={clampZoom(ui.tabZoom) <= ZOOM_MIN}
+              onClick={() => nudgeTabZoom(-1)}
+            >
               −
             </Button>
             <span className="w-16 text-center text-[13px] tabular-nums">
               {ui.tabZoom === 0 ? 'Default' : ui.tabZoom > 0 ? `+${ui.tabZoom}` : ui.tabZoom}
             </span>
-            <Button variant="secondary" size="icon-sm" aria-label="Bigger" disabled={clampZoom(ui.tabZoom) >= ZOOM_MAX} onClick={() => nudgeTabZoom(1)}>
+            <Button
+              variant="secondary"
+              size="icon-sm"
+              aria-label="Bigger"
+              disabled={clampZoom(ui.tabZoom) >= ZOOM_MAX}
+              onClick={() => nudgeTabZoom(1)}
+            >
               +
             </Button>
           </div>
@@ -176,7 +214,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="grid grid-cols-[180px_1fr] items-start gap-4">
       <div>
@@ -195,7 +241,13 @@ const APPEARANCES: { id: Appearance; label: string }[] = [
 ];
 
 /** System, Light or Dark, as one joined pill. The theme changes as soon as you choose. */
-function AppearanceChoice({ value, onChange }: { value: Appearance; onChange: (appearance: Appearance) => void }) {
+function AppearanceChoice({
+  value,
+  onChange,
+}: {
+  value: Appearance;
+  onChange: (appearance: Appearance) => void;
+}) {
   return (
     <div className="flex" role="group" aria-label="Appearance">
       {APPEARANCES.map((option, i) => (
@@ -208,7 +260,9 @@ function AppearanceChoice({ value, onChange }: { value: Appearance; onChange: (a
             'rounded-toggle',
             i > 0 ? '-ml-px rounded-l-none' : '',
             i < APPEARANCES.length - 1 ? 'rounded-r-none' : '',
-            value === option.id ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85' : 'text-toggle-off-ink',
+            value === option.id
+              ? 'bg-toggle-on text-toggle-on-ink inset-ring inset-ring-toggle-on-ring hover:bg-toggle-on/85'
+              : 'text-toggle-off-ink',
           ].join(' ')}
           onClick={() => onChange(option.id)}
         >
@@ -250,7 +304,9 @@ function Blockable({
             className={on ? '' : 'text-ink/35 line-through'}
             aria-pressed={on}
             disabled={on && open === 1}
-            onClick={() => onChange(on ? [...blocked, o.id] : blocked.filter((b) => b !== o.id))}
+            onClick={() =>
+              onChange(on ? [...blocked, o.id] : blocked.filter((b) => b !== o.id))
+            }
           >
             {o.label}
           </Button>
@@ -260,7 +316,15 @@ function Blockable({
   );
 }
 
-function OnOff({ on, label, onChange }: { on: boolean; label: string; onChange: (on: boolean) => void }) {
+function OnOff({
+  on,
+  label,
+  onChange,
+}: {
+  on: boolean;
+  label: string;
+  onChange: (on: boolean) => void;
+}) {
   return (
     <Button
       size="sm"
@@ -347,18 +411,22 @@ function DataSection() {
             <DialogHeader>
               <DialogTitle>Import</DialogTitle>
               <DialogDescription>
-                Exported {new Date(pending.file.exportedAt).toLocaleString()}. Nothing is changed
-                until you choose.
+                Exported {new Date(pending.file.exportedAt).toLocaleString()}. Nothing is
+                changed until you choose.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 text-[13px]">
               <div>
                 <p className="font-semibold">Merge — keeps whichever copy was changed last</p>
-                <p className="text-ink/64" data-testid="merge-summary">{describe(pending.merge)}</p>
+                <p className="text-ink/64" data-testid="merge-summary">
+                  {describe(pending.merge)}
+                </p>
               </div>
               <div>
                 <p className="font-semibold">Replace — this browser becomes exactly the file</p>
-                <p className="text-ink/64" data-testid="replace-summary">{describe(pending.replace)}</p>
+                <p className="text-ink/64" data-testid="replace-summary">
+                  {describe(pending.replace)}
+                </p>
               </div>
             </div>
             <DialogFooter>
@@ -389,7 +457,10 @@ function describe(summary: ImportSummary): string {
     const items = tables
       .filter(([t]) => summary[t][verb] > 0)
       .map(([t, one, many]) => count(summary[t][verb], one, many));
-    if (items.length > 0) parts.push(`${verb === 'added' ? 'Adds' : verb === 'updated' ? 'updates' : 'removes'} ${items.join(', ')}`);
+    if (items.length > 0)
+      parts.push(
+        `${verb === 'added' ? 'Adds' : verb === 'updated' ? 'updates' : 'removes'} ${items.join(', ')}`,
+      );
   }
   if (summary.settings === 'replaced') parts.push('takes its settings');
   return parts.length === 0 ? 'Nothing would change.' : `${parts.join('; ')}.`;

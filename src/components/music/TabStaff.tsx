@@ -228,7 +228,10 @@ function TabSystem({
       : null;
 
   return (
-    <div className={systemIndex > 0 ? 'mt-6' : undefined} data-testid={`tab-system-${systemIndex}`}>
+    <div
+      className={systemIndex > 0 ? 'mt-6' : undefined}
+      data-testid={`tab-system-${systemIndex}`}
+    >
       <div className="relative">
         {localPlayhead !== null && (
           <div

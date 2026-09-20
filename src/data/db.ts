@@ -1,7 +1,15 @@
 import Dexie, { type Table } from 'dexie';
 import type { PracticeDay } from '@/domain/progress';
 import { rollupDays } from '@/domain/progress';
-import type { Exercise, ExerciseStats, Rep, Routine, Session, Settings, Video } from './entities';
+import type {
+  Exercise,
+  ExerciseStats,
+  Rep,
+  Routine,
+  Session,
+  Settings,
+  Video,
+} from './entities';
 import { FIRST_RUN_VIDEOS } from './seed/videos';
 
 /**
@@ -61,7 +69,9 @@ export class TheoryPadDB extends Dexie {
     // new one — and after that it is a row like any other.
     this.version(5)
       .stores({ videos: 'id, updatedAt' })
-      .upgrade((transaction) => transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]));
+      .upgrade((transaction) =>
+        transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]),
+      );
     this.on('populate', (transaction) => {
       void transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]);
     });

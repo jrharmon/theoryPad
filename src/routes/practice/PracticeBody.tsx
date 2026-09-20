@@ -53,7 +53,10 @@ function PlayedBody({
   instance,
   instrument,
 }: {
-  instance: Extract<NonNullable<ReturnType<typeof usePractice.getState>['instance']>, { kind: 'played' }>;
+  instance: Extract<
+    NonNullable<ReturnType<typeof usePractice.getState>['instance']>,
+    { kind: 'played' }
+  >;
   instrument: ReturnType<typeof useSettings.getState>['settings']['instrument'];
 }) {
   const state = usePractice((s) => s.snapshot?.state);
@@ -152,4 +155,3 @@ function PlayedBody({
     </div>
   );
 }
-

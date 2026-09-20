@@ -8,8 +8,15 @@ import { toggleSubset } from '../policies';
 
 const base = { seed: 1234, instrument: STANDARD_GUITAR };
 const ALL: AxisId[] = [
-  'mode', 'key', 'neckPosition', 'stringSet', 'targetScaleDegree', 'rhythmPattern', 'direction',
-  'intervalPattern', 'intervalPairing',
+  'mode',
+  'key',
+  'neckPosition',
+  'stringSet',
+  'targetScaleDegree',
+  'rhythmPattern',
+  'direction',
+  'intervalPattern',
+  'intervalPairing',
 ];
 
 describe('rollVariation', () => {
@@ -65,7 +72,10 @@ describe('axis policies', () => {
         ...base,
         seed,
         axes: ['mode', 'key'],
-        policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+        policies: {
+          mode: { mode: 'fixed', value: 'dorian' },
+          key: { mode: 'fixed', value: 'D' },
+        },
       });
       expect(rolled.axes.mode!.key).toBe('dorian');
       expect(rolled.axes.key!.key).toBe('D');
@@ -196,8 +206,8 @@ describe('coverage bias', () => {
     const coverage = { direction: { ascending: 5 } };
     const counts = new Map<string, number>();
     for (let seed = 0; seed < 400; seed += 1) {
-      const key = rollVariation({ ...base, seed, axes: ['direction'], coverage }).axes.direction!
-        .key;
+      const key = rollVariation({ ...base, seed, axes: ['direction'], coverage }).axes
+        .direction!.key;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     expect(counts.size).toBe(4);
@@ -213,8 +223,8 @@ describe('coverage bias', () => {
     const counts = new Map<string, number>();
     const coverage = { direction: { ascending: 0, descending: 1, 'up-down': 3, 'down-up': 7 } };
     for (let seed = 0; seed < 4000; seed += 1) {
-      const key = rollVariation({ ...base, seed, axes: ['direction'], coverage }).axes.direction!
-        .key;
+      const key = rollVariation({ ...base, seed, axes: ['direction'], coverage }).axes
+        .direction!.key;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     // Expected shares are 1 : 1/2 : 1/4 : 1/8.
@@ -232,7 +242,10 @@ describe('coverage bias', () => {
         ...base,
         seed,
         axes: ['mode', 'key', 'targetScaleDegree'],
-        policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+        policies: {
+          mode: { mode: 'fixed', value: 'dorian' },
+          key: { mode: 'fixed', value: 'D' },
+        },
       });
       const key = rolled.axes.targetScaleDegree!.key;
       counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -251,7 +264,10 @@ describe('coverage bias', () => {
         ...base,
         seed,
         axes: ['mode', 'key', 'targetScaleDegree'],
-        policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+        policies: {
+          mode: { mode: 'fixed', value: 'dorian' },
+          key: { mode: 'fixed', value: 'D' },
+        },
       });
       const key = rolled.axes.targetScaleDegree!.key;
       counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -278,7 +294,10 @@ describe('session axes', () => {
     const rolled = rollVariation({
       ...base,
       axes: ['mode', 'key'],
-      policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+      policies: {
+        mode: { mode: 'fixed', value: 'dorian' },
+        key: { mode: 'fixed', value: 'D' },
+      },
     });
     expect(variationKeyMode(rolled)).toEqual({ tonic: 'D', mode: 'dorian' });
   });
@@ -322,7 +341,12 @@ describe('instrument awareness', () => {
   it('never offers a position past the end of the neck', () => {
     const short = { ...STANDARD_GUITAR, fretCount: 12 };
     for (let seed = 0; seed < 40; seed += 1) {
-      const rolled = rollVariation({ ...base, seed, instrument: short, axes: ['neckPosition'] });
+      const rolled = rollVariation({
+        ...base,
+        seed,
+        instrument: short,
+        axes: ['neckPosition'],
+      });
       const position = rolled.axes.neckPosition!.value as { fret: number; span: number };
       expect(position.fret + position.span).toBeLessThanOrEqual(12);
     }
@@ -387,11 +411,16 @@ describe('toggleSubset', () => {
 });
 
 describe('axis defaults, allowed values and blocked values', () => {
-  const keysOver = (options: Partial<Parameters<typeof rollVariation>[0]>, axes: AxisId[] = ['mode', 'key']) => {
+  const keysOver = (
+    options: Partial<Parameters<typeof rollVariation>[0]>,
+    axes: AxisId[] = ['mode', 'key'],
+  ) => {
     const seen = new Set<string>();
     for (let seed = 0; seed < 200; seed += 1) {
       const rolled = rollVariation({ ...base, seed, axes, ...options });
-      seen.add(`${rolled.axes.key?.key ?? ''} ${rolled.axes.mode?.key ?? ''} ${rolled.axes.stringSet?.key ?? ''}`.trim());
+      seen.add(
+        `${rolled.axes.key?.key ?? ''} ${rolled.axes.mode?.key ?? ''} ${rolled.axes.stringSet?.key ?? ''}`.trim(),
+      );
     }
     return seen;
   };
@@ -405,19 +434,31 @@ describe('axis defaults, allowed values and blocked values', () => {
   });
 
   it('still rolls string sets when asked to', () => {
-    expect(keysOver({ policies: { stringSet: { mode: 'roll' } } }, ['stringSet']).size).toBeGreaterThan(3);
+    expect(
+      keysOver({ policies: { stringSet: { mode: 'roll' } } }, ['stringSet']).size,
+    ).toBeGreaterThan(3);
   });
 
   it('never leaves what the exercise allows, even when pinned outside it', () => {
     const allowed = { stringSet: ['adj-3-3', 'adj-3-2'] };
-    expect(keysOver({ allowed, policies: { stringSet: { mode: 'roll' } } }, ['stringSet'])).toEqual(
-      new Set(['adj-3-3', 'adj-3-2']),
-    );
+    expect(
+      keysOver({ allowed, policies: { stringSet: { mode: 'roll' } } }, ['stringSet']),
+    ).toEqual(new Set(['adj-3-3', 'adj-3-2']));
     // The axis default (all strings) is outside it, and so is a stale pin.
     expect(keysOver({ allowed }, ['stringSet'])).toEqual(new Set(['adj-3-3', 'adj-3-2']));
-    const pinned = rollVariation({ ...base, axes: ['stringSet'], allowed, policies: { stringSet: { mode: 'fixed', value: 'all' } } });
+    const pinned = rollVariation({
+      ...base,
+      axes: ['stringSet'],
+      allowed,
+      policies: { stringSet: { mode: 'fixed', value: 'all' } },
+    });
     expect(allowed.stringSet).toContain(pinned.axes.stringSet!.key);
-    const inside = rollVariation({ ...base, axes: ['stringSet'], allowed, policies: { stringSet: { mode: 'fixed', value: 'adj-3-2' } } });
+    const inside = rollVariation({
+      ...base,
+      axes: ['stringSet'],
+      allowed,
+      policies: { stringSet: { mode: 'fixed', value: 'adj-3-2' } },
+    });
     expect(inside.axes.stringSet!.key).toBe('adj-3-2');
   });
 
@@ -434,33 +475,61 @@ describe('axis defaults, allowed values and blocked values', () => {
 
   it('plays a blocked key that is pinned or held on purpose', () => {
     const blocked = { key: ['Eb'] };
-    const pinned = rollVariation({ ...base, axes: ['mode', 'key'], blocked, policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'fixed', value: 'Eb' } } });
+    const pinned = rollVariation({
+      ...base,
+      axes: ['mode', 'key'],
+      blocked,
+      policies: {
+        mode: { mode: 'fixed', value: 'ionian' },
+        key: { mode: 'fixed', value: 'Eb' },
+      },
+    });
     expect(pinned.axes.key!.key).toBe('Eb');
-    const held = rollVariation({ ...base, axes: ['key'], blocked, policies: { key: { mode: 'hold' } }, held: { key: 'Eb' } });
+    const held = rollVariation({
+      ...base,
+      axes: ['key'],
+      blocked,
+      policies: { key: { mode: 'hold' } },
+      held: { key: 'Eb' },
+    });
     expect(held.axes.key!.key).toBe('Eb');
   });
 
   it('lets a subset beat the blocked list when nothing else is left in it', () => {
     const seen = keysOver({
       blocked: { key: ['C', 'G'] },
-      policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'roll', from: ['C', 'G', 'D'] } },
+      policies: {
+        mode: { mode: 'fixed', value: 'ionian' },
+        key: { mode: 'roll', from: ['C', 'G', 'D'] },
+      },
     });
     expect(seen).toEqual(new Set(['D ionian']));
     const only = keysOver({
       blocked: { key: ['C', 'G'] },
-      policies: { mode: { mode: 'fixed', value: 'ionian' }, key: { mode: 'roll', from: ['C', 'G'] } },
+      policies: {
+        mode: { mode: 'fixed', value: 'ionian' },
+        key: { mode: 'roll', from: ['C', 'G'] },
+      },
     });
     expect(only).toEqual(new Set(['C ionian', 'G ionian']));
   });
 
   it('matches a key subset by pitch, whatever the mode spells it as', () => {
     // The editor offers Db; phrygian spells that key C#.
-    const seen = keysOver({ policies: { mode: { mode: 'fixed', value: 'phrygian' }, key: { mode: 'roll', from: ['Db', 'E'] } } });
+    const seen = keysOver({
+      policies: {
+        mode: { mode: 'fixed', value: 'phrygian' },
+        key: { mode: 'roll', from: ['Db', 'E'] },
+      },
+    });
     expect(seen).toEqual(new Set(['C# phrygian', 'E phrygian']));
   });
 
   it('rolls from everything rather than nothing when every value is blocked', () => {
-    const everything = Array.from({ length: 12 }, (_, i) => ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][i]!);
+    const everything = Array.from(
+      { length: 12 },
+      (_, i) => ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'][i]!,
+    );
     expect(keysOver({ blocked: { key: everything } }).size).toBeGreaterThan(20);
   });
 });

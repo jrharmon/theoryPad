@@ -1,6 +1,12 @@
 import type { Exercise, Rep } from '@/data';
 import type { DayKey, PracticeDay, ReportSummary } from '@/domain/progress';
-import { dayStart, exerciseLog, formatPracticeTime, reportSummary, timeByDay } from '@/domain/progress';
+import {
+  dayStart,
+  exerciseLog,
+  formatPracticeTime,
+  reportSummary,
+  timeByDay,
+} from '@/domain/progress';
 import { findExerciseDefinition } from '@/exercises/registry';
 
 /** One line of the table, ready to show — the screen and the exported file share it. */
@@ -59,7 +65,11 @@ function sortValue(row: ReportRow, column: SortColumn): number | string {
       return row.played;
     case 'tempos':
       // Theory rows sort by score, below every tempo.
-      return row.tempos ? row.tempos.high : row.score ? row.score.correct / row.score.total - 1 : -2;
+      return row.tempos
+        ? row.tempos.high
+        : row.score
+          ? row.score.correct / row.score.total - 1
+          : -2;
     case 'target':
       return row.target ?? -1;
     case 'time':
@@ -67,7 +77,11 @@ function sortValue(row: ReportRow, column: SortColumn): number | string {
   }
 }
 
-export function sortRows(rows: readonly ReportRow[], column: SortColumn, descending: boolean): ReportRow[] {
+export function sortRows(
+  rows: readonly ReportRow[],
+  column: SortColumn,
+  descending: boolean,
+): ReportRow[] {
   return [...rows].sort((a, b) => {
     const x = sortValue(a, column);
     const y = sortValue(b, column);

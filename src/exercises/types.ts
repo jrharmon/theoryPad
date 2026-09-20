@@ -7,17 +7,42 @@ import type { NeckOverlay } from '@/domain/neck';
 import type { Phrase } from '@/domain/phrase';
 import type { TheoryQuestion } from '@/domain/theory';
 import type { TempoPlan } from '@/domain/tempo';
-import type { AxisId, AxisPolicies, AxisValueKeys, Rng, RolledVariation } from '@/domain/variation';
+import type {
+  AxisId,
+  AxisPolicies,
+  AxisValueKeys,
+  Rng,
+  RolledVariation,
+} from '@/domain/variation';
 
 export const KNOWN_TAGS = [
   // Musical content
-  'scales', 'modes', 'arpeggios', 'triads', 'chords', 'intervals',
+  'scales',
+  'modes',
+  'arpeggios',
+  'triads',
+  'chords',
+  'intervals',
   // Technique
-  'picking', 'legato', 'speed', 'string-skipping', 'sweeping', 'stretching',
+  'picking',
+  'legato',
+  'speed',
+  'string-skipping',
+  'sweeping',
+  'stretching',
   // Knowledge
-  'theory', 'fretboard-knowledge', 'ear-training', 'key-signatures',
+  'theory',
+  'fretboard-knowledge',
+  'ear-training',
+  'key-signatures',
   // Shape of the work
-  'no-guitar', 'improv', 'whole-neck', 'positional', 'horizontal', 'warm-up', 'timing',
+  'no-guitar',
+  'improv',
+  'whole-neck',
+  'positional',
+  'horizontal',
+  'warm-up',
+  'timing',
 ] as const;
 
 export type ExerciseTag = (typeof KNOWN_TAGS)[number];

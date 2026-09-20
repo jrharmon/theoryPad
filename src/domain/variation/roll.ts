@@ -112,13 +112,17 @@ function resolveOne(
   if (policy.mode === 'roll' && policy.from && policy.from.length > 0) {
     // By identity: the editor offers keys spelled as majors, and Db is written
     // C# in phrygian.
-    const narrowed = candidates.filter((c) => includesValue(id, policy.from, definition.key(c)));
+    const narrowed = candidates.filter((c) =>
+      includesValue(id, policy.from, definition.key(c)),
+    );
     // An empty subset means the restriction no longer matches anything; rolling
     // from everything beats throwing in the middle of a practice session.
     if (narrowed.length > 0) candidates = narrowed;
   }
   if (limits.blocked && limits.blocked.length > 0) {
-    const open = candidates.filter((c) => !includesValue(id, limits.blocked, definition.key(c)));
+    const open = candidates.filter(
+      (c) => !includesValue(id, limits.blocked, definition.key(c)),
+    );
     if (open.length > 0) candidates = open;
   }
 

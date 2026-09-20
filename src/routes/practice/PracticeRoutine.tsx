@@ -83,7 +83,9 @@ export function PracticeRoutine() {
         </>
       )}
 
-      {routineSnapshot.phase === 'done' && <Summary routine={routine} snapshot={routineSnapshot} />}
+      {routineSnapshot.phase === 'done' && (
+        <Summary routine={routine} snapshot={routineSnapshot} />
+      )}
     </section>
   );
 }
@@ -107,8 +109,8 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
           <ReferenceTrigger keyMode={snapshot.keyMode}>
             <strong>{key}</strong>
           </ReferenceTrigger>
-          . Read it through, re-roll anything you would rather
-          not play, then start — it runs to the end on its own.
+          . Read it through, re-roll anything you would rather not play, then start — it runs to
+          the end on its own.
         </p>
       </div>
 
@@ -121,7 +123,9 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
               className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4 last:border-b-0"
               data-testid="overview-item"
             >
-              <span className="text-[13px] font-extrabold tabular-nums text-ink/45">{index + 1}</span>
+              <span className="text-[13px] font-extrabold tabular-nums text-ink/45">
+                {index + 1}
+              </span>
               <div className="min-w-0">
                 <p className="kicker">
                   {definition?.name} · {item.reps === 1 ? '1 pass' : `${item.reps} passes`}
@@ -164,7 +168,10 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
       </p>
       <ol className="sheet mb-8 max-w-[640px] px-5">
         {snapshot.items.map((item, index) => (
-          <li key={item.id} className="flex gap-3 border-b border-rule py-2.5 text-[14px] last:border-b-0">
+          <li
+            key={item.id}
+            className="flex gap-3 border-b border-rule py-2.5 text-[14px] last:border-b-0"
+          >
             <span className="w-6 tabular-nums text-ink/45">{index + 1}</span>
             <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
             <span className="tabular-nums text-ink/64">
@@ -176,7 +183,9 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
         ))}
       </ol>
       <div className="flex gap-3">
-        <Button onClick={() => void usePractice.getState().prepareRoutine(routine)}>Again</Button>
+        <Button onClick={() => void usePractice.getState().prepareRoutine(routine)}>
+          Again
+        </Button>
         <Button variant="secondary" asChild>
           <Link to="/home">Back to your routines</Link>
         </Button>

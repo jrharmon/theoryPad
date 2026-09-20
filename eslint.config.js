@@ -165,7 +165,8 @@ export default tseslint.config(
       patterns: [
         {
           group: ['@/store', '@/store/*', '@/routes/*', '@/components/*', 'react', 'zustand'],
-          message: 'A practice session is framework-free: the store adapts it, not the reverse.',
+          message:
+            'A practice session is framework-free: the store adapts it, not the reverse.',
         },
         {
           group: ['@/audio', '@/audio/*'],

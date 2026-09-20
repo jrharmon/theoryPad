@@ -54,7 +54,12 @@ export function CountInMenu() {
                 onClick={() => pick(choice)}
               >
                 <span className="block text-[13px] font-semibold">{LABEL[choice]}</span>
-                <span className={cn('block text-[12px]', choice === bars ? 'opacity-80' : 'text-ink/64')}>
+                <span
+                  className={cn(
+                    'block text-[12px]',
+                    choice === bars ? 'opacity-80' : 'text-ink/64',
+                  )}
+                >
                   {DETAIL[choice]}
                 </span>
               </button>

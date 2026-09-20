@@ -63,7 +63,10 @@ export function BackingPanel() {
                 .join(' · ')}
             </p>
             {backing.needsClick && (
-              <p className="mt-2 text-[13px] font-semibold text-accent-text" data-testid="needs-click">
+              <p
+                className="mt-2 text-[13px] font-semibold text-accent-text"
+                data-testid="needs-click"
+              >
                 Your browser wants the first play to come from the video itself. Press its play
                 button — the app lines the track up from there.
               </p>
@@ -113,7 +116,9 @@ export function ReferencePanel() {
 
 /** Said once, where the backing menu is: the remembered track isn't in this key. */
 export function BackingDroppedNote() {
-  const dropped = usePractice((s) => s.backing.resolved.kind === 'none' && s.backing.resolved.dropped);
+  const dropped = usePractice(
+    (s) => s.backing.resolved.kind === 'none' && s.backing.resolved.dropped,
+  );
   const keyMode = usePractice((s) => s.snapshot?.keyMode);
   if (!dropped || !keyMode) return null;
   return (

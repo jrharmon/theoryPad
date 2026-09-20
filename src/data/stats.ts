@@ -49,7 +49,9 @@ export function applyRep(stats: ExerciseStats, rep: Rep): ExerciseStats {
     repCount: stats.repCount + (counts ? 1 : 0),
     totalSeconds: stats.totalSeconds + repSeconds(rep),
     firstPlayedAt:
-      stats.firstPlayedAt === null ? rep.startedAt : Math.min(stats.firstPlayedAt, rep.startedAt),
+      stats.firstPlayedAt === null
+        ? rep.startedAt
+        : Math.min(stats.firstPlayedAt, rep.startedAt),
     lastPlayedAt:
       stats.lastPlayedAt === null ? rep.startedAt : Math.max(stats.lastPlayedAt, rep.startedAt),
     axisValuesSeen,
@@ -66,7 +68,8 @@ export function rebuildStats(reps: Rep[]): ExerciseStats[] {
   // Order matters for firstPlayedAt/lastPlayedAt to read naturally, though
   // both are min/max so the result is order-independent either way.
   for (const rep of [...reps].sort((a, b) => a.startedAt - b.startedAt)) {
-    const current = byExercise.get(rep.exerciseId) ?? emptyStats(rep.exerciseId, rep.definitionId);
+    const current =
+      byExercise.get(rep.exerciseId) ?? emptyStats(rep.exerciseId, rep.definitionId);
     byExercise.set(rep.exerciseId, applyRep(current, rep));
   }
 

@@ -65,7 +65,12 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
             Press play on the video
           </Button>
         ) : (
-          <Button size="icon-lg" variant="secondary" aria-label="Starting" data-testid="starting">
+          <Button
+            size="icon-lg"
+            variant="secondary"
+            aria-label="Starting"
+            data-testid="starting"
+          >
             <PauseIcon className="size-5 fill-current" />
           </Button>
         ))}
@@ -120,10 +125,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           >
             −
           </Button>
-          <span
-            className="num w-12 text-center text-[17px] font-extrabold"
-            data-testid="tempo"
-          >
+          <span className="num w-12 text-center text-[17px] font-extrabold" data-testid="tempo">
             {currentTempo}
           </span>
           <Button
@@ -136,7 +138,9 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
           </Button>
           <TrackSpeed />
           {targetTempo !== null && currentTempo !== targetTempo && (
-            <span className="ml-1 text-[12px] text-ink/64 tabular-nums">target {targetTempo}</span>
+            <span className="ml-1 text-[12px] text-ink/64 tabular-nums">
+              target {targetTempo}
+            </span>
           )}
         </div>
       )}

@@ -40,7 +40,10 @@ export function KeyModeTrigger({
     <>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger
-          className={className ?? 'text-left underline decoration-ink/30 underline-offset-4 hover:decoration-ink'}
+          className={
+            className ??
+            'text-left underline decoration-ink/30 underline-offset-4 hover:decoration-ink'
+          }
           aria-label={label ?? `${name}: notes, chords and how to use it`}
           data-testid="key-mode-trigger"
         >

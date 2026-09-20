@@ -57,7 +57,11 @@ export function sameResolution(a: ResolvedBacking, b: ResolvedBacking): boolean 
 }
 
 /** What the menu offers and what the choice resolves to, for a key. */
-export function resolveFor(videos: readonly Video[], choice: BackingChoice, query: BackingQuery) {
+export function resolveFor(
+  videos: readonly Video[],
+  choice: BackingChoice,
+  query: BackingQuery,
+) {
   return {
     options: backingTracks(videos, query),
     resolved: resolveBacking(choice, videos, query),
@@ -141,8 +145,12 @@ export class BackingController {
       keyMode,
     });
 
-    if (sameResolution(backing.resolved, resolved) && (backing.source || resolved.kind === 'none')) {
-      if (backing.resolved.kind === 'drone') (backing.source as DroneSource | null)?.setKeyMode(keyMode);
+    if (
+      sameResolution(backing.resolved, resolved) &&
+      (backing.source || resolved.kind === 'none')
+    ) {
+      if (backing.resolved.kind === 'drone')
+        (backing.source as DroneSource | null)?.setKeyMode(keyMode);
       this.set({ options, resolved });
       return;
     }
@@ -159,7 +167,11 @@ export class BackingController {
     };
     let tempo: number | null = null;
     // Leaving a track: back to the tempo from before it took over.
-    if (backing.resolved.kind === 'video' && resolved.kind !== 'video' && backing.tempoBefore !== null) {
+    if (
+      backing.resolved.kind === 'video' &&
+      resolved.kind !== 'video' &&
+      backing.tempoBefore !== null
+    ) {
       tempo = backing.tempoBefore;
       next.tempoBefore = null;
     }
@@ -232,7 +244,9 @@ export class BackingController {
   }
 
   /** The browser held a video back: say so, and wait for the click on it. */
-  private readonly askForClick: PlayOptions = { onBlocked: () => this.set({ needsClick: true }) };
+  private readonly askForClick: PlayOptions = {
+    onBlocked: () => this.set({ needsClick: true }),
+  };
 
   /**
    * Start the backing ahead of the clock, settling once it sounds. A track

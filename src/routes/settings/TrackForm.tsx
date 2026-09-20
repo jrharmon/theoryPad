@@ -3,7 +3,13 @@ import type { Video, VideoScope } from '@/data';
 import { tagsInUse } from '@/data';
 import { MODE_NAMES, modeTitle, tonicsForMode } from '@/domain/music';
 import type { ModeName } from '@/domain/music';
-import { MIN_TAPS, formatVideoTime, parseVideoTime, parseYouTubeLink, tapTempo } from '@/domain/backing';
+import {
+  MIN_TAPS,
+  formatVideoTime,
+  parseVideoTime,
+  parseYouTubeLink,
+  tapTempo,
+} from '@/domain/backing';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +34,13 @@ import { useVideos } from '@/store/videos';
 import { YT_STATE, type YouTubePlayer } from '@/audio/backing';
 import type * as AudioNs from '@/audio';
 import type * as BackingNs from '@/audio/backing';
-import { draftFromVideo, draftToVideo, emptyDraft, respell, type TrackDraft } from './trackDraft';
+import {
+  draftFromVideo,
+  draftToVideo,
+  emptyDraft,
+  respell,
+  type TrackDraft,
+} from './trackDraft';
 
 /** After this long without a tap, the next one starts a fresh run. */
 const TAP_RESET_SEC = 3;
@@ -46,7 +58,13 @@ export interface TrackFormTarget {
  * found by ear: tap along on the beat, from the first beat where the backing
  * kicks in.
  */
-export function TrackForm({ target, onClose }: { target: TrackFormTarget | null; onClose: () => void }) {
+export function TrackForm({
+  target,
+  onClose,
+}: {
+  target: TrackFormTarget | null;
+  onClose: () => void;
+}) {
   return (
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       {target && (
@@ -90,7 +108,9 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{target.video ? 'Edit' : 'Add'} {shared ? 'a backing track' : 'a video'}</DialogTitle>
+        <DialogTitle>
+          {target.video ? 'Edit' : 'Add'} {shared ? 'a backing track' : 'a video'}
+        </DialogTitle>
         <DialogDescription>
           {shared
             ? 'Shared tracks are offered to any exercise or routine in the same key and mode.'
@@ -145,7 +165,9 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
               onChange={(e) => change({ title: e.target.value })}
             />
           </Field>
-          {(shared || draft.playAlong) && <KeyAndMode draft={draft} change={change} allowAny={!shared} />}
+          {(shared || draft.playAlong) && (
+            <KeyAndMode draft={draft} change={change} allowAny={!shared} />
+          )}
         </div>
 
         {!shared && (
@@ -162,7 +184,11 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
 
         {(shared || draft.playAlong) && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Progression" htmlFor="track-progression" hint="For display: modal vamp, ii-V-i, 12-bar blues.">
+            <Field
+              label="Progression"
+              htmlFor="track-progression"
+              hint="For display: modal vamp, ii-V-i, 12-bar blues."
+            >
               <Input
                 id="track-progression"
                 data-typing
@@ -170,7 +196,11 @@ function FormBody({ target, onClose }: { target: TrackFormTarget; onClose: () =>
                 onChange={(e) => change({ progression: e.target.value })}
               />
             </Field>
-            <Field label="Tags" htmlFor="track-tags" hint="Separated by commas: rock, funk, drums only.">
+            <Field
+              label="Tags"
+              htmlFor="track-tags"
+              hint="Separated by commas: rock, funk, drums only."
+            >
               <Input
                 id="track-tags"
                 data-typing
@@ -289,7 +319,8 @@ function Timing({
   const start = parseVideoTime(draft.start);
   const bpm = Number(draft.bpm);
   const beats = Number(draft.beats);
-  const canCheck = player !== null && start !== null && bpm > 0 && Number.isInteger(beats) && beats >= 1;
+  const canCheck =
+    player !== null && start !== null && bpm > 0 && Number.isInteger(beats) && beats >= 1;
 
   const check = async () => {
     if (checking) {
@@ -301,7 +332,11 @@ function Timing({
     if (!player || start === null || !audioModules.current) return;
     setChecking(true);
     const [{ getAudioEngine }, { clickAlong }] = audioModules.current;
-    stopCheck.current = await clickAlong(getAudioEngine(), player, { startSec: start, bpm, beatsPerBar: beats });
+    stopCheck.current = await clickAlong(getAudioEngine(), player, {
+      startSec: start,
+      bpm,
+      beatsPerBar: beats,
+    });
   };
 
   const nudge = (by: number) => {
@@ -311,7 +346,11 @@ function Timing({
   return (
     <div className="space-y-3 rounded-[8px] bg-ink/[0.03] p-4">
       <div className="flex flex-wrap items-end gap-2">
-        <Field label="Bar 1" htmlFor="track-start" hint="Where the backing kicks in, after any intro.">
+        <Field
+          label="Bar 1"
+          htmlFor="track-start"
+          hint="Where the backing kicks in, after any intro."
+        >
           <Input
             id="track-start"
             value={draft.start}
@@ -319,10 +358,20 @@ function Timing({
             onChange={(e) => change({ start: e.target.value })}
           />
         </Field>
-        <Button variant="secondary" size="sm" aria-label="Bar 1 earlier" onClick={() => nudge(-0.05)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          aria-label="Bar 1 earlier"
+          onClick={() => nudge(-0.05)}
+        >
           −0.05 s
         </Button>
-        <Button variant="secondary" size="sm" aria-label="Bar 1 later" onClick={() => nudge(0.05)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          aria-label="Bar 1 later"
+          onClick={() => nudge(0.05)}
+        >
           +0.05 s
         </Button>
         <Button
@@ -406,7 +455,11 @@ function Timing({
             onChange={(e) => change({ beats: e.target.value })}
           />
         </Field>
-        <Field label="Loop back at" htmlFor="track-end" hint="Optional. The end of the video otherwise.">
+        <Field
+          label="Loop back at"
+          htmlFor="track-end"
+          hint="Optional. The end of the video otherwise."
+        >
           <div className="flex gap-2">
             <Input
               id="track-end"
@@ -431,8 +484,17 @@ function Timing({
 }
 
 /** A reference video's part worth watching: where to start, and optionally stop. */
-function WatchRange({ draft, change, player }: { draft: TrackDraft; change: Change; player: YouTubePlayer | null }) {
-  const now = (field: 'start' | 'end') => player && change({ [field]: formatVideoTime(player.currentTime) });
+function WatchRange({
+  draft,
+  change,
+  player,
+}: {
+  draft: TrackDraft;
+  change: Change;
+  player: YouTubePlayer | null;
+}) {
+  const now = (field: 'start' | 'end') =>
+    player && change({ [field]: formatVideoTime(player.currentTime) });
   return (
     <div className="flex flex-wrap items-end gap-4 rounded-[8px] bg-ink/[0.03] p-4">
       <Field label="Start at" htmlFor="watch-start">
@@ -466,7 +528,15 @@ function WatchRange({ draft, change, player }: { draft: TrackDraft; change: Chan
   );
 }
 
-function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Change; allowAny: boolean }) {
+function KeyAndMode({
+  draft,
+  change,
+  allowAny,
+}: {
+  draft: TrackDraft;
+  change: Change;
+  allowAny: boolean;
+}) {
   const mode = draft.mode || 'ionian';
   return (
     <div className="flex gap-2">
@@ -474,7 +544,9 @@ function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Ch
         <Select
           value={draft.tonic || ANY}
           onValueChange={(tonic) =>
-            change(tonic === ANY ? { tonic: '', mode: '' } : { tonic, mode: draft.mode || 'ionian' })
+            change(
+              tonic === ANY ? { tonic: '', mode: '' } : { tonic, mode: draft.mode || 'ionian' },
+            )
           }
         >
           <SelectTrigger id="track-tonic" aria-label="Key" className="w-[110px]">
@@ -482,7 +554,11 @@ function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Ch
           </SelectTrigger>
           <SelectContent>
             {allowAny && <SelectItem value={ANY}>Any key</SelectItem>}
-            {!allowAny && !draft.tonic && <SelectItem value={ANY} disabled>Key</SelectItem>}
+            {!allowAny && !draft.tonic && (
+              <SelectItem value={ANY} disabled>
+                Key
+              </SelectItem>
+            )}
             {tonicsForMode(mode).map((tonic) => (
               <SelectItem key={tonic} value={tonic}>
                 {tonic}
@@ -497,7 +573,10 @@ function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Ch
           onValueChange={(value) => {
             if (value === ANY) return change({ tonic: '', mode: '' });
             const next = value as ModeName;
-            change({ mode: next, tonic: respell(draft.tonic, next) || (allowAny ? '' : draft.tonic) });
+            change({
+              mode: next,
+              tonic: respell(draft.tonic, next) || (allowAny ? '' : draft.tonic),
+            });
           }}
         >
           <SelectTrigger id="track-mode" aria-label="Mode" className="w-[150px]">
@@ -505,7 +584,11 @@ function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Ch
           </SelectTrigger>
           <SelectContent>
             {allowAny && <SelectItem value={ANY}>Any mode</SelectItem>}
-            {!allowAny && !draft.mode && <SelectItem value={ANY} disabled>Mode</SelectItem>}
+            {!allowAny && !draft.mode && (
+              <SelectItem value={ANY} disabled>
+                Mode
+              </SelectItem>
+            )}
             {MODE_NAMES.map((m) => (
               <SelectItem key={m} value={m}>
                 {modeTitle(m)}
@@ -519,8 +602,21 @@ function KeyAndMode({ draft, change, allowAny }: { draft: TrackDraft; change: Ch
 }
 
 /** Tags already in use that this track doesn't have yet — one click adds one. */
-function TagSuggestions({ suggestions, draft, change }: { suggestions: string[]; draft: TrackDraft; change: Change }) {
-  const have = new Set(draft.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean));
+function TagSuggestions({
+  suggestions,
+  draft,
+  change,
+}: {
+  suggestions: string[];
+  draft: TrackDraft;
+  change: Change;
+}) {
+  const have = new Set(
+    draft.tags
+      .split(',')
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean),
+  );
   const offered = suggestions.filter((t) => !have.has(t.toLowerCase()));
   if (offered.length === 0) return null;
   return (
@@ -530,7 +626,13 @@ function TagSuggestions({ suggestions, draft, change }: { suggestions: string[];
           key={tag}
           type="button"
           className="rounded-toggle bg-ink/5 px-2 py-0.5 text-[12px] text-ink/70 hover:bg-ink/10"
-          onClick={() => change({ tags: [...have.size ? [draft.tags.trim().replace(/,$/, '')] : [], tag].join(', ') })}
+          onClick={() =>
+            change({
+              tags: [...(have.size ? [draft.tags.trim().replace(/,$/, '')] : []), tag].join(
+                ', ',
+              ),
+            })
+          }
         >
           + {tag}
         </button>

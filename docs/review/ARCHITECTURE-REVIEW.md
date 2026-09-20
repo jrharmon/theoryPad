@@ -11,8 +11,8 @@ every large test suite. I deliberately skipped small nits; each finding below is
 costs real time or causes real bugs.
 
 **Overall:** the pure core is in good shape. `src/domain/` is clean, deterministic and well
-tested; the exercise-definition model is a good abstraction; the comments explain *why*, not
-*what*. The problems are concentrated at the **edges of the pure core** — the store that
+tested; the exercise-definition model is a good abstraction; the comments explain _why_, not
+_what_. The problems are concentrated at the **edges of the pure core** — the store that
 orchestrates audio, backing and persistence, the styling layer, and a few copy-paste patterns
 that have grown with each feedback round. Tests are inverted relative to risk: dense where bugs
 are rare, absent where the recent feedback-round bugs actually lived.
@@ -26,13 +26,14 @@ cleanup pass. **Low** — do opportunistically.
 
 ### A1 — `store/practice.ts` is a 750-line god object with no tests · High
 
-One Zustand store owns: runner lifecycle (exercise *and* routine), session rows, lazy audio
+One Zustand store owns: runner lifecycle (exercise _and_ routine), session rows, lazy audio
 loading, the entire backing-track state machine (`refreshBacking`, `startBacking`,
 `catchUpBacking`, `fitSpeedTo`, `applySpeed`, tempo hand-off between track and runner),
 persistence of every practice-screen setting to two other stores, and the audio sound routing
 (`soundFor`). None of it has a unit test (`src/store/__tests__/` only covers routine helpers).
 
 Symptoms visible in the code:
+
 - A re-entrancy guard (`refreshing`) exists because `refreshBacking` → `runner.setTempo` →
   emit → subscriber → `refreshBacking`. That is a feedback loop being patched, not designed out.
 - Backing logic is spread across the exercise subscriber, the routine subscriber and
@@ -67,6 +68,7 @@ loop mean". Make `ExerciseDefinition` a discriminated union on `kind` so `genera
 matching instance type.
 
 Also in `ExerciseRunner`:
+
 - `beginNext` re-implements most of `beginPass` (count-in scheduling, `scheduleEnd`,
   `onRepStart`). Extract one `startPass({ from, countInBars, continuation })`.
 - The caller's config object is mutated as runtime state (`config.params`, `config.tempo`,
@@ -86,6 +88,7 @@ production use for it, and tests already have `fake-indexeddb` for the real Dexi
 Separately, stores call `createRepositories(db())` inline 23 times across 7 stores.
 
 **Decision: delete it.**
+
 - Remove `src/data/repositories/memory.ts`, its export from `src/data/index.ts`, and the
   memory half of `repositories.test.ts` (the suite keeps running against Dexie on
   `fake-indexeddb`).
@@ -175,13 +178,14 @@ are and **how many** micro-tests some suites carry.
 
 The code most likely to break has no unit tests: `store/practice.ts` (backing hand-off, tempo
 under a track, routine catch-up, stop/restart, count-in persistence). The three feedback rounds
-changed exactly this code, and the only safety net is E2E. Meanwhile `FakeClock` — a *test
-double* — has 26 tests.
+changed exactly this code, and the only safety net is E2E. Meanwhile `FakeClock` — a _test
+double_ — has 26 tests.
 
 **Recommendation.** After A1, write ~10–15 scenario tests for `PracticeSession` /
 `BackingController` against `FakeClock` + fake audio port + Dexie repositories on
 `fake-indexeddb`. Suggested scenarios,
 each one test validating everything observable about the outcome:
+
 1. Exercise happy path: prepare → play → pass ends → rep persisted with axes, tempo, frets;
    held values saved to the exercise.
 2. Routine happy path across a played item → theory item → played item (clock, count-in,
@@ -194,17 +198,17 @@ each one test validating everything observable about the outcome:
 
 ### T2 — Micro-test clusters that should collapse into invariants · Medium
 
-Suites where several tests assert different facets of the *same call* and would be clearer (and
+Suites where several tests assert different facets of the _same call_ and would be clearer (and
 catch the same bugs) as one happy-path test plus the genuinely distinct edge cases:
 
-| Suite | Now | Suggested |
-| --- | --- | --- |
-| `domain/instrument/__tests__/shapes.test.ts` (`scaleShape`) | 14 tests: ascends in pitch, ascends within string, consecutive degrees, never outside key, hand span, three per string… | One invariant test over `TEST_INSTRUMENTS` × keys checking all properties of a valid shape; keep the canonical-G fingering golden, `minFret`, string subset, end-of-neck. ~5 tests. |
-| `domain/time/__tests__/FakeClock.test.ts` | 26 tests on a test double, incl. "runs a long routine instantly", "never drifts" and "loops … without drifting" | ~8: scheduling order/exactness, pause/resume, seek, loop, clear. Drift and speed are already proven by every runner test. |
-| `domain/variation/__tests__/rng.test.ts` | Statistical tests (`spreads roughly evenly`, `stays in [0,1)`) on a vendored mulberry32 | Keep determinism, weighted pick edge cases, shuffle integrity, `hashSeed` collisions. Drop distribution tests. |
-| `audio/__tests__/Metronome.test.ts` | 17 tests, several single-assert (`has no count-in by default`, `can be told not to accent`, `unsubscribes a listener`) | One 4/4 happy path asserting beats, accents, bar/beat reporting and count-in marking together; one for 6/8; then muted/silenced/mid-clock count-in/pause. ~7. |
-| `domain/instrument/__tests__/fretboard.test.ts` | `noteAt` ×4, `string indexing` ×4 facets | Fold into per-function invariant tests over `TEST_INSTRUMENTS`. |
-| `exercises/runner/__tests__/ExerciseRunner.test.ts` | Mostly good. Redundant: "starts idle…", "never advances off the brief…" (covered by "plays when told to"), "runs a whole exercise in no time at all", "ignores pause outside of playing" | Merge into the happy path; keep the rest. |
+| Suite                                                       | Now                                                                                                                                                                                      | Suggested                                                                                                                                                                           |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/instrument/__tests__/shapes.test.ts` (`scaleShape`) | 14 tests: ascends in pitch, ascends within string, consecutive degrees, never outside key, hand span, three per string…                                                                  | One invariant test over `TEST_INSTRUMENTS` × keys checking all properties of a valid shape; keep the canonical-G fingering golden, `minFret`, string subset, end-of-neck. ~5 tests. |
+| `domain/time/__tests__/FakeClock.test.ts`                   | 26 tests on a test double, incl. "runs a long routine instantly", "never drifts" and "loops … without drifting"                                                                          | ~8: scheduling order/exactness, pause/resume, seek, loop, clear. Drift and speed are already proven by every runner test.                                                           |
+| `domain/variation/__tests__/rng.test.ts`                    | Statistical tests (`spreads roughly evenly`, `stays in [0,1)`) on a vendored mulberry32                                                                                                  | Keep determinism, weighted pick edge cases, shuffle integrity, `hashSeed` collisions. Drop distribution tests.                                                                      |
+| `audio/__tests__/Metronome.test.ts`                         | 17 tests, several single-assert (`has no count-in by default`, `can be told not to accent`, `unsubscribes a listener`)                                                                   | One 4/4 happy path asserting beats, accents, bar/beat reporting and count-in marking together; one for 6/8; then muted/silenced/mid-clock count-in/pause. ~7.                       |
+| `domain/instrument/__tests__/fretboard.test.ts`             | `noteAt` ×4, `string indexing` ×4 facets                                                                                                                                                 | Fold into per-function invariant tests over `TEST_INSTRUMENTS`.                                                                                                                     |
+| `exercises/runner/__tests__/ExerciseRunner.test.ts`         | Mostly good. Redundant: "starts idle…", "never advances off the brief…" (covered by "plays when told to"), "runs a whole exercise in no time at all", "ignores pause outside of playing" | Merge into the happy path; keep the rest.                                                                                                                                           |
 
 Target: roughly **25–30% fewer tests with no loss of meaningful coverage**. Don't chase a number;
 delete a test only when another test would fail for the same bug.
@@ -216,12 +220,13 @@ about how things happen to look, plus near-duplicates.
 
 **The rule (agreed):** a class, style or attribute may be asserted **only when applying it is the
 component's job** — e.g. a component whose purpose is to mark the target note, where that marking
-*is* a class or `data-role`. Purely visual choices (which colour a mark is drawn in, that the
+_is_ a class or `data-role`. Purely visual choices (which colour a mark is drawn in, that the
 large size has a different inline style) do not belong in unit tests. **No screenshot tests** —
 they break on every purely visual change and are expensive to maintain; visuals are verified by
 looking during development (CLAUDE.md), not by an automated diff.
 
 Apply it to TabStaff:
+
 - **Remove** — non-functional: "renders every articulation mark in the accent"
   (`className` contains `text-accent-text`); "renders bigger at the large size" (inline `style`
   differs); asserting `data-columns` / `data-system` / `data-testid` values where the test could

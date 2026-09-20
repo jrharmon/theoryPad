@@ -47,8 +47,7 @@ export function findRedundantExercises(
       continue;
     }
 
-    const keep =
-      withHistory[0] ?? [...group].sort((a, b) => a.createdAt - b.createdAt)[0]!;
+    const keep = withHistory[0] ?? [...group].sort((a, b) => a.createdAt - b.createdAt)[0]!;
     remove.push(...group.filter((exercise) => exercise.id !== keep.id));
   }
 

@@ -12,10 +12,7 @@ export interface OverlayOptions {
   labelMode?: NeckOverlay['labelMode'];
 }
 
-function overlayFrom(
-  positions: ScaleNotePosition[],
-  options: OverlayOptions,
-): NeckOverlay {
+function overlayFrom(positions: ScaleNotePosition[], options: OverlayOptions): NeckOverlay {
   const { targetDegree, emphasisFrets, labelMode = 'degree' } = options;
   return {
     labelMode,

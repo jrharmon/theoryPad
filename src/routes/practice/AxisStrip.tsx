@@ -29,12 +29,11 @@ export function AxisStrip() {
   const mode = variation.axes.mode;
 
   const cells = shown.map((axis) => ({
-      key: axis.id,
-      label: axis.id === 'key' ? 'Key & mode' : axisDefinition(axis.id).label,
-      value:
-        axis.id === 'key' && mode ? `${axis.display} ${mode.display}` : axis.display,
-      fresh: axis.fresh || (axis.id === 'key' && (mode?.fresh ?? false)),
-      note: null as string | null,
+    key: axis.id,
+    label: axis.id === 'key' ? 'Key & mode' : axisDefinition(axis.id).label,
+    value: axis.id === 'key' && mode ? `${axis.display} ${mode.display}` : axis.display,
+    fresh: axis.fresh || (axis.id === 'key' && (mode?.fresh ?? false)),
+    note: null as string | null,
   }));
 
   return (
@@ -65,7 +64,9 @@ export function AxisStrip() {
               {cell.value}
             </ReferenceTrigger>
           ) : (
-            <p className={`face-title text-[19px] ${cell.fresh ? 'w-fit highlight' : ''}`}>{cell.value}</p>
+            <p className={`face-title text-[19px] ${cell.fresh ? 'w-fit highlight' : ''}`}>
+              {cell.value}
+            </p>
           )}
           {cell.note && <p className="text-[11px] text-ink/64 tabular-nums">{cell.note}</p>}
         </div>

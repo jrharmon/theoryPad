@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { APPEARANCE_KEY, applyAppearance, resolveTheme, type Appearance } from '@/app/appearance';
+import {
+  APPEARANCE_KEY,
+  applyAppearance,
+  resolveTheme,
+  type Appearance,
+} from '@/app/appearance';
 
 describe('resolveTheme', () => {
   const cases: [Appearance, boolean, 'light' | 'dark'][] = [

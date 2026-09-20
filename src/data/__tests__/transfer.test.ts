@@ -102,7 +102,11 @@ describe('export and import', () => {
 
     // The file also has a newer version of something else.
     const incoming = structuredClone(file);
-    incoming.data.routines[0] = { ...incoming.data.routines[0]!, name: 'Renamed', updatedAt: 9_000 };
+    incoming.data.routines[0] = {
+      ...incoming.data.routines[0]!,
+      name: 'Renamed',
+      updatedAt: 9_000,
+    };
 
     const plan = await planImport(target, incoming, 'merge');
     expect(plan.exercises).toEqual({ added: 0, updated: 0, removed: 0 });
@@ -174,7 +178,9 @@ describe('export and import', () => {
 
   it('leaves videos alone when the file predates them, even replacing', async () => {
     const { db } = await populated();
-    const file = JSON.parse(JSON.stringify(await exportData(db))) as { data: Record<string, unknown> };
+    const file = JSON.parse(JSON.stringify(await exportData(db))) as {
+      data: Record<string, unknown>;
+    };
     delete file.data.videos;
     const target = fresh();
     const repos = createRepositories(target);
@@ -198,7 +204,9 @@ describe('export and import', () => {
 
   it('accepts an export from before routines existed', async () => {
     const { db } = await populated();
-    const file = JSON.parse(JSON.stringify(await exportData(db))) as { data: Record<string, unknown> };
+    const file = JSON.parse(JSON.stringify(await exportData(db))) as {
+      data: Record<string, unknown>;
+    };
     delete file.data.routines;
     expect(parseExport(file).data.routines).toEqual([]);
   });

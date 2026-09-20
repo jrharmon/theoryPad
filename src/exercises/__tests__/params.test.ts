@@ -30,7 +30,8 @@ describe('paramFields', () => {
   it('lists a small integer range, and leaves a wide one to be typed', () => {
     const shapes = byKey.get('shapesPerRep')!;
     expect(shapes.kind).toBe('choice');
-    if (shapes.kind === 'choice') expect(shapes.options.map((o) => o.value)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    if (shapes.kind === 'choice')
+      expect(shapes.options.map((o) => o.value)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(byKey.get('bpm')).toMatchObject({ kind: 'number', min: 30, max: 300 });
     expect(byKey.get('loose')).toMatchObject({ kind: 'number' });
   });
@@ -67,14 +68,21 @@ describe('resolveParams', () => {
   });
 
   it('falls back to the defaults when stored params no longer validate', () => {
-    expect(resolveParams(definition, { variant: 'retired' })).toEqual(definition.params!.parse({}));
+    expect(resolveParams(definition, { variant: 'retired' })).toEqual(
+      definition.params!.parse({}),
+    );
   });
 });
 
 describe('paramFields for a list', () => {
   it('turns an array of an enum into a multi-select, with its minimum', () => {
     const [field] = paramFields(
-      z.object({ kinds: z.array(z.enum(['name-notes', 'spell-chord'])).min(1).default(['name-notes']) }),
+      z.object({
+        kinds: z
+          .array(z.enum(['name-notes', 'spell-chord']))
+          .min(1)
+          .default(['name-notes']),
+      }),
     );
     expect(field).toMatchObject({
       kind: 'multi',

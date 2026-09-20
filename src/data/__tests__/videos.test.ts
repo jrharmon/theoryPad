@@ -47,7 +47,9 @@ describe('the backing menu', () => {
     const aMinor = video({ title: 'A minor' });
     const dDorian = video({ keyMode: km('D', 'dorian') });
     const aDorian = video({ keyMode: km('A', 'dorian') });
-    expect(backingTracks([aMinor, dDorian, aDorian], { keyMode: km('A', 'aeolian') })).toEqual([aMinor]);
+    expect(backingTracks([aMinor, dDorian, aDorian], { keyMode: km('A', 'aeolian') })).toEqual([
+      aMinor,
+    ]);
   });
 
   it('matches the tonic by sound, not spelling', () => {
@@ -65,14 +67,18 @@ describe('the backing menu', () => {
 
   it('offers an exercise’s own track without a key in any key', () => {
     const anyKey = video({ scope: own('ex-1'), keyMode: undefined });
-    expect(backingTracks([anyKey], { keyMode: km('F#', 'lydian'), exerciseId: 'ex-1' })).toEqual([anyKey]);
+    expect(
+      backingTracks([anyKey], { keyMode: km('F#', 'lydian'), exerciseId: 'ex-1' }),
+    ).toEqual([anyKey]);
   });
 
   it('never offers reference videos, or an exercise’s tracks to a routine', () => {
     const lesson = video({ scope: own('ex-1'), playAlong: false });
     const mine = video({ scope: own('ex-1') });
     expect(backingTracks([lesson, mine], { keyMode: km('A', 'aeolian') })).toEqual([]);
-    expect(backingTracks([lesson], { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1' })).toEqual([]);
+    expect(
+      backingTracks([lesson], { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1' }),
+    ).toEqual([]);
   });
 
   it('narrows shared tracks by saved criteria, and new ones that fit just appear', () => {
@@ -89,7 +95,11 @@ describe('the backing menu', () => {
 
   it('does not narrow the exercise’s own tracks by criteria', () => {
     const mine = video({ scope: own('ex-1'), tags: [] });
-    const query = { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1', criteria: { tags: ['funk'] } };
+    const query = {
+      keyMode: km('A', 'aeolian'),
+      exerciseId: 'ex-1',
+      criteria: { tags: ['funk'] },
+    };
     expect(backingTracks([mine], query)).toEqual([mine]);
   });
 });
@@ -98,7 +108,11 @@ describe('tags an exercise requires', () => {
   it('adds them to the player’s criteria, without doubling one already there', () => {
     expect(withRequiredTags(undefined, undefined)).toBeUndefined();
     expect(withRequiredTags(undefined, ['single-chord'])).toEqual({ tags: ['single-chord'] });
-    expect(withRequiredTags({ tags: ['Single-Chord', 'funk'], bpm: { min: 60, max: 90 } }, ['single-chord'])).toEqual({
+    expect(
+      withRequiredTags({ tags: ['Single-Chord', 'funk'], bpm: { min: 60, max: 90 } }, [
+        'single-chord',
+      ]),
+    ).toEqual({
       tags: ['Single-Chord', 'funk'],
       bpm: { min: 60, max: 90 },
     });
@@ -108,7 +122,11 @@ describe('tags an exercise requires', () => {
     const vamp = video({ tags: ['single-chord'] });
     const changes = video({ tags: ['ii-V-I'] });
     const mine = video({ scope: own('ex-1') });
-    const query = { keyMode: km('A', 'aeolian'), exerciseId: 'ex-1', criteria: withRequiredTags(undefined, ['single-chord'])! };
+    const query = {
+      keyMode: km('A', 'aeolian'),
+      exerciseId: 'ex-1',
+      criteria: withRequiredTags(undefined, ['single-chord'])!,
+    };
     expect(backingTracks([vamp, changes, mine], query)).toEqual([mine, vamp]);
   });
 });
@@ -129,9 +147,9 @@ describe('a remembered choice', () => {
       kind: 'video',
       video: track,
     });
-    expect(resolveBacking({ kind: 'video', id: track.id }, [track], { keyMode: km('E', 'aeolian') })).toEqual(
-      { kind: 'none', dropped: true },
-    );
+    expect(
+      resolveBacking({ kind: 'video', id: track.id }, [track], { keyMode: km('E', 'aeolian') }),
+    ).toEqual({ kind: 'none', dropped: true });
     expect(resolveBacking({ kind: 'video', id: 'deleted' }, [track], query)).toEqual({
       kind: 'none',
       dropped: true,
@@ -160,11 +178,9 @@ describe('reference videos, coverage and tags', () => {
   });
 
   it('suggests each tag once, spelled as first seen', () => {
-    expect(tagsInUse([video({ tags: ['Funk', 'clean'] }), video({ tags: ['funk', ' rock '] })])).toEqual([
-      'clean',
-      'Funk',
-      'rock',
-    ]);
+    expect(
+      tagsInUse([video({ tags: ['Funk', 'clean'] }), video({ tags: ['funk', ' rock '] })]),
+    ).toEqual(['clean', 'Funk', 'rock']);
   });
 });
 
@@ -173,7 +189,8 @@ describe('what stops a video being saved', () => {
     const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = video();
     return rest;
   })();
-  const problems = (changes: Loose<NewVideo>) => videoProblems(defined<NewVideo>({ ...base, ...changes }));
+  const problems = (changes: Loose<NewVideo>) =>
+    videoProblems(defined<NewVideo>({ ...base, ...changes }));
 
   it('accepts a complete shared track', () => {
     expect(problems({})).toEqual([]);

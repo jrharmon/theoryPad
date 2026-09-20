@@ -25,8 +25,13 @@ describe('relativeMajor', () => {
 describe('keySignature', () => {
   it('gives every mode of C an empty signature', () => {
     const modesOfC = [
-      ['C', 'ionian'], ['D', 'dorian'], ['E', 'phrygian'], ['F', 'lydian'],
-      ['G', 'mixolydian'], ['A', 'aeolian'], ['B', 'locrian'],
+      ['C', 'ionian'],
+      ['D', 'dorian'],
+      ['E', 'phrygian'],
+      ['F', 'lydian'],
+      ['G', 'mixolydian'],
+      ['A', 'aeolian'],
+      ['B', 'locrian'],
     ] as const;
     for (const [tonic, mode] of modesOfC) {
       const sig = keySignature({ tonic: pitchClass(tonic), mode });
@@ -55,10 +60,14 @@ describe('keySignature', () => {
 
   it('lists accidentals in signature order', () => {
     expect(keySignature({ tonic: pitchClass('A'), mode: 'ionian' }).accidentals).toEqual([
-      'F#', 'C#', 'G#',
+      'F#',
+      'C#',
+      'G#',
     ]);
     expect(keySignature({ tonic: pitchClass('Eb'), mode: 'ionian' }).accidentals).toEqual([
-      'Bb', 'Eb', 'Ab',
+      'Bb',
+      'Eb',
+      'Ab',
     ]);
   });
 
