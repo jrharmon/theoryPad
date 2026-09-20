@@ -318,6 +318,20 @@ describe('free time', () => {
     expect(runner.completedReps[0]!.tempo).toBeNull();
   });
 
+  it('plays every rep a routine item asks for, one per Done', () => {
+    // Free time has no clock to end a pass, so each rep waits for the player.
+    const { runner } = makeRunner({ freeTime: true, passes: 3, endWhenFinished: true });
+    runner.start();
+    runner.begin();
+    runner.completeRep();
+    expect(runner.snapshot.state).toBe('playing');
+    runner.completeRep();
+    expect(runner.snapshot.state).toBe('playing');
+    runner.completeRep();
+    expect(runner.snapshot.state).toBe('done');
+    expect(runner.completedReps).toHaveLength(3);
+  });
+
   it('is forced on for an exercise with no pulse', () => {
     const freeOnly = { ...tinyExercise, timing: 'free' as const };
     const { runner } = makeRunner({ definition: freeOnly, freeTime: false });

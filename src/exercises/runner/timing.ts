@@ -32,14 +32,14 @@ export const METERED: PassTiming = {
   again: 'straight-on',
 };
 
-/** In free time: no clock; the player says when a pass is done. */
+/** In free time: no clock; the player says when a pass is done, rep after rep. */
 export const FREE: PassTiming = {
   name: 'free',
   clock: false,
   pausable: true,
   freshEachPass: false,
   loops: false,
-  again: 'none',
+  again: 'wait',
 };
 
 /** A theory set: no clock, ended by submitting it; the next pass is a fresh set. */
