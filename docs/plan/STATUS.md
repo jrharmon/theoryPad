@@ -251,6 +251,14 @@ Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
   minFret 1)` spans sixteen frets: the low D string runs 1-2-4, and the next scale note is below
   the open A string, so it jumps to fret 11. With `minFret` 2 or more the same shape is fine. The
   invariant test's `minFret` loop starts at 3 because of it.
+- Step 9 (A7+S2) done on branch `cleanup-dry`, **at the gate**: params come from each Zod
+  schema's own `.default()`, `estimateRepSeconds` is optional for a played exercise, `AxisValues`
+  types `axisValue` by axis id, briefs read from named consts, and `definedProps()` replaces
+  stacked conditional spreads. That finishes the review's service and test steps; the styling
+  steps 1–4 remain.
+- A setting toggled and then reloaded straight away used to lose the write (`serialWrites` queued
+  even the first write behind a microtask). Fixed, and the appearance and transport E2E tests now
+  wait for the row to land before reloading.
 - Locally `pnpm test:e2e` runs 5 workers with no retry and flakes (gallery replay, transport
   toggles, a theory question); each passes alone, and CI runs one worker with a retry.
 - Step 6 changed two behaviors on purpose: a track now fits the tempo you are hearing in a
