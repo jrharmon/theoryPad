@@ -75,6 +75,11 @@ export class VideoBacking implements BackingSource {
     this.follower.start();
   }
 
+  /** The clock was moved under the track; hold it where it was put. */
+  reanchor(): void {
+    this.follower?.reanchor();
+  }
+
   pause(): void {
     this.follower?.stop();
     this.player.pause();

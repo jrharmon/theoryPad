@@ -256,11 +256,18 @@ Five things from another session with the app in hand. All five are on `feedback
 - **Clicking a note moves the playhead to it**, playing or paused, and playback carries on from
   there. `ExerciseRunner.seekTo` moves the clock within the pass; the count-in is not somewhere a
   click can land or skip past, and landing past the end lands on the last tick so the pass is
-  played out rather than finished by the click. **Under a backing track the click does nothing** —
-  YouTube cannot be dragged along in step, so the two would drift. The whole grid cell is the
-  target, not the digit, and the note buttons are deliberately out of the tab order: a phrase can
-  run to hundreds of notes and tabbing through them to reach the transport would be worse than
-  the shortcut is worth.
+  played out rather than finished by the click. The whole grid cell is the target, not the digit,
+  and the note buttons are deliberately out of the tab order: a phrase can run to hundreds of
+  notes and tabbing through them to reach the transport would be worse than the shortcut is worth.
+- **It works under a backing track too, with the track playing on.** YouTube cannot be dragged to
+  the new position, so the exercise moves and the recording does not. That needed `TrackFollower`
+  to hold an offset: it exists to haul the clock back into step with the video several times a
+  second, so without re-anchoring it the click undid itself over the next few seconds.
+  `reanchor()` takes where the clock is now as where it belongs and keeps the two that far apart,
+  still correcting the drift that is its job. It runs down through `BackingController.reanchor`
+  and an optional `reanchor?()` on `BackingSource` — only a source with a timeline of its own has
+  anything to do. Verified against the real seeded YouTube track: the playhead stays where it was
+  put and runs on from there at tempo.
 
 `FakeClock.seek` was made positional to match Tone's transport — what lies ahead of the new
 position is due again, what lies behind it is not. Without that, seeking back over a phrase

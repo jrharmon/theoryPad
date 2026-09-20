@@ -40,6 +40,7 @@ class FakeTrack implements TrackSource {
   speed = 1;
   status: Status = 'loaded';
   startedFrom: number | null = null;
+  reanchored = 0;
 
   constructor(track: VideoTrack, failWith: Error | null) {
     this.bpm = track.bpm;
@@ -70,6 +71,9 @@ class FakeTrack implements TrackSource {
   }
   setRate(speed: number) {
     this.speed = speed;
+  }
+  reanchor() {
+    this.reanchored += 1;
   }
   dispose() {
     this.status = 'disposed';
@@ -547,7 +551,7 @@ describe('RoutineSession', () => {
     expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(1);
   });
 
-  it('leaves a seek alone under a backing track, which cannot follow it', async () => {
+  it('seeks under a backing track, leaving the track playing where it is', async () => {
     const inG = track();
     const { deps, repos, audio } = world([inG]);
     const exercise = await addExercise(repos, 'modes-through-key', { countInBars: 1 });
@@ -561,9 +565,13 @@ describe('RoutineSession', () => {
     await session.play();
     await settle();
 
-    audio.clock.advanceTicks(session.state.snapshot!.countInRemaining + 960);
-    const at = session.state.snapshot!.phraseTick;
-    session.seekTo(0);
-    expect(session.state.snapshot!.phraseTick).toBe(at);
+    audio.clock.advanceTicks(session.runner!.snapshot.countInRemaining + 960);
+    expect(session.runner!.snapshot.phraseTick).toBe(960);
+
+    // The exercise moves; the recording plays on from where it is and takes
+    // the clock's new position as the one to stay in step with.
+    session.seekTo(480);
+    expect(session.runner!.snapshot.phraseTick).toBe(480);
+    expect(audio.tracks[0]).toMatchObject({ status: 'playing', reanchored: 1 });
   });
 });

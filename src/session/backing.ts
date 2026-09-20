@@ -308,6 +308,15 @@ export class BackingController {
     this.set({ started: false, advert: false });
   }
 
+  /**
+   * The clock has been moved and the backing has not. Whatever is sounding
+   * plays on from where it is, and takes the clock's new position as the one
+   * to keep step with, so nothing drags it back.
+   */
+  reanchor(): void {
+    this.current.source?.reanchor?.();
+  }
+
   pause(): void {
     this.current.source?.pause();
   }

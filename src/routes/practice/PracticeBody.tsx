@@ -71,9 +71,7 @@ function PlayedBody({
   // Counting in, the playhead sits on the first note whatever the last pass
   // reached: the count-in is a fresh start, and a restart must look like one.
   const playheadTick = showPlayhead ? (state === 'count-in' ? 0 : tick) : null;
-  // A backing track owns the clock and cannot be dragged with us.
-  const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
-  const seekable = (playing || state === 'paused') && !underTrack;
+  const seekable = playing || state === 'paused';
   /**
    * Clicking a note moves the playhead to it. A repeating phrase is drawn once
    * but played several times over, so the click lands in the pass being played

@@ -107,6 +107,23 @@ describe('following a video', () => {
     expect(Math.abs(gapSec())).toBeLessThan(0.05);
   });
 
+  it('holds the clock where a seek put it, with the video playing on', () => {
+    // The player clicked a note two bars back while the track kept going.
+    const { run, clock, follower, gapSec } = setup();
+    run(3);
+    const moved = clock.ticks - 2 * BAR;
+    clock.seek(moved);
+    follower.reanchor();
+
+    // Without the re-anchor the follower would spend the next seconds hauling
+    // the clock back to the recording, undoing the click. It should stay two
+    // bars — 4.8 s at 100 bpm — behind the video, and run on at tempo.
+    run(4);
+    expect(gapSec()).toBeCloseTo((2 * 4 * 60) / 100, 1);
+    expect(clock.ticks).toBeGreaterThan(moved);
+    expect(clock.bpm).toBeCloseTo(100, 0);
+  });
+
   it('leaves a clock the app has paused alone', () => {
     const { follower, clock } = setup();
     clock.pause();

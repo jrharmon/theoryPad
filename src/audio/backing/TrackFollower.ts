@@ -24,6 +24,11 @@ const JUMP_SEC = 1;
  * slow to close the gap. The clock never jumps, because a jump could step over
  * the end of a pass. It also loops the video on a bar line, and holds the
  * clock while the video buffers.
+ *
+ * The clock can also be moved deliberately — the player clicks a note in the
+ * tab while a track plays. The video cannot follow it there, so `reanchor`
+ * records how far apart the two now are and the follower keeps them that far
+ * apart, still correcting the drift that is its job.
  */
 export class TrackFollower {
   private loops = 0;
@@ -37,6 +42,8 @@ export class TrackFollower {
   private readonly alignment: TrackAlignment;
   /** The tempo the clock runs at when on time: the track's bpm times its speed. */
   private tempo: number;
+  /** Ticks the clock is deliberately behind the video, from a seek. */
+  private offset = 0;
 
   constructor(
     clock: Clock,
@@ -55,6 +62,14 @@ export class TrackFollower {
   /** A new speed: the clock's resting tempo moves with it. */
   setTempo(tempo: number): void {
     this.tempo = tempo;
+  }
+
+  /**
+   * Take where the clock is now as where it belongs. The track plays on from
+   * where it is; the exercise carries on from where it was put.
+   */
+  reanchor(): void {
+    this.offset = this.videoTick() - this.clock.ticks;
   }
 
   start(): void {
@@ -95,7 +110,14 @@ export class TrackFollower {
       this.video.seekTo(this.track.startSec);
     }
 
-    const videoTick = tickAtVideoTime(this.track, this.alignment, time, this.loops);
-    this.clock.setBpm(this.tempo * followFactor(this.clock.ticks, videoTick, this.clock.bpm));
+    this.clock.setBpm(
+      this.tempo *
+        followFactor(this.clock.ticks, this.videoTick() - this.offset, this.clock.bpm),
+    );
+  }
+
+  /** Where the video is, as a tick on the clock's timeline. */
+  private videoTick(): number {
+    return tickAtVideoTime(this.track, this.alignment, this.video.currentTime, this.loops);
   }
 }
