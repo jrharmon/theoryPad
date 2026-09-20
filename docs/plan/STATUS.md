@@ -1,8 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **Feedback round 4 is merged and live** — five transport and
-generator fixes from living with the app, listed under "Feedback round 4" below. Nothing is in
-progress. Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
+**Last updated:** 2026-09-20. **Feedback round 5 is built and waiting at its gate** — a
+transport clock, settings that reload on every visit, and uniform bar widths in the tab; see
+"Feedback round 5" below. It is on the branch `feedback-5-transport-clock`, three commits, for
+review. Before that, **feedback round
+4 was merged and live** — five transport and generator fixes from living with the app, listed
+under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
 going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
 at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
 next.** The ad task corrected the advert signal that whole run was planned
@@ -28,6 +31,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
+| Feedback round 5 — transport clock, settings reload, tab bar widths | built, **at its gate** — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -228,6 +232,46 @@ the perfect view of related chords".
   back (`ui.showInfoColumn`); the panels' own minimize buttons stay for one at a time.
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
+
+## Feedback round 5 — built, at its gate (2026-09-20)
+
+Three things from living with the app, plus two frozen readouts found while building the first.
+`pnpm check` (691 unit tests in 48 files) and the 64 E2E are green, and every screen was driven
+in the browser and looked at, in both themes.
+
+- **The transport shows a clock**: how long this press of Play lasts, and how far into it you
+  are — `0:12 / 2:00`, beside the bar and beat. Both halves are ticks converted at the tempo
+  being played, so a tempo nudge rescales them together and the fraction between them stays
+  honest; a pause simply stops the clock and the elapsed time holds. Stop puts it back to 0:00,
+  and the length shows before you start too, which is worth knowing with a guitar in your hands.
+  The length is one pass of the material times the passes one press of Play runs, so **a routine
+  item's rep count multiplies it** — `snapshot.passes` is already the item's reps. **Looping is
+  timed as the loop**: going round has no end to count toward, so the length is one time through
+  and the elapsed time starts again with it, which is what you want to know while you are in it.
+  A theory set, free time and an exercise with no written phrase have nothing to time and show
+  nothing.
+  `runTicks` on `RunnerSnapshot` is the new part of the model — ticks since Play, across every
+  pass of the run, 0 whenever nothing is under way; `runClock()` in `src/routes/practice/`
+  turns it and the phrase into the two numbers.
+- **The bar and beat, and the chrome's progress bar, were frozen.** Both read
+  `snapshot.phraseTick`, and the runner only emits when something *happens* to it — so they sat
+  at "Bar 1 · beat 1" and 0% for the whole pass. Only the playhead was polled. `usePhraseTick`
+  is now `useRunnerTicks`, which returns the phrase tick and the run's ticks, and everything
+  that has to count reads it from there. It hands back the same object when the numbers have not
+  moved, so a paused clock does not re-render the screen every frame.
+- **The settings screen reloads on every visit.** Settings are read once at start-up and kept in
+  memory, and `load()` returned early once loaded — so a second tab that was already open showed
+  what it last knew until it was refreshed. `useSettings.reload()` reads the row again, through
+  the same queue as the writes so a read can never overtake a save that has not landed. `load()`
+  is unchanged for every other screen. **The backing-track list on that same screen has the same
+  staleness** (`useVideos` also loads once) and was left alone — say so if it should follow.
+- **Every tab line is laid out to the same width**, so a bar is the same length wherever it
+  falls. A short last line ended up stretching its bars across the whole page, which read as
+  longer than they were; it now ends early, and the tracks past its last bar are held open with
+  no string line through them. A phrase that fits on one line has nothing to be consistent with
+  and takes the full width as before. `slotColumns` in `TabStaff` is the count every line is
+  laid out to; the playhead and the bar lines are positioned against it rather than against the
+  line's own bars.
 
 ## Feedback round 4 — merged (2026-09-20)
 
