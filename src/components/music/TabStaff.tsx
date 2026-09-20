@@ -16,6 +16,12 @@ export interface TabStaffProps {
   subdivision?: number;
   /** Current transport position; null hides the playhead. */
   playheadTick?: number | null;
+  /**
+   * Called with a note's start tick when it is clicked. Given, every written
+   * note becomes a target you can move the playhead to; omitted, the tab is
+   * read-only.
+   */
+  onSeek?: (startTick: number) => void;
   showBarLabels?: boolean;
   showPickStrokes?: boolean;
   /** Bars per line. 'auto' keeps a line readable at any subdivision. */
@@ -76,6 +82,7 @@ export function TabStaff({
   size = 'compact',
   subdivision,
   playheadTick = null,
+  onSeek,
   showBarLabels = true,
   showPickStrokes = false,
   barsPerSystem = 'auto',
@@ -172,6 +179,7 @@ export function TabStaff({
           playheadColumn={playheadColumn}
           showBarLabels={showBarLabels}
           showPickStrokes={showPickStrokes}
+          {...(onSeek ? { onSeek } : {})}
         />
       ))}
     </div>
@@ -191,6 +199,7 @@ interface TabSystemProps {
   playheadColumn: number | null;
   showBarLabels: boolean;
   showPickStrokes: boolean;
+  onSeek?: (startTick: number) => void;
 }
 
 function TabSystem({
@@ -206,6 +215,7 @@ function TabSystem({
   playheadColumn,
   showBarLabels,
   showPickStrokes,
+  onSeek,
 }: TabSystemProps) {
   const strings = stringCount(instrument);
   const firstColumn = Math.floor((bars[0]?.startTick ?? 0) / ticksPerColumn);
@@ -278,6 +288,7 @@ function TabSystem({
               rowHeight={rowHeight}
               fretSize={fretSize}
               showPickStrokes={showPickStrokes}
+              {...(onSeek ? { onSeek } : {})}
             />
           ))}
         </div>
@@ -370,6 +381,7 @@ interface TabRowProps {
   rowHeight: number;
   fretSize: number;
   showPickStrokes: boolean;
+  onSeek?: (startTick: number) => void;
 }
 
 function TabRow({
@@ -381,6 +393,7 @@ function TabRow({
   rowHeight,
   fretSize,
   showPickStrokes,
+  onSeek,
 }: TabRowProps) {
   const byColumn = new Map(placed.map((p) => [p.column, p.note]));
 
@@ -409,21 +422,37 @@ function TabRow({
         // same identity wherever it lands once the phrase wraps onto systems.
         const column = firstColumn + offset;
         const note = byColumn.get(column);
-        return (
-          <div
+        const chip = note && (
+          <NoteChip
+            stringIndex={stringIndex}
+            column={column}
+            note={note}
+            fretSize={fretSize}
+            showPickStrokes={showPickStrokes}
+          />
+        );
+        const cell = { height: rowHeight, ...lineBackground };
+        // The whole cell is the target, not the digit: a fret number is a few
+        // pixels wide and this is clicked with a guitar in your hands.
+        return note && onSeek ? (
+          <button
             key={column}
-            className="grid place-items-center"
-            style={{ height: rowHeight, ...lineBackground }}
+            type="button"
+            // Out of the tab order on purpose: a phrase runs to hundreds of
+            // notes, and tabbing through all of them to reach the transport
+            // would be worse than the shortcut is worth. Everything this does
+            // is on a hotkey already; the click is the pointer's way in.
+            tabIndex={-1}
+            className="grid cursor-pointer place-items-center hover:bg-ink/5"
+            style={cell}
+            onClick={() => onSeek(note.startTick)}
+            aria-label={`Play from fret ${note.fret} on ${stringLabel(instrument, stringIndex)}`}
           >
-            {note && (
-              <NoteChip
-                stringIndex={stringIndex}
-                column={column}
-                note={note}
-                fretSize={fretSize}
-                showPickStrokes={showPickStrokes}
-              />
-            )}
+            {chip}
+          </button>
+        ) : (
+          <div key={column} className="grid place-items-center" style={cell}>
+            {chip}
           </div>
         );
       })}

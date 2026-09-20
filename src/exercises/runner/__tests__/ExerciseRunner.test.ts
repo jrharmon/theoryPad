@@ -47,6 +47,40 @@ function playPass(runner: ExerciseRunner, clock: FakeClock) {
 }
 
 describe('ExerciseRunner', () => {
+  it('moves the playhead to a clicked note, playing or paused, and still ends the pass there', () => {
+    const { runner, clock } = makeRunner({ countInBars: 1 });
+    runner.start();
+    const phrase = runner.currentPhrase!;
+    const countIn = ticksPerBar(phrase.timeSignature);
+    runner.begin();
+
+    // Not during the count-in: a click does not skip it.
+    runner.seekTo(QUARTER * 4);
+    expect(runner.snapshot).toMatchObject({ state: 'count-in', phraseTick: 0 });
+
+    clock.advanceTicks(countIn + QUARTER * 6);
+    expect(runner.snapshot.phraseTick).toBe(QUARTER * 6);
+
+    // Back to a note already played; the pass carries on from there.
+    runner.seekTo(QUARTER * 2);
+    expect(runner.snapshot).toMatchObject({ state: 'playing', phraseTick: QUARTER * 2 });
+    expect(runner.completedReps).toHaveLength(0);
+
+    // Paused, it waits where it was put.
+    runner.pause();
+    runner.seekTo(QUARTER);
+    expect(runner.snapshot).toMatchObject({ state: 'paused', phraseTick: QUARTER });
+    runner.resume();
+
+    // Past the end lands on the last tick of the phrase, not on the end of it,
+    // so the pass is played out rather than finished by the click.
+    runner.seekTo(phrase.totalTicks * 4);
+    expect(runner.completedReps).toHaveLength(0);
+    expect(runner.snapshot.phraseTick).toBe(phrase.totalTicks - 1);
+    clock.advanceTicks(QUARTER * 4);
+    expect(runner.completedReps).toHaveLength(1);
+  });
+
   it('waits at the brief, plays when told to, and comes back ready', () => {
     const { runner, clock } = makeRunner();
     // Idle until started, and the player reads the whole rolled variation

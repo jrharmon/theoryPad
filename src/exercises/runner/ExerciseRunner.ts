@@ -426,6 +426,25 @@ export class ExerciseRunner {
     this.emit();
   }
 
+  /**
+   * Move the playhead to a tick within the current pass — the player clicked a
+   * note. Playing, it carries straight on from there; paused, it waits there.
+   *
+   * The count-in is not somewhere you can land and not something a click skips
+   * past, so this only applies once the pass is under way.
+   */
+  seekTo(phraseTick: number): void {
+    if (!this.timing.clock) return;
+    if (this.state !== 'playing' && this.state !== 'paused') return;
+    const phrase = this.currentPhrase;
+    if (!phrase) return;
+    const length = phrase.totalTicks * (phrase.repeat ?? 1);
+    // Landing exactly on the end would finish the pass instead of playing it.
+    const target = Math.min(Math.max(0, Math.round(phraseTick)), Math.max(0, length - 1));
+    this.config.clock.seek(this.passStartTick + target);
+    this.emit();
+  }
+
   /** Takes effect the next time Play is pressed. */
   setCountInBars(bars: CountInBars): void {
     this.countInBars = bars;

@@ -4,25 +4,34 @@ import { usePractice } from '@/store/practice';
 import { useVideos } from '@/store/videos';
 
 /**
- * Ticks into the phrase while playing. Polled rather than pushed: the runner's
- * clock is the source of truth, and reading it on rAF keeps the screen in step
- * without the clock driving React. Held where it stopped when paused.
+ * Ticks into the phrase, for as long as there is a playhead to draw. Polled
+ * rather than pushed: the runner's clock is the source of truth, and reading it
+ * on rAF keeps the screen in step without the clock driving React.
+ *
+ * `active` covers the count-in and the pause as well as playing, so a restart
+ * puts the playhead back to the top while it counts you in instead of leaving
+ * it where the last pass fell apart, and so a seek shows up while paused. A
+ * paused clock does not move, so polling it simply holds the playhead still.
  */
-export function usePhraseTick(playing: boolean): number {
+export function usePhraseTick(active: boolean): number {
   const [tick, setTick] = useState(0);
   const frame = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!playing) return;
+    if (!active) return;
+    const read = () => setTick(usePractice.getState().runner?.snapshot.phraseTick ?? 0);
+    // Straight away as well as on the next frame: a restart must not show the
+    // old position for even one frame.
+    read();
     const step = () => {
-      setTick(usePractice.getState().runner?.snapshot.phraseTick ?? 0);
+      read();
       frame.current = requestAnimationFrame(step);
     };
     frame.current = requestAnimationFrame(step);
     return () => {
       if (frame.current !== null) cancelAnimationFrame(frame.current);
     };
-  }, [playing]);
+  }, [active]);
 
   return tick;
 }

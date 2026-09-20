@@ -35,6 +35,8 @@ interface PracticeState extends SessionState {
   stop: () => void;
   /** From the top straight away, counted in. Must be called from a click or keypress. */
   restart: () => Promise<void>;
+  /** Move the playhead to a tick within the current pass — a note was clicked. */
+  seekTo: (phraseTick: number) => void;
   setTempo: (bpm: number) => void;
   nudgeTempo: (delta: number) => void;
   completeRep: () => void;
@@ -153,6 +155,7 @@ export const usePractice = create<PracticeState>((set, get) => {
     resume: () => void get().session?.resume(),
     stop: () => get().session?.stop(),
     restart: () => get().session?.restart() ?? Promise.resolve(),
+    seekTo: (phraseTick) => get().session?.seekTo(phraseTick),
     setTempo: (bpm) => get().session?.setTempo(bpm),
     nudgeTempo: (delta) => get().session?.nudgeTempo(delta),
     completeRep: () => get().session?.completeRep(),

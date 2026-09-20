@@ -13,14 +13,15 @@ const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
 describe('applyDirection', () => {
   const items = [1, 2, 3, 4];
 
-  it('runs each way, turning without repeating the turning note', () => {
+  it('runs each way, playing the turning note twice', () => {
     expect(applyDirection(items, 'ascending')).toEqual([1, 2, 3, 4]);
     expect(applyDirection(items, 'descending')).toEqual([4, 3, 2, 1]);
-    // 1 2 3 4 3 2 1, not 1 2 3 4 4 3 2 1 — a run should not stutter where it
-    // changes direction.
-    expect(applyDirection(items, 'up-down')).toEqual([1, 2, 3, 4, 3, 2, 1]);
-    expect(applyDirection(items, 'down-up')).toEqual([4, 3, 2, 1, 2, 3, 4]);
+    // Up to the top and straight back down from it: the turn is a change of
+    // picking direction on the same note, not a note to skip.
+    expect(applyDirection(items, 'up-down')).toEqual([1, 2, 3, 4, 4, 3, 2, 1]);
+    expect(applyDirection(items, 'down-up')).toEqual([4, 3, 2, 1, 1, 2, 3, 4]);
 
+    // One note is not a turn.
     expect(applyDirection([1], 'up-down')).toEqual([1]);
     expect(applyDirection([], 'up-down')).toEqual([]);
     // The caller's array is never reordered under it.

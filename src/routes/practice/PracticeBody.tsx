@@ -64,10 +64,27 @@ function PlayedBody({
 }) {
   const state = usePractice((s) => s.snapshot?.state);
   const playing = state === 'playing';
-  const tick = usePhraseTick(playing);
   // Paused keeps the playhead where it stopped — losing your place is exactly
   // what you did not want when you paused.
   const showPlayhead = playing || state === 'paused' || state === 'count-in';
+  const tick = usePhraseTick(showPlayhead);
+  // Counting in, the playhead sits on the first note whatever the last pass
+  // reached: the count-in is a fresh start, and a restart must look like one.
+  const playheadTick = showPlayhead ? (state === 'count-in' ? 0 : tick) : null;
+  // A backing track owns the clock and cannot be dragged with us.
+  const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
+  const seekable = (playing || state === 'paused') && !underTrack;
+  /**
+   * Clicking a note moves the playhead to it. A repeating phrase is drawn once
+   * but played several times over, so the click lands in the pass being played
+   * rather than jumping back to the first.
+   */
+  const seek = (startTick: number) => {
+    const total = instance.phrase.totalTicks;
+    const at = usePractice.getState().runner?.snapshot.phraseTick ?? 0;
+    const pass = total > 0 ? Math.floor(at / total) : 0;
+    usePractice.getState().seekTo(pass * total + startTick);
+  };
 
   const ui = useSettings((s) => s.settings.ui);
   const save = useSettings((s) => s.save);
@@ -126,7 +143,8 @@ function PlayedBody({
           <TabStaff
             phrase={instance.phrase}
             instrument={instrument}
-            playheadTick={showPlayhead ? tick : null}
+            playheadTick={playheadTick}
+            {...(seekable ? { onSeek: seek } : {})}
             size="large"
             zoom={zoom}
             autoScroll={playing}

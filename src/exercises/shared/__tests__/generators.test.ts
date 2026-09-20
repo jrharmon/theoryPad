@@ -78,14 +78,14 @@ describe('intervalRun', () => {
     expect(alt.slice(0, 4)).toEqual([8, 6, 5, 7]);
   });
 
-  it('does not repeat the figure it turns on', () => {
+  it('answers the figure it turns on with the same notes coming back', () => {
     const run = intervalRun({
       positions: [1, 2, 3, 4],
       pattern: pattern('3rds'),
       pairing: 'same-direction',
       direction: 'up-down',
     });
-    expect(run).toEqual([1, 3, 2, 4, 3, 1]);
+    expect(run).toEqual([1, 3, 2, 4, 4, 2, 3, 1]);
   });
 });
 
