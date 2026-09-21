@@ -252,7 +252,7 @@ in the browser and looked at, in both themes.
   nothing.
   `runTicks` on `RunnerSnapshot` is the new part of the model — ticks since Play, across every
   pass of the run, 0 whenever nothing is under way; `runClock()` in `src/routes/practice/`
-  turns it and the phrase into the two numbers.
+  turns it and the phrase into the two numbers. It reads between the tempo and the metronome.
 - **The bar and beat, and the chrome's progress bar, were frozen.** Both read
   `snapshot.phraseTick`, and the runner only emits when something *happens* to it — so they sat
   at "Bar 1 · beat 1" and 0% for the whole pass. Only the playhead was polled. `usePhraseTick`
@@ -263,8 +263,13 @@ in the browser and looked at, in both themes.
   memory, and `load()` returned early once loaded — so a second tab that was already open showed
   what it last knew until it was refreshed. `useSettings.reload()` reads the row again, through
   the same queue as the writes so a read can never overtake a save that has not landed. `load()`
-  is unchanged for every other screen. **The backing-track list on that same screen has the same
-  staleness** (`useVideos` also loads once) and was left alone — say so if it should follow.
+  is unchanged for every other screen.
+- **The practice screen's backing menu reads the video table again on every visit.**
+  `sessionDeps()` loaded the videos only `if (!loaded)`, so a tab that had already been to a
+  practice screen never saw a track another tab had added — reproduced across two tabs, and the
+  same tab showed the track after a page reload. `useVideos.load()` itself has no such guard, so
+  **Settings and the exercise config page were already fresh**: an earlier note here that said
+  otherwise was wrong. The table is tens of rows, so reading it per visit costs nothing.
 - **Every tab line is laid out to the same width**, so a bar is the same length wherever it
   falls. A short last line ended up stretching its bars across the whole page, which read as
   longer than they were; it now ends early, and the tracks past its last bar are held open with
