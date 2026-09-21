@@ -83,7 +83,9 @@ async function audioPort(): Promise<AudioPort> {
 /** A session's world: the app's audio, database and stores. */
 async function sessionDeps(): Promise<SessionDeps> {
   const audio = await audioPort();
-  if (!useVideos.getState().loaded) await useVideos.getState().load();
+  // Read the table again on every visit rather than only the first: another
+  // tab can have added a track since, and the backing menu would not know.
+  await useVideos.getState().load();
   return {
     audio,
     repos: repos(),
