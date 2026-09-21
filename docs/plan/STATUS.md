@@ -1,11 +1,10 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **Feedback round 5 is built and waiting at its gate** — a
-transport clock, settings that reload on every visit, and uniform bar widths in the tab; see
-"Feedback round 5" below. It is on the branch `feedback-5-transport-clock`, three commits, for
-review. Before that, **feedback round
-4 was merged and live** — five transport and generator fixes from living with the app, listed
-under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
+**Last updated:** 2026-09-20. **Feedback round 5 is merged and live** — a transport clock,
+settings and the backing menu reloading on every visit, and uniform bar widths in the tab, plus
+two frozen readouts fixed on the way; see "Feedback round 5" below. Nothing is in progress.
+Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
+living with the app, listed under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
 going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
 at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
 next.** The ad task corrected the advert signal that whole run was planned
@@ -31,7 +30,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
-| Feedback round 5 — transport clock, settings reload, tab bar widths | built, **at its gate** — see below |
+| Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -233,10 +232,10 @@ the perfect view of related chords".
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
-## Feedback round 5 — built, at its gate (2026-09-20)
+## Feedback round 5 — merged (2026-09-20)
 
 Three things from living with the app, plus two frozen readouts and a stale backing menu found
-while building them. `pnpm check` (692 unit tests in 48 files) and the 65 E2E are green, and
+while building them. All merged to `main` in eight commits. `pnpm check` (692 unit tests in 48 files) and the 65 E2E are green, and
 every screen was driven in the browser and looked at, in both themes.
 
 - **The transport shows a clock**: how long this press of Play lasts, and how far into it you
