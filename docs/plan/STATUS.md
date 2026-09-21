@@ -51,8 +51,6 @@ files, 57 E2E, `pnpm check` green.
   needs, not the whole repo.
 - **Verify by looking.** Anything visual gets a screenshot before it is called done (see
   "Checking UI" below). Most of the bugs that mattered in this project were invisible to tests.
-- **After pushing, check CI as well as the deploy.** CI failed for three pushes before anyone
-  noticed (see "Things that bit").
 - American spelling in user-facing text. The player plays three-note-per-string shapes, not
   CAGED.
 
@@ -762,10 +760,12 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   "returns to Play when a phrase reaches its end". Both reload or wait on audio timing; both
   pass on their own and on a re-run. If CI is red on one of these, re-run before digging.
 
-- **CI was red for three pushes and nobody looked.** The ESLint-boundaries test builds a
-  TypeScript program and took over 5 s on the CI runner. It now has a 30 s timeout. After a
-  push, check the CI run, not just the deploy. The API gives run status without credentials;
-  failure messages are on the check-run's `annotations` endpoint.
+- **CI was red for three pushes once.** The ESLint-boundaries test builds a TypeScript program
+  and took over 5 s on the CI runner; it now has a 30 s timeout. Checking CI after a push is the
+  player's call, not something to do unasked — `pnpm check` and the E2E are run before pushing,
+  so the run is a duplicate of what has already passed. **If asked to check it**: the API gives
+  run status without credentials, and failure messages are on the check-run's `annotations`
+  endpoint (there is no `gh` CLI on this machine).
 - **Playwright's web server can time out locally** (`pnpm build && pnpm preview` on :4173). If
   it does, start `pnpm preview --port 4173` yourself; the config reuses a running server. And
   never chain `;` after a test run in a command that also merges or pushes.
