@@ -167,6 +167,23 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </span>
       )}
 
+      {/* A routine item can be several passes, and which one you are on is the
+          one thing the clock cannot tell you. Loop runs past the total on
+          purpose: that is what "Stay on this" is doing. */}
+      {inRoutine && (
+        <span
+          className="num text-body-sm font-extrabold"
+          data-testid="rep-count"
+          aria-label={`Pass ${snapshot.passesThisRun + 1} of ${snapshot.passes}`}
+        >
+          {snapshot.passesThisRun + 1}
+          <span className="font-semibold text-ink-muted">
+            {' / '}
+            {snapshot.passes}
+          </span>
+        </span>
+      )}
+
       {!theory && <PlaybackToggles />}
       {!theory && <CountInMenu />}
       {!theory && <BackingMenu />}

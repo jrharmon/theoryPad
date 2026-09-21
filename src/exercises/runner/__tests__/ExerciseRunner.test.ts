@@ -171,11 +171,17 @@ describe('ExerciseRunner', () => {
     expect(runner.snapshot.phraseTick).toBe(QUARTER);
   });
 
-  it('plays a routine item’s passes back to back, then finishes', () => {
+  it('plays a routine item’s passes back to back, counting them, then finishes', () => {
     const { runner, clock } = makeRunner({ passes: 3, endWhenFinished: true });
     runner.start();
     runner.begin();
-    for (let i = 0; i < 3; i += 1) playPass(runner, clock);
+    // What the transport reads out: the pass under way is passesThisRun + 1.
+    expect(runner.snapshot.passesThisRun).toBe(0);
+    for (let i = 0; i < 3; i += 1) {
+      playPass(runner, clock);
+      expect(runner.snapshot.passesThisRun).toBe(i + 1);
+    }
+    expect(runner.snapshot.passes).toBe(3);
     expect(runner.snapshot.state).toBe('done');
     expect(runner.completedReps).toHaveLength(3);
   });

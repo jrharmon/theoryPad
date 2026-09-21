@@ -184,6 +184,7 @@ export class ExerciseRunner {
       state: this.state,
       passesPlayed: this.passesPlayed,
       passes: this.passes,
+      passesThisRun: this.passesThisRun,
       loop: this.loop,
       lastSet: this.lastSet,
       variation: this.variation,

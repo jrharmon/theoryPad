@@ -48,6 +48,11 @@ export interface RunnerSnapshot {
   passesPlayed: number;
   /** Passes one press of Play runs before stopping: 1 standalone, the item's reps in a routine. */
   passes: number;
+  /**
+   * Passes finished since this press of Play — so the one under way is
+   * `passesThisRun + 1`. Loop keeps going, so it can pass `passes`.
+   */
+  passesThisRun: number;
   /** Keep playing the same material until told to stop. */
   loop: boolean;
   /** The last theory set finished, for its summary. */
