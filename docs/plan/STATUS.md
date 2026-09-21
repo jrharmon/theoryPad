@@ -1,9 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-21. **Feedback round 6 is built and waiting at its gate** on branch
-`feedback-6` — circled root fret numbers in the tab, a routine's pass counter, and chord
-families replacing degree names in the theory drill; see "Feedback round 6" below. It merges to `main` once the
-player has reviewed it hands-on. Before that, **feedback round 5 was merged
+**Last updated:** 2026-09-21. **Feedback round 6 is merged and live** — circled root fret
+numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
+theory drill; see "Feedback round 6" below. Nothing is in progress. Before that, **feedback round 5 was merged
 and live** — a transport clock, settings and the backing menu reloading on every visit, and
 uniform bar widths in the tab, plus two frozen readouts fixed on the way; see "Feedback round
 5" below. Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
@@ -34,12 +33,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
-| Feedback round 6 — circled tab roots, pass counter, chord families | 🔶 built, at its gate on `feedback-6` — see below |
+| Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted; apart from `feedback-6`, `main` is the only branch. 692 unit tests in 48 files,
+deleted — `main` is the only branch, local and origin in sync. 692 unit tests in 48 files,
 66 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -234,10 +233,10 @@ the perfect view of related chords".
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
-## Feedback round 6 — at its gate (2026-09-21)
+## Feedback round 6 — merged (2026-09-21)
 
 Three things from living with the app. The third turned out to be a real correction to what
-the app teaches, not a wording fix. On branch `feedback-6`, not yet merged. `pnpm check` (692
+the app teaches, not a wording fix. All merged to `main` in three commits. `pnpm check` (692
 unit tests in 48 files) and the 66 E2E are green, and every screen that changed was driven in the browser and
 looked at, in both themes.
 
