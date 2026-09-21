@@ -155,6 +155,18 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </div>
       )}
 
+      {/* Shown before you start too: how long the exercise runs for is worth
+          knowing with a guitar in your hands and no hand free to work it out. */}
+      {clock && (
+        <span className="num text-body-sm font-extrabold" data-testid="run-clock">
+          {formatClock(clock.elapsedSeconds)}
+          <span className="font-semibold text-ink-muted">
+            {' / '}
+            {formatClock(clock.totalSeconds)}
+          </span>
+        </span>
+      )}
+
       {!theory && <PlaybackToggles />}
       {!theory && <CountInMenu />}
       {!theory && <BackingMenu />}
@@ -166,18 +178,6 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       {state === 'playing' && position && (
         <span className="num text-body-sm font-extrabold" data-testid="position">
           Bar {position.bar + 1} · beat {position.beat + 1}
-        </span>
-      )}
-
-      {/* Shown before you start too: how long the exercise runs for is worth
-          knowing with a guitar in your hands and no hand free to work it out. */}
-      {clock && (
-        <span className="num text-body-sm font-extrabold" data-testid="run-clock">
-          {formatClock(clock.elapsedSeconds)}
-          <span className="font-semibold text-ink-muted">
-            {' / '}
-            {formatClock(clock.totalSeconds)}
-          </span>
         </span>
       )}
 
