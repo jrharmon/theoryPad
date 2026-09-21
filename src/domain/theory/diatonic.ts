@@ -1,11 +1,10 @@
-import type { KeyMode, SeventhQuality, TriadQuality } from '@/domain/music';
+import type { ChordFunction, KeyMode, SeventhQuality, TriadQuality } from '@/domain/music';
 import {
   chordOnDegree,
   diatonicChords,
   keySignature,
   scaleDegrees,
   scaleNotes,
-  semitonesBetween,
 } from '@/domain/music';
 import type { Rng } from '@/domain/variation';
 import {
@@ -15,7 +14,12 @@ import {
   wantsTrick,
   withCorrect,
 } from './distractors';
-import type { SinglePickQuestion, TableFillQuestion, TheoryQuestion } from './types';
+import type {
+  MultiPickQuestion,
+  SinglePickQuestion,
+  TableFillQuestion,
+  TheoryQuestion,
+} from './types';
 
 export type DiatonicQuestionType =
   'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function';
@@ -26,14 +30,6 @@ export function keyModeName(km: KeyMode): string {
 }
 
 const ORDINAL = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
-
-/** What each degree is called. The 7th depends on whether it leads up to the tonic. */
-export function degreeName(km: KeyMode, degree: number): string {
-  const names = ['tonic', 'supertonic', 'mediant', 'subdominant', 'dominant', 'submediant'];
-  if (degree <= 6) return names[degree - 1]!;
-  const seventh = scaleNotes(km)[6]!;
-  return semitonesBetween(seventh, km.tonic) === 1 ? 'leading tone' : 'subtonic';
-}
 
 const TRIAD_LABEL: Record<TriadQuality, string> = {
   maj: 'maj',
@@ -203,40 +199,64 @@ export function spellChord(
   };
 }
 
-/** "Which chord is the subdominant in D Dorian?" */
-export function chordFunction(
+/** The chord families, in the order a question offers them. */
+const FAMILIES = ['tonic', 'subdominant', 'dominant'] as const;
+
+const COUNT_WORD = ['no', 'one', 'two', 'three', 'four'];
+
+/** "2nd and 4th", "1st, 3rd and 6th" — not "1st and 3rd and 6th". */
+function listOf(items: readonly string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * "Which chords are the subdominant family in D Dorian?" — tick every one.
+ *
+ * A family is two or three chords, not one, which is the whole point: the
+ * 2nd and the 4th are both subdominant. Asking for a single chord is what
+ * made the old degree-name version of this question misleading.
+ */
+export function chordFamily(
   km: KeyMode,
   rng: Rng,
   sevenths: boolean,
   id: string,
-  degree = rng.int(7) + 1,
-): SinglePickQuestion {
-  const others = rng.shuffle([1, 2, 3, 4, 5, 6, 7].filter((d) => d !== degree)).slice(0, 3);
-  const { items, index } = withCorrect(degree, others, rng);
-  const options = items.map((d) => ({
+  family: ChordFunction = FAMILIES[rng.int(FAMILIES.length)]!,
+): MultiPickQuestion {
+  // The families come off the chords themselves, so this question and the
+  // key/mode reference can never drift apart.
+  const chords = diatonicChords(km);
+  const degrees = rng.shuffle(chords.map((c) => c.degree.number));
+  const options = degrees.map((d) => ({
     id: `${id}-${d}`,
     label: chordFor(km, d, sevenths).symbol,
   }));
-  const name = degreeName(km, degree);
+  const inFamily = (d: number) => chords[d - 1]!.function === family;
+  const correct = degrees.filter(inFamily);
+  const members = chords.filter((c) => c.function === family).map((c) => c.degree.number);
 
   const whatItIs: Record<string, string> = {};
-  items.forEach((d, i) => {
-    if (i !== index)
-      whatItIs[options[i]!.id] =
-        `That’s the ${degreeName(km, d)}, on the ${ORDINAL[d - 1]} degree.`;
-  });
+  for (const d of degrees) {
+    if (inFamily(d)) continue;
+    whatItIs[`${id}-${d}`] =
+      `${chordFor(km, d, sevenths).symbol} is the ${ORDINAL[d - 1]} — ${chords[d - 1]!.function} family.`;
+  }
 
   return {
-    kind: 'single-pick',
+    kind: 'multi-pick',
     id,
     subject: keyModeName(km),
-    prompt: `Which chord is the ${name} in ${keyModeName(km)}?`,
+    prompt: `Which chords are the ${family} family in ${keyModeName(km)}?`,
+    note: `${COUNT_WORD[members.length]!.replace(/^./, (c) => c.toUpperCase())} of them.`,
     options,
-    correctOptionId: options[index]!.id,
+    correctOptionIds: correct.map((d) => `${id}-${d}`),
     feedback: {
-      rule: `The ${name} is built on the ${ORDINAL[degree - 1]} degree: ${chordFor(km, degree, sevenths).symbol}.`,
+      rule: `The ${family} family in ${keyModeName(km)} is the ${listOf(
+        members.map((d) => ORDINAL[d - 1]!),
+      )}: ${listOf(members.map((d) => chordFor(km, d, sevenths).symbol))}.`,
       whatItIs,
-      visual: { kind: 'note-row', keyMode: km, highlight: [degree] },
+      visual: { kind: 'note-row', keyMode: km, highlight: members },
     },
   };
 }
@@ -270,6 +290,13 @@ export function diatonicQuestions(options: {
     }
     return queue.shift()!;
   };
+  // Only three families, so they take turns rather than being drawn at random:
+  // a set of four should not ask about the dominant three times.
+  let familyQueue: ChordFunction[] = [];
+  const nextFamily = () => {
+    if (familyQueue.length === 0) familyQueue = rng.shuffle([...FAMILIES]);
+    return familyQueue.shift()!;
+  };
 
   for (let i = 0; out.length < count && i < count * 3; i += 1) {
     let type = types[(start + i) % types.length]!;
@@ -290,7 +317,7 @@ export function diatonicQuestions(options: {
     } else if (type === 'spell-chord') {
       out.push(spellChord(km, rng, sevenths(i), id, nextDegree(type)));
     } else {
-      out.push(chordFunction(km, rng, sevenths(i), id, nextDegree(type)));
+      out.push(chordFamily(km, rng, sevenths(i), id, nextFamily()));
     }
   }
   return out;

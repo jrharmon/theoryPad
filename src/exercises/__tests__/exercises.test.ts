@@ -183,6 +183,11 @@ describe.each(THEORY.map((d) => [d.id, d] as const))('%s', (_id, definition) => 
           expect(q.options.length).toBeLessThanOrEqual(6);
           expect(q.options.filter((o) => o.id === q.correctOptionId)).toHaveLength(1);
           expect(new Set(q.options.map((o) => o.label)).size).toBe(q.options.length);
+        } else if (q.kind === 'multi-pick') {
+          expect(new Set(q.options.map((o) => o.label)).size).toBe(q.options.length);
+          expect(q.correctOptionIds.length).toBeGreaterThan(0);
+          const ids = new Set(q.options.map((o) => o.id));
+          for (const id of q.correctOptionIds) expect(ids.has(id)).toBe(true);
         } else {
           for (const row of q.rows) {
             expect(row.options.filter((o) => o.id === row.correctOptionId)).toHaveLength(1);

@@ -5,8 +5,7 @@ import { mulberry32 } from '@/domain/variation';
 import {
   CIRCLE_POSITIONS,
   circleQuestions,
-  chordFunction,
-  degreeName,
+  chordFamily,
   diatonicQuestions,
   enharmonics,
   keyOnCircle,
@@ -18,6 +17,7 @@ import {
   positionOfMajor,
   signatureLabel,
   spellingDistractors,
+  multiIsCorrect,
   tableIsCorrect,
   wrapPosition,
   type CircleQuestionType,
@@ -104,21 +104,34 @@ describe('diatonic questions', () => {
     ]);
   });
 
-  it('names the degrees, telling a leading tone from a subtonic', () => {
-    expect(degreeName(C_MAJOR, 4)).toBe('subdominant');
-    expect(degreeName(C_MAJOR, 7)).toBe('leading tone');
-    expect(degreeName(D_DORIAN, 7)).toBe('subtonic');
+  it('asks for a whole chord family, offering every chord in the key', () => {
+    const q = chordFamily(D_DORIAN, mulberry32(3), false, 'q', 'subdominant');
+    expect(q.prompt).toBe('Which chords are the subdominant family in D Dorian?');
+    expect(q.note).toBe('Two of them.');
+    // Every chord of the key is offered, each one exactly once.
+    expect(q.options).toHaveLength(7);
+    const notes = scaleNotes(D_DORIAN);
+    for (const option of q.options) {
+      expect(notes).toContain(pitchClass(option.label.replace(/(m|dim|aug)$/, '')));
+    }
+    // The 2nd and the 4th together: the whole reason this is a multi-pick.
+    const answers = q.correctOptionIds.map((id) => q.options.find((o) => o.id === id)!.label);
+    expect(answers.sort()).toEqual(['Em', 'G']);
+    // Every chord that is not in the family says which family it is in.
+    expect(Object.keys(q.feedback.whatItIs ?? {})).toHaveLength(5);
+    expect(q.feedback.rule).toBe(
+      'The subdominant family in D Dorian is the 2nd and 4th: Em and G.',
+    );
   });
 
-  it('asks which chord has a function, and that chord is among the options', () => {
-    for (let seed = 0; seed < 10; seed += 1) {
-      const q = chordFunction(D_DORIAN, mulberry32(seed), false, 'q');
-      expect(q.options).toHaveLength(4);
-      const answer = q.options.find((o) => o.id === q.correctOptionId)!;
-      const notes = scaleNotes(D_DORIAN);
-      expect(notes).toContain(pitchClass(answer.label.replace(/(m|dim|aug)$/, '')));
-      expect(Object.keys(q.feedback.whatItIs ?? {})).toHaveLength(3);
-    }
+  it('marks a family answer right only when the picks match exactly', () => {
+    const q = chordFamily(C_MAJOR, mulberry32(1), false, 'q', 'dominant');
+    const right = q.correctOptionIds;
+    expect(multiIsCorrect(q, right)).toBe(true);
+    expect(multiIsCorrect(q, [...right].reverse())).toBe(true);
+    expect(multiIsCorrect(q, right.slice(1))).toBe(false);
+    const extra = q.options.find((o) => !right.includes(o.id))!.id;
+    expect(multiIsCorrect(q, [...right, extra])).toBe(false);
   });
 
   it('makes a set of the asked-for size, each table at most once, the same for the same seed', () => {
@@ -335,14 +348,19 @@ describe('traps are occasional', () => {
 describe('a set does not repeat itself', () => {
   it('asks about different chords within one diatonic set', () => {
     for (let seed = 0; seed < 10; seed += 1) {
-      const prompts = diatonicQuestions({
+      const set = diatonicQuestions({
         keyMode: D_DORIAN,
         rng: mulberry32(seed),
         types: ['spell-chord', 'chord-function'],
         depth: 'triads',
         count: 12,
-      }).map((q) => q.prompt);
-      expect(new Set(prompts).size).toBe(prompts.length);
+      });
+      // Seven chords to spell, and a set of twelve asks for six of them.
+      const spell = set.filter((q) => q.kind === 'single-pick').map((q) => q.prompt);
+      expect(new Set(spell).size).toBe(spell.length);
+      // Only three families exist, so they cycle: all three before any repeat.
+      const families = set.filter((q) => q.kind === 'multi-pick').map((q) => q.prompt);
+      expect(new Set(families.slice(0, 3)).size).toBe(3);
     }
   });
 

@@ -8,25 +8,33 @@ import { NoteRow } from './NoteRow';
  */
 export function TheoryFeedback({
   question,
-  pickedId,
+  pickedIds,
 }: {
   question: TheoryQuestion;
-  /** Single-pick only: the option chosen. */
-  pickedId?: string | undefined;
+  /** What was chosen: one option, or every option ticked in a multi-pick. */
+  pickedIds?: readonly string[];
 }) {
   const { feedback } = question;
-  const whatItIs = pickedId ? feedback.whatItIs?.[pickedId] : undefined;
+  // Each wrong pick is named, so a multi-pick says what all of them were.
+  const whatItIs = (pickedIds ?? [])
+    .map((id) => feedback.whatItIs?.[id])
+    .filter((line): line is string => line !== undefined);
+  const firstPick = pickedIds?.[0];
   const visual = feedback.visual;
 
   return (
     <div className="space-y-3 border-l-2 border-accent pl-4" data-testid="theory-feedback">
-      {whatItIs && <p className="text-body-sm text-ink-muted">{whatItIs}</p>}
+      {whatItIs.map((line) => (
+        <p key={line} className="text-body-sm text-ink-muted">
+          {line}
+        </p>
+      ))}
       <p className="text-body font-semibold">{feedback.rule}</p>
       {visual?.kind === 'circle-of-fifths' && (
         <CircleStrip
           correct={visual.correct}
-          {...(pickedId !== undefined && visual.positions[pickedId] !== undefined
-            ? { picked: visual.positions[pickedId] }
+          {...(firstPick !== undefined && visual.positions[firstPick] !== undefined
+            ? { picked: visual.positions[firstPick] }
             : {})}
         />
       )}

@@ -223,7 +223,7 @@ function questions work through the degrees in a shuffled order so a set never r
 | `name-notes`     | table-fill                | "Name the seven notes of D Dorian." 7 rows, degree given, note picked from options.       |
 | `name-chords`    | table-fill                | "Pick the quality for each degree. The root is given." — the 3b mockup exactly.           |
 | `spell-chord`    | table-fill or single-pick | "Spell Gmaj7." → four cells, or pick the correct 4-note set from options.                 |
-| `chord-function` | single-pick               | "Which chord is the subdominant in D Dorian?" — the `by-function` grouping you described. |
+| `chord-function` | multi-pick                | "Which chords are the subdominant family in D Dorian?" — tick every chord in the family. |
 
 **Distractor generation matters more than the question.** A drill where the wrong answers are
 obviously wrong teaches nothing. _(At the M4 review: but a drill made only of traps is a game

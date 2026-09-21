@@ -69,11 +69,16 @@ export type SeventhQuality = 'maj7' | 'min7' | 'dom7' | 'min7b5' | 'dim7' | 'min
 export type ChordQuality = TriadQuality | SeventhQuality;
 
 /**
- * Harmonic function, taken relative to the mode's own tonic: degree 1 is the
- * tonic, 4 the subdominant, 5 the dominant. Simple, and it is what the
- * key/mode reference highlights.
+ * The chord family a degree belongs to, relative to the mode's own tonic.
+ * Every diatonic chord is in one: tonic (1, 3, 6), subdominant (2, 4),
+ * dominant (5, 7). Degree names — supertonic, mediant — are not modeled;
+ * people say "the 2nd", and families are what the drills ask about.
+ *
+ * Taken by degree in every mode. In a mode whose 7th is a subtonic rather
+ * than a leading tone it is still called dominant, which keeps one rule
+ * across all seven modes.
  */
-export type ChordFunction = 'tonic' | 'subdominant' | 'dominant' | 'other';
+export type ChordFunction = 'tonic' | 'subdominant' | 'dominant';
 
 export interface DiatonicChord {
   degree: Degree;

@@ -39,7 +39,7 @@ test('a table is submitted whole, and only once every row is filled', async ({ p
   await page.goto('/#/exercises');
   await page.getByRole('link', { name: 'Key signature drill', exact: true }).click();
   const types = page.getByRole('group', { name: 'Question types' });
-  for (const t of ['Name chords', 'Spell chord', 'Chord function']) {
+  for (const t of ['Name chords', 'Spell chord', 'Chord families']) {
     await types.getByRole('button', { name: t }).click();
   }
   await expect(types.getByRole('button', { name: 'Name notes' })).toBeDisabled();
@@ -83,4 +83,37 @@ test('a routine moves on from a theory set to the next exercise', async ({ page 
   await expect(page.getByTestId('tab-staff')).toBeVisible();
   // Straight on, counted in: no Play to press.
   await expect(page.getByTestId('pause')).toBeVisible();
+});
+
+test('a chord family is picked whole: every chord of its family, and no other', async ({
+  page,
+}) => {
+  // Just the family question, so the set is one multi-pick.
+  await page.goto('/#/exercises');
+  await page.getByRole('link', { name: 'Key signature drill', exact: true }).click();
+  const types = page.getByRole('group', { name: 'Question types' });
+  for (const t of ['Name notes', 'Name chords', 'Spell chord']) {
+    await types.getByRole('button', { name: t }).click();
+  }
+  await page.getByRole('link', { name: 'Practice this' }).click();
+  await page.getByTestId('play').click();
+
+  // A family is more than one chord, and nothing is marked until you submit.
+  await expect(
+    page.getByRole('heading', { name: /Which chords are the .+ family/ }),
+  ).toBeVisible();
+  const options = page.getByRole('group', { name: 'Answers' }).getByRole('button');
+  await expect(options).toHaveCount(7);
+  await expect(page.getByTestId('submit-multi')).toBeDisabled();
+  await page.keyboard.press('1');
+  await expect(options.first()).toHaveAttribute('aria-pressed', 'true');
+  // Ticking every chord is wrong however many of them belong.
+  for (const n of ['2', '3', '4', '5', '6', '7']) await page.keyboard.press(n);
+  await page.keyboard.press('Enter');
+
+  // Wrong, so the correction waits — and names the family it was asking for.
+  await expect(page.getByTestId('theory-feedback')).toContainText(/family .+ is the/);
+  await expect(page.getByTestId('theory-question')).toContainText('Question 1 of');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('theory-question')).toContainText('Question 2 of');
 });

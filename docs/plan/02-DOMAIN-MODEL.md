@@ -60,7 +60,8 @@ export interface DiatonicChord {
   seventhSymbol: string;
   /** Honest about missing extensions: "Em11", or null where no diatonic 9th exists. */
   ninthSymbol: string | null;
-  function: 'tonic' | 'subdominant' | 'dominant' | 'other';
+  /** The chord family: tonic (1, 3, 6), subdominant (2, 4), dominant (5, 7). */
+  function: 'tonic' | 'subdominant' | 'dominant';
 }
 ```
 

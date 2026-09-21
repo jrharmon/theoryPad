@@ -1,9 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-20. **Feedback round 5 is merged and live** — a transport clock,
-settings and the backing menu reloading on every visit, and uniform bar widths in the tab, plus
-two frozen readouts fixed on the way; see "Feedback round 5" below. Nothing is in progress.
-Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
+**Last updated:** 2026-09-21. **Feedback round 6 is built and waiting at its gate** on branch
+`feedback-6` — a circled root note, a routine's pass counter, and chord families replacing
+degree names in the theory drill; see "Feedback round 6" below. It merges to `main` once the
+player has reviewed it hands-on. Before that, **feedback round 5 was merged
+and live** — a transport clock, settings and the backing menu reloading on every visit, and
+uniform bar widths in the tab, plus two frozen readouts fixed on the way; see "Feedback round
+5" below. Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
 living with the app, listed under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
 going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
 at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
@@ -31,12 +34,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
+| Feedback round 6 — circled root, pass counter, chord families | 🔶 built, at its gate on `feedback-6` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync at `4ac008a`. 670 unit tests in 46
-files, 57 E2E, `pnpm check` green.
+deleted; apart from `feedback-6`, `main` is the only branch. 692 unit tests in 48 files,
+66 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -229,6 +233,61 @@ the perfect view of related chords".
   back (`ui.showInfoColumn`); the panels' own minimize buttons stay for one at a time.
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
+
+## Feedback round 6 — at its gate (2026-09-21)
+
+Three things from living with the app. The third turned out to be a real correction to what
+the app teaches, not a wording fix. On branch `feedback-6`, not yet merged. `pnpm check` (692
+unit tests in 48 files) and the 66 E2E are green, and every screen that changed was driven in the browser and
+looked at, in both themes.
+
+- **The root note is circled.** Colour alone was not enough to find the root at a glance, so a
+  root dot now gets a ring drawn round it — `RING_GAP` outside the dot in `Fretboard.tsx`, in
+  the same `--color-dot-root` ink. The gap is bounded by the **compact row height** (26px for a
+  19px dot), which is why it is 6 and not more; the large size has room to spare. It sits behind
+  the dot as a sibling, so the heat layer's `ring-neck` still separates a shaded dot from its
+  ground.
+- **A routine says which pass you are on**, `1 / 4`, immediately right of the clock. The runner
+  already counted it privately; `passesThisRun` is now on `RunnerSnapshot` beside `passes`, so
+  the pass under way is `passesThisRun + 1`. Shown for **every** routine item including a
+  one-pass one — items in a routine have different pass counts, so a readout that disappears is
+  worse than one that says `1 / 1`. **Loop deliberately runs past the total** (`4 / 3`): that is
+  exactly what "Stay on this" is doing, and the toggle is lit right beside it. No label, by the
+  player's call; the meaning is in the `aria-label`.
+- **Chord families replaced degree names.** The old `chord-function` question asked "Which chord
+  is the subdominant in D Dorian?" and accepted only the 4th. The player's teacher calls **both
+  the 2nd and the 4th** subdominant chords, and the teacher is right: those are two different
+  frames, and the app was using one word for both.
+  - **Degree names are gone.** `degreeName()` is deleted — people say "the 2nd", not "the
+    supertonic", and the ordinals in `ORDINAL` say it better. Families are what is worth
+    learning.
+  - `ChordFunction` is now **the family, covering all seven degrees**: tonic (1, 3, 6),
+    subdominant (2, 4), dominant (5, 7). `'other'` is gone from the type — every diatonic chord
+    is in a family. Taken **by degree in every mode**, at the player's call: a mode whose 7th is
+    a subtonic rather than a leading tone is still called dominant, which keeps one rule across
+    all seven modes rather than a rule with a footnote. (The alternative, leaving the subtonic
+    out, was offered and turned down.)
+  - The question is now a **multi-pick**: "Which chords are the subdominant family in D Dorian?"
+    with all seven chords of the key offered, shuffled, and a note saying how many to find. It
+    is submitted whole like a table — right only if the ticks match exactly, so missing one is
+    as wrong as adding one. `MultiPickQuestion` and `multiIsCorrect()` are the new domain
+    pieces; `MultiPick.tsx` is the UI. After submitting, each option shows which of **four**
+    things it was: right, wrongly ticked (struck through), **missed** (outlined in the accent,
+    labelled), or correctly left alone. The correction names **every** wrong tick, which is why
+    `TheoryFeedback` now takes `pickedIds` rather than one `pickedId`.
+  - The families come off `diatonicChords(km)` itself, so the drill and the key/mode reference
+    can never drift apart.
+  - **The stored value is still `chord-function`** — it is persisted in saved exercises, so it
+    cannot be renamed. `OPTION_LABELS` in `src/exercises/params.ts` overrides just the label to
+    "Chord families". That table is the place for a value whose humanized form would mislead.
+  - The key/mode reference's **Function column is now Family**, and every row names its family.
+    The tint that used to mark I/IV/V is gone: once six or seven rows have a family, a tint on
+    three of them distinguishes nothing.
+  - Number keys answer up to **7** now, not 6 — a family question offers all seven chords.
+
+**Known flake, not from this round:** `PracticeSession.test.ts` occasionally reports an
+unhandled `DatabaseClosedError` from Dexie after "seeks under a backing track" finishes. Every
+test passes; it is a teardown race. It failed one `pnpm check` in five and has not recurred.
 
 ## Feedback round 5 — merged (2026-09-20)
 

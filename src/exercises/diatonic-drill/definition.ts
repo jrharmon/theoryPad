@@ -19,13 +19,13 @@ export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
   name: 'Key signature drill',
   tags: ['theory', 'chords', 'key-signatures', 'no-guitar'],
   kind: 'theory',
-  summary: 'The notes and chords of a key: spelling, quality and function.',
+  summary: 'The notes and chords of a key: spelling, quality and chord families.',
   description: [
     'A key is rolled — in a routine, the routine’s key, so the theory is about',
     'what you just played. Name its notes, the quality of each chord, spell',
-    'chords, and say which chord does which job. No guitar. The wrong answers',
-    'are near misses on purpose: the other spelling of a note, one note off in',
-    'a chord.',
+    'chords, and pick out the tonic, subdominant and dominant families. No',
+    'guitar. The wrong answers are near misses on purpose: the other spelling',
+    'of a note, one note off in a chord.',
   ].join(' '),
 
   axes: ['mode', 'key'],

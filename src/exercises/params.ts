@@ -26,6 +26,17 @@ export function humanize(id: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * Option values whose humanized form would mislead. `chord-function` is
+ * persisted in saved exercises so the value cannot change, but the question
+ * it now asks is about chord families.
+ */
+const OPTION_LABELS: Record<string, string> = {
+  'chord-function': 'Chord families',
+};
+
+const optionLabel = (value: string): string => OPTION_LABELS[value] ?? humanize(value);
+
 /** Small integer ranges read better as a pick-list than as a box to type into. */
 const MAX_LISTED_NUMBERS = 24;
 
@@ -46,7 +57,7 @@ function fieldFor(key: string, schema: z.ZodType): ParamField | null {
   if (inner instanceof z.ZodEnum) {
     const options = (inner.options as (string | number)[]).map((value) => ({
       value,
-      label: humanize(String(value)),
+      label: optionLabel(String(value)),
     }));
     return { ...base, kind: 'choice', options };
   }
@@ -56,7 +67,7 @@ function fieldFor(key: string, schema: z.ZodType): ParamField | null {
     if (element instanceof z.ZodEnum) {
       const options = (element.options as string[]).map((value) => ({
         value,
-        label: humanize(value),
+        label: optionLabel(value),
       }));
       // Zod gathers a schema's constraints into its bag: `.min(1)` is minimum 1.
       const min = (inner._zod.bag as { minimum?: number }).minimum ?? 0;

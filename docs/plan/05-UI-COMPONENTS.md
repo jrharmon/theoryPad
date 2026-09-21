@@ -143,7 +143,7 @@ once with a `variant: 'full' | 'compact'` prop and rendered into a `Sheet` or a 
 whoever opens it.
 
 Sections: the seven notes with degree labels (signature degree in accent), diatonic chord
-table (triad / 7th / 9th / function, with tonic-subdominant-dominant rows tinted), a function
+table (triad / 7th / 9th / family, every row naming its family), a function
 strip, go-to progressions, character description, and writing notes.
 
 Everything is computed from `diatonicChords(km)` and friends — **no hard-coded content per

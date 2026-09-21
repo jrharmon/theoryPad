@@ -45,6 +45,19 @@ export interface SinglePickQuestion extends QuestionBase {
   correctOptionId: string;
 }
 
+/**
+ * Pick every option that belongs, then submit. One answer, right only if the
+ * picks match exactly — missing one is as wrong as adding one. The chord
+ * families need it: a family is two or three chords, not one.
+ */
+export interface MultiPickQuestion extends QuestionBase {
+  kind: 'multi-pick';
+  options: Option[];
+  correctOptionIds: string[];
+  /** "Two of them." — how many to find, without saying which. */
+  note?: string;
+}
+
 export interface TableRow {
   id: string;
   /** Cells shown already filled, by column id. */
@@ -67,12 +80,22 @@ export interface TableFillQuestion extends QuestionBase {
   rows: TableRow[];
 }
 
-export type TheoryQuestion = SinglePickQuestion | TableFillQuestion;
+export type TheoryQuestion = SinglePickQuestion | MultiPickQuestion | TableFillQuestion;
 
 /** One question's outcome, as logged. */
 export interface Answer {
   subject: string;
   correct: boolean;
+}
+
+/** Whether a multi-pick's ticked options are exactly the right set. */
+export function multiIsCorrect(
+  question: MultiPickQuestion,
+  picked: readonly string[],
+): boolean {
+  const want = new Set(question.correctOptionIds);
+  const got = new Set(picked);
+  return want.size === got.size && [...want].every((id) => got.has(id));
 }
 
 /** Whether a table's answers, one option id per row, are all right. */

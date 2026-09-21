@@ -266,7 +266,7 @@ function TheoryTable() {
     <table className="w-full text-left text-body-sm">
       <thead>
         <tr className="border-b border-rule">
-          {['Deg', 'Triad', '7th', '9th', 'Function'].map((h) => (
+          {['Deg', 'Triad', '7th', '9th', 'Family'].map((h) => (
             <th key={h} className="kicker py-2 font-normal">
               {h}
             </th>
@@ -275,20 +275,12 @@ function TheoryTable() {
       </thead>
       <tbody>
         {chords.map((chord) => (
-          <tr
-            key={chord.degree.label}
-            className={[
-              'border-b border-rule/50',
-              chord.function !== 'other' ? 'bg-accent/8' : '',
-            ].join(' ')}
-          >
+          <tr key={chord.degree.label} className="border-b border-rule/50">
             <td className="py-2 font-semibold">{chord.degree.label}</td>
             <td className="py-2 font-semibold">{chord.triadSymbol}</td>
             <td className="py-2">{chord.seventhSymbol}</td>
             <td className="py-2 text-ink-muted">{chord.ninthSymbol ?? '—'}</td>
-            <td className="py-2 text-ink-muted">
-              {chord.function === 'other' ? '' : chord.function}
-            </td>
+            <td className="py-2 text-ink-muted">{chord.function}</td>
           </tr>
         ))}
       </tbody>

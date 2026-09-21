@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-/** Answer whatever is on screen with the keyboard: 1 for picks, every row then Enter for tables. */
+/** Answer whatever is on screen with the keyboard: 1 for picks, then Enter for anything submitted whole. */
 export async function answerSet(page: Page) {
   await page.getByTestId('theory-question').waitFor();
   for (let i = 0; i < 40; i += 1) {
@@ -10,6 +10,10 @@ export async function answerSet(page: Page) {
     if (await page.getByTestId('submit-table').isVisible()) {
       const rows = await page.getByTestId('table-row').count();
       for (let r = 0; r < rows; r += 1) await page.keyboard.press('1');
+      await page.keyboard.press('Enter');
+    } else if (await page.getByTestId('submit-multi').isVisible()) {
+      // Tick the first option and submit: right or wrong, the set moves on.
+      await page.keyboard.press('1');
       await page.keyboard.press('Enter');
     } else {
       await page.keyboard.press('1');

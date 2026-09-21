@@ -67,22 +67,22 @@ describe('diatonicChords', () => {
       'Bm7b5',
       'Cmaj7',
     ]);
-    // The subdominant being major is exactly what makes it Dorian rather than Aeolian.
-    const subdominant = chords.find((c) => c.function === 'subdominant');
-    expect(subdominant?.triadSymbol).toBe('G');
-    expect(subdominant?.triad).toBe('maj');
+    // A major chord on the 4th is exactly what makes it Dorian rather than Aeolian.
+    const fourth = chords[3];
+    expect(fourth?.triadSymbol).toBe('G');
+    expect(fourth?.triad).toBe('maj');
   });
 
-  it('marks tonic, subdominant and dominant, and nothing else', () => {
+  it('puts every chord in a family, the 2nd alongside the 4th', () => {
     const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
     expect(chords.map((c) => c.function)).toEqual([
       'tonic',
-      'other',
-      'other',
+      'subdominant',
+      'tonic',
       'subdominant',
       'dominant',
-      'other',
-      'other',
+      'tonic',
+      'dominant',
     ]);
   });
 

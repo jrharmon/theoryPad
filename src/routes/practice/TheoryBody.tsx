@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Answer, TheoryQuestion } from '@/domain/theory';
-import { tableIsCorrect } from '@/domain/theory';
+import { multiIsCorrect, tableIsCorrect } from '@/domain/theory';
 import type { TheoryInstance } from '@/exercises/types';
 import { TheoryFeedback } from '@/components/theory/Feedback';
+import { MultiPick } from '@/components/theory/MultiPick';
 import { SinglePick } from '@/components/theory/SinglePick';
 import { TableFill } from '@/components/theory/TableFill';
 import { Button } from '@/components/ui/button';
@@ -67,6 +68,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
   const [phase, setPhase] = useState<Phase>('asking');
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [picks, setPicks] = useState<(string | null)[]>([]);
+  const [ticked, setTicked] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState(0);
   const results = useRef<Answer[]>([]);
   const question = questions[index]!;
@@ -80,6 +82,7 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
     setPhase('asking');
     setPickedId(null);
     setPicks([]);
+    setTicked([]);
     setActiveRow(0);
   }, [index, questions.length]);
 
@@ -106,6 +109,22 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
     },
     [question, phase, record],
   );
+
+  const toggle = useCallback(
+    (optionId: string) => {
+      if (question.kind !== 'multi-pick' || phase !== 'asking') return;
+      setTicked((on) =>
+        on.includes(optionId) ? on.filter((id) => id !== optionId) : [...on, optionId],
+      );
+    },
+    [question.kind, phase],
+  );
+
+  const submitMulti = useCallback(() => {
+    if (question.kind !== 'multi-pick' || phase !== 'asking') return;
+    if (ticked.length === 0) return;
+    record(multiIsCorrect(question, ticked));
+  }, [question, phase, ticked, record]);
 
   const rows = question.kind === 'table-fill' ? question.rows.length : 0;
   const currentPicks = useMemo(
@@ -143,7 +162,9 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
       if (event.key === 'Enter') {
         event.preventDefault();
         if (phase === 'wrong') next();
-        else if (phase === 'asking' && question.kind === 'table-fill') submitTable();
+        else if (phase !== 'asking') return;
+        else if (question.kind === 'table-fill') submitTable();
+        else if (question.kind === 'multi-pick') submitMulti();
         return;
       }
       if (question.kind === 'table-fill' && phase === 'asking') {
@@ -151,10 +172,14 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
         if (event.key === 'ArrowUp') setActiveRow((r) => Math.max(0, r - 1));
       }
       const n = Number(event.key);
-      if (!Number.isInteger(n) || n < 1 || n > 6 || phase !== 'asking') return;
+      // A family question offers all seven chords of the key, so 7 answers too.
+      if (!Number.isInteger(n) || n < 1 || n > 7 || phase !== 'asking') return;
       if (question.kind === 'single-pick') {
         const option = question.options[n - 1];
         if (option) answerSingle(option.id);
+      } else if (question.kind === 'multi-pick') {
+        const option = question.options[n - 1];
+        if (option) toggle(option.id);
       } else {
         const option = question.rows[activeRow]?.options[n - 1];
         if (option) fill(activeRow, option.id);
@@ -162,7 +187,18 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [phase, question, activeRow, rows, next, submitTable, answerSingle, fill]);
+  }, [
+    phase,
+    question,
+    activeRow,
+    rows,
+    next,
+    submitTable,
+    submitMulti,
+    answerSingle,
+    fill,
+    toggle,
+  ]);
 
   return (
     <div className="sheet mx-8 mt-5 mb-2 max-w-[860px] px-6 py-5" data-testid="theory-question">
@@ -180,13 +216,21 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
         )}
       </div>
       <h3 className="face-title mb-1 mt-1 text-display">{question.prompt}</h3>
-      {question.kind === 'table-fill' && question.note && (
+      {question.kind !== 'single-pick' && question.note && (
         <p className="mb-3 text-body-sm text-ink-muted">{question.note}</p>
       )}
 
       <div className="mt-4">
         {question.kind === 'single-pick' ? (
           <SinglePick question={question} pickedId={pickedId} onPick={answerSingle} />
+        ) : question.kind === 'multi-pick' ? (
+          <MultiPick
+            question={question}
+            picked={ticked}
+            submitted={phase !== 'asking'}
+            onToggle={toggle}
+            onSubmit={submitMulti}
+          />
         ) : (
           <TableFill
             question={question}
@@ -202,7 +246,10 @@ function QuestionRun({ questions }: { questions: TheoryQuestion[] }) {
 
       {phase === 'wrong' && (
         <div className="mt-6 space-y-4">
-          <TheoryFeedback question={question} pickedId={pickedId ?? undefined} />
+          <TheoryFeedback
+            question={question}
+            pickedIds={question.kind === 'multi-pick' ? ticked : pickedId ? [pickedId] : []}
+          />
           <Button onClick={next} data-testid="theory-continue">
             {index + 1 >= questions.length ? 'Finish' : 'Next question'}
           </Button>

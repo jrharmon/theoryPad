@@ -17,7 +17,6 @@ const FUNCTION_LABEL: Record<ChordFunction, string> = {
   tonic: 'Tonic',
   subdominant: 'Subdominant',
   dominant: 'Dominant',
-  other: '',
 };
 
 function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }) {
@@ -133,7 +132,7 @@ export function KeyModeView({
         <table className="mt-2 w-full border-collapse text-left text-body-sm">
           <thead>
             <tr className="border-b-(length:--rule-section-w) border-divider">
-              {['', 'Triad', '7th', '9th', 'Function'].map((h) => (
+              {['', 'Triad', '7th', '9th', 'Family'].map((h) => (
                 <th key={h} className="kicker py-1.5 pr-4 font-normal text-ink-muted">
                   {h}
                 </th>
@@ -144,10 +143,7 @@ export function KeyModeView({
             {chords.map((chord) => (
               <tr
                 key={chord.root}
-                className={cn(
-                  'border-b border-rule',
-                  chord.function !== 'other' && 'bg-neutral-200',
-                )}
+                className="border-b border-rule"
                 data-function={chord.function}
               >
                 <td className="tabular py-1.5 pr-4 pl-1 text-ink-muted">

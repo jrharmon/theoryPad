@@ -67,14 +67,14 @@ function stack(notes: PitchClass[], i: number, count: number): PitchClass[] {
 }
 
 /**
- * Function relative to the mode's own tonic. The reference screens tint these
- * three rows; everything else is 'other'.
+ * The chord family, relative to the mode's own tonic. Three families cover
+ * all seven degrees — the 2nd sits with the 4th, which is why a teacher calls
+ * both of them subdominant chords.
  */
 function functionOf(degreeNumber: number): ChordFunction {
-  if (degreeNumber === 1) return 'tonic';
-  if (degreeNumber === 4) return 'subdominant';
-  if (degreeNumber === 5) return 'dominant';
-  return 'other';
+  if (degreeNumber === 2 || degreeNumber === 4) return 'subdominant';
+  if (degreeNumber === 5 || degreeNumber === 7) return 'dominant';
+  return 'tonic';
 }
 
 export function diatonicChords(km: KeyMode): DiatonicChord[] {
