@@ -1,8 +1,8 @@
 # Status — start here
 
 **Last updated:** 2026-09-21. **Feedback round 6 is built and waiting at its gate** on branch
-`feedback-6` — a circled root note, a routine's pass counter, and chord families replacing
-degree names in the theory drill; see "Feedback round 6" below. It merges to `main` once the
+`feedback-6` — circled root fret numbers in the tab, a routine's pass counter, and chord
+families replacing degree names in the theory drill; see "Feedback round 6" below. It merges to `main` once the
 player has reviewed it hands-on. Before that, **feedback round 5 was merged
 and live** — a transport clock, settings and the backing menu reloading on every visit, and
 uniform bar widths in the tab, plus two frozen readouts fixed on the way; see "Feedback round
@@ -34,7 +34,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
-| Feedback round 6 — circled root, pass counter, chord families | 🔶 built, at its gate on `feedback-6` — see below |
+| Feedback round 6 — circled tab roots, pass counter, chord families | 🔶 built, at its gate on `feedback-6` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -241,12 +241,19 @@ the app teaches, not a wording fix. On branch `feedback-6`, not yet merged. `pnp
 unit tests in 48 files) and the 66 E2E are green, and every screen that changed was driven in the browser and
 looked at, in both themes.
 
-- **The root note is circled.** Colour alone was not enough to find the root at a glance, so a
-  root dot now gets a ring drawn round it — `RING_GAP` outside the dot in `Fretboard.tsx`, in
-  the same `--color-dot-root` ink. The gap is bounded by the **compact row height** (26px for a
-  19px dot), which is why it is 6 and not more; the large size has room to spare. It sits behind
-  the dot as a sibling, so the heat layer's `ring-neck` still separates a shaded dot from its
-  ground.
+- **Root fret numbers are circled in the tab.** This is the **tab staff**, not the neck
+  diagram — the numbers you read off the page while playing. The neck diagram already colours
+  its root dot and is untouched; the tab did not mark the root at all, though it has carried
+  `data-role` on every note all along. Now a root's fret number sits in a `rounded-full` ring
+  at `border-tab-digit/45`, so it follows `--ink-base` into dark on its own.
+  - **Only the fret number goes inside the ring.** A pick stroke or an articulation mark says
+    how you play the note, not which note it is, so they stay outside it.
+  - **The padding is in `em`, not pixels**, so the ring holds its shape across all the zoom
+    steps — the digit scales and the ring scales with it. At the smallest step the rows are
+    ~13px apart and a pixel padding would have collided with the string above.
+  - A **two-digit** fret makes it an oval rather than a circle, which is how tab has always
+    written it. Checked at both zoom extremes, with two-digit roots, and in an exercise that
+    shows note names instead of fret numbers.
 - **A routine says which pass you are on**, `1 / 4`, immediately right of the clock. The runner
   already counted it privately; `passesThisRun` is now on `RunnerSnapshot` beside `passes`, so
   the pass under way is `passesThisRun + 1`. Shown for **every** routine item including a

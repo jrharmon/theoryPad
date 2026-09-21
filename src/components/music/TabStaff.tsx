@@ -381,7 +381,20 @@ function NoteChip({
         </span>
       )}
       {mark?.leading && glyph}
-      {note.display ?? note.fret}
+      {/* The root is circled, the way tab has always circled it. Only the fret
+          number goes inside: a pick stroke or an articulation mark describes
+          how you play the note, not which note it is. Padding is in em so the
+          ring holds its shape at every zoom step. */}
+      {note.role === 'root' ? (
+        <span
+          data-testid={`tab-root-ring-${stringIndex}-${column}`}
+          className="rounded-full border border-tab-digit/45 px-[0.34em] py-[0.1em]"
+        >
+          {note.display ?? note.fret}
+        </span>
+      ) : (
+        (note.display ?? note.fret)
+      )}
       {mark && !mark.leading && glyph}
     </span>
   );
