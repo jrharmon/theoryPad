@@ -291,9 +291,13 @@ looked at, in both themes.
     three of them distinguishes nothing.
   - Number keys answer up to **7** now, not 6 — a family question offers all seven chords.
 
-**Known flake, not from this round:** `PracticeSession.test.ts` occasionally reports an
-unhandled `DatabaseClosedError` from Dexie after "seeks under a backing track" finishes. Every
-test passes; it is a teardown race. It failed one `pnpm check` in five and has not recurred.
+**The `PracticeSession.test.ts` flake, fixed (2026-09-21).** It occasionally reported an
+unhandled `DatabaseClosedError` after "seeks under a backing track", failing `pnpm check` with
+every test green. Sessions persist fire-and-forget (`lastPlayedAt`, held axis values), and under
+full-suite load a test could end with one of those writes still queued; `afterEach` then deleted
+the database under it. Confirmed by slowing the routine writes 5 ms, which reproduced the exact
+error every run. The harness now records every write a session starts and `afterEach` waits for
+them before deleting the database; with the delay still in, the error is gone.
 
 ## Feedback round 5 — merged (2026-09-20)
 

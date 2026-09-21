@@ -4,9 +4,11 @@ import {
   TheoryPadDB,
   createRepositories,
   defaultSettings,
+  type Exercise,
   newId,
   type NewExercise,
   type Repositories,
+  type Routine,
   type RoutineItem,
   type Settings,
   type Video,
@@ -166,8 +168,24 @@ function fakeAudio() {
 
 let database: TheoryPadDB | null = null;
 let count = 0;
+/**
+ * Every write a session has started. Sessions persist fire-and-forget, so a
+ * test can end with one still running; deleting the database under it fails
+ * the run with a DatabaseClosedError.
+ */
+let writes: Promise<unknown>[] = [];
+
+function recorded<A extends unknown[]>(save: (...args: A) => Promise<void>) {
+  return (...args: A) => {
+    const write = save(...args);
+    writes.push(write);
+    return write;
+  };
+}
 
 afterEach(async () => {
+  await Promise.allSettled(writes);
+  writes = [];
   await database?.delete();
   database = null;
 });
@@ -191,14 +209,15 @@ function world(videos: Video[] = []) {
       settings.audio = { ...settings.audio, ...changes };
       return Promise.resolve();
     },
-    saveExercise: async (id, changes) => {
+    saveExercise: recorded(async (id: string, changes: Partial<Exercise>) => {
       await repos.exercises.update(id, changes);
-    },
-    saveRoutine: (id, changes) =>
+    }),
+    saveRoutine: recorded((id: string, changes: Partial<Routine>) =>
       queued(id, async () => {
         await repos.routines.update(id, changes);
       }),
-    saveRoutineItem: (id, itemId, changes) =>
+    ),
+    saveRoutineItem: recorded((id: string, itemId: string, changes: Partial<RoutineItem>) =>
       queued(id, async () => {
         const routine = (await repos.routines.byId(id))!;
         await repos.routines.update(id, {
@@ -207,6 +226,7 @@ function world(videos: Video[] = []) {
           ),
         });
       }),
+    ),
     now: () => (time += 1_000),
     onError: (error) => {
       throw error;
