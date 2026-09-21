@@ -271,3 +271,54 @@ test('a routine starts its track with the first item, and brings it back after a
   await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-state', '1');
   await expect(page.getByTestId('pause')).toBeVisible();
 });
+
+test('a track added in another tab is offered on the next visit to a practice screen', async ({
+  page,
+  context,
+}) => {
+  // The video table was read once per tab and kept, so a tab that had already
+  // opened a practice screen never saw a track added anywhere else — only a
+  // reload brought it in, which is what this test must not do.
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('backing-menu').click();
+  // None, the drone, and the track this app ships with.
+  await expect(page.getByRole('option')).toHaveCount(3);
+  await page.keyboard.press('Escape');
+  await page.getByRole('link', { name: 'Home' }).click();
+  await page.evaluate(() => ((window as Window & { stayed?: boolean }).stayed = true));
+
+  const other = await context.newPage();
+  await other.goto('/#/settings');
+  await expect(other.getByTestId('track-list')).toBeVisible();
+  await writeRow(other, 'videos', {
+    id: 'd9a1c0b2-1111-4222-8333-444455556666',
+    videoId: 'zzzzzzzzzzz',
+    title: 'Another tab’s A minor track',
+    scope: { kind: 'shared' },
+    playAlong: true,
+    startSec: 0,
+    keyMode: { tonic: 'A', mode: 'aeolian' },
+    bpm: 100,
+    beatsPerBar: 4,
+    tags: [],
+    createdAt: 2,
+    updatedAt: 2,
+  });
+  await other.close();
+
+  // Back to the practice screen through the app, never reloading the document.
+  await page.getByRole('link', { name: 'Exercises' }).click();
+  await page
+    .locator('li', { hasText: 'Modes up the neck' })
+    .getByRole('link', { name: 'Practice', exact: true })
+    .click();
+  await expect(page.getByTestId('backing-menu')).toBeVisible();
+  await page.getByTestId('backing-menu').click();
+  await expect(page.getByRole('option', { name: /Another tab’s A minor track/ })).toBeVisible();
+
+  // A reload would have picked the track up whatever the store did, so the
+  // test only means something if this tab is the one it started as.
+  expect(await page.evaluate(() => (window as Window & { stayed?: boolean }).stayed)).toBe(
+    true,
+  );
+});

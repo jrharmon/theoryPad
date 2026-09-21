@@ -235,9 +235,9 @@ the perfect view of related chords".
 
 ## Feedback round 5 — built, at its gate (2026-09-20)
 
-Three things from living with the app, plus two frozen readouts found while building the first.
-`pnpm check` (691 unit tests in 48 files) and the 64 E2E are green, and every screen was driven
-in the browser and looked at, in both themes.
+Three things from living with the app, plus two frozen readouts and a stale backing menu found
+while building them. `pnpm check` (692 unit tests in 48 files) and the 65 E2E are green, and
+every screen was driven in the browser and looked at, in both themes.
 
 - **The transport shows a clock**: how long this press of Play lasts, and how far into it you
   are — `0:12 / 2:00`, beside the bar and beat. Both halves are ticks converted at the tempo
@@ -269,7 +269,10 @@ in the browser and looked at, in both themes.
   practice screen never saw a track another tab had added — reproduced across two tabs, and the
   same tab showed the track after a page reload. `useVideos.load()` itself has no such guard, so
   **Settings and the exercise config page were already fresh**: an earlier note here that said
-  otherwise was wrong. The table is tens of rows, so reading it per visit costs nothing.
+  otherwise was wrong. The table is tens of rows, so reading it per visit costs nothing. Pinned
+  by an E2E test in `backing.spec.ts` that drives two tabs and never reloads the first — it
+  stamps `window` and checks the stamp survived, because a reload would pass whatever the store
+  did. It was confirmed to fail on the old `if (!loaded)`.
 - **Every tab line is laid out to the same width**, so a bar is the same length wherever it
   falls. A short last line ended up stretching its bars across the whole page, which read as
   longer than they were; it now ends early, and the tracks past its last bar are held open with
