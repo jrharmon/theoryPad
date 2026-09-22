@@ -38,6 +38,7 @@ export function SettingsDialog({
   initial,
   held,
   axes = definition.axes,
+  hiddenParams,
   onApply,
 }: {
   open: boolean;
@@ -49,6 +50,8 @@ export function SettingsDialog({
   held: Record<string, string>;
   /** Which axes to offer. A routine item leaves key and mode to the routine. */
   axes?: AxisId[];
+  /** Params set somewhere else — a routine's theory item takes its question count from its reps. */
+  hiddenParams?: string[];
   onApply: (changed: Partial<ExerciseSettings>) => void;
 }) {
   // Mounted fresh on every open, so the draft always starts from what is saved.
@@ -62,6 +65,7 @@ export function SettingsDialog({
           initial={initial}
           held={held}
           axes={axes}
+          {...(hiddenParams ? { hiddenParams } : {})}
           onApply={onApply}
           onClose={() => onOpenChange(false)}
         />
@@ -77,6 +81,7 @@ function Draft({
   initial,
   held,
   axes,
+  hiddenParams,
   onApply,
   onClose,
 }: {
@@ -86,6 +91,7 @@ function Draft({
   initial: ExerciseSettings;
   held: Record<string, string>;
   axes: AxisId[];
+  hiddenParams?: string[];
   onApply: (changed: Partial<ExerciseSettings>) => void;
   onClose: () => void;
 }) {
@@ -146,6 +152,7 @@ function Draft({
           <ParamsEditor
             definition={definition}
             stored={params}
+            {...(hiddenParams ? { hidden: hiddenParams } : {})}
             onChange={(next) => setParams(next)}
           />
         </div>

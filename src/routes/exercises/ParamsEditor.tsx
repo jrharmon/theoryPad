@@ -20,13 +20,19 @@ import {
 export function ParamsEditor({
   definition,
   stored,
+  hidden,
   onChange,
 }: {
   definition: AnyExerciseDefinition;
   stored: unknown;
+  /** Keys set elsewhere, left out of the form. */
+  hidden?: readonly string[];
   onChange: (params: Record<string, unknown>) => void;
 }) {
-  const fields = useMemo(() => paramFields(definition.params), [definition]);
+  const fields = useMemo(
+    () => paramFields(definition.params).filter((f) => !hidden?.includes(f.key)),
+    [definition, hidden],
+  );
   const values = resolveParams(definition, stored) as Record<string, unknown>;
 
   if (fields.length === 0) return null;

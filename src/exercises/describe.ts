@@ -1,6 +1,8 @@
 import { axisDefinition, policyFor } from '@/domain/variation';
 import type { AxisId, AxisPolicies } from '@/domain/variation';
 import type { Instrument } from '@/domain/instrument';
+import { repsAreQuestions } from './params';
+import type { AnyExerciseDefinition } from './types';
 
 /**
  * What distinguishes one configured exercise from another of the same
@@ -44,4 +46,14 @@ export function describePolicies(
   }
 
   return out;
+}
+
+/** A routine item's reps in words: "3 passes", or "8 questions" for a theory set. */
+export function describeReps(
+  definition: AnyExerciseDefinition | undefined,
+  reps: number,
+): string {
+  const unit = definition && repsAreQuestions(definition) ? 'question' : 'pass';
+  const plural = unit === 'pass' ? 'passes' : 'questions';
+  return `${reps} ${reps === 1 ? unit : plural}`;
 }

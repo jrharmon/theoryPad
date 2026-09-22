@@ -232,6 +232,26 @@ describe('RoutineRunner', () => {
     expect(routine.current!.snapshot.state).toBe('count-in');
     expect(clock.state).toBe('started');
   });
+  it('asks a theory item its reps as questions, in one set — past the exercise’s own limits', () => {
+    const quiz = (reps: number) =>
+      item(`quiz-${reps}`, {
+        definition: circleOfFifths,
+        reps,
+        params: { questionCount: 10 },
+        tempo: { targetTempo: null, maxTempo: null },
+      });
+    const { routine } = makeRoutine([quiz(1), quiz(4), quiz(30), item('play')]);
+    const sizes = routine.snapshot.items.map((i) =>
+      i.instance?.kind === 'theory' ? i.instance.questions.length : null,
+    );
+    expect(sizes).toEqual([1, 4, 30, null]);
+
+    routine.play();
+    routine.current!.submitSet({ answers: [{ subject: 'key:C', correct: true }] });
+    // One set is all it gets: on to the next item.
+    expect(routine.snapshot.index).toBe(1);
+    expect(routine.snapshot.items[0]!.completed).toBe(1);
+  });
 });
 
 describe('stopping and each item\u2019s own count-in', () => {

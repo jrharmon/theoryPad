@@ -118,3 +118,52 @@ export function resolveParams(definition: AnyExerciseDefinition, stored: unknown
   if (parsed.success) return parsed.data as unknown;
   return definition.params.parse({}) as unknown;
 }
+
+/** The param a theory set sizes itself by. */
+const QUESTION_COUNT = 'questionCount';
+
+/**
+ * Whether a routine item's rep count means questions rather than passes: a
+ * theory set sized by `questionCount`. In a routine the player asks for as many
+ * questions as they want, so the count is the reps, not the exercise's setting.
+ */
+export function repsAreQuestions(definition: AnyExerciseDefinition): boolean {
+  return (
+    definition.kind === 'theory' &&
+    definition.params instanceof z.ZodObject &&
+    QUESTION_COUNT in definition.params.shape
+  );
+}
+
+/**
+ * How a routine item runs: its params, and how many passes. A theory item's
+ * reps are its question count, asked as one set. The count is set after the
+ * schema, so a routine can ask for more or fewer than the exercise's own form
+ * allows.
+ */
+export function routineItemRun(
+  definition: AnyExerciseDefinition,
+  item: { params: unknown; reps: number },
+): { params: unknown; passes: number } {
+  const params = resolveParams(definition, item.params);
+  const reps = Math.max(1, item.reps);
+  if (!repsAreQuestions(definition)) return { params, passes: reps };
+  return { params: { ...(params as object), [QUESTION_COUNT]: reps }, passes: 1 };
+}
+
+/** A new routine item's reps: a theory set's own question count, otherwise the exercise's. */
+export function initialItemReps(
+  definition: AnyExerciseDefinition | undefined,
+  stored: {
+    params: unknown;
+    defaultReps: number;
+  },
+): number {
+  if (definition && repsAreQuestions(definition)) {
+    const count = (resolveParams(definition, stored.params) as Record<string, unknown>)[
+      QUESTION_COUNT
+    ];
+    if (typeof count === 'number') return count;
+  }
+  return Math.max(1, stored.defaultReps);
+}

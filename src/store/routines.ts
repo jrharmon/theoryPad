@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { repos, newId, type Exercise, type Routine, type RoutineItem } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
+import { initialItemReps } from '@/exercises/params';
+import { findExerciseDefinition } from '@/exercises/registry';
 import { serialWrites } from './util';
 
 /**
@@ -13,7 +15,7 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     id: newId(),
     exerciseId: exercise.id,
     definitionId: exercise.definitionId,
-    reps: Math.max(1, exercise.defaultReps),
+    reps: initialItemReps(findExerciseDefinition(exercise.definitionId), exercise),
     params: structuredClone(exercise.params),
     tempo: { ...exercise.tempo },
     countInBars: exercise.countInBars ?? 1,

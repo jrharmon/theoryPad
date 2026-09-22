@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { Routine } from '@/data';
 import type { RoutineSnapshot } from '@/exercises/runner';
+import { describeReps } from '@/exercises/describe';
 import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
+import { repsAreQuestions } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -129,7 +131,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
               </span>
               <div className="min-w-0">
                 <p className="kicker">
-                  {definition?.name} · {item.reps === 1 ? '1 pass' : `${item.reps} passes`}
+                  {definition?.name} · {describeReps(definition, item.reps)}
                 </p>
                 <p className="face-title text-lead">{item.instance?.brief.headline}</p>
               </div>
@@ -168,20 +170,30 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
         {formatDuration(seconds)} · every pass logged against its exercise.
       </p>
       <ol className="sheet mb-8 max-w-[640px] px-5">
-        {snapshot.items.map((item, index) => (
-          <li
-            key={item.id}
-            className="flex gap-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
-          >
-            <span className="w-6 tabular-nums text-ink-faint">{index + 1}</span>
-            <span className="flex-1">{findExerciseDefinition(item.definitionId)?.name}</span>
-            <span className="tabular-nums text-ink-muted">
-              {item.completed === 0 && item.skipped
-                ? 'skipped'
-                : `${item.completed === 1 ? '1 pass' : `${item.completed} passes`}${item.skipped ? ' · skipped' : ''}`}
-            </span>
-          </li>
-        ))}
+        {snapshot.items.map((item, index) => {
+          const definition = findExerciseDefinition(item.definitionId);
+          // A theory item is one set of its reps' questions: done, or not.
+          const played =
+            definition && repsAreQuestions(definition)
+              ? item.completed > 0
+                ? describeReps(definition, item.reps)
+                : null
+              : describeReps(definition, item.completed);
+          return (
+            <li
+              key={item.id}
+              className="flex gap-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
+            >
+              <span className="w-6 tabular-nums text-ink-faint">{index + 1}</span>
+              <span className="flex-1">{definition?.name}</span>
+              <span className="tabular-nums text-ink-muted">
+                {item.completed === 0 && item.skipped
+                  ? 'skipped'
+                  : `${played ?? describeReps(definition, 0)}${item.skipped ? ' · skipped' : ''}`}
+              </span>
+            </li>
+          );
+        })}
       </ol>
       <div className="flex gap-3">
         <Button onClick={() => void usePractice.getState().prepareRoutine(routine)}>

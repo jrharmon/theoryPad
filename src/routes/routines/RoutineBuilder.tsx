@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { Exercise, Routine, RoutineItem } from '@/data';
 import type { AxisId } from '@/domain/variation';
-import { describePolicies } from '@/exercises/describe';
+import { describePolicies, describeReps } from '@/exercises/describe';
+import { repsAreQuestions } from '@/exercises/params';
 import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
@@ -193,6 +194,9 @@ function NameField({
   );
 }
 
+const MAX_PASSES = 9;
+const MAX_QUESTIONS = 40;
+
 function ItemRow({
   routine,
   item,
@@ -225,6 +229,9 @@ function ItemRow({
   }
 
   const axes = definition.axes.filter((a) => a !== 'key' && a !== 'mode');
+  // A theory set's reps are its questions: one set, as long as asked for.
+  const questions = repsAreQuestions(definition);
+  const unit = questions ? 'questions' : 'passes';
   const described = [
     item.tempo.targetTempo === null ? null : `${item.tempo.targetTempo} bpm`,
     ...describePolicies(item.axisPolicies, axes, instrument),
@@ -244,11 +251,15 @@ function ItemRow({
       </div>
 
       <div className="flex items-center gap-1">
-        <div className="mr-2 flex items-center gap-1" role="group" aria-label="Passes">
+        <div
+          className="mr-2 flex items-center gap-1"
+          role="group"
+          aria-label={questions ? 'Questions' : 'Passes'}
+        >
           <Button
             variant="secondary"
             size="icon-xs"
-            aria-label="Fewer passes"
+            aria-label={`Fewer ${unit}`}
             disabled={item.reps <= 1}
             onClick={() =>
               void routines.updateItem(routine.id, item.id, { reps: item.reps - 1 })
@@ -257,16 +268,16 @@ function ItemRow({
             −
           </Button>
           <span
-            className="w-16 text-center text-body-sm tabular-nums"
+            className="w-24 text-center text-body-sm tabular-nums"
             data-testid="item-passes"
           >
-            {item.reps} {item.reps === 1 ? 'pass' : 'passes'}
+            {describeReps(definition, item.reps)}
           </span>
           <Button
             variant="secondary"
             size="icon-xs"
-            aria-label="More passes"
-            disabled={item.reps >= 9}
+            aria-label={`More ${unit}`}
+            disabled={item.reps >= (questions ? MAX_QUESTIONS : MAX_PASSES)}
             onClick={() =>
               void routines.updateItem(routine.id, item.id, { reps: item.reps + 1 })
             }
@@ -313,6 +324,7 @@ function ItemRow({
         initial={{ tempo: item.tempo, params: item.params, axisPolicies: item.axisPolicies }}
         held={item.heldAxisValues}
         axes={axes}
+        {...(questions ? { hiddenParams: ['questionCount'] } : {})}
         onApply={(changed) => void routines.updateItem(routine.id, item.id, changed)}
       />
     </li>

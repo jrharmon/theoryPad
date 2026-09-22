@@ -11,7 +11,7 @@ import {
   variationKeyMode,
 } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
-import { resolveParams } from '../params';
+import { routineItemRun } from '../params';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
 import { ExerciseRunner, type RepStartInfo } from './ExerciseRunner';
 import type { RepRecord, RunnerSnapshot } from './types';
@@ -21,6 +21,7 @@ export interface RoutineRunItem {
   id: string;
   exerciseId: string;
   definition: AnyExerciseDefinition;
+  /** Passes — or, for a theory set, how many questions it asks. */
   reps: number;
   params: unknown;
   tempo: TempoConfig;
@@ -188,6 +189,7 @@ export class RoutineRunner {
     };
 
     this.runners = this.config.items.map((item) => {
+      const { params, passes } = routineItemRun(item.definition, item);
       const runner = new ExerciseRunner({
         clock: this.config.clock,
         definition: item.definition,
@@ -196,9 +198,9 @@ export class RoutineRunner {
         instrument,
         sessionId,
         sessionKeyMode: this.keyMode,
-        params: resolveParams(item.definition, item.params),
+        params,
         tempo: item.tempo,
-        passes: item.reps,
+        passes,
         endWhenFinished: true,
         loop: this.config.loop ?? false,
         countInBars: item.countInBars ?? this.config.countInBars ?? 0,

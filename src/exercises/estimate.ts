@@ -4,7 +4,7 @@ import { phraseSeconds, ticksPerBar, ticksToSeconds } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
 import { mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
-import { resolveParams } from './params';
+import { routineItemRun } from './params';
 import type { AnyExerciseDefinition } from './types';
 
 /** For an exercise with no pulse of its own: something to estimate against. */
@@ -28,15 +28,16 @@ export function estimateItemSeconds(
     policies: item.axisPolicies,
     ...(definition.allowedValues ? { allowed: definition.allowedValues } : {}),
   });
+  const run = routineItemRun(definition, item);
   const context = {
     variation,
     keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('C'), mode: 'ionian' as const },
     instrument,
-    params: resolveParams(definition, item.params),
+    params: run.params,
     rng: mulberry32(1),
     repIndex: 0,
   };
-  const reps = Math.max(1, item.reps);
+  const reps = run.passes;
   if (definition.kind === 'theory') {
     return definition.estimateRepSeconds(definition.generate(context)) * reps;
   }
