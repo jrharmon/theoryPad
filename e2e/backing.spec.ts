@@ -35,6 +35,8 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
         });
         element.replaceWith(stand);
         this.stand = stand;
+        // The player's own controls, for a test to press.
+        (window as unknown as { fakePlayer: unknown }).fakePlayer = this;
         // Like the real iframe: nothing loads until it is on the page.
         const whenMounted = () => {
           if (!stand.isConnected) return void setTimeout(whenMounted, 20);
@@ -143,6 +145,30 @@ test('a backing track takes the tempo over, and the metronome waits it out', asy
   // Remembered on the exercise.
   await page.reload();
   await expect(page.getByTestId('backing-menu')).toContainText('A minor backing track');
+});
+
+test('pausing on the video pauses the exercise, and playing there starts it again', async ({
+  page,
+}) => {
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /A minor backing track/ }).click();
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('pause')).toBeVisible();
+
+  // YouTube's own controls, as the player would use them.
+  const own = (playing: boolean) =>
+    page.evaluate((play: boolean) => {
+      const player = (window as unknown as { fakePlayer: Record<string, () => void> })
+        .fakePlayer;
+      player[play ? 'playVideo' : 'pauseVideo']!();
+    }, playing);
+
+  await own(false);
+  await expect(page.getByTestId('pause')).toHaveAttribute('aria-label', 'Resume');
+
+  await own(true);
+  await expect(page.getByTestId('pause')).toHaveAttribute('aria-label', 'Pause');
 });
 
 test('the drone plays under the notes, and the metronome keeps the beat', async ({ page }) => {

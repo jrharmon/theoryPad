@@ -1,15 +1,16 @@
 # Status — start here
 
-**Last updated:** 2026-09-22. **A routine's theory reps are now its question count** — merged and pushed; see the section of that name. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
+**Last updated:** 2026-09-22. Two things merged today: **a routine's theory reps are now its
+question count**, and **the exercise follows YouTube's own pause and play**, which closes the
+backing-track run — see those sections. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
 numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
 theory drill; see "Feedback round 6" below. Nothing is in progress. Before that, **feedback round 5 was merged
 and live** — a transport clock, settings and the backing menu reloading on every visit, and
 uniform bar widths in the tab, plus two frozen readouts fixed on the way; see "Feedback round
 5" below. Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
-living with the app, listed under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" finished as far as it is
-going: tasks 1 and 2 are merged and live, and task 3 (turning off YouTube's controls) is **parked
-at the player's call** — the gain was cosmetic and it had turned up a reproduced failure. **M7b is
-next.** The ad task corrected the advert signal that whole run was planned
+living with the app, listed under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" is **finished**:
+tasks 1 and 2 are merged and live, and task 3 turned out not to need custom controls at all — the
+exercise follows YouTube's own pause and play instead. **M7b is next.** The ad task corrected the advert signal that whole run was planned
 around, so read that section before touching backing playback again. Written as a hand-off: a
 fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it points
 to. Start with "Remaining work".
@@ -30,7 +31,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7a — Backing tracks, reference videos, free improv | ✅ merged, live |
 | Feedback rounds 1–3 — after living with M7a | ✅ merged, live |
 | Cleanup — architecture review | ✅ all nine steps merged — `docs/review/ARCHITECTURE-REVIEW.md` |
-| Backing tracks — ads and the YouTube host | tasks 1–2 ✅ merged, live; task 3 **parked** by choice — see below |
+| Backing tracks — ads and the YouTube host | ✅ all three done — task 3 by following YouTube's controls rather than hiding them |
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
@@ -585,10 +586,30 @@ gets adverts.
 - Docs updated: `06-AUDIO.md` decision 3 now records the switch and why, and both file headers
   explain the trade rather than arguing for nocookie.
 
-**3. Disable YouTube's own controls (S) — PARKED 2026-09-20, at the player's call.**
-Not wanted for now: the gain is cosmetic and the risk is not. Everything below stays true and
-researched, so picking it up later starts from measurements rather than from scratch — but do not
-start it without reading the `needsClick` bullet, which is a reproduced failure, not a worry.
+**3. Disable YouTube's own controls (S) — DONE 2026-09-22, another way. Closed.**
+Not by hiding the controls: **the exercise follows them instead.** Pausing on the video pauses the
+exercise and playing there resumes it, which is what the task was for — the runner used to play on
+over a silent video. `controls` stays 1, so YouTube's own play button is still there to click, and
+the `needsClick` recovery below never became a problem to solve. The player asked for this as the
+middle ground and called custom controls closed: ask again only if they come up.
+
+*How it works.* `VideoBacking.onTransport` maps YouTube's `playing` and `paused` states — and
+nothing else — onto the `BackingSource` interface; `BackingController` mirrors them into the
+session's own `pause` and `resume`. Nothing decides anything on the way: the session already
+ignores a state that is its own, so the app pausing the video cannot come back round as a second
+pause, and only a disagreement between the two moves anything. States during a start (an advert's
+among them) are left alone. Buffering, cueing and the end of the video are the follower's
+business, not the transport's — it already holds the clock through a buffer. Covered by a session
+scenario test and an E2E over the fake player, and checked by hand against real YouTube on
+localhost: paused the video, the clock froze mid-bar and the transport offered Resume; played it,
+the exercise carried on and the clock ran again.
+
+**Still open, if it ever matters:** scrubbing YouTube's own progress bar moves the video out from
+under the exercise. `reanchor` is the machinery for it. Nobody has asked.
+
+*The rest of this section is what task 3 would have been, kept because it was measured rather
+than guessed.* Everything below stays true — but do not start it without reading the `needsClick`
+bullet, which is a reproduced failure, not a worry.
 
 `YouTubePlayer.ts` passes `controls: 1` for the backing player, so YouTube's controls show.
 Pausing on the video pauses the video but does **not** stop the exercise — the runner plays on.
@@ -643,9 +664,10 @@ see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 **M10 — Optional sync** — only if wanted after living with export/import (doc 07).
 
 **Parked — in no milestone yet**
-- Turning off YouTube's own controls (`controls: 0`) — task 3 above, parked 2026-09-20. The
-  research is done and recorded there; the blocker is that an advert can stall in a state only
-  YouTube's own controls can clear.
+- Custom transport over the video (`controls: 0`) — **closed 2026-09-22**, and closed by the
+  player, not deferred: following YouTube's controls gave them everything they wanted. The
+  research is still recorded under task 3 if it is ever reopened. Scrubbing the video's own
+  progress bar still moves it out from under the exercise; nobody has asked.
 - Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
 - Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
 - Generated backing — deferred past M9; 75% on a real track was fine, so likely unneeded.

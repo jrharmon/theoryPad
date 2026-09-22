@@ -114,7 +114,12 @@ export abstract class PracticeSession {
     this.backing = new BackingController({
       audio: deps.audio,
       videos: deps.videos,
-      host: { keyMode: () => this.keyMode, runner: () => this.runner },
+      host: {
+        keyMode: () => this.keyMode,
+        runner: () => this.runner,
+        pauseFromVideo: () => this.pause(),
+        resumeFromVideo: () => void this.resume(),
+      },
       onChange: (backing) => this.update({ backing }),
     });
   }

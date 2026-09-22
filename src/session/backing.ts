@@ -77,6 +77,10 @@ export interface BackingHost {
   keyMode(): KeyMode | null;
   /** The runner whose tempo a track takes over. */
   runner(): ExerciseRunner | null;
+  /** The video's own controls were used to pause: the exercise follows it. */
+  pauseFromVideo(): void;
+  /** And to play again — including the click that gets a held-back video going. */
+  resumeFromVideo(): void;
 }
 
 /**
@@ -91,6 +95,7 @@ export interface BackingHost {
 export class BackingController {
   private current: BackingState = NO_BACKING;
   private query: Omit<BackingQuery, 'keyMode'> = {};
+  private offTransport: (() => void) | null = null;
   private readonly audio: AudioPort;
   private readonly host: BackingHost;
   private readonly videos: () => readonly Video[];
@@ -158,6 +163,8 @@ export class BackingController {
       return;
     }
 
+    this.offTransport?.();
+    this.offTransport = null;
     backing.source?.dispose();
     let next: BackingState = {
       ...backing,
@@ -200,10 +207,31 @@ export class BackingController {
       source.setRate(speed);
       tempo = effectiveTempo(bpm, speed);
       next = { ...next, source, player: source.player, speed, tempoBefore: before };
+      this.watchTransport(source);
     }
     this.current = next;
     this.onChange(next);
     if (tempo !== null) this.host.runner()?.setTempo(tempo);
+  }
+
+  /**
+   * The video's own controls drive the exercise: pausing on the video pauses
+   * the exercise, and playing there starts it again. Without this the runner
+   * plays on over a silent video.
+   *
+   * Nothing is decided here. The session's pause and resume already ignore a
+   * state that is theirs already, so the app pausing the video cannot come back
+   * round as a second pause — only a disagreement between the two moves
+   * anything. While the track is starting, the states belong to that start
+   * (an advert's among them), so they are left alone.
+   */
+  private watchTransport(source: BackingSource): void {
+    this.offTransport =
+      source.onTransport?.((playing) => {
+        if (this.current.starting || this.current.advert) return;
+        if (playing) this.host.resumeFromVideo();
+        else this.host.pauseFromVideo();
+      }) ?? null;
   }
 
   /**
@@ -334,11 +362,15 @@ export class BackingController {
   shelveTrack(): void {
     const { source } = this.current;
     if (!source || !this.underTrack) return;
+    this.offTransport?.();
+    this.offTransport = null;
     source.dispose();
     this.set({ source: null, player: null, started: false, advert: false });
   }
 
   dispose(): void {
+    this.offTransport?.();
+    this.offTransport = null;
     this.current.source?.dispose();
     this.current = NO_BACKING;
   }

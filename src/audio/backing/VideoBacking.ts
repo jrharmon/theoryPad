@@ -75,6 +75,18 @@ export class VideoBacking implements BackingSource {
     this.follower.start();
   }
 
+  /**
+   * YouTube's own play and pause button, reported as transport. Only those two
+   * states: buffering, cueing and the end of the video are the track's own
+   * business, and the follower already holds the clock through them.
+   */
+  onTransport(listener: (playing: boolean) => void): () => void {
+    return this.player.onState((state) => {
+      if (state === YT_STATE.playing) listener(true);
+      else if (state === YT_STATE.paused) listener(false);
+    });
+  }
+
   /** The clock was moved under the track; hold it where it was put. */
   reanchor(): void {
     this.follower?.reanchor();

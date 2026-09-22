@@ -27,6 +27,12 @@ export interface BackingSource {
    * anything to do here.
    */
   reanchor?(): void;
+  /**
+   * The player's own controls were used, rather than the app's: true when it
+   * was set playing, false when paused. Only a source the player can touch
+   * directly has anything to report.
+   */
+  onTransport?(listener: (playing: boolean) => void): () => void;
   stop(): void;
   setRate(speed: number): void;
   dispose(): void;

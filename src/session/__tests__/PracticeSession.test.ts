@@ -41,6 +41,7 @@ class FakeTrack implements TrackSource {
   private readonly failWith: Error | null;
   speed = 1;
   status: Status = 'loaded';
+  private transport: ((playing: boolean) => void) | null = null;
   startedFrom: number | null = null;
   reanchored = 0;
 
@@ -76,6 +77,17 @@ class FakeTrack implements TrackSource {
   }
   reanchor() {
     this.reanchored += 1;
+  }
+  onTransport(listener: (playing: boolean) => void) {
+    this.transport = listener;
+    return () => {
+      this.transport = null;
+    };
+  }
+  /** YouTube's own controls, as the player would use them. */
+  useOwnControls(playing: boolean) {
+    this.status = playing ? 'playing' : 'paused';
+    this.transport?.(playing);
   }
   dispose() {
     this.status = 'disposed';
@@ -388,6 +400,33 @@ describe('ExerciseSession', () => {
     await session.chooseBacking({ kind: 'none' });
     expect(audio.tracks[0]!.status).toBe('disposed');
     expect(session.state.snapshot?.currentTempo).toBe(72);
+  });
+
+  it('follows the video’s own controls: pausing there pauses the exercise, playing resumes it', async () => {
+    const own = track({ scope: { kind: 'exercise', exerciseId: 'set below' } });
+    const { deps, repos, audio } = world([own]);
+    const exercise = await addExercise(repos, 'modes-through-key', { countInBars: 1 });
+    own.scope = { kind: 'exercise', exerciseId: exercise.id };
+    delete own.keyMode;
+    const session = await ExerciseSession.open(exercise, deps);
+    await session.chooseBacking({ kind: 'video', id: own.id });
+    await session.play();
+    expect(session.state.snapshot?.state).toBe('count-in');
+
+    audio.tracks[0]!.useOwnControls(false);
+    expect(session.state.snapshot?.state).toBe('paused');
+
+    audio.tracks[0]!.useOwnControls(true);
+    await settle();
+    expect(session.state.snapshot?.state).toBe('count-in');
+    expect(audio.tracks[0]!.status).toBe('playing');
+
+    // The app's own pause reports back from the video, and does not bounce.
+    session.pause();
+    audio.tracks[0]!.useOwnControls(false);
+    expect(session.state.snapshot?.state).toBe('paused');
+    await session.resume();
+    expect(session.state.snapshot?.state).toBe('count-in');
   });
 
   it('follows the key: a track that no longer fits is dropped, and the drone retunes', async () => {
