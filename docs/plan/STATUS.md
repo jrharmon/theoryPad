@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-22. **A routine's theory reps are now its question count** — on a branch, awaiting review; see the section of that name. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
+**Last updated:** 2026-09-22. **A routine's theory reps are now its question count** — merged and pushed; see the section of that name. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
 numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
 theory drill; see "Feedback round 6" below. Nothing is in progress. Before that, **feedback round 5 was merged
 and live** — a transport clock, settings and the backing menu reloading on every visit, and
@@ -233,9 +233,9 @@ the perfect view of related chords".
 - **Play, pause, restart and stop are icons** (lucide), which is most of the transport's width
   back. Theory keeps its worded Start / Again.
 
-## A routine's theory reps are questions — on branch `routine-theory-questions` (2026-09-22)
+## A routine's theory reps are questions — merged (2026-09-22)
 
-Awaiting the player's review. In a routine, a theory item sized by `questionCount` (circle of
+In a routine, a theory item sized by `questionCount` (circle of
 fifths, key signature drill) now reads its reps as **questions**, asked as one set: reps 4 is a
 4-question set, where before reps 1 was one whole 10-question set. `routineItemRun` in
 `src/exercises/params.ts` does it for the runner and the time estimate; the count is set after
