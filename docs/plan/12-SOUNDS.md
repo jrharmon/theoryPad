@@ -489,9 +489,9 @@ tab, swing's ride on the triplets.
 ### Gate — round 2, and the merge (2026-09-23)
 
 "Everything seems a lot better." The straight beat took the name Upbeat and the swing one
-became Swing. Merged into `main` and pushed. Not explicitly judged, so still open: guitar vs
-piano as the default, the open-hat count-in, and Simple in 3/4 and 6/8 (no exercise uses
-either yet). The beats are starting points the player means to tweak in `beats.ts`.
+became Swing. Merged into `main` and pushed. Answered just after: **guitar stays the
+default**, and **the open-hat count-in works**. Simple in 3/4 and 6/8 waits for the first
+exercise in either signature (STATUS notes it under M8). The beats are starting points the player means to tweak in `beats.ts`.
 
 ---
 

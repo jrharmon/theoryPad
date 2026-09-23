@@ -695,9 +695,9 @@ now drum tab in `src/domain/drums/beats.ts`, which the player means to tweak and
 Upbeat is straight-sixteenth jazz-funk, Swing its triplet cousin, Heavy is metal with gallops
 and double-kick runs (the first two had their names swapped on the second listen). No new samples — the player's call — so swing's hi-hat foot is a soft closed hat.
 
-**Second listen: "Everything seems a lot better"** — merged. Not explicitly judged, so listed
-under "Open questions": guitar vs piano as the default, the open-hat count-in, Simple in 3/4
-and 6/8.
+**Second listen: "Everything seems a lot better"** — merged. Answered after the merge: guitar
+stays the default, and the open-hat count-in works. Simple in 3/4 and 6/8 waits for the first
+exercise in either signature — noted under M8.
 
 
 **The full spec is `docs/plan/12-SOUNDS.md`. Read it before starting — the design choices below
@@ -740,6 +740,9 @@ are high and cut through on their own, and the kick is there for feel rather tha
   the synth — the trigger for sampled instruments.
 
 **M8 — The rest of the catalog** (all thirteen exercises)
+- **The first exercise in 3/4 or 6/8 gets Simple checked by ear** at its gate — whether the
+  generated beat works there or wants a hand-written one in `beats.ts`. Nothing in the app is
+  in either signature yet, so it has never been heard (Sounds, 2026-09-23).
 - 8.1 ladder tempo plans, pick-stroke marks, articulation audio (M) · 8.2 speed picking (S) ·
   8.3 legato (S) · 8.4 `remapToStringSet` + string skipping (M) · 8.5 triad shapes, R/3/5/7
   labels, triads & arpeggios (M) · 8.6 clickable `FretboardInput` + note finding (M) · 8.7
@@ -771,12 +774,6 @@ are high and cut through on their own, and the kick is there for feel rather tha
 
 ## Open questions for the player
 
-**Left from Sounds** (not explicitly judged at its gate):
-- Guitar or piano as the default instrument (guitar today).
-- Whether the open-hat count-in reads as "come in here".
-- Simple in 3/4 and 6/8 — **no exercise uses either yet**, so it cannot be heard in the app;
-  ask when the first one does, or build a scratch audition page.
-
 **Left from M7a:**
 - "Improvise to a target" had not been tried when M7a merged — ask how it went.
 - "Set to now" was reported flaky; it could not be reproduced after the time display moved to
@@ -807,6 +804,7 @@ These need a guitar:
   click. A missing kit plays the click, never silence.
 - Metronome voices swap mid-run on a fixed grid; the menu stays usable while playing.
 - A routine's overview has no metronome menu: each item's is its own, set while it plays.
+- Guitar is the default instrument; the open hat is the drum count-in. Both confirmed by ear.
 - Beats beyond Simple are drum tab in `beats.ts`, for the player to tweak. Soft dropped; Upbeat
   (straight, jazz-funk), Swing and Heavy (metal). No new samples. The kick is heard, not felt.
 
