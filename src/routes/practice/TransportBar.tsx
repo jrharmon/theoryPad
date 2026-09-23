@@ -4,6 +4,7 @@ import { ToggleButton } from '@/components/ui/toggle-button';
 import { tickToBarBeat } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
+import { useSounds } from '@/store/sounds';
 import { BackingMenu, TrackSpeed } from './BackingMenu';
 import { CountInMenu } from './CountInMenu';
 import { BackingDroppedNote } from './BackingPanel';
@@ -188,6 +189,7 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       {!theory && <CountInMenu />}
       {!theory && <BackingMenu />}
       {!theory && state === 'brief' && <BackingDroppedNote />}
+      {!theory && <SoundsNote />}
 
       {state === 'count-in' && (
         <span className="text-body-sm font-extrabold tabular-nums">Counting in…</span>
@@ -216,6 +218,24 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
       </div>
     </div>
   );
+}
+
+/**
+ * Quiet word while the samples download, and once if they could not: either
+ * way the synth is playing, and nothing waited for it.
+ */
+function SoundsNote() {
+  const status = useSounds((s) => s.status);
+  if (status === 'loading')
+    return <span className="text-meta text-ink-muted">Loading sounds…</span>;
+  if (status === 'failed') {
+    return (
+      <span className="text-meta text-ink-muted">
+        Sounds didn’t load — the synth plays instead.
+      </span>
+    );
+  }
+  return null;
 }
 
 /** Metronome and loop. Remembered app-wide, and applied straight away. */

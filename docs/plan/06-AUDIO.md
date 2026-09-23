@@ -100,34 +100,38 @@ free-time runs.
 
 ---
 
-## Voices — the samples-later path
+## Voices — synth and samples
 
-```ts
-export interface InstrumentVoice {
-  readonly id: string;
-  load(): Promise<void>;
-  triggerAttackRelease(
-    note: NoteName,
-    durationSec: number,
-    atTime: number,
-    velocity: number,
-  ): void;
-  releaseAll(): void;
-  dispose(): void;
-}
-```
+_As built in the Sounds run, task 2 (2026-09-22). Doc 12 has the decisions and the sample sets._
 
-v1 ships **`SynthVoice`** — a `Tone.PolySynth` with a plucked/karplus-ish configuration for
-guitar-ish tone, plus a `Tone.PolySynth` with softer settings for backing chords.
+`InstrumentVoice` (`src/audio/voices/`) is the interface everything downstream plays through:
+`load`, `ready`, `play(note, durationSeconds, atTime, velocity?)`, `releaseAll`, `setVolume`,
+`dispose`. Two implementations:
 
-Later, **`SampledVoice`** wraps `Tone.Sampler` with a small multi-sampled acoustic or clean
-electric guitar (a handful of pitches per octave; Tone pitch-shifts between them). Because
-everything downstream only knows `InstrumentVoice`, adding it is: drop samples into `public/`,
-write the class, add `'sampled'` to the settings enum. **No consumer changes.** That is the
-"not hard to add samples later" requirement, satisfied structurally.
+- **`SynthVoice`** — a `Tone.PolySynth`, instant, no download.
+- **`SampledVoice`** — `Tone.Sampler` over one `VoicePreset` (`presets.ts`): **piano**
+  (Salamander, every minor third, Eb1–C7, each note cut to 4 s after decoding to keep memory
+  near 25 MB) and **guitar** (FluidR3 steel-string acoustic, every semitone, B1–E6). Files
+  resolve through `import.meta.env.BASE_URL` — `sampleDir()` — never a leading slash, because
+  the deploy lives under `/theoryPad/`. Each preset's `volumeDb` levels it with the synth
+  (matched by RMS over the same rendered line). Polyphonic, so chords work.
 
-Sample assets are lazy-loaded and cached by the service worker, so they cost nothing until
-selected.
+**The voice slot.** `AudioEngine` holds a `VoiceSlot`: the synth always, plus the chosen
+sampled voice once it has loaded. `PhrasePlayer` takes `() => InstrumentVoice` and reads the
+slot as each note plays, so nothing waits on a download — the synth plays until the samples
+are in, and a load finishing mid-pass takes over from the next note. `init()` loads only the
+synth. A failed load stays on the synth and is not retried until a different voice is chosen.
+
+**Loading.** `audioPort()` in the practice store starts the chosen voice (`useSounds.choose`)
+when the practice screen opens; Settings starts it when the voice changes. The transport says
+"Loading sounds…" while it is in flight and "Sounds didn't load — the synth plays instead" if
+it failed. `Settings.audio.voice` is `'synth' | 'piano' | 'guitar'`, default guitar; the v6
+migration moved everyone off the never-chosen `'synth'`, and `withDefaults` reads the old
+`'sampled'` as piano. Bass samples are committed but not a voice: guitar tab reaches E6 and a
+bass sampler would stretch that into a chipmunk. They wait for generated backing.
+
+Settings → Sound: **Instrument** (Synth · Piano · Guitar) with **Hear it** — a strummed Cmaj7
+then C7 through the chosen voice — and a **Credits** line; two sample sets are CC-BY.
 
 ---
 

@@ -14,6 +14,7 @@ import {
 import { useExercises } from './exercises';
 import { useRoutines } from './routines';
 import { useSettings } from './settings';
+import { useSounds } from './sounds';
 import { useVideos } from './videos';
 
 interface PracticeState extends SessionState {
@@ -68,6 +69,11 @@ async function audioPort(): Promise<AudioPort> {
   const audio = await import('@/audio');
   // Constructing the engine is safe without a gesture; only starting it is not.
   const engine = audio.getAudioEngine();
+  // The chosen voice starts downloading now, not on Play. Nothing waits for it:
+  // the synth plays until it is in. Settings may not have loaded on a reload
+  // straight into practice, and loading them twice is a no-op.
+  await useSettings.getState().load();
+  void useSounds.getState().choose(useSettings.getState().settings.audio.voice);
   return {
     clock: engine.clock,
     metronome: engine.metronome,

@@ -55,7 +55,7 @@ export function BackingMenu() {
           <Option
             selected={backing.resolved.kind === 'none'}
             title="None"
-            detail="The synth plays the notes, with the metronome."
+            detail="The notes play, with the metronome."
             onPick={() => pick({ kind: 'none' })}
           />
           <Option

@@ -1,7 +1,16 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import { db, type TheoryPadDB } from '../db';
-import type { Exercise, Rep, Routine, Session, Settings, Uuid, Video } from '../entities';
+import type {
+  Exercise,
+  Rep,
+  Routine,
+  Session,
+  Settings,
+  Uuid,
+  Video,
+  VoiceId,
+} from '../entities';
 import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import type {
@@ -282,7 +291,7 @@ export function defaultSettings(at: number): Settings {
       metronomeEnabled: true,
       countInBars: 1,
       loop: false,
-      voice: 'synth',
+      voice: 'guitar',
       masterVolumeDb: 0,
     },
     practice: {
@@ -314,11 +323,24 @@ export function defaultSettings(at: number): Settings {
  */
 export function withDefaults(stored: Settings): Settings {
   const defaults = defaultSettings(stored.updatedAt);
+  const audio = { ...defaults.audio, ...stored.audio };
   return {
     ...defaults,
     ...stored,
-    audio: { ...defaults.audio, ...stored.audio },
+    audio: { ...audio, voice: knownVoice(audio.voice) },
     practice: { ...defaults.practice, ...stored.practice },
     ui: { ...defaults.ui, ...stored.ui },
   };
+}
+
+const VOICES: readonly string[] = ['synth', 'piano', 'guitar'] satisfies VoiceId[];
+
+/**
+ * A stored voice we can play. `'sampled'` was the placeholder before there was
+ * more than one sample set, and meant the piano; anything else unknown — an
+ * export from a later version, say — plays the synth, which always works.
+ */
+function knownVoice(voice: string): VoiceId {
+  if (voice === 'sampled') return 'piano';
+  return VOICES.includes(voice) ? (voice as VoiceId) : 'synth';
 }

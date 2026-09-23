@@ -128,7 +128,7 @@ export function BackingDroppedNote() {
   if (!dropped || !keyMode) return null;
   return (
     <span className="text-meta text-ink-muted">
-      Your track isn’t in {keyMode.tonic} {modeTitle(keyMode.mode)} — the synth plays instead.
+      Your track isn’t in {keyMode.tonic} {modeTitle(keyMode.mode)} — the notes play instead.
     </span>
   );
 }

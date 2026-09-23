@@ -187,6 +187,27 @@ polyphony works.
 **Recommended default: `guitar`.** It is a guitar app and the tab on screen is guitar tab. The
 gate decides; piano is the honest alternative, and it is the clearer one for ear training.
 
+### Task 2 — outcome (2026-09-22)
+
+Built as above, with three changes agreed with the player before starting:
+
+- **Guitar is the default, and everyone moves to it once.** `audio.voice` had been stored as
+  `'synth'` since M0 but never shown, so nobody chose it; a v6 Dexie upgrade sets it to
+  `'guitar'`. From then on the synth is a real choice. `'sampled'` still reads as piano, and
+  anything unknown as the synth.
+- **No bass voice.** The notes are guitar tab up to E6, and the bass samples stop at G3 — a
+  sampler would shift them up two and a half octaves. `VoiceId` is `'synth' | 'piano' |
+  'guitar'`; the bass samples wait for generated backing.
+- **The piano is cut to 4 s per note after decoding**, with a 0.1 s fade: ~133 MB decoded
+  becomes ~25 MB, with no re-encode.
+
+Levels: each preset's `volumeDb` was set by rendering the same line through the synth and
+the sampled voice offline and matching RMS — guitar +8 dB, piano −2 dB, both now within
+0.3 dB of the synth. "Hear it" plays Cmaj7 then C7, strummed. The voice state lives in a
+small `useSounds` store rather than the session: a session never needs to know which voice
+is playing, and `AudioPort` is unchanged. The backing menu's "The synth plays the notes"
+became "The notes play", since the notes are no longer necessarily the synth.
+
 ---
 
 ## Part 3 — Drum patterns, pure

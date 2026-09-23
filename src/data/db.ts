@@ -72,6 +72,19 @@ export class TheoryPadDB extends Dexie {
       .upgrade((transaction) =>
         transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]),
       );
+    // Sampled instruments. `audio.voice` was stored as 'synth' from the start
+    // but never shown anywhere, so nobody chose it: everyone moves to the new
+    // default once, and from here on the synth is a real choice.
+    this.version(6)
+      .stores({})
+      .upgrade((transaction) =>
+        transaction
+          .table<Settings>('settings')
+          .toCollection()
+          .modify((row) => {
+            row.audio = { ...row.audio, voice: 'guitar' };
+          }),
+      );
     this.on('populate', (transaction) => {
       void transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]);
     });

@@ -37,7 +37,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — task 1 (samples) done 2026-09-22; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
+| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples) and 2 (sampled voices) done 2026-09-22; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
 | M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -75,9 +75,9 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
 | `src/domain/` | Pure logic. `music` (tonal wrapper), `instrument` (shapes, fretboard), `phrase` (ticks, builder), `variation` (axes, policies, roller), `theory` (questions, distractors), `neck`, `tempo`, `time` (Clock, FakeClock). |
 | `src/exercises/` | Definitions, one directory each, registered in `registry.ts`; `shared/` generators; `params.ts` (a Zod schema → a settings form); `runner/` — `ExerciseRunner` and `RoutineRunner`. |
 | `src/domain/progress/` | Everything progress, pure: local day keys, the per-day rollup, heatmap, streak, time by day, exercise log, report summary, fret tally and neck heat, key × mode grid, answer weights. |
-| `src/data/` | Dexie (schema v4: exercises, routines, sessions, reps, exerciseStats, practiceDays, settings), repositories (Dexie, tested over `fake-indexeddb`; reached through `repos()`), stats, `transfer.ts` (export/import). |
+| `src/data/` | Dexie (schema v6: exercises, routines, sessions, reps, exerciseStats, practiceDays, settings), repositories (Dexie, tested over `fake-indexeddb`; reached through `repos()`), stats, `transfer.ts` (export/import). |
 | `src/session/` | Framework-free `PracticeSession` (`ExerciseSession`, `RoutineSession`): runner, sound routing, saves; `BackingController` (choice → source, track/runner tempo hand-off). Injected `AudioPort` + repositories; scenario-tested over `FakeClock` and `fake-indexeddb`. Imports audio as types only (lint-enforced). |
-| `src/store/` | Zustand: `practice` (a thin adapter holding one `PracticeSession` and mirroring its state), `exercises`, `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state). |
+| `src/store/` | Zustand: `practice` (a thin adapter holding one `PracticeSession` and mirroring its state), `exercises`, `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state), `sounds` (the engine's voice: choose, status, hear it). |
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
@@ -161,7 +161,9 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
   - a settings dialog
   - tab size (`-` / `=`) and bar lines
   - the neck trimmed to the frets in use, or hidden.
-- **Settings**: tuning (standard, drop D, 7-string), sound, display (appearance, neck, tab size),
+- **Settings**: tuning (standard, drop D, 7-string), sound (the instrument the notes play
+  on — synth, sampled piano or sampled guitar, default guitar — with Hear it, and the sample
+  credits), display (appearance, neck, tab size),
   and Export / Import (merge or replace, with a summary first).
 - **Keys**:
   - Space: pause

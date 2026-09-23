@@ -42,7 +42,7 @@ describe('PhrasePlayer', () => {
       .sequence([p(0, 3), p(0, 5), p(1, 0)])
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
     clock.start();
     clock.advanceTicks(QUARTER * 4);
 
@@ -62,7 +62,7 @@ describe('PhrasePlayer', () => {
     const dropD = { ...STANDARD_GUITAR, tuning: [...STANDARD_GUITAR.tuning] };
     dropD.tuning[0] = 'D2' as NoteName;
 
-    new PhrasePlayer(clock, voice).load(phrase, dropD);
+    new PhrasePlayer(clock, () => voice).load(phrase, dropD);
     clock.start();
     clock.advanceTicks(QUARTER);
     expect(played[0]!.note).toBe('D2');
@@ -80,7 +80,7 @@ describe('PhrasePlayer', () => {
         .sequence([p(0, 3)])
         .build();
 
-      new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+      new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
       clock.start();
       clock.advanceTicks(QUARTER);
       expect(played[0]!.duration).toBe(expected);
@@ -97,7 +97,7 @@ describe('PhrasePlayer', () => {
       .note(p(0, 7), { articulation: 'pull-off' })
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
     clock.start();
     clock.advanceTicks(QUARTER * 2);
 
@@ -118,7 +118,7 @@ describe('PhrasePlayer', () => {
       .note(p(0, 5), { articulation: 'let-ring' })
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
     clock.start();
     clock.advanceTicks(QUARTER * 2);
 
@@ -135,7 +135,7 @@ describe('PhrasePlayer', () => {
       .note(p(0, 5), { velocity: 0.4 })
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
     clock.start();
     clock.advanceTicks(QUARTER * 2);
     expect(played.map((n) => n.velocity)).toEqual([1, 0.4]);
@@ -149,7 +149,7 @@ describe('PhrasePlayer', () => {
       .sequence([p(0, 3), p(0, 5), p(0, 7), p(0, 8)])
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
     clock.start();
     clock.advanceTicks(QUARTER * 16);
 
@@ -165,7 +165,7 @@ describe('PhrasePlayer', () => {
       .sequence([p(0, 3)])
       .build();
 
-    new PhrasePlayer(clock, voice).load(phrase, STANDARD_GUITAR, QUARTER * 4);
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR, QUARTER * 4);
     clock.start();
     clock.advanceTicks(QUARTER * 2);
     expect(played).toHaveLength(0);
@@ -178,7 +178,7 @@ describe('PhrasePlayer', () => {
   it('plays nothing for a phrase with no notes', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    const player = new PhrasePlayer(clock, voice);
+    const player = new PhrasePlayer(clock, () => voice);
     player.load(
       phraseBuilder()
         .rest(QUARTER * 4)
@@ -195,7 +195,7 @@ describe('PhrasePlayer', () => {
   it('clears scheduled notes and releases the voice', () => {
     const clock = new FakeClock(60);
     const { voice, played, releases } = recordingVoice();
-    const player = new PhrasePlayer(clock, voice);
+    const player = new PhrasePlayer(clock, () => voice);
     player.load(
       phraseBuilder()
         .rhythm(QUARTER)
@@ -219,7 +219,7 @@ describe('PhrasePlayer', () => {
   it('replaces the previous phrase on reload', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    const player = new PhrasePlayer(clock, voice);
+    const player = new PhrasePlayer(clock, () => voice);
 
     player.load(
       phraseBuilder()
@@ -245,7 +245,7 @@ describe('PhrasePlayer', () => {
   it('sounds nothing while the clock is paused', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
-    new PhrasePlayer(clock, voice).load(
+    new PhrasePlayer(clock, () => voice).load(
       phraseBuilder()
         .rhythm(QUARTER)
         .sequence([p(0, 3), p(0, 5), p(0, 7), p(0, 8)])

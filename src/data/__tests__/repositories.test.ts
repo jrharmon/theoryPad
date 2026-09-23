@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import Dexie from 'dexie';
 import { TheoryPadDB } from '../db';
-import { createRepositories } from '../repositories/dexie';
+import { createRepositories, defaultSettings } from '../repositories/dexie';
 import type { Repositories } from '../repositories/types';
 import type { NewExercise, NewRep, NewSession, NewVideo } from '../repositories/types';
 import { FIRST_RUN_VIDEOS } from '../seed/videos';
@@ -504,5 +504,51 @@ describe('settings saved before a field existed', () => {
     expect(loaded.ui.appearance).toBe('system');
     expect(loaded.ui.showNeck).toBe(false);
     await database.delete();
+  });
+
+  it("play the piano for the old 'sampled' voice, and the synth for one we do not know", async () => {
+    const database = new TheoryPadDB(`old-settings-${Math.random()}`);
+    const repos = createRepositories(database);
+    const current = await repos.settings.get();
+    const stored = (voice: string) =>
+      database.settings.put({
+        ...current,
+        audio: { ...current.audio, voice } as typeof current.audio,
+      });
+
+    await stored('sampled');
+    expect((await repos.settings.get()).audio.voice).toBe('piano');
+    await stored('theremin');
+    expect((await repos.settings.get()).audio.voice).toBe('synth');
+    await database.delete();
+  });
+});
+
+describe('the v6 migration', () => {
+  it("moves the never-chosen 'synth' voice to the guitar", async () => {
+    const name = `theorypad-migration-v6-${Math.random()}`;
+    const before = new Dexie(name);
+    before.version(5).stores({
+      exercises: 'id, definitionId, updatedAt, deletedAt',
+      sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
+      reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
+      exerciseStats: 'exerciseId, definitionId, updatedAt',
+      settings: 'key',
+      routines: 'id, updatedAt, deletedAt',
+      practiceDays: 'date',
+      videos: 'id, updatedAt',
+    });
+    await before.open();
+    const old = defaultSettings(1);
+    await before
+      .table('settings')
+      .put({ ...old, audio: { ...old.audio, voice: 'synth', masterVolumeDb: -4 } });
+    before.close();
+
+    const after = new TheoryPadDB(name);
+    const { audio } = await createRepositories(after).settings.get();
+    expect(audio.voice).toBe('guitar');
+    expect(audio.masterVolumeDb).toBe(-4);
+    await after.delete();
   });
 });

@@ -204,6 +204,14 @@ export interface ExerciseStats {
   updatedAt: number;
 }
 
+/**
+ * What the notes play on. The synth needs no download; piano and guitar are
+ * samples under public/samples/. Bass samples are committed too, but guitar tab
+ * reaches E6 and a bass sampler would stretch that into a chipmunk, so bass
+ * waits for the generated backing (docs/plan/12-SOUNDS.md).
+ */
+export type VoiceId = 'synth' | 'piano' | 'guitar';
+
 /** Light or dark. 'system' follows the computer, and changes when it does. */
 export type Appearance = 'system' | 'light' | 'dark';
 
@@ -219,7 +227,7 @@ export interface Settings {
     countInBars: CountInBars;
     /** Keep playing the same material pass after pass. */
     loop: boolean;
-    voice: 'synth' | 'sampled';
+    voice: VoiceId;
     masterVolumeDb: number;
   };
   practice: {

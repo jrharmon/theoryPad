@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   applyImport,
   type Appearance,
+  type VoiceId,
   db,
   exportData,
   parseExport,
@@ -11,8 +12,8 @@ import {
   type TheoryPadExport,
 } from '@/data';
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
-import type { Chroma, ModeName } from '@/domain/music';
-import { MODE_NAMES, modeTitle, preferredTonic } from '@/domain/music';
+import type { Chroma, ModeName, NoteName } from '@/domain/music';
+import { MODE_NAMES, modeTitle, noteName, preferredTonic } from '@/domain/music';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSettings } from '@/store/settings';
+import { useSounds } from '@/store/sounds';
 import { downloadFile } from '@/lib/download';
 import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
 import { BackingTracksSection } from './BackingTracksSection';
@@ -91,6 +93,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Sound">
+        <InstrumentRow voice={audio.voice} volumeDb={audio.masterVolumeDb} />
         <Row
           label="Metronome"
           hint="On when you open an exercise. The transport can switch it any time."
@@ -119,6 +122,22 @@ export function SettingsPage() {
               {audio.masterVolumeDb} dB
             </span>
           </div>
+        </Row>
+        <Row label="Credits">
+          {/* Two of the sample sets are CC-BY: crediting them is the licence, not politeness. */}
+          <p className="text-body-sm text-ink-muted">
+            Piano: Salamander Grand Piano by Alexander Holm. Guitar: FluidR3_GM by Frank Wen.
+            Both <span className="whitespace-nowrap">CC-BY 3.0</span>. Drums: Sonic Pi&rsquo;s
+            samples, CC0.{' '}
+            <a
+              href={`${import.meta.env.BASE_URL}samples/v1/CREDITS.md`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent underline underline-offset-2"
+            >
+              Full credits
+            </a>
+          </p>
         </Row>
       </Section>
 
@@ -205,6 +224,66 @@ export function SettingsPage() {
 
       <DataSection />
     </section>
+  );
+}
+
+const VOICES: { id: VoiceId; label: string }[] = [
+  { id: 'synth', label: 'Synth' },
+  { id: 'piano', label: 'Piano' },
+  { id: 'guitar', label: 'Guitar' },
+];
+
+/** maj7 then dom7: the difference ear training needs, and the proof that chords sound. */
+const HEAR_CHORDS: NoteName[][] = [
+  ['C3', 'E3', 'G3', 'B3', 'E4'],
+  ['C3', 'E3', 'G3', 'Bb3', 'E4'],
+].map((chord) => chord.map(noteName));
+
+/** What the notes play on, and a chord through it. */
+function InstrumentRow({ voice, volumeDb }: { voice: VoiceId; volumeDb: number }) {
+  const save = useSettings((s) => s.save);
+  const status = useSounds((s) => s.status);
+  const [hearing, setHearing] = useState(false);
+
+  // Tone, not the samples: ready before "hear it" is clicked, so the click
+  // still counts as the gesture that starts audio.
+  useEffect(() => {
+    void import('@/audio');
+  }, []);
+
+  const choose = (id: VoiceId) => {
+    const { audio } = useSettings.getState().settings;
+    void save({ audio: { ...audio, voice: id } });
+    void useSounds.getState().choose(id);
+  };
+
+  const hear = () => {
+    setHearing(true);
+    // Choosing the voice already chosen is a no-op; this starts the download
+    // if nothing on this visit has yet.
+    void useSounds.getState().choose(voice);
+    void useSounds
+      .getState()
+      .hear(HEAR_CHORDS, volumeDb)
+      .finally(() => setHearing(false));
+  };
+
+  return (
+    <Row
+      label="Instrument"
+      hint={
+        status === 'failed'
+          ? 'Those sounds didn’t load, so the synth plays instead.'
+          : 'What the notes play on. The synth plays while samples load.'
+      }
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <SegmentedControl label="Instrument" value={voice} options={VOICES} onChange={choose} />
+        <Button variant="secondary" size="sm" onClick={hear} disabled={hearing}>
+          {hearing && status === 'loading' ? 'Loading…' : 'Hear it'}
+        </Button>
+      </div>
+    </Row>
   );
 }
 

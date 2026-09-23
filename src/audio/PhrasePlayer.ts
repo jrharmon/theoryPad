@@ -49,10 +49,11 @@ function soundingDuration(note: TabNote, seconds: number): number {
  */
 export class PhrasePlayer {
   private readonly clock: Clock;
-  private readonly voice: InstrumentVoice;
+  /** Read as each note plays: the engine swaps the synth for samples once they load. */
+  private readonly voice: () => InstrumentVoice;
   private handles: number[] = [];
 
-  constructor(clock: Clock, voice: InstrumentVoice) {
+  constructor(clock: Clock, voice: () => InstrumentVoice) {
     this.clock = clock;
     this.voice = voice;
   }
@@ -69,7 +70,7 @@ export class PhrasePlayer {
         this.handles.push(
           this.clock.schedule((audioTime) => {
             const seconds = ticksToSeconds(note.durationTicks, this.clock.bpm);
-            this.voice.play(
+            this.voice().play(
               noteAt(instrument, note),
               soundingDuration(note, seconds),
               audioTime,
@@ -84,7 +85,7 @@ export class PhrasePlayer {
   clear(): void {
     for (const handle of this.handles) this.clock.clear(handle);
     this.handles = [];
-    this.voice.releaseAll();
+    this.voice().releaseAll();
   }
 
   get scheduledNoteCount(): number {
