@@ -280,6 +280,31 @@ sits under the guitar. Mix accordingly: the snare and ride carry the beat and mu
 audible, the kick can be felt more than heard. The kit still needs a level pass of its own
 rather than inheriting the click's.
 
+### Task 3 — outcome (2026-09-22)
+
+`src/domain/drums/` as specced: `DrumSound`, `DrumHit`, `DrumPattern`, the four patterns,
+`drumPatterns()`, `patternById()`, `patternsFor()`. Pattern ids are `simple`, `upbeat`, `soft`,
+`heavy`. Every hit lands on its pattern's grid (tested for all four, in each signature they
+fit). Simple in 6/8 puts a kick on all six eighths with the snare on 2, 4 and 6 — the rule
+as written; the gate decides whether 6/8 wants its own. Heavy's crash takes the downbeat's
+hat rather than stacking on it.
+
+`DrumKit` (`src/audio/DrumKit.ts`) loads the seven kit files through the base URL and plays
+a hit at an audio time and velocity. Two things beyond the spec:
+
+- **A closed hat chokes a ringing open hat**, with a 20 ms fade, as the pedal does. Without
+  it Upbeat's open hat rings over the next downbeat, and the count-in's open hats smear
+  into each other.
+- **A per-drum mix.** The samples arrive normalised, which made the kick the loudest thing
+  in the kit and the ride the quietest — backwards for a metronome. Kick −6 dB, ride +3,
+  open hat −2, crash −3; then the kit as a whole at −12 dB. Rendered offline at 96 bpm,
+  Simple peaks near −8 dBFS with its RMS ~5 dB under a line of the levelled guitar; Upbeat
+  and Heavy sit within 3 dB of it, and Soft ~9 dB under, as intended. All to be judged by
+  ear at the gate.
+
+`DrumKit.load()` rejects if a file fails; task 4's `DrumVoice` decides what a failed kit
+falls back to.
+
 ---
 
 ## Part 4 — Metronome voices

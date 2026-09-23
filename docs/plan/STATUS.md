@@ -37,7 +37,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples) and 2 (sampled voices) done 2026-09-22; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
+| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
 | M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -81,6 +81,7 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
+| `src/domain/drums/` | Pure drum patterns for the metronome: Simple (any signature), Upbeat, Soft, Heavy (4/4); `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
 | `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
 | `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, host www.youtube.com), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
 | `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
