@@ -3,8 +3,8 @@ import type { CountInBars } from '@/domain/phrase';
 import { COUNT_IN_CHOICES } from '@/domain/phrase';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from 'cn';
 import { usePractice } from '@/store/practice';
+import { MenuOption } from './MenuOption';
 
 const LABEL: Record<number, string> = { 0: 'None', 0.5: '½ bar', 1: '1 bar', 2: '2 bars' };
 
@@ -42,26 +42,13 @@ export function CountInMenu() {
       <PopoverContent align="start" side="top" className="w-[300px] p-2">
         <ul className="space-y-0.5" role="listbox" aria-label="Count-in">
           {COUNT_IN_CHOICES.map((choice) => (
-            <li key={choice}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={choice === bars}
-                data-toggle={choice === bars ? 'on' : 'off'}
-                className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
-                onClick={() => pick(choice)}
-              >
-                <span className="block text-body-sm font-semibold">{LABEL[choice]}</span>
-                <span
-                  className={cn(
-                    'block text-meta',
-                    choice === bars ? 'opacity-80' : 'text-ink-muted',
-                  )}
-                >
-                  {DETAIL[choice]}
-                </span>
-              </button>
-            </li>
+            <MenuOption
+              key={choice}
+              selected={choice === bars}
+              title={LABEL[choice]!}
+              detail={DETAIL[choice]!}
+              onPick={() => pick(choice)}
+            />
           ))}
         </ul>
         <p className="px-2 pt-2 pb-1 text-meta text-ink-muted">

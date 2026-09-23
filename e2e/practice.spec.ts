@@ -189,15 +189,15 @@ test('the transport toggles are remembered — loop app-wide, the metronome on t
 }) => {
   await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   const loop = page.getByRole('button', { name: 'Loop', exact: true });
-  const metronome = page.getByRole('button', { name: 'Metronome', exact: true });
+  const metronome = page.getByTestId('metronome-menu');
   await expect(loop).toHaveAttribute('aria-pressed', 'false');
-  await expect(metronome).toHaveAttribute('aria-pressed', 'true');
+  await expect(metronome).toHaveText('MetronomeClick');
 
   await loop.click();
-  // M toggles the metronome without taking a hand off the guitar.
+  // M turns the metronome off without taking a hand off the guitar.
   await page.keyboard.press('m');
   await expect(loop).toHaveAttribute('aria-pressed', 'true');
-  await expect(metronome).toHaveAttribute('aria-pressed', 'false');
+  await expect(metronome).toHaveText('MetronomeOff');
 
   // Loop is app-wide; the metronome belongs to the exercise.
   await savedSettings(page, (s) => s.audio.loop === true);
@@ -211,10 +211,29 @@ test('the transport toggles are remembered — loop app-wide, the metronome on t
     'aria-pressed',
     'true',
   );
-  await expect(page.getByRole('button', { name: 'Metronome', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'false',
-  );
+  await expect(page.getByTestId('metronome-menu')).toHaveText('MetronomeOff');
+});
+
+test('a drum beat chosen from the metronome menu stays with the exercise', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  const metronome = page.getByTestId('metronome-menu');
+  await metronome.click();
+  await page.getByRole('option', { name: /Drums — Heavy/ }).click();
+  await expect(metronome).toHaveText('MetronomeDrums — Heavy');
+
+  await expect
+    .poll(async () =>
+      (await readStore<{ metronome?: string }>(page, 'exercises')).map((e) => e.metronome),
+    )
+    .toContain('drums-heavy');
+  await page.reload();
+  await expect(page.getByTestId('metronome-menu')).toHaveText('MetronomeDrums — Heavy');
+
+  // M turns it off, and back on to the beat rather than the click.
+  await page.keyboard.press('m');
+  await expect(page.getByTestId('metronome-menu')).toHaveText('MetronomeOff');
+  await page.keyboard.press('m');
+  await expect(page.getByTestId('metronome-menu')).toHaveText('MetronomeDrums — Heavy');
 });
 
 test('settings can be changed without leaving the exercise', async ({ page }) => {

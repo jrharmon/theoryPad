@@ -7,6 +7,7 @@ import { useSettings } from '@/store/settings';
 import { useSounds } from '@/store/sounds';
 import { BackingMenu, TrackSpeed } from './BackingMenu';
 import { CountInMenu } from './CountInMenu';
+import { MetronomeMenu } from './MetronomeMenu';
 import { BackingDroppedNote } from './BackingPanel';
 import { formatClock, runClock } from './runClock';
 import { useRunnerTicks } from './usePracticeBody';
@@ -185,7 +186,8 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         </span>
       )}
 
-      {!theory && <PlaybackToggles />}
+      {!theory && <LoopToggle />}
+      {!theory && <MetronomeMenu />}
       {!theory && <CountInMenu />}
       {!theory && <BackingMenu />}
       {!theory && state === 'brief' && <BackingDroppedNote />}
@@ -238,56 +240,18 @@ function SoundsNote() {
   return null;
 }
 
-/** Metronome, saved to the exercise or routine item, and loop, remembered app-wide. */
-export function PlaybackToggles() {
+/**
+ * Loop, remembered app-wide. In a routine it holds you on the current item.
+ * The metronome is a menu of its own, saved to the exercise or item.
+ */
+export function LoopToggle() {
   const practice = usePractice();
-  const audio = useSettings((s) => s.settings.audio);
+  const loop = useSettings((s) => s.settings.audio.loop);
   const inRoutine = usePractice((s) => s.routineId !== null);
-  const metronome = usePractice((s) => s.metronome);
-  // A track is the click: the metronome waits it out, and says why.
-  const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
   return (
-    <div className="flex items-center gap-1" role="group" aria-label="Playback">
-      <Toggle
-        label="Metronome"
-        on={metronome !== 'off' && !underTrack}
-        disabled={underTrack}
-        title={underTrack ? 'Muted under a backing track' : undefined}
-        onChange={() => void practice.toggleMetronome()}
-      />
-      <Toggle
-        // In a routine, looping holds you on the current exercise.
-        label={inRoutine ? 'Stay on this' : 'Loop'}
-        on={audio.loop}
-        onChange={(on) => void practice.setLoop(on)}
-      />
-    </div>
-  );
-}
-
-/** On is ink, off is quiet: the accent stays with Play. */
-function Toggle({
-  label,
-  on,
-  onChange,
-  disabled = false,
-  title,
-}: {
-  label: string;
-  on: boolean;
-  onChange: (on: boolean) => void;
-  disabled?: boolean;
-  title?: string | undefined;
-}) {
-  return (
-    <ToggleButton
-      on={on}
-      quietOff
-      disabled={disabled}
-      title={title}
-      onClick={() => onChange(!on)}
-    >
-      {label}
+    // On is ink, off is quiet: the accent stays with Play.
+    <ToggleButton on={loop} quietOff onClick={() => void practice.setLoop(!loop)}>
+      {inRoutine ? 'Stay on this' : 'Loop'}
     </ToggleButton>
   );
 }

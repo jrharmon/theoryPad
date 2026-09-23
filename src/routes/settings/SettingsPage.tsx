@@ -11,6 +11,7 @@ import {
   type ImportSummary,
   type TheoryPadExport,
 } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
 import type { Chroma, ModeName, NoteName } from '@/domain/music';
 import { MODE_NAMES, modeTitle, noteName, preferredTonic } from '@/domain/music';
@@ -37,6 +38,7 @@ import {
 import { useSettings } from '@/store/settings';
 import { useSounds } from '@/store/sounds';
 import { downloadFile } from '@/lib/download';
+import { metronomeChoices } from '../practice/metronomeChoices';
 import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
 import { BackingTracksSection } from './BackingTracksSection';
 
@@ -96,18 +98,28 @@ export function SettingsPage() {
         <InstrumentRow voice={audio.voice} volumeDb={audio.masterVolumeDb} />
         <Row
           label="Metronome"
-          hint="On when you open an exercise. The transport can switch it any time."
+          hint="For an exercise that hasn’t chosen its own. Upbeat, Soft and Heavy are 4/4 only."
         >
-          <OnOff
-            on={audio.metronome !== 'off'}
-            label="Metronome"
-            onChange={(on) =>
-              void save({ audio: { ...audio, metronome: on ? 'click' : 'off' } })
+          <Select
+            value={audio.metronome}
+            onValueChange={(id) =>
+              void save({ audio: { ...audio, metronome: id as MetronomeVoiceId } })
             }
-          />
+          >
+            <SelectTrigger aria-label="Metronome" className="w-[260px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {metronomeChoices(null).map((choice) => (
+                <SelectItem key={choice.id} value={choice.id}>
+                  {choice.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Row>
         {/* The count-in belongs to each exercise now, and is set from its transport. */}
-        <Row label="Volume" hint="The notes and the click together.">
+        <Row label="Volume" hint="The notes and the metronome together.">
           <div className="flex items-center gap-3">
             <input
               type="range"

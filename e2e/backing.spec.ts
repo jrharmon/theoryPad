@@ -131,7 +131,7 @@ test('a backing track takes the tempo over, and the metronome waits it out', asy
   // Target 70 over a 100 bpm track: 70% speed, 70 bpm.
   await expect(page.getByTestId('tempo')).toHaveText('70');
   await expect(page.getByTestId('track-speed')).toHaveText('70% speed');
-  await expect(page.getByRole('button', { name: 'Metronome' })).toBeDisabled();
+  await expect(page.getByTestId('metronome-menu')).toBeDisabled();
 
   // The tempo moves in the track's own steps.
   await page.keyboard.press(']');
@@ -177,7 +177,7 @@ test('the drone plays under the notes, and the metronome keeps the beat', async 
   await page.getByRole('option', { name: /Drone/ }).click();
   await expect(page.getByTestId('backing-menu')).toContainText('Drone');
   await expect(page.getByTestId('backing-panel')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Metronome' })).toBeEnabled();
+  await expect(page.getByTestId('metronome-menu')).toBeEnabled();
   await page.getByTestId('play').click();
   await expect(page.getByTestId('pause')).toBeVisible();
 });

@@ -14,7 +14,7 @@ import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
 import { RunningChrome } from './RunningChrome';
-import { PlaybackToggles, TransportBar } from './TransportBar';
+import { LoopToggle, TransportBar } from './TransportBar';
 import { BackingMenu } from './BackingMenu';
 import { useKeyModeView } from '@/store/keyModeView';
 import { ReferenceTrigger } from './ReferenceTrigger';
@@ -147,7 +147,7 @@ function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSn
         <Button size="lg" onClick={() => void practice.play()} data-testid="start-routine">
           Start
         </Button>
-        <PlaybackToggles />
+        <LoopToggle />
         <BackingMenu />
         <div className="ml-auto">
           <Button variant="secondary" size="sm" onClick={() => practice.rerollAll()}>

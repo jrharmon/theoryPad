@@ -5,8 +5,8 @@ import { modeTitle } from '@/domain/music';
 import { SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from 'cn';
 import { usePractice } from '@/store/practice';
+import { MenuOption } from './MenuOption';
 
 /** What the transport says is playing under the exercise. */
 function label(
@@ -52,20 +52,20 @@ export function BackingMenu() {
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-[340px] p-2">
         <ul className="space-y-0.5" role="listbox" aria-label="Backing">
-          <Option
+          <MenuOption
             selected={backing.resolved.kind === 'none'}
             title="None"
             detail="The notes play, with the metronome."
             onPick={() => pick({ kind: 'none' })}
           />
-          <Option
+          <MenuOption
             selected={backing.resolved.kind === 'drone'}
             title="Drone"
             detail={`Root and fifth of ${key}, held under the notes and the metronome.`}
             onPick={() => pick({ kind: 'drone' })}
           />
           {backing.options.map((video) => (
-            <Option
+            <MenuOption
               key={video.id}
               selected={
                 backing.resolved.kind === 'video' && backing.resolved.video.id === video.id
@@ -100,36 +100,6 @@ function trackDetail(video: Video): string {
     .join(' · ');
 }
 
-function Option({
-  selected,
-  title,
-  detail,
-  onPick,
-}: {
-  selected: boolean;
-  title: string;
-  detail: string;
-  onPick: () => void;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        role="option"
-        aria-selected={selected}
-        onClick={onPick}
-        data-toggle={selected ? 'on' : 'off'}
-        className="w-full rounded-control px-2 py-1.5 text-left hover:bg-ink/5"
-      >
-        <span className="block text-body-sm font-semibold">{title}</span>
-        <span className={cn('block text-meta', selected ? 'opacity-80' : 'text-ink-muted')}>
-          {detail}
-        </span>
-      </button>
-    </li>
-  );
-}
-
 /** "75%" beside the tempo while a track sets it; flagged where YouTube's audio smears. */
 export function TrackSpeed() {
   const backing = usePractice((s) => s.backing);
@@ -137,7 +107,8 @@ export function TrackSpeed() {
   const mushy = backing.speed < SPEED_MUSHY_BELOW;
   return (
     <span
-      className={cn('text-meta tabular-nums', mushy ? 'text-destructive' : 'text-ink-muted')}
+      // Not `cn`, which would drop text-meta as clashing with the color.
+      className={`text-meta tabular-nums ${mushy ? 'text-destructive' : 'text-ink-muted'}`}
       title={mushy ? 'Below 50% the recording gets smeared' : 'The track’s speed'}
       data-testid="track-speed"
     >

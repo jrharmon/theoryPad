@@ -2,7 +2,9 @@
 
 **Last updated:** 2026-09-23. **In progress: "Sounds — sampled instruments and drum
 metronomes", on branch `sounds`. Tasks 1–4 are committed and reviewed; task 5 (the metronome
-menu) is next, then the gate.** Nothing is pushed or merged yet — `main` is unchanged. See
+menu) is committed and waiting on the gate (task 6), which needs the player and a guitar.**
+Nothing is pushed or merged yet — `main` is unchanged. After the gate: merge `sounds` into
+`main` (fast-forward) and push. See
 "Sounds — progress" under "Remaining work", and `docs/plan/12-SOUNDS.md`, whose per-task
 **Outcome** sections record every decision made along the way. It goes before M7b. Before that, two things merged today: **a routine's theory reps are now its
 question count**, and **the exercise follows YouTube's own pause and play**, which closes the
@@ -39,11 +41,11 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22, 4 (metronome voices, per exercise) 2026-09-23; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
+| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22, 4 (metronome voices, per exercise) and 5 (metronome menu) 2026-09-23; **at the gate**; spec and every task's outcome in `docs/plan/12-SOUNDS.md` |
 | M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-On `sounds`: 713 unit tests in 52 files, 67 E2E, `pnpm check` green. M5 was deliberately built before M4. Everything else is on `main`, and every merged branch has been
+On `sounds`: 713 unit tests in 52 files, 68 E2E, `pnpm check` green. M5 was deliberately built before M4. Everything else is on `main`, and every merged branch has been
 deleted — `main` is the only branch, local and origin in sync. 692 unit tests in 48 files,
 66 E2E, `pnpm check` green.
 
@@ -160,13 +162,14 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
   - *Improvise to a target* (`free-improv-target`) — no tab: a phrase counter, the note to land
     on (yellow on each phrase's last bar), the whole mode on the neck
 - **Practicing**:
-  - Metronome, Count-in and Loop toggles
+  - Loop; the Metronome menu (Off, Click, or a drum beat — Simple, and Upbeat, Soft, Heavy in
+    4/4 — saved to the exercise or routine item, changeable while playing); the Count-in menu
   - a settings dialog
   - tab size (`-` / `=`) and bar lines
   - the neck trimmed to the frets in use, or hidden.
 - **Settings**: tuning (standard, drop D, 7-string), sound (the instrument the notes play
   on — synth, sampled piano or sampled guitar, default guitar — with Hear it, and the sample
-  credits), display (appearance, neck, tab size),
+  credits; the metronome for exercises that have not chosen one), display (appearance, neck, tab size),
   and Export / Import (merge or replace, with a summary first).
 - **Keys**:
   - Space: pause
@@ -175,7 +178,7 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
   - `[` `]`: tempo — under a track, one 5% speed step
   - T: tap along, in the track form
   - R: re-roll
-  - M: metronome
+  - M: metronome off, and back to the last one that was on
   - L: loop
   - S: skip (routines)
   - K: the key/mode reference
@@ -657,7 +660,7 @@ the player before the next began:
 | 2 | `SampledVoice`, voice slot, Settings → Sound Instrument row | `a74c573` | ✅ reviewed |
 | 3 | `src/domain/drums/`, `DrumKit` | `790163f` | ✅ reviewed |
 | 4 | Metronome voices, per-exercise choice, migration | `41b9798` | ✅ reviewed |
-| 5 | Metronome menu, Settings row, `M`, E2E | — | **next** |
+| 5 | Metronome menu, Settings row, `M`, E2E | the commit after `e6a2b95` | ✅ built — awaiting the gate |
 | 6 | Gate — with a guitar; then merge `sounds` into `main` and push | — | after 5 |
 
 What changed from the plan, in short (doc 12's Outcome sections have the reasons):
@@ -678,23 +681,17 @@ What changed from the plan, in short (doc 12's Outcome sections have the reasons
 - Levels were set by offline RMS measurement (guitar +8 dB, piano −2 dB to match the synth;
   kit −12 dB with per-drum trims) — all still for the ear at the gate.
 
-**Task 5, agreed before starting** — build these, don't reopen them:
-- `MetronomeMenu.tsx` in `src/routes/practice/`, modelled on `BackingMenu.tsx`, replacing the
-  metronome toggle in `TransportBar`'s `PlaybackToggles`. Off, Click, then
-  `patternsFor(phrase.timeSignature)` as "Drums — Simple" etc. with each pattern's `detail`.
-  **Usable while playing** — a choice is heard from the next grid step. Disabled under a
-  backing track, as the toggle is now. Calls `practice.setMetronomeVoice(id)`; the current
-  choice is `usePractice((s) => s.metronome)`.
-- Settings → Sound's Metronome row becomes a **dropdown** (Select) of all six, for exercises
-  that have not chosen their own. Today it is an On/Off pill mapped to click/off.
-- `M` keeps toggling between Off and the last choice that was on (`toggleMetronome()`, done).
-- One E2E test: open the menu, choose a beat, reload, the exercise still has it. The existing
-  "transport toggles are remembered" test already checks `M` saves to the exercise.
-- Update STATUS "What works today" and the Keys list, and `06-AUDIO.md` if anything moves.
+**Task 5, built** to the agreed brief — doc 12's "Task 5 — outcome" has it. Beyond the brief:
+the menu shows what is *heard* (a 4/4 beat in 3/4 shows Simple, with a line saying why); a
+routine's overview lost its metronome button, which only ever set the first item's; and the
+Backing and Count-in menus' detail lines had been rendering at body size (`cn` dropped
+`text-meta` against `text-ink-muted`) — all three menus now share `MenuOption`.
 
 **The gate** — doc 12 lists what only the player can judge: guitar vs piano as the default,
 whether snare and ride keep time over a guitar, the kit and notes levels, whether Upbeat,
-Soft and Heavy each earn their place, the open-hat count-in, Simple in 3/4 and 6/8.
+Soft and Heavy each earn their place, the open-hat count-in, Simple in 3/4 and 6/8. **No
+exercise is in 3/4 or 6/8 yet**, so that last one cannot be heard in the app — it needs a
+scratch audition page (as task 1's samples had) or waits for the first exercise that uses one.
 
 
 **The full spec is `docs/plan/12-SOUNDS.md`. Read it before starting — the design choices below
@@ -797,6 +794,7 @@ These need a guitar:
 - Load only what the chosen metronome can play; Off loads nothing and counts in on the synth
   click. A missing kit plays the click, never silence.
 - Metronome voices swap mid-run on a fixed grid; the menu stays usable while playing.
+- A routine's overview has no metronome menu: each item's is its own, set while it plays.
 
 **Feedback round 3**
 - Between routine items the count-in is the next item's own, however short — no floor.
@@ -984,6 +982,9 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
 - **Tailwind layering.** A `@layer components` or `@layer base` rule loses to a utility.
   `.kicker` is an `@utility`; the `data-slot` overrides in `index.css` are unlayered. The shared
   `Input`'s text size wins over a heading class — use a plain `<input>` for big inline fields.
+- **`cn` drops `text-meta` when a color follows it.** It reads both as `text-*` of one group
+  and keeps the last, so `cn('text-meta', 'text-ink-muted')` renders at body size. Combine a
+  size token with a conditional color in a template string, as `MenuOption` does.
 - **The shadcn CLI** reads the solution-style root `tsconfig.json`, and the components import
   `cn` from the `cn` package. Match that, don't "fix" it.
 - **TypeScript is pinned to 6.0.3** — typescript-eslint does not support TS 7 yet.

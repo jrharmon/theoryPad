@@ -424,6 +424,29 @@ task-5 brief._
   sample attributions.
 - Both themes, checked on screen. Menu labels in American spelling.
 
+### Task 5 — outcome (2026-09-23)
+
+Built to the brief. What it came to:
+
+- **`MetronomeMenu`** sits where the toggle was, between Loop and Count-in: "Metronome
+  Drums — Upbeat". Off, Click, then `patternsFor` the phrase's signature, each with a line
+  saying what it plays. Usable while playing; disabled under a backing track, as the toggle
+  was. The option labels and details live in `metronomeChoices.ts`, shared with Settings.
+- **The menu shows what is heard.** An exercise set to Upbeat that rolls into 3/4 shows
+  "Drums — Simple" selected, with a line saying Upbeat is written for 4/4. No exercise is
+  in 3/4 or 6/8 yet, so nobody will see that line today.
+- **A routine's overview lost its metronome button.** It toggled only the first item's,
+  since task 4 gave every item its own. Each item's is set from the running transport; the
+  overview keeps "Stay on this" and Backing. (`PlaybackToggles` is now `LoopToggle`.)
+- **Settings → Sound's Metronome** is a Select of all six, the default for an exercise that
+  has not chosen. Volume's hint says "the notes and the metronome".
+- **A bug found in the screenshots:** the Backing and Count-in menus' detail lines, and the
+  track-speed label, had been rendering at body size. `cn` treats `text-meta` and
+  `text-ink-muted` as one group and kept only the color. The three menus now share one
+  `MenuOption` row, which builds that class without `cn`.
+- E2E: the menu test chooses Heavy, reloads, and checks `M` goes off and back to Heavy
+  rather than to the click. The "toggles are remembered" test reads the menu's label now.
+
 ---
 
 ## Tests

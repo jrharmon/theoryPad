@@ -70,7 +70,8 @@ nothing on first paint needs it.
 
 ## Metronome
 
-_Voices as built in the Sounds run, task 4 (2026-09-23). Doc 12 has the decisions._
+_Voices as built in the Sounds run, task 4, and the menu in task 5 (2026-09-23). Doc 12 has
+the decisions._
 
 `Metronome` (`src/audio/Metronome.ts`) runs two repeats on the clock: the **beat**, for
 listeners (the playhead, the transport), unchanged since M2; and a fixed **sixteenth-note
@@ -97,6 +98,12 @@ as the fallback: the `countInBars` precedent. **Off is the click voice, muted**:
 never silences the count-in, because with the click off the count-in is still how you know
 when to start. A beat that does not fit the phrase's signature plays Simple. `M` toggles
 between off and the last choice that was on.
+
+It is chosen from the **Metronome menu** in the transport (`MetronomeMenu.tsx`): Off, Click,
+and the beats that fit the phrase's signature. It works while playing — the new voice is heard
+from the next grid step — and is disabled under a backing track, which mutes it anyway.
+Settings → Sound's Metronome dropdown sets the fallback. A routine's overview has no menu:
+each item's metronome is its own, set from the transport while that item plays.
 
 **Only what a choice can play is downloaded** (`metronomeSounds(id)`): Off loads nothing,
 so its count-in is the synth click; Click loads the stick; a beat loads its own drums, the
