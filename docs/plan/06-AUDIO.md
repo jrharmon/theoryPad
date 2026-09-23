@@ -98,7 +98,8 @@ for rest, ghost, hit and accent — parsed by `drumTab()`, which throws on a typ
 tests catch it. A beat loops over the bars written; a bar's cell count sets its grid. Adding
 a `drumTab({ … })` there adds it to the menu and Settings. The metronome's grid is a twelfth
 of a beat (`METRONOME_GRID_TICKS`), so sixteenths and swing's triplets both land on it.
-Shipping now: Simple, Upbeat (swing), Jazz funk (straight), Heavy (metal, double kick).
+Shipping now: Simple, Upbeat (straight sixteenths, jazz-funk), Swing (triplets), Heavy (metal,
+double kick).
 
 **The choice** is a `MetronomeVoiceId` — `off`, `click`, or `drums-<beat id>` —
 saved on the exercise (`Exercise.metronome`) or routine item, with `Settings.audio.metronome`

@@ -472,9 +472,10 @@ The player's first listen, with a guitar.
     throws with the beat and line named, so `pnpm check` catches it. Ids are open-ended —
     `drums-<id>` — so a new block is all a new beat takes.
   - **Soft is gone.** Only this branch ever had it; a stored `drums-soft` plays Simple.
-  - **Upbeat is swing**, on eighth triplets: the jazz ride, the hat on 2 and 4, feathered
-    kick, snare comping, a crash into the phrase and a triplet fill in bar 4. **Jazz funk**
-    is its straight-sixteenth cousin — the player asked for both, since a swung beat rubs
+  - **Swing**, on eighth triplets: the jazz ride, the hat on 2 and 4, feathered kick, snare
+    comping, a crash into the phrase and a triplet fill in bar 4. **Upbeat** is its
+    straight-sixteenth, jazz-funk cousin (written as "Upbeat" = swing and "Jazz funk" first;
+    the player swapped the names on the second listen) — the player asked for both, since a swung beat rubs
     against straight exercise material. **Heavy** is metal: gallops, a bar of straight
     sixteenth double kick, a snare fill in bar 4.
   - **No new samples** (the player's call): no toms, so fills stay on the snare; no hi-hat
@@ -483,7 +484,14 @@ The player's first listen, with a guitar.
     (`METRONOME_GRID_TICKS`, 40 ticks), so triplets land on it.
 
 Checked on the dev server by recording every kit hit's tick: each beat plays exactly its
-tab, swing's ride on the triplets. How they *sound* is the next listen.
+tab, swing's ride on the triplets.
+
+### Gate — round 2, and the merge (2026-09-23)
+
+"Everything seems a lot better." The straight beat took the name Upbeat and the swing one
+became Swing. Merged into `main` and pushed. Not explicitly judged, so still open: guitar vs
+piano as the default, the open-hat count-in, and Simple in 3/4 and 6/8 (no exercise uses
+either yet). The beats are starting points the player means to tweak in `beats.ts`.
 
 ---
 

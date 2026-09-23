@@ -228,19 +228,19 @@ describe('Metronome voices', () => {
 
   it('count the click in on the stick when it is loaded, and play the click until a beat’s drums are in', () => {
     const clock = new FakeClock();
-    const { voice, played, has, attach, clicks } = drums('upbeat', ['stick']);
+    const { voice, played, has, attach, clicks } = drums('swing', ['stick']);
     attach(clock);
     const metronome = new Metronome(clock, voice, { countInTicks: QUARTER * 4 });
     metronome.start();
     clock.start();
     clock.advanceTicks(QUARTER * 6 - 1);
 
-    // Upbeat's drums are not in: the click, counted in on the stick.
+    // Swing's drums are not in: the click, counted in on the stick.
     expect(played.map((p) => p.sound)).toEqual(['stick', 'stick', 'stick', 'stick']);
     expect(clicks).toEqual(['accent', 'beat']);
 
     // Once they are, from the next step.
-    for (const sound of patternSounds(patternById('upbeat')!)) has.add(sound);
+    for (const sound of patternSounds(patternById('swing')!)) has.add(sound);
     has.add('hat-open');
     clock.advanceTicks(QUARTER * 2);
     expect(played.slice(4).map((p) => p.sound)).toContain('snare');

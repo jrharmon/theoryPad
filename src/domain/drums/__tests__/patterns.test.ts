@@ -64,7 +64,7 @@ describe('the patterns', () => {
     expect(patternsFor({ beats: 4, unit: 4 }).map((p) => p.id)).toEqual([
       'simple',
       'upbeat',
-      'jazz-funk',
+      'swing',
       'heavy',
     ]);
   });

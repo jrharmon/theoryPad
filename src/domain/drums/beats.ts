@@ -20,10 +20,10 @@ import { drumTab } from './tab';
  * id disappears plays Simple instead.
  */
 
-const UPBEAT = drumTab({
-  id: 'upbeat',
-  name: 'Upbeat',
-  detail: 'Swing: a jazz ride, the hat on 2 and 4, ghost notes, a fill every fourth bar.',
+const SWING = drumTab({
+  id: 'swing',
+  name: 'Swing',
+  detail: 'A jazz ride, the hat on 2 and 4, ghost notes, a fill every fourth bar.',
   signature: '4/4',
   //    1  2  3  4  |1  2  3  4  |1  2  3  4  |1  2  3  4
   tab: `
@@ -35,9 +35,9 @@ const UPBEAT = drumTab({
   `,
 });
 
-const JAZZ_FUNK = drumTab({
-  id: 'jazz-funk',
-  name: 'Jazz funk',
+const UPBEAT = drumTab({
+  id: 'upbeat',
+  name: 'Upbeat',
   detail: 'Straight sixteenths: hats, ghost notes, a kick that skips around.',
   signature: '4/4',
   //    1   2   3   4   |1   2   3   4   |1   2   3   4   |1   2   3   4
@@ -64,4 +64,4 @@ const HEAVY = drumTab({
   `,
 });
 
-export const BEATS = [UPBEAT, JAZZ_FUNK, HEAVY];
+export const BEATS = [UPBEAT, SWING, HEAVY];

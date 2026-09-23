@@ -1,12 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-23. **In progress: "Sounds — sampled instruments and drum
-metronomes", on branch `sounds`. Tasks 1–4 are committed and reviewed; task 5 (the metronome
-menu) is committed and waiting on the gate (task 6), which needs the player and a guitar.**
-Nothing is pushed or merged yet — `main` is unchanged. After the gate: merge `sounds` into
-`main` (fast-forward) and push. See
-"Sounds — progress" under "Remaining work", and `docs/plan/12-SOUNDS.md`, whose per-task
-**Outcome** sections record every decision made along the way. It goes before M7b. Before that, two things merged today: **a routine's theory reps are now its
+**Last updated:** 2026-09-23. **"Sounds — sampled instruments and drum metronomes" is merged
+and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
+Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
+beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
+to. See "Sounds" under "Remaining work" and `docs/plan/12-SOUNDS.md`, whose per-task
+**Outcome** and **Gate** sections record every decision. `main` is the only branch. **M7b is
+next.** Before that, two things merged today: **a routine's theory reps are now its
 question count**, and **the exercise follows YouTube's own pause and play**, which closes the
 backing-track run — see those sections. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
 numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
@@ -41,13 +41,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22, 4 (metronome voices, per exercise) and 5 (metronome menu) 2026-09-23; **at the gate**; spec and every task's outcome in `docs/plan/12-SOUNDS.md` |
-| M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
+| Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-On `sounds`: 713 unit tests in 52 files, 68 E2E, `pnpm check` green. M5 was deliberately built before M4. Everything else is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 692 unit tests in 48 files,
-66 E2E, `pnpm check` green.
+M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
+deleted — `main` is the only branch, local and origin in sync. 714 unit tests in 52 files,
+68 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -85,7 +85,7 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
-| `src/domain/drums/` | Pure drum patterns for the metronome: Simple (generated, any signature), and the 4/4 beats written as drum tab in `beats.ts` — Upbeat (swing), Jazz funk, Heavy — parsed by `tab.ts`; `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
+| `src/domain/drums/` | Pure drum patterns for the metronome: Simple (generated, any signature), and the 4/4 beats written as drum tab in `beats.ts` — Upbeat, Swing, Heavy — parsed by `tab.ts`; `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
 | `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
 | `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, host www.youtube.com), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
 | `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
@@ -162,8 +162,8 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
   - *Improvise to a target* (`free-improv-target`) — no tab: a phrase counter, the note to land
     on (yellow on each phrase's last bar), the whole mode on the neck
 - **Practicing**:
-  - Loop; the Metronome menu (Off, Click, or a drum beat — Simple, and Upbeat (swing), Jazz
-    funk, Heavy in 4/4 — saved to the exercise or routine item, changeable while playing); the Count-in menu
+  - Loop; the Metronome menu (Off, Click, or a drum beat — Simple, and Upbeat, Swing and
+    Heavy in 4/4 — saved to the exercise or routine item, changeable while playing); the Count-in menu
   - a settings dialog
   - tab size (`-` / `=`) and bar lines
   - the neck trimmed to the frets in use, or hidden.
@@ -649,10 +649,10 @@ is already set. Two things to resolve while doing it:
 hands-on check on https://jrharmon.github.io/theoryPad/ — including in a signed-out browser, to
 see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 
-**Sounds — sampled instruments and drum metronomes** (in progress on `sounds`; planned 2026-09-22)
+**Sounds — sampled instruments and drum metronomes** (✅ merged and pushed 2026-09-23; planned 2026-09-22)
 
-**Sounds — progress (2026-09-23).** A commit per task on `sounds`, unpushed, each reviewed by
-the player before the next began:
+**Sounds — how it went (2026-09-23).** A commit per task on `sounds`, each reviewed by the
+player before the next began, then merged:
 
 | # | Task | Commit | State |
 | --- | --- | --- | --- |
@@ -660,8 +660,8 @@ the player before the next began:
 | 2 | `SampledVoice`, voice slot, Settings → Sound Instrument row | `a74c573` | ✅ reviewed |
 | 3 | `src/domain/drums/`, `DrumKit` | `790163f` | ✅ reviewed |
 | 4 | Metronome voices, per-exercise choice, migration | `41b9798` | ✅ reviewed |
-| 5 | Metronome menu, Settings row, `M`, E2E | the commit after `e6a2b95` | ✅ built — awaiting the gate |
-| 6 | Gate — with a guitar; then merge `sounds` into `main` and push | — | after 5 |
+| 5 | Metronome menu, Settings row, `M`, E2E | `ff0bd0c` | ✅ reviewed |
+| 6 | Gate: silent metronome fixed (`9e8286f`); beats as tab, louder kick (`b0a4e24`); renames; merged | — | ✅ merged |
 
 What changed from the plan, in short (doc 12's Outcome sections have the reasons):
 - **Picked by ear** on a scratch audition page: steel-string acoustic guitar **every
@@ -671,7 +671,7 @@ What changed from the plan, in short (doc 12's Outcome sections have the reasons
 - **No bass voice**: guitar tab reaches E6, the bass samples stop at G3. They wait for
   generated backing. The Instrument row is Synth · Piano · Guitar, **default guitar**; a v6
   migration moved everyone off the never-chosen `'synth'`.
-- **The metronome runs one fixed sixteenth grid**; a voice can be swapped mid-run (routine
+- **The metronome runs one fixed grid** — a twelfth of a beat since the gate, for swing; a voice can be swapped mid-run (routine
   items each have their own), so the menu need not be disabled while playing.
 - **Count-ins are fixed in code**: the click counts in on the stick, a drum beat on the open
   hat. **Off loads no samples**, so its count-in is the synth click (accepted by the player).
@@ -692,14 +692,12 @@ silent on the real clock (fixed, `9e8286f`). Then: Simple's offbeat ride was ina
 (raised), the kick too quiet (0 dB now, from −6 — it should be *heard*, merely allowed to
 get buried now and then), and Upbeat, Soft and Heavy were too plain. Soft is gone; beats are
 now drum tab in `src/domain/drums/beats.ts`, which the player means to tweak and add to:
-Upbeat is swing, Jazz funk is its straight cousin, Heavy is metal with gallops and double-
-kick runs. No new samples — the player's call — so swing's hi-hat foot is a soft closed hat.
+Upbeat is straight-sixteenth jazz-funk, Swing its triplet cousin, Heavy is metal with gallops
+and double-kick runs (the first two had their names swapped on the second listen). No new samples — the player's call — so swing's hi-hat foot is a soft closed hat.
 
-**Still at the gate:** the three new beats by ear (they are starting points, written to be
-edited), the kick's new level, guitar vs piano as the default, the open-hat count-in,
-Simple in 3/4 and 6/8. **No
-exercise is in 3/4 or 6/8 yet**, so that last one cannot be heard in the app — it needs a
-scratch audition page (as task 1's samples had) or waits for the first exercise that uses one.
+**Second listen: "Everything seems a lot better"** — merged. Not explicitly judged, so listed
+under "Open questions": guitar vs piano as the default, the open-hat count-in, Simple in 3/4
+and 6/8.
 
 
 **The full spec is `docs/plan/12-SOUNDS.md`. Read it before starting — the design choices below
@@ -773,6 +771,12 @@ are high and cut through on their own, and the kick is there for feel rather tha
 
 ## Open questions for the player
 
+**Left from Sounds** (not explicitly judged at its gate):
+- Guitar or piano as the default instrument (guitar today).
+- Whether the open-hat count-in reads as "come in here".
+- Simple in 3/4 and 6/8 — **no exercise uses either yet**, so it cannot be heard in the app;
+  ask when the first one does, or build a scratch audition page.
+
 **Left from M7a:**
 - "Improvise to a target" had not been tried when M7a merged — ask how it went.
 - "Set to now" was reported flaky; it could not be reproduced after the time display moved to
@@ -803,6 +807,8 @@ These need a guitar:
   click. A missing kit plays the click, never silence.
 - Metronome voices swap mid-run on a fixed grid; the menu stays usable while playing.
 - A routine's overview has no metronome menu: each item's is its own, set while it plays.
+- Beats beyond Simple are drum tab in `beats.ts`, for the player to tweak. Soft dropped; Upbeat
+  (straight, jazz-funk), Swing and Heavy (metal). No new samples. The kick is heard, not felt.
 
 **Feedback round 3**
 - Between routine items the count-in is the next item's own, however short — no floor.
