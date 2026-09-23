@@ -54,7 +54,13 @@ export class ToneClock implements Clock {
     if (intervalTicks <= 0) throw new Error(`Interval must be positive, got ${intervalTicks}`);
     const id = this.transport.scheduleRepeat(
       (time) => {
-        callback(time, this.transport.ticks);
+        // The tick this repeat was due on, as FakeClock gives it — not the
+        // transport's position now. Tone runs a callback up to a lookahead
+        // early, so `ticks` reads short of it by a varying amount, and a grid
+        // that tests `tick % n === 0` then never matches: the metronome's
+        // voices went silent that way.
+        const at = this.transport.getTicksAtTime(time);
+        callback(time, fromTick + Math.round((at - fromTick) / intervalTicks) * intervalTicks);
       },
       `${intervalTicks}i`,
       `${fromTick}i`,

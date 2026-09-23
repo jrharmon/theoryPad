@@ -444,6 +444,11 @@ Built to the brief. What it came to:
   track-speed label, had been rendering at body size. `cn` treats `text-meta` and
   `text-ink-muted` as one group and kept only the color. The three menus now share one
   `MenuOption` row, which builds that class without `cn`.
+- **The gate's first listen found every metronome silent** — count-in included — while the
+  notes played. Task 4's bug, not the menu's: `ToneClock` handed a repeat the transport's
+  position at callback time, not the step's own tick, so the grid's exact-multiple test
+  almost never passed. Fixed in `ToneClock`; checked on the dev server by counting the kit's
+  and the click's calls and metering the output for Off, Click, Simple and Heavy.
 - E2E: the menu test chooses Heavy, reloads, and checks `M` goes off and back to Heavy
   rather than to the click. The "toggles are remembered" test reads the menu's label now.
 

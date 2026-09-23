@@ -929,6 +929,15 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   Firefox only start a video with sound inside the click. Never pass that flag when checking
   playback; the E2E fake YouTube has a `blocking` mode for the strict case.
 
+- **The metronome was silent on the real clock, and every test passed.** `ToneClock`'s
+  repeats handed back `transport.ticks` — where the transport is when Tone runs the callback,
+  up to a lookahead early — not the tick the step was due on. Task 4's grid keeps a step only
+  if `tickInBar % gridTicks === 0`, so almost nothing sounded: no count-in, no click, no drums.
+  `FakeClock` passes exact ticks, so no unit test could see it; the player heard it. A repeat
+  now gets its own grid tick, snapped from `getTicksAtTime(time)`. To check the metronome
+  without ears, wrap the engine's `clickSink.click` and `kit.play` in the page and count calls,
+  and hang a `Tone.Meter` on the destination (patching `AudioScheduledSourceNode.start` sees
+  nothing — Tone's nodes go around it).
 - **Moving an iframe in the DOM reloads it.** A YouTube player's node is mounted once
   (`PlayerSlot`) and enlarged by restyling its panel in place. That is also why a routine can't
   carry the overview's player into the running screen, and why a theory set rebuilds it.
