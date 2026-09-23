@@ -232,7 +232,7 @@ export default tseslint.config(
 
   // Plain JS (this config file) gets no type-aware rules.
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: { globals: globals.node },
   },

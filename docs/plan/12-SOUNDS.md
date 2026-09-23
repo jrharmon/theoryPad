@@ -66,8 +66,8 @@ in `v2/`, they do not overwrite `v1/`.
 | Voice | Source | Licence | Size |
 | --- | --- | --- | --- |
 | piano | Salamander Grand Piano v3 (Alexander Holm), mirrored at `https://tonejs.github.io/audio/salamander/` | **CC-BY 3.0** | 60–80 KB/note |
-| guitar | FluidR3_GM `electric_guitar_clean`, `https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/FluidR3_GM/` | **CC-BY 3.0** | ~19 KB/note |
-| bass | FluidR3_GM `electric_bass_finger`, same host | **CC-BY 3.0** | ~16 KB/note |
+| guitar | FluidR3_GM `acoustic_guitar_steel` (chosen by ear over `electric_guitar_clean`), `https://raw.githubusercontent.com/gleitz/midi-js-soundfonts/gh-pages/FluidR3_GM/` | **CC-BY 3.0** | ~19 KB/note |
+| bass | FluidR3_GM `acoustic_bass` (chosen by ear over `electric_bass_finger`), same host | **CC-BY 3.0** | ~16 KB/note |
 | kit | Sonic Pi `etc/samples/` (`sonic-pi-net/sonic-pi`, branch `dev`) | **CC0** | 20–150 KB/file, FLAC |
 
 All four were probed and return 200. `FluidR3_GM` also has `acoustic_guitar_steel` and
@@ -100,6 +100,34 @@ notes off the ends — the ranges below are the ones that matter.
 `ffmpeg`, writes the files and regenerates `CREDITS.md`. Run once; **commit the mp3s**. The
 script exists so the cut is reproducible and reviewable, not so it runs at build time. It is not
 wired into `pnpm build` and must not be.
+
+### Task 1 — outcome (2026-09-22)
+
+Cut by `scripts/fetch-samples.mjs` after the player auditioned every candidate on a scratch
+page. **2.86 MB total**: piano 1.67 MB, guitar 936 KB, bass 178 KB, kit 82 KB.
+
+- **Guitar every semitone**, B1–E6 (54 files): at minor thirds it was "very noticeably" worse
+  by ear — the shifted notes sounded synthetic, as "Things that will bite" §2 feared.
+- **Piano and bass every minor third.** Piano has no choice: Salamander was recorded only on
+  A, C, D♯, F♯, so E1–C7 is 24 files (Eb1–C7), not the ~16 estimated above. Bass is anchored
+  on E so the E strings are real samples: Bb0–G3 (12). Nothing shifts more than a semitone.
+- **Kit, picked by ear:** kick `drum_heavy_kick`, snare `drum_snare_hard`, hat-closed
+  `drum_cymbal_closed`, hat-open `drum_cymbal_open`, ride `drum_cymbal_soft`, crash
+  `drum_splash_hard`, stick `perc_snap`. Sonic Pi also has real rides (`ride_tri`, `ride_via`);
+  they lost the audition. Long tails are cut with a fade (open hat 1.2 s, ride 1.5 s, crash
+  2.5 s) and leading silence removed.
+- **Stick stays.** The player wants the count-in sound to be a choice: open hat, or a click,
+  even under the full kit. Task 4 decides where that choice lives.
+- **mp3 throughout.** The pitched sources are already mp3 (~40–48 kbps), so another format
+  would only be a bigger copy. The kit is encoded here (LAME `-q:a 2`, 82 KB against ~330 KB as
+  FLAC). Measured in Chromium, each kit mp3's onset matches its FLAC twin within 0.2 ms — the
+  LAME gapless header is honoured, so no encoder padding makes a drum late. Safari unmeasured.
+- **Every source is pinned to a commit**, and the kit encode is bit-exact: a re-run gives the
+  same bytes.
+- **Memory is the real cost, not format.** Decoded, the piano is ~133 MB (Salamander notes run
+  up to 24 s, stereo), guitar ~63 MB, bass ~13 MB. Task 2 loads only the chosen voice, and
+  should trim each buffer to ~4 s after decoding (no re-encode), which brings piano to ~25 MB;
+  the guitar's notes are already 3.1 s.
 
 ---
 
