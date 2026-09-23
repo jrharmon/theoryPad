@@ -3,18 +3,12 @@ import type { TimeSignature } from '../phrase';
 import { patternById, patternsFor } from './patterns';
 import type { DrumPattern, DrumSound } from './types';
 
-/** What the metronome plays: nothing but the count-in, a click, or a drum beat. */
-export type MetronomeVoiceId =
-  'off' | 'click' | 'drums-simple' | 'drums-upbeat' | 'drums-soft' | 'drums-heavy';
-
-export const METRONOME_VOICE_IDS: readonly MetronomeVoiceId[] = [
-  'off',
-  'click',
-  'drums-simple',
-  'drums-upbeat',
-  'drums-soft',
-  'drums-heavy',
-];
+/**
+ * What the metronome plays: nothing but the count-in, a click, or a drum beat
+ * by its pattern id. A beat's id is open-ended so adding one to beats.ts is
+ * all it takes; an id that no longer exists plays Simple.
+ */
+export type MetronomeVoiceId = 'off' | 'click' | `drums-${string}`;
 
 const PREFIX = 'drums-';
 
@@ -33,10 +27,11 @@ export function drumPatternFor(
   return fits.find((p) => p === wanted) ?? patternById('simple')!;
 }
 
-/** Every sound a pattern plays, over enough bars to catch a crash every fourth. */
+/** Every sound a pattern plays, in any of its bars. */
 export function patternSounds(pattern: DrumPattern): DrumSound[] {
   const ts = pattern.timeSignature ?? FOUR_FOUR;
-  const sounds = [0, 1, 2, 3].flatMap((bar) => pattern.bar(ts, bar).map((hit) => hit.sound));
+  const bars = Array.from({ length: pattern.bars }, (_, bar) => pattern.bar(ts, bar));
+  const sounds = bars.flatMap((hits) => hits.map((hit) => hit.sound));
   return [...new Set(sounds)];
 }
 

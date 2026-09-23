@@ -8,6 +8,8 @@ describe('metronome voices', () => {
     expect(drumPatternFor('drums-upbeat', THREE_FOUR)?.id).toBe('simple');
     expect(drumPatternFor('drums-heavy', SIX_EIGHT)?.id).toBe('simple');
     expect(drumPatternFor('drums-simple', SIX_EIGHT)?.id).toBe('simple');
+    // A beat that has been retired, like Soft.
+    expect(drumPatternFor('drums-soft', FOUR_FOUR)?.id).toBe('simple');
     expect(drumPatternFor('click', FOUR_FOUR)).toBeNull();
     expect(drumPatternFor('off', FOUR_FOUR)).toBeNull();
   });
@@ -15,11 +17,10 @@ describe('metronome voices', () => {
   it('download only what they can play', () => {
     expect(metronomeSounds('off')).toEqual([]);
     expect(metronomeSounds('click')).toEqual(['stick']);
-    // Upbeat's own drums, Simple's ride for the fallback, the open hat to count in.
-    expect(metronomeSounds('drums-upbeat').sort()).toEqual(
-      ['hat-closed', 'hat-open', 'kick', 'ride', 'snare'].sort(),
+    // Heavy's own drums, Simple's ride for the fallback, the open hat to count in.
+    expect(metronomeSounds('drums-heavy').sort()).toEqual(
+      ['crash', 'hat-closed', 'hat-open', 'kick', 'ride', 'snare'].sort(),
     );
-    expect(metronomeSounds('drums-heavy')).toContain('crash');
     expect(metronomeSounds('drums-simple')).not.toContain('stick');
   });
 });

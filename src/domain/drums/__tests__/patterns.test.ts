@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FOUR_FOUR, SIX_EIGHT, THREE_FOUR, ticksPerBar } from '@/domain/phrase';
 import type { TimeSignature } from '@/domain/phrase';
-import { drumPatterns, patternById, patternsFor } from '..';
+import { drumPatterns, drumTab, METRONOME_GRID_TICKS, patternById, patternsFor } from '..';
 import type { DrumHit } from '..';
 
 const simple = patternById('simple')!;
@@ -58,13 +58,13 @@ describe('Simple', () => {
 });
 
 describe('the patterns', () => {
-  it('offer only Simple outside 4/4, and all four in it', () => {
+  it('offer only Simple outside 4/4, and every beat in it', () => {
     expect(patternsFor(THREE_FOUR).map((p) => p.id)).toEqual(['simple']);
     expect(patternsFor(SIX_EIGHT).map((p) => p.id)).toEqual(['simple']);
     expect(patternsFor({ beats: 4, unit: 4 }).map((p) => p.id)).toEqual([
       'simple',
       'upbeat',
-      'soft',
+      'jazz-funk',
       'heavy',
     ]);
   });
@@ -73,7 +73,8 @@ describe('the patterns', () => {
     const signatures: TimeSignature[] = [FOUR_FOUR, THREE_FOUR, SIX_EIGHT];
     for (const pattern of drumPatterns()) {
       for (const ts of pattern.timeSignature ? [pattern.timeSignature] : signatures) {
-        for (const barIndex of [0, 1, 2, 3]) {
+        expect(pattern.gridTicks(ts) % METRONOME_GRID_TICKS, pattern.id).toBe(0);
+        for (let barIndex = 0; barIndex < pattern.bars; barIndex++) {
           const hits = pattern.bar(ts, barIndex);
           const ticks = hits.map((h) => h.tick);
           expect(ticks).toEqual([...ticks].sort((a, b) => a - b));
@@ -87,14 +88,53 @@ describe('the patterns', () => {
       }
     }
   });
+});
 
-  it('crash Heavy on the downbeat of bar 1 of every four, in place of the hat', () => {
-    const heavy = patternById('heavy')!;
-    const crashes = [0, 1, 2, 3, 4, 5, 6, 7].map((bar) =>
-      heavy.bar(FOUR_FOUR, bar).some((h) => h.sound === 'crash'),
-    );
-    expect(crashes).toEqual([true, false, false, false, true, false, false, false]);
-    expect(grid(heavy.bar(FOUR_FOUR, 0))[0]).toBe('0: crash kick');
-    expect(grid(heavy.bar(FOUR_FOUR, 1))[0]).toBe('0: hat-closed kick');
+describe('drum tab', () => {
+  const tab = (body: string) =>
+    drumTab({ id: 'test', name: 'Test', detail: '', signature: '4/4', tab: body });
+
+  it('reads a line per drum, bars between bars, and each bar’s own grid', () => {
+    // Bar 1 in eighths, bar 2 in eighth triplets.
+    const beat = tab(`
+      HH |x-x-x-x-|x--x--x--x--|
+      SN |--X---g-|---X-----X-g|
+      BD |x-------|X-----x-----|
+    `);
+    expect(beat.bars).toBe(2);
+    expect(beat.timeSignature).toEqual(FOUR_FOUR);
+    // The finest step any hit needs: the triplet snare at 1760 makes it 160.
+    expect(beat.gridTicks(FOUR_FOUR)).toBe(160);
+    expect(grid(beat.bar(FOUR_FOUR, 0))).toEqual([
+      '0: hat-closed kick',
+      '480: hat-closed snare',
+      '960: hat-closed',
+      '1440: hat-closed snare',
+    ]);
+    expect(grid(beat.bar(FOUR_FOUR, 1))).toEqual([
+      '0: hat-closed kick',
+      '480: hat-closed snare',
+      '960: hat-closed kick',
+      '1440: hat-closed snare',
+      '1760: snare',
+    ]);
+    const velocity = (bar: number, sound: string, tick: number) =>
+      beat.bar(FOUR_FOUR, bar).find((h) => h.sound === sound && h.tick === tick)?.velocity;
+    expect(velocity(0, 'snare', 480)).toBe(1);
+    expect(velocity(0, 'hat-closed', 0)).toBe(0.8);
+    expect(velocity(0, 'snare', 1440)).toBe(0.35);
+    // It loops, the count-in's negative bars included.
+    expect(beat.bar(FOUR_FOUR, 2)).toEqual(beat.bar(FOUR_FOUR, 0));
+    expect(beat.bar(FOUR_FOUR, -1)).toEqual(beat.bar(FOUR_FOUR, 1));
+  });
+
+  it('refuses a typo, naming the line', () => {
+    expect(() => tab('XX |x-x-x-x-|')).toThrow(/unknown drum "XX"/);
+    expect(() => tab('SN |x-o-x-x-|')).toThrow(/"o" in bar 1/);
+    expect(() => tab('SN |x-x-x-x-|\nBD |x-------|x-------|')).toThrow(/2 bars/);
+    expect(() => tab('SN |x-x-x-x-|\nBD |x------|')).toThrow(/bar 1 has 7 cells/);
+    // Five to a bar isn't a grid the metronome runs.
+    expect(() => tab('SN |x-x-x|')).toThrow(/metronome's grid/);
+    expect(() => tab('SN x-x-x-x-')).toThrow(/line "SN x-x-x-x-"/);
   });
 });

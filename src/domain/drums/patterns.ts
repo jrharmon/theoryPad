@@ -1,5 +1,6 @@
-import { EIGHTH, FOUR_FOUR, QUARTER, ticksPerBar, ticksPerBeat } from '../phrase';
+import { QUARTER, ticksPerBar, ticksPerBeat } from '../phrase';
 import type { TimeSignature } from '../phrase';
+import { BEATS } from './beats';
 import type { DrumHit, DrumPattern, DrumSound } from './types';
 
 const hit = (sound: DrumSound, tick: number, velocity: number): DrumHit => ({
@@ -35,6 +36,7 @@ const SIMPLE: DrumPattern = {
   name: 'Simple',
   detail: 'Ride, kick on every beat, snare on every other.',
   timeSignature: null,
+  bars: 1,
   gridTicks: simpleGrid,
   bar(ts) {
     const beat = ticksPerBeat(ts);
@@ -42,7 +44,9 @@ const SIMPLE: DrumPattern = {
     const hits: DrumHit[] = [];
     for (let tick = 0; tick < ticksPerBar(ts); tick += step) {
       const onBeat = tick % beat === 0;
-      hits.push(hit('ride', tick, tick === 0 ? 0.9 : onBeat ? 0.7 : 0.5));
+      // The offbeats nearly as loud as the beats: at 0.5 they were lost in the
+      // ride's own wash, and it sounded like quarters.
+      hits.push(hit('ride', tick, tick === 0 ? 0.9 : onBeat ? 0.8 : 0.75));
       if (!onBeat) continue;
       const index = tick / beat;
       hits.push(hit('kick', tick, index === 0 ? 1 : 0.75));
@@ -52,79 +56,8 @@ const SIMPLE: DrumPattern = {
   },
 };
 
-/** Beat `n` (1-based) and its "and", in 4/4 ticks. */
-const beat = (n: number) => (n - 1) * QUARTER;
-const and = (n: number) => beat(n) + EIGHTH;
-
-/** Closed hats on the eighths of a 4/4 bar, leaving out any tick in `except`. */
-function eighthHats(velocity: number, except: number[] = []): DrumHit[] {
-  const hits: DrumHit[] = [];
-  for (let tick = 0; tick < 4 * QUARTER; tick += EIGHTH) {
-    if (!except.includes(tick))
-      hits.push(hit('hat-closed', tick, tick % QUARTER ? velocity * 0.75 : velocity));
-  }
-  return hits;
-}
-
-const mod = (n: number, m: number) => ((n % m) + m) % m;
-
-/** Starting points, to be tuned by ear at the gate. */
-const UPBEAT: DrumPattern = {
-  id: 'upbeat',
-  name: 'Upbeat',
-  detail: 'Hats on the eighths, an open hat and an extra kick that push.',
-  timeSignature: FOUR_FOUR,
-  gridTicks: () => EIGHTH,
-  bar: () =>
-    byTick([
-      ...eighthHats(0.7, [and(4)]),
-      hit('hat-open', and(4), 0.7),
-      hit('kick', beat(1), 1),
-      hit('kick', beat(3), 0.8),
-      hit('kick', and(3), 0.7),
-      hit('snare', beat(2), 0.9),
-      hit('snare', beat(4), 0.9),
-    ]),
-};
-
-const SOFT: DrumPattern = {
-  id: 'soft',
-  name: 'Soft',
-  detail: 'Quiet hat and snare, for slow work.',
-  timeSignature: FOUR_FOUR,
-  gridTicks: () => QUARTER,
-  bar: () =>
-    byTick([
-      ...[1, 2, 3, 4].map((n) => hit('hat-closed', beat(n), n === 1 ? 0.55 : 0.45)),
-      hit('kick', beat(1), 0.55),
-      hit('kick', beat(3), 0.45),
-      hit('snare', beat(2), 0.35),
-      hit('snare', beat(4), 0.35),
-    ]),
-};
-
-const HEAVY: DrumPattern = {
-  id: 'heavy',
-  name: 'Heavy',
-  detail: 'Full snare, a busy kick, and a crash every four bars.',
-  timeSignature: FOUR_FOUR,
-  gridTicks: () => EIGHTH,
-  bar(_ts, barIndex) {
-    const crash = mod(barIndex, 4) === 0;
-    return byTick([
-      // The crash takes the downbeat's hat, as a drummer's right hand would.
-      ...eighthHats(0.8, crash ? [beat(1)] : []),
-      ...(crash ? [hit('crash', beat(1), 0.9)] : []),
-      hit('kick', beat(1), 1),
-      hit('kick', and(2), 0.85),
-      hit('kick', beat(3), 0.9),
-      hit('snare', beat(2), 1),
-      hit('snare', beat(4), 1),
-    ]);
-  },
-};
-
-const PATTERNS: readonly DrumPattern[] = [SIMPLE, UPBEAT, SOFT, HEAVY];
+/** Simple first: it fits every signature. The rest are tab, in beats.ts. */
+const PATTERNS: readonly DrumPattern[] = [SIMPLE, ...BEATS];
 
 export function drumPatterns(): readonly DrumPattern[] {
   return PATTERNS;

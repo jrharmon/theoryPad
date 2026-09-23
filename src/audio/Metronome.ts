@@ -1,5 +1,6 @@
 import type { TimeSignature } from '@/domain/phrase';
-import { FOUR_FOUR, SIXTEENTH, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
+import { METRONOME_GRID_TICKS } from '@/domain/drums';
+import { FOUR_FOUR, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
 
 export interface MetronomeOptions {
@@ -37,7 +38,7 @@ export interface GridEvent {
  * so tests need no audio.
  */
 export interface MetronomeVoice {
-  /** Ticks between the events this voice wants. A multiple of a sixteenth. */
+  /** Ticks between the events this voice wants. A multiple of `METRONOME_GRID_TICKS`. */
   gridTicks(timeSignature: TimeSignature): number;
   at(event: GridEvent): void;
 }
@@ -47,12 +48,13 @@ export type BeatListener = (event: BeatEvent) => void;
 const mod = (n: number, m: number) => ((n % m) + m) % m;
 
 /**
- * The finest step any voice asks for. The grid runs at this whatever the voice,
+ * The finest step any voice asks for — a twelfth of a beat, so sixteenths
+ * and swing's triplets both land on it. The grid runs at this whatever the voice,
  * and each voice hears only the steps on its own grid — so a voice can be
  * swapped mid-run, between a routine's items, without re-scheduling anything
  * or shifting the beat.
  */
-const GRID_TICKS = SIXTEENTH;
+const GRID_TICKS = METRONOME_GRID_TICKS;
 
 /**
  * Beat generation, driven entirely by a Clock — so it is fully testable with

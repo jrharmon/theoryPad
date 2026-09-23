@@ -11,12 +11,12 @@ const KIT_VOLUME_DB = -12;
 
 /**
  * Each drum's level within the kit. The samples all arrive normalised, which
- * leaves the kick loudest and the ride quietest — backwards for a metronome.
- * The snare and ride keep the time, so they must cut through the guitar; the
- * kick is there for feel and can sit under it.
+ * leaves the ride quietest. The snare and ride keep the time, so they must cut
+ * through the guitar. The kick should be heard too — at −6 dB it wasn't, at the
+ * gate — though it is fine if it sometimes gets buried.
  */
 const SOUND_DB: Record<DrumSound, number> = {
-  kick: -6,
+  kick: 0,
   snare: 0,
   'hat-closed': 0,
   'hat-open': -2,

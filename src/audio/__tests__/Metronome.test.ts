@@ -240,7 +240,8 @@ describe('Metronome voices', () => {
     expect(clicks).toEqual(['accent', 'beat']);
 
     // Once they are, from the next step.
-    for (const sound of ['kick', 'snare', 'hat-closed', 'hat-open'] as const) has.add(sound);
+    for (const sound of patternSounds(patternById('upbeat')!)) has.add(sound);
+    has.add('hat-open');
     clock.advanceTicks(QUARTER * 2);
     expect(played.slice(4).map((p) => p.sound)).toContain('snare');
     expect(clicks).toHaveLength(2);

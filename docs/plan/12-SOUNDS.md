@@ -452,6 +452,39 @@ Built to the brief. What it came to:
 - E2E: the menu test chooses Heavy, reloads, and checks `M` goes off and back to Heavy
   rather than to the click. The "toggles are remembered" test reads the menu's label now.
 
+### Gate — round 1 (2026-09-23)
+
+The player's first listen, with a guitar.
+
+- **The metronome made no sound at all** on the real clock — a task-4 bug; see Task 5's
+  outcome. Fixed in `ToneClock`.
+- **Simple's ride sounded like quarters.** It was playing the eighths, but the offbeats at
+  velocity 0.5 were lost in the soft cymbal's own wash. Now 0.75, against 0.8 on the beat.
+- **The kick was too quiet.** Part 3's "felt more than heard" overread the player: it should
+  be heard, and it is only *allowed* to get buried now and then, since it is not the thing
+  keeping time. Its trim went from −6 dB to 0.
+- **Upbeat, Soft and Heavy were too plain.** Beyond Simple, a beat should feel like a
+  drummer — something inspiring to play against. Decided with the player:
+  - Beats are **drum tab**, in `src/domain/drums/beats.ts`, easy to tweak and to add to.
+    `drumTab()` parses them (`tab.ts`): a line per drum (`CR RD HH OH SN BD ST`), `|`
+    between bars, `- g x X` for rest, ghost (0.35), hit (0.8) and accent (1). A beat loops
+    over the bars written; a bar's cell count sets its grid, and bars may differ. A typo
+    throws with the beat and line named, so `pnpm check` catches it. Ids are open-ended —
+    `drums-<id>` — so a new block is all a new beat takes.
+  - **Soft is gone.** Only this branch ever had it; a stored `drums-soft` plays Simple.
+  - **Upbeat is swing**, on eighth triplets: the jazz ride, the hat on 2 and 4, feathered
+    kick, snare comping, a crash into the phrase and a triplet fill in bar 4. **Jazz funk**
+    is its straight-sixteenth cousin — the player asked for both, since a swung beat rubs
+    against straight exercise material. **Heavy** is metal: gallops, a bar of straight
+    sixteenth double kick, a snare fill in bar 4.
+  - **No new samples** (the player's call): no toms, so fills stay on the snare; no hi-hat
+    foot, so swing's 2 and 4 are a soft closed hat; ghost notes are quiet hard-snare hits.
+  - The metronome's grid went from a sixteenth to **a twelfth of a beat**
+    (`METRONOME_GRID_TICKS`, 40 ticks), so triplets land on it.
+
+Checked on the dev server by recording every kit hit's tick: each beat plays exactly its
+tab, swing's ride on the triplets. How they *sound* is the next listen.
+
 ---
 
 ## Tests

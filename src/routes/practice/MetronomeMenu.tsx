@@ -76,6 +76,6 @@ const signature = (ts: TimeSignature) => `${ts.beats}/${ts.unit}`;
 /** Why the beat you chose isn't the one playing. */
 function unfitNote(chosen: MetronomeVoiceId, timeSignature: TimeSignature): string {
   const pattern = patternById(chosen.replace('drums-', ''));
-  const written = pattern?.timeSignature ? ` for ${signature(pattern.timeSignature)}` : '';
-  return `${pattern?.name ?? chosen} is written${written}, so Simple plays in ${signature(timeSignature)}.`;
+  if (!pattern?.timeSignature) return 'That beat is no longer offered, so Simple plays.';
+  return `${pattern.name} is written for ${signature(pattern.timeSignature)}, so Simple plays in ${signature(timeSignature)}.`;
 }

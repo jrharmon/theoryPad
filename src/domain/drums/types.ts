@@ -33,6 +33,8 @@ export interface DrumPattern {
   detail: string;
   /** Null fits any signature; otherwise the pattern is only offered for this one. */
   timeSignature: TimeSignature | null;
+  /** How many bars it runs before it repeats: 1 for Simple, 4 for a beat with a fill. */
+  bars: number;
   /** The grid the metronome must schedule it on: every hit lands on a multiple of it. */
   gridTicks(timeSignature: TimeSignature): number;
   /** One bar of hits, in tick order. `barIndex` lets a pattern crash every fourth bar. */

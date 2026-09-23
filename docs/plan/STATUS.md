@@ -85,7 +85,7 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
 | `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
-| `src/domain/drums/` | Pure drum patterns for the metronome: Simple (any signature), Upbeat, Soft, Heavy (4/4); `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
+| `src/domain/drums/` | Pure drum patterns for the metronome: Simple (generated, any signature), and the 4/4 beats written as drum tab in `beats.ts` — Upbeat (swing), Jazz funk, Heavy — parsed by `tab.ts`; `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
 | `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
 | `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, host www.youtube.com), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
 | `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
@@ -162,8 +162,8 @@ deleted — `main` is the only branch, local and origin in sync. 692 unit tests 
   - *Improvise to a target* (`free-improv-target`) — no tab: a phrase counter, the note to land
     on (yellow on each phrase's last bar), the whole mode on the neck
 - **Practicing**:
-  - Loop; the Metronome menu (Off, Click, or a drum beat — Simple, and Upbeat, Soft, Heavy in
-    4/4 — saved to the exercise or routine item, changeable while playing); the Count-in menu
+  - Loop; the Metronome menu (Off, Click, or a drum beat — Simple, and Upbeat (swing), Jazz
+    funk, Heavy in 4/4 — saved to the exercise or routine item, changeable while playing); the Count-in menu
   - a settings dialog
   - tab size (`-` / `=`) and bar lines
   - the neck trimmed to the frets in use, or hidden.
@@ -687,9 +687,17 @@ routine's overview lost its metronome button, which only ever set the first item
 Backing and Count-in menus' detail lines had been rendering at body size (`cn` dropped
 `text-meta` against `text-ink-muted`) — all three menus now share `MenuOption`.
 
-**The gate** — doc 12 lists what only the player can judge: guitar vs piano as the default,
-whether snare and ride keep time over a guitar, the kit and notes levels, whether Upbeat,
-Soft and Heavy each earn their place, the open-hat count-in, Simple in 3/4 and 6/8. **No
+**The gate, first listen (2026-09-23)** — doc 12's "Gate — round 1" has it. The metronome was
+silent on the real clock (fixed, `9e8286f`). Then: Simple's offbeat ride was inaudible
+(raised), the kick too quiet (0 dB now, from −6 — it should be *heard*, merely allowed to
+get buried now and then), and Upbeat, Soft and Heavy were too plain. Soft is gone; beats are
+now drum tab in `src/domain/drums/beats.ts`, which the player means to tweak and add to:
+Upbeat is swing, Jazz funk is its straight cousin, Heavy is metal with gallops and double-
+kick runs. No new samples — the player's call — so swing's hi-hat foot is a soft closed hat.
+
+**Still at the gate:** the three new beats by ear (they are starting points, written to be
+edited), the kick's new level, guitar vs piano as the default, the open-hat count-in,
+Simple in 3/4 and 6/8. **No
 exercise is in 3/4 or 6/8 yet**, so that last one cannot be heard in the app — it needs a
 scratch audition page (as task 1's samples had) or waits for the first exercise that uses one.
 

@@ -98,10 +98,15 @@ export function SettingsPage() {
         <InstrumentRow voice={audio.voice} volumeDb={audio.masterVolumeDb} />
         <Row
           label="Metronome"
-          hint="For an exercise that hasn’t chosen its own. Upbeat, Soft and Heavy are 4/4 only."
+          hint="For an exercise that hasn’t chosen its own. A beat written for 4/4 plays Simple in any other time."
         >
           <Select
-            value={audio.metronome}
+            // A beat that is no longer offered plays Simple, so say so.
+            value={
+              metronomeChoices(null).some((c) => c.id === audio.metronome)
+                ? audio.metronome
+                : 'drums-simple'
+            }
             onValueChange={(id) =>
               void save({ audio: { ...audio, metronome: id as MetronomeVoiceId } })
             }
