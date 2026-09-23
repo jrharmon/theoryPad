@@ -1,6 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-22. Two things merged today: **a routine's theory reps are now its
+**Last updated:** 2026-09-22. **A new run is planned and not yet started: "Sounds — sampled
+instruments and drum metronomes", specced in `docs/plan/12-SOUNDS.md` and summarized under
+"Remaining work". It goes before M7b.** Before that, two things merged today: **a routine's theory reps are now its
 question count**, and **the exercise follows YouTube's own pause and play**, which closes the
 backing-track run — see those sections. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
 numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
@@ -35,7 +37,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
+| Sounds — sampled instruments and drum metronomes | **next** — planned 2026-09-22, spec in `docs/plan/12-SOUNDS.md` |
+| M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -638,6 +641,38 @@ is already set. Two things to resolve while doing it:
 hands-on check on https://jrharmon.github.io/theoryPad/ — including in a signed-out browser, to
 see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 
+**Sounds — sampled instruments and drum metronomes** (next; planned 2026-09-22)
+
+**The full spec is `docs/plan/12-SOUNDS.md`. Read it before starting — the design choices below
+were answered by the player and should not be reopened.** Six tasks, in order; sizes there.
+
+Two changes that share a sample pipeline and a loading story:
+
+- **The notes stop being a synth.** `SampledVoice` over `Tone.Sampler` — piano, guitar and bass,
+  chosen in Settings -> Sound. `InstrumentVoice` was designed for this in M0 and no consumer
+  changes. Polyphonic, so chords work; `PhrasePlayer` already schedules simultaneous notes.
+- **The metronome becomes a choice of voice**: Off, Click, or one of four drum beats, from a
+  popover in the transport like the Backing menu. Drums are *a metronome*, not a backing source
+  — they do not own the tempo and do not replace the notes. Simple (ride on the eighths, kick on
+  the quarters, snare every other beat from beat 2) fits any time signature and is always
+  offered; Upbeat, Soft and Heavy declare 4/4 and are hidden elsewhere. A drum metronome counts
+  in on an open hi-hat, not a click.
+
+Settled when it was planned: samples are **vendored under `public/samples/v1/`**, not fetched
+from a CDN — the app is local-first and M9.1 makes it a PWA. Sources are verified and their
+licences checked: Salamander piano and FluidR3_GM guitar/bass are **CC-BY 3.0** and need
+attribution shipped with them; the Sonic Pi drum samples are **CC0**. Budget 3 MB total. The
+metronome choice lives **per exercise with the global setting as fallback**, exactly as
+`countInBars` does.
+
+**This is deliberately before M7b.** M7b's plan made mode and progression drills wait on
+"whether maj7 vs dom7 is audible on the synth — the trigger for sampled instruments". Doing this
+first removes the question rather than answering it.
+
+**The gate needs a guitar** — levels, whether each beat earns its place, and the default voice.
+Note that the old click's 2 kHz reasoning does **not** carry over to the kit: the snare and ride
+are high and cut through on their own, and the kick is there for feel rather than timekeeping.
+
 **M7b — Ear training and "hear it"** (after the ad work)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
   drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
@@ -671,7 +706,8 @@ see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 - Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
 - Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
 - Generated backing — deferred past M9; 75% on a real track was fine, so likely unneeded.
-- Sampled instruments — decided by the M7b gate.
+- ~~Sampled instruments — decided by the M7b gate.~~ **Promoted 2026-09-22** to the
+  "Sounds" run above, with drum metronomes alongside it. See `docs/plan/12-SOUNDS.md`.
 - M7a leftovers, ask whether wanted: a criteria editor for routines; reference videos on a theory
   exercise's practice screen; a free-time toggle in the transport; one video player kept alive
   through a whole routine (only if Safari's "Press play on the video" prompt gets tiresome).
