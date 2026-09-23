@@ -70,22 +70,38 @@ nothing on first paint needs it.
 
 ## Metronome
 
-```ts
-interface Metronome {
-  configure(opts: {
-    timeSignature: TimeSignature;
-    accentFirstBeat: boolean;
-    subdivision: 1 | 2 | 4;
-    countInBars: 0 | 1 | 2;
-  }): void;
-  start(): void;
-  stop(): void;
-  onBeat(cb: (bar: number, beat: number) => void): Unsubscribe;
-}
-```
+_Voices as built in the Sounds run, task 4 (2026-09-23). Doc 12 has the decisions._
 
-Two `MembraneSynth`/`MetalSynth` voices — a higher accent click on beat 1, a lower click
-elsewhere. Optional subdivision clicks at lower volume.
+`Metronome` (`src/audio/Metronome.ts`) runs two repeats on the clock: the **beat**, for
+listeners (the playhead, the transport), unchanged since M2; and a fixed **sixteenth-note
+grid** driving a `MetronomeVoice` — `gridTicks(timeSignature)` and `at(GridEvent)`. Each voice
+hears only the steps on its own grid, so a voice can be swapped mid-run with `setVoice()` —
+between a routine's items — without re-scheduling anything or shifting the beat. A grid
+event's bar counts from the current exercise's bar 1: `countInBetween(from, to)` moves it to
+`to`, so a routine item that counts in for half a bar still gets its backbeat where its bars
+are.
+
+Two voices (`src/audio/metronomeVoices.ts`, no Tone, tested over `FakeClock`):
+
+- **`ClickVoice`** — the synthesised click (2 kHz accent, 1.4 kHz beat; see `AudioEngine.ts`
+  for why it is high), optional subdivisions. **Counts in on the stick sample** when it is
+  loaded, on the click itself when not.
+- **`DrumVoice`** — a `DrumPattern` from `src/domain/drums` played on the `DrumKit`. **Counts
+  in on the open hi-hat**, louder on the downbeat, ignoring the pattern. Until the kit has
+  every drum the pattern needs — loading, or failed — it plays the `ClickVoice` instead: the
+  samples are a nicety, and the time never goes silent.
+
+**The choice** is a `MetronomeVoiceId` — `off`, `click`, `drums-simple|upbeat|soft|heavy` —
+saved on the exercise (`Exercise.metronome`) or routine item, with `Settings.audio.metronome`
+as the fallback: the `countInBars` precedent. **Off is the click voice, muted**: muting
+never silences the count-in, because with the click off the count-in is still how you know
+when to start. A beat that does not fit the phrase's signature plays Simple. `M` toggles
+between off and the last choice that was on.
+
+**Only what a choice can play is downloaded** (`metronomeSounds(id)`): Off loads nothing,
+so its count-in is the synth click; Click loads the stick; a beat loads its own drums, the
+open hat, and Simple's drums for the fallback. The session preloads when it opens — a
+routine, every item's — and `DrumKit` fetches each sound once and never retries a failure.
 
 Count-in is none, half a bar, 1 or 2 bars of clicks before the phrase starts, with a visible
 bar/beat readout so you know when to come in. Half a bar is for slow tempos; it rounds up to

@@ -1,5 +1,6 @@
 import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { CountInBars } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
@@ -89,6 +90,8 @@ export interface Exercise extends Row {
   defaultReps: number;
   /** Pinned to the top of the library. */
   favorite?: boolean;
+  /** The metronome chosen for it; absent is the setting's. */
+  metronome?: MetronomeVoiceId;
   /** The backing last chosen for it; absent is the synth notes. */
   backing?: BackingChoice;
   backingCriteria?: BackingCriteria;
@@ -116,6 +119,8 @@ export interface RoutineItem {
   tempo: TempoConfig;
   /** Copied from the exercise, and its own afterwards. It counts this item in in a routine too. */
   countInBars?: CountInBars;
+  /** Copied from the exercise too; absent is the setting's. */
+  metronome?: MetronomeVoiceId;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
 }
@@ -219,7 +224,8 @@ export interface Settings {
   key: 'settings';
   instrument: Instrument;
   audio: {
-    metronomeEnabled: boolean;
+    /** For an exercise or routine item that has not chosen its own. */
+    metronome: MetronomeVoiceId;
     /**
      * The count-in for an exercise that has none of its own — rows made before
      * the count-in moved onto the exercise. Not shown in Settings any more.

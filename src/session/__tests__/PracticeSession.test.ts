@@ -13,6 +13,7 @@ import {
   type Settings,
   type Video,
 } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import { countInTicks, type Phrase } from '@/domain/phrase';
 import { FakeClock } from '@/domain/time';
@@ -135,6 +136,8 @@ function fakeAudio() {
     notesAt: 0,
     clicking: false,
     silenced: false,
+    metronome: null as MetronomeVoiceId | null,
+    preloaded: [] as MetronomeVoiceId[],
   };
   const fake = {
     clock,
@@ -150,7 +153,6 @@ function fakeAudio() {
     metronome: {
       start: () => (sound.clicking = true),
       stop: () => (sound.clicking = false),
-      setMuted: () => {},
       setSilenced: (silenced) => (sound.silenced = silenced),
       countInBetween: () => {},
     },
@@ -162,6 +164,8 @@ function fakeAudio() {
       clear: () => (sound.notes = null),
     },
     configureMetronome: () => {},
+    setMetronomeVoice: (id) => (sound.metronome = id),
+    preloadMetronome: (id) => sound.preloaded.push(id),
     init: () => Promise.resolve(),
     setMasterVolume: () => {},
     drone: (keyMode) => {
@@ -500,6 +504,40 @@ describe('ExerciseSession', () => {
     expect(saved.items[0]!.countInBars).toBe(0);
     expect(saved.backing).toEqual({ kind: 'drone' });
     expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(2);
+  });
+
+  it('plays each exercise’s own metronome, saves a change to it, and M brings the last one back', async () => {
+    const { deps, repos, audio } = world();
+    const upbeat = await addExercise(repos, 'modes-through-key', { metronome: 'drums-upbeat' });
+    const session = await ExerciseSession.open(upbeat, deps);
+    // Downloaded before Play, and played from the first pass.
+    expect(audio.sound.preloaded).toEqual(['drums-upbeat']);
+    await session.play();
+    expect(audio.sound.metronome).toBe('drums-upbeat');
+
+    await session.toggleMetronome();
+    expect(session.state.metronome).toBe('off');
+    expect(audio.sound.metronome).toBe('off');
+    expect((await repos.exercises.byId(upbeat.id))!.metronome).toBe('off');
+    await session.toggleMetronome();
+    expect(audio.sound.metronome).toBe('drums-upbeat');
+    await session.end();
+
+    // One that has not chosen plays the setting's; a routine item keeps its own.
+    const plain = await addExercise(repos, 'modes-through-key');
+    const other = await ExerciseSession.open(plain, deps);
+    expect(other.state.metronome).toBe('click');
+    await other.end();
+
+    const stored = await repos.routines.add({
+      name: 'R',
+      items: [itemFromExercise((await repos.exercises.byId(upbeat.id))!)],
+      sessionAxisPolicies: {},
+    });
+    const routine = await RoutineSession.open(stored, deps);
+    await routine.setMetronomeVoice('drums-soft');
+    expect((await repos.routines.byId(stored.id))!.items[0]!.metronome).toBe('drums-soft');
+    expect((await repos.exercises.byId(upbeat.id))!.metronome).toBe('drums-upbeat');
   });
 });
 

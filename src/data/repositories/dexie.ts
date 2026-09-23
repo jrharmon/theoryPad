@@ -288,7 +288,7 @@ export function defaultSettings(at: number): Settings {
     key: 'settings',
     instrument: STANDARD_GUITAR,
     audio: {
-      metronomeEnabled: true,
+      metronome: 'click',
       countInBars: 1,
       loop: false,
       voice: 'guitar',
@@ -323,11 +323,19 @@ export function defaultSettings(at: number): Settings {
  */
 export function withDefaults(stored: Settings): Settings {
   const defaults = defaultSettings(stored.updatedAt);
-  const audio = { ...defaults.audio, ...stored.audio };
+  const { metronomeEnabled, ...storedAudio } = stored.audio as Settings['audio'] & {
+    metronomeEnabled?: boolean;
+  };
+  const audio = { ...defaults.audio, ...storedAudio };
   return {
     ...defaults,
     ...stored,
-    audio: { ...audio, voice: knownVoice(audio.voice) },
+    audio: {
+      ...audio,
+      voice: knownVoice(audio.voice),
+      // The metronome was an on/off switch before it was a choice of voice.
+      metronome: storedAudio.metronome ?? (metronomeEnabled === false ? 'off' : 'click'),
+    },
     practice: { ...defaults.practice, ...stored.practice },
     ui: { ...defaults.ui, ...stored.ui },
   };

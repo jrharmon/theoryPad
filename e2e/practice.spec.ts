@@ -184,7 +184,9 @@ test('a practice run rolls, briefs, plays and logs the rep', async ({ page }) =>
   expect(reps[0]!.axes.key).toBeTruthy();
 });
 
-test('the transport toggles are remembered', async ({ page }) => {
+test('the transport toggles are remembered — loop app-wide, the metronome on the exercise', async ({
+  page,
+}) => {
   await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
   const loop = page.getByRole('button', { name: 'Loop', exact: true });
   const metronome = page.getByRole('button', { name: 'Metronome', exact: true });
@@ -197,7 +199,13 @@ test('the transport toggles are remembered', async ({ page }) => {
   await expect(loop).toHaveAttribute('aria-pressed', 'true');
   await expect(metronome).toHaveAttribute('aria-pressed', 'false');
 
-  await savedSettings(page, (s) => s.audio.loop === true && s.audio.metronomeEnabled === false);
+  // Loop is app-wide; the metronome belongs to the exercise.
+  await savedSettings(page, (s) => s.audio.loop === true);
+  await expect
+    .poll(async () =>
+      (await readStore<{ metronome?: string }>(page, 'exercises')).map((e) => e.metronome),
+    )
+    .toContain('off');
   await page.reload();
   await expect(page.getByRole('button', { name: 'Loop', exact: true })).toHaveAttribute(
     'aria-pressed',

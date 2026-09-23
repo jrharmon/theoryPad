@@ -19,6 +19,7 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     params: structuredClone(exercise.params),
     tempo: { ...exercise.tempo },
     countInBars: exercise.countInBars ?? 1,
+    ...(exercise.metronome ? { metronome: exercise.metronome } : {}),
     // Key and mode belong to the routine, so the item does not carry them.
     axisPolicies: Object.fromEntries(
       Object.entries(exercise.axisPolicies).filter(

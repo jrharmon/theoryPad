@@ -1,4 +1,5 @@
 import { withRequiredTags, type BackingChoice, type Exercise } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CoverageCounts } from '@/domain/variation';
 import { countInTicks, type CountInBars } from '@/domain/phrase';
@@ -23,6 +24,7 @@ import {
 export class ExerciseSession extends PracticeSession {
   readonly exerciseId: string;
   private readonly exercise: ExerciseRunner;
+  private metronome: MetronomeVoiceId;
 
   /**
    * Roll a variation and generate the material, without touching audio.
@@ -53,6 +55,8 @@ export class ExerciseSession extends PracticeSession {
     super(deps, sessionId);
     this.exerciseId = exercise.id;
     const settings = deps.settings();
+    this.metronome = exercise.metronome ?? settings.audio.metronome;
+    deps.audio.preloadMetronome(this.metronome);
 
     this.exercise = new ExerciseRunner({
       clock: deps.audio.clock,
@@ -95,6 +99,7 @@ export class ExerciseSession extends PracticeSession {
 
     this.exercise.start();
     this.update({ runner: this.exercise });
+    this.syncMetronome();
     this.backing.open(exercise.backing ?? { kind: 'none' }, {
       exerciseId: exercise.id,
       ...criteriaQuery(
@@ -169,6 +174,15 @@ export class ExerciseSession extends PracticeSession {
 
   protected saveBacking(backing: BackingChoice): Promise<void> {
     return this.deps.saveExercise(this.exerciseId, { backing });
+  }
+
+  protected currentMetronome(): MetronomeVoiceId {
+    return this.metronome;
+  }
+
+  protected rememberMetronome(id: MetronomeVoiceId): Promise<void> {
+    this.metronome = id;
+    return this.deps.saveExercise(this.exerciseId, { metronome: id });
   }
 
   protected endRunner(): void {

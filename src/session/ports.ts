@@ -1,4 +1,5 @@
 import type { Repositories, Routine, RoutineItem, Settings, Exercise, Video } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { Instrument } from '@/domain/instrument';
 import type { KeyMode } from '@/domain/music';
 import type { Phrase, TimeSignature } from '@/domain/phrase';
@@ -16,7 +17,6 @@ export interface AudioPort {
   readonly metronome: {
     start(): void;
     stop(): void;
-    setMuted(muted: boolean): void;
     setSilenced(silenced: boolean): void;
     countInBetween(from: number, to: number): void;
   };
@@ -25,6 +25,10 @@ export interface AudioPort {
     clear(): void;
   };
   configureMetronome(options: { timeSignature: TimeSignature; countInTicks: number }): void;
+  /** What the metronome sounds through, for a phrase in this signature. Off counts in only. */
+  setMetronomeVoice(id: MetronomeVoiceId, timeSignature: TimeSignature): void;
+  /** Start downloading what a metronome can play, so it is in before Play. */
+  preloadMetronome(id: MetronomeVoiceId): void;
   /** Must be called from a user gesture. */
   init(): Promise<void>;
   setMasterVolume(decibels: number): void;

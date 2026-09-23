@@ -95,7 +95,7 @@ export function useRunnerHotkeys({
           break;
         case 'm':
         case 'M':
-          void practice.setMetronome(!useSettings.getState().settings.audio.metronomeEnabled);
+          void practice.toggleMetronome();
           break;
         case 'l':
         case 'L':

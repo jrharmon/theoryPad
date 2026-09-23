@@ -378,6 +378,33 @@ export type MetronomeVoiceId =
 exercise or routine item rather than app-wide. `M` toggles between `'off'` and the last non-off
 choice, so the reflex "kill the click" still works.
 
+### Task 4 — outcome (2026-09-23)
+
+Built as Part 4 describes, with these differences, all agreed with the player or forced by
+the code:
+
+- **One fixed grid, not a re-scheduled one.** The metronome runs a sixteenth-note grid for
+  the whole run and each voice filters it to its own. Swapping a voice is a pointer change,
+  so it is safe mid-run — which a routine needs, since its clock never stops between items
+  and each item has its own metronome. "Things that will bite" §4 no longer applies, and the
+  task-5 menu does not need disabling while running.
+- **Bars count from the current item's bar 1.** `countInBetween(from, to)` already knew where
+  the next item starts; the grid now uses it, so a half-bar count-in between items does not
+  put Heavy's crash and the snare on the wrong beats.
+- **Count-in sounds are fixed in code**, per the player: the click counts in on the stick,
+  every beat on the open hat. Not a setting.
+- **Only what the choice can play is downloaded** (the player's call, mid-task): Off
+  nothing — its count-in is the synth click — Click the stick, a beat its own drums plus the
+  open hat and Simple's. Checked on the dev server: Off requests no kit file, Click one,
+  Upbeat five, Heavy six.
+- **A failed or unfinished kit plays the click**, count-in included (the player's call).
+- **Subdivision and accent moved onto `ClickVoice`**; nothing in the app set them.
+- The session keeps the choice in `SessionState.metronome`, not the runner — it does not
+  affect timing. `setMetronome(on)` became `setMetronomeVoice(id)` and `toggleMetronome()`;
+  until task 5's menu, the transport's toggle and `M` both toggle, and Settings' row maps
+  On/Off to click/off. `Settings.audio.metronomeEnabled` is read once as `metronome` (true →
+  click, false → off) and dropped. A routine item copies the exercise's choice when added.
+
 ---
 
 ## Part 5 — UI

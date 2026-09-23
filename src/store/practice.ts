@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { repos, type BackingChoice, type Exercise, type Routine } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { CountInBars } from '@/domain/phrase';
 import type { Reconfiguration } from '@/exercises/runner';
 import {
@@ -55,8 +56,11 @@ interface PracticeState extends SessionState {
   /** Tear the session down. Leaving the screen calls this; there is no End button. */
   end: () => Promise<void>;
   setFreeTime: (freeTime: boolean) => void;
-  /** The transport's toggles. Remembered app-wide, and applied straight away. */
-  setMetronome: (on: boolean) => Promise<void>;
+  /** The metronome for this exercise — or, in a routine, this item. Saved to it. */
+  setMetronomeVoice: (id: MetronomeVoiceId) => Promise<void>;
+  /** Off, or back to the last metronome that was on. */
+  toggleMetronome: () => Promise<void>;
+  /** Remembered app-wide, and applied straight away. */
   /** The count-in for this exercise — or, in a routine, this item. Saved to it. */
   setCountIn: (bars: CountInBars) => Promise<void>;
   setLoop: (on: boolean) => Promise<void>;
@@ -79,6 +83,8 @@ async function audioPort(): Promise<AudioPort> {
     metronome: engine.metronome,
     phrase: engine.phrase,
     configureMetronome: (options) => engine.configureMetronome(options),
+    setMetronomeVoice: (id, timeSignature) => engine.setMetronomeVoice(id, timeSignature),
+    preloadMetronome: (id) => engine.preloadMetronome(id),
     init: () => engine.init(),
     setMasterVolume: (decibels) => engine.setMasterVolume(decibels),
     drone: (keyMode) => new audio.Drone(keyMode),
@@ -121,6 +127,7 @@ const CLOSED = {
   routineSnapshot: null,
   backing: NO_BACKING,
   audioReady: false,
+  metronome: 'click',
 } satisfies Partial<PracticeState>;
 
 export const usePractice = create<PracticeState>((set, get) => {
@@ -178,7 +185,8 @@ export const usePractice = create<PracticeState>((set, get) => {
     setLoop: (on) => get().session?.setLoop(on) ?? Promise.resolve(),
     chooseBacking: (choice) => get().session?.chooseBacking(choice) ?? Promise.resolve(),
 
-    setMetronome: (on) => get().session?.setMetronome(on) ?? Promise.resolve(),
+    setMetronomeVoice: (id) => get().session?.setMetronomeVoice(id) ?? Promise.resolve(),
+    toggleMetronome: () => get().session?.toggleMetronome() ?? Promise.resolve(),
 
     async end() {
       const { session } = get();

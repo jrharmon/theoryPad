@@ -1,4 +1,5 @@
 import { withRequiredTags, type BackingChoice, type Routine } from '@/data';
+import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
 import { RoutineRunner, type ExerciseRunner, type RoutineRunItem } from '@/exercises/runner';
@@ -19,6 +20,8 @@ import {
 export class RoutineSession extends PracticeSession {
   readonly routineId: string;
   private readonly routine: RoutineRunner;
+  /** Each item's own metronome, by item id; absent is the setting's. */
+  private readonly metronomes = new Map<string, MetronomeVoiceId>();
 
   /** Roll a whole routine for its overview. Nothing plays until `play`. */
   static async open(routine: Routine, deps: SessionDeps): Promise<RoutineSession> {
@@ -51,6 +54,14 @@ export class RoutineSession extends PracticeSession {
     super(deps, sessionId);
     this.routineId = routine.id;
     const settings = deps.settings();
+    for (const item of routine.items) {
+      if (item.metronome) this.metronomes.set(item.id, item.metronome);
+    }
+    // Every item's, before Play: the routine runs straight through.
+    const chosen = routine.items.map((item) => item.metronome ?? settings.audio.metronome);
+    for (const id of new Set(chosen)) {
+      deps.audio.preloadMetronome(id);
+    }
 
     this.routine = new RoutineRunner({
       clock: deps.audio.clock,
@@ -100,6 +111,7 @@ export class RoutineSession extends PracticeSession {
     });
 
     this.routine.open();
+    this.syncMetronome();
     this.backing.open(routine.backing ?? { kind: 'none' }, {
       // One track plays through, so it must suit every played item.
       ...criteriaQuery(
@@ -169,6 +181,20 @@ export class RoutineSession extends PracticeSession {
 
   protected saveBacking(backing: BackingChoice): Promise<void> {
     return this.deps.saveRoutine(this.routineId, { backing });
+  }
+
+  protected currentMetronome(): MetronomeVoiceId {
+    const { items, index } = this.routine.snapshot;
+    const item = items[index];
+    return (item && this.metronomes.get(item.id)) ?? this.deps.settings().audio.metronome;
+  }
+
+  protected async rememberMetronome(id: MetronomeVoiceId): Promise<void> {
+    const { items, index } = this.routine.snapshot;
+    const item = items[index];
+    if (!item) return;
+    this.metronomes.set(item.id, id);
+    await this.deps.saveRoutineItem(this.routineId, item.id, { metronome: id });
   }
 
   protected endRunner(): void {

@@ -3,7 +3,16 @@ import type { VoiceId } from '@/data';
 import type { NoteName } from '@/domain/music';
 import type { Clock } from '@/domain/time';
 import { ToneClock } from './ToneClock';
-import { Metronome, type ClickSink, type MetronomeOptions } from './Metronome';
+import {
+  drumPatternFor,
+  metronomeSounds,
+  patternSounds,
+  type MetronomeVoiceId,
+} from '@/domain/drums';
+import type { TimeSignature } from '@/domain/phrase';
+import { DrumKit } from './DrumKit';
+import { Metronome, type MetronomeOptions } from './Metronome';
+import { ClickVoice, DrumVoice, type ClickSink } from './metronomeVoices';
 import { PhrasePlayer } from './PhrasePlayer';
 import {
   SampledVoice,
@@ -76,6 +85,8 @@ export class AudioEngine {
   readonly phrase: PhrasePlayer;
 
   private readonly clickSink = new ToneClickSink();
+  private readonly kit = new DrumKit();
+  private readonly click = new ClickVoice(this.clickSink, this.kit);
   private readonly voices: VoiceSlot;
   private started = false;
 
@@ -85,7 +96,7 @@ export class AudioEngine {
       options.voice ?? new SynthVoice('guitar'),
       (id) => new SampledVoice(VOICE_PRESETS[id]),
     );
-    this.metronome = new Metronome(this.clock, this.clickSink);
+    this.metronome = new Metronome(this.clock, this.click);
     this.phrase = new PhrasePlayer(this.clock, () => this.voices.voice);
   }
 
@@ -142,6 +153,31 @@ export class AudioEngine {
     this.metronome.configure(options);
   }
 
+  /**
+   * What the metronome sounds through, for a phrase in this signature. Off is
+   * the click, muted, so the count-in still sounds. Safe mid-run. A beat plays
+   * the click until the kit has its drums — and for good, if they fail.
+   */
+  setMetronomeVoice(id: MetronomeVoiceId, timeSignature: TimeSignature): void {
+    this.preloadMetronome(id);
+    const pattern = drumPatternFor(id, timeSignature);
+    this.metronome.setVoice(
+      pattern
+        ? new DrumVoice(pattern, this.kit, this.click, [...patternSounds(pattern), 'hat-open'])
+        : this.click,
+    );
+    this.metronome.setMuted(id === 'off');
+  }
+
+  /**
+   * Start downloading the samples a voice can play — none for Off, the stick
+   * for the click — so they are in before Play. Never waits, never throws: a
+   * sample that fails leaves the click playing.
+   */
+  preloadMetronome(id: MetronomeVoiceId): void {
+    this.kit.load(metronomeSounds(id)).catch(() => {});
+  }
+
   setMasterVolume(decibels: number): void {
     Tone.getDestination().volume.value = decibels;
   }
@@ -152,6 +188,7 @@ export class AudioEngine {
     this.clock.clearAll();
     this.clock.stop();
     this.clickSink.dispose();
+    this.kit.dispose();
     this.voices.dispose();
     this.started = false;
   }

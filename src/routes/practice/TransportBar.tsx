@@ -238,21 +238,22 @@ function SoundsNote() {
   return null;
 }
 
-/** Metronome and loop. Remembered app-wide, and applied straight away. */
+/** Metronome, saved to the exercise or routine item, and loop, remembered app-wide. */
 export function PlaybackToggles() {
   const practice = usePractice();
   const audio = useSettings((s) => s.settings.audio);
   const inRoutine = usePractice((s) => s.routineId !== null);
+  const metronome = usePractice((s) => s.metronome);
   // A track is the click: the metronome waits it out, and says why.
   const underTrack = usePractice((s) => s.backing.resolved.kind === 'video');
   return (
     <div className="flex items-center gap-1" role="group" aria-label="Playback">
       <Toggle
         label="Metronome"
-        on={audio.metronomeEnabled && !underTrack}
+        on={metronome !== 'off' && !underTrack}
         disabled={underTrack}
         title={underTrack ? 'Muted under a backing track' : undefined}
-        onChange={(on) => void practice.setMetronome(on)}
+        onChange={() => void practice.toggleMetronome()}
       />
       <Toggle
         // In a routine, looping holds you on the current exercise.

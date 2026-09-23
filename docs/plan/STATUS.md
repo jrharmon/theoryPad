@@ -37,7 +37,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 4 — transport and turning notes | ✅ merged, live — see below |
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
-| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
+| Sounds — sampled instruments and drum metronomes | **in progress** on branch `sounds` — tasks 1 (samples), 2 (sampled voices) and 3 (drum patterns, `DrumKit`) done 2026-09-22, 4 (metronome voices, per exercise) 2026-09-23; spec and its task-1 outcome in `docs/plan/12-SOUNDS.md` |
 | M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 

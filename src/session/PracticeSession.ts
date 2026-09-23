@@ -1,7 +1,8 @@
 import { coverageCounts, type BackingChoice, type BackingCriteria, type Session } from '@/data';
 import type { Instrument } from '@/domain/instrument';
 import { canonicalKeyMode, pitchClass, type KeyMode } from '@/domain/music';
-import type { CountInBars } from '@/domain/phrase';
+import type { MetronomeVoiceId } from '@/domain/drums';
+import type { CountInBars, TimeSignature } from '@/domain/phrase';
 import { answerWeights } from '@/domain/progress';
 import { AXIS_IDS, type AxisValueKeys, type CoverageCounts } from '@/domain/variation';
 import type {
@@ -26,6 +27,8 @@ export interface SessionState {
   /** The track or drone playing instead of the synth notes, if one was chosen. */
   backing: BackingState;
   audioReady: boolean;
+  /** The metronome for this exercise — in a routine, this item — or the setting's. */
+  metronome: MetronomeVoiceId;
 }
 
 /**
@@ -104,7 +107,10 @@ export abstract class PracticeSession {
     routineSnapshot: null,
     backing: NO_BACKING,
     audioReady: false,
+    metronome: 'click',
   };
+  /** What `M` turns the metronome back on to. */
+  private lastMetronome: MetronomeVoiceId = 'click';
   private readonly listeners = new Set<(state: SessionState) => void>();
 
   protected constructor(deps: SessionDeps, sessionId: string) {
@@ -154,6 +160,10 @@ export abstract class PracticeSession {
   abstract setCountIn(bars: CountInBars): Promise<void>;
   protected abstract applyLoop(on: boolean): void;
   protected abstract saveBacking(choice: BackingChoice): Promise<void>;
+  /** The metronome this exercise — or this routine item — has chosen, or the setting's. */
+  protected abstract currentMetronome(): MetronomeVoiceId;
+  /** Remember a metronome on the exercise or item: in memory at once, then saved. */
+  protected abstract rememberMetronome(id: MetronomeVoiceId): Promise<void>;
   protected abstract endRunner(): void;
   /** After an action that can start an item: a routine may need its track caught up. */
   protected afterAdvance(): void {}
@@ -214,10 +224,21 @@ export abstract class PracticeSession {
     this.afterAdvance();
   }
 
-  /** Remembered app-wide, and applied straight away. */
-  async setMetronome(on: boolean): Promise<void> {
-    this.deps.audio.metronome.setMuted(!on);
-    await this.deps.saveAudioSettings({ metronomeEnabled: on });
+  /**
+   * The metronome for this exercise — or, in a routine, this item. Saved to
+   * it, and heard straight away: swapping the voice mid-run is safe.
+   */
+  async setMetronomeVoice(id: MetronomeVoiceId): Promise<void> {
+    const saving = this.rememberMetronome(id);
+    this.syncMetronome(this.runner?.currentPhrase?.timeSignature);
+    await saving;
+  }
+
+  /** Off, or back to the last metronome that was on: the reflex to kill the click. */
+  toggleMetronome(): Promise<void> {
+    return this.setMetronomeVoice(
+      this.current.metronome === 'off' ? this.lastMetronome : 'off',
+    );
   }
 
   async setLoop(on: boolean): Promise<void> {
@@ -255,6 +276,18 @@ export abstract class PracticeSession {
     this.update({ audioReady: true });
   }
 
+  /**
+   * Show the current exercise's metronome, and hand it to the engine for a
+   * phrase in this signature. Called as each exercise starts, and on a change.
+   */
+  protected syncMetronome(timeSignature?: TimeSignature): void {
+    const id = this.currentMetronome();
+    if (id !== 'off') this.lastMetronome = id;
+    else if (this.lastMetronome === 'off') this.lastMetronome = 'click';
+    if (id !== this.current.metronome) this.update({ metronome: id });
+    if (timeSignature) this.deps.audio.setMetronomeVoice(id, timeSignature);
+  }
+
   /** Back at the brief, or finished: nothing sounds. */
   protected silence(): void {
     this.deps.audio.metronome.stop();
@@ -289,7 +322,11 @@ export abstract class PracticeSession {
       // Straight on from the last pass or item: the clock and the click never
       // stopped, so only the notes need scheduling again — and a count-in in
       // the middle of the clock needs to click even when the metronome is off.
-      if (countInFrom !== undefined) audio.metronome.countInBetween(countInFrom, countInTicks);
+      if (countInFrom !== undefined) {
+        audio.metronome.countInBetween(countInFrom, countInTicks);
+        // A routine's next item, with a metronome of its own.
+        if (phrase) this.syncMetronome(phrase.timeSignature);
+      }
       audio.phrase.clear();
       if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
       return;
@@ -300,7 +337,7 @@ export abstract class PracticeSession {
     // The metronome always runs, muted or not: the count-in clicks either way,
     // and switching it mid-bar must not shift the beat.
     if (phrase) audio.configureMetronome({ timeSignature: phrase.timeSignature, countInTicks });
-    audio.metronome.setMuted(!this.deps.settings().audio.metronomeEnabled);
+    this.syncMetronome(phrase?.timeSignature);
     audio.metronome.start();
     // The phrase goes after the count-in, not at zero.
     if (notes) audio.phrase.load(notes, this.instrument, countInTicks);

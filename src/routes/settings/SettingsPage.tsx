@@ -99,9 +99,11 @@ export function SettingsPage() {
           hint="On when you open an exercise. The transport can switch it any time."
         >
           <OnOff
-            on={audio.metronomeEnabled}
+            on={audio.metronome !== 'off'}
             label="Metronome"
-            onChange={(on) => void save({ audio: { ...audio, metronomeEnabled: on } })}
+            onChange={(on) =>
+              void save({ audio: { ...audio, metronome: on ? 'click' : 'off' } })
+            }
           />
         </Row>
         {/* The count-in belongs to each exercise now, and is set from its transport. */}

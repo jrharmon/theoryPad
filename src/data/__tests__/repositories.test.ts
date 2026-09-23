@@ -524,6 +524,28 @@ describe('settings saved before a field existed', () => {
   });
 });
 
+describe('a metronome saved as a switch', () => {
+  it('becomes the click when it was on, and off when it was off', async () => {
+    const database = new TheoryPadDB(`old-settings-${Math.random()}`);
+    const repos = createRepositories(database);
+    const { metronome: _dropped, ...oldAudio } = (await repos.settings.get()).audio;
+    const current = await repos.settings.get();
+    const stored = (metronomeEnabled: boolean) =>
+      database.settings.put({
+        ...current,
+        audio: { ...oldAudio, metronomeEnabled } as unknown as typeof current.audio,
+      });
+
+    await stored(false);
+    const off = await repos.settings.get();
+    expect(off.audio.metronome).toBe('off');
+    expect(off.audio).not.toHaveProperty('metronomeEnabled');
+    await stored(true);
+    expect((await repos.settings.get()).audio.metronome).toBe('click');
+    await database.delete();
+  });
+});
+
 describe('the v6 migration', () => {
   it("moves the never-chosen 'synth' voice to the guitar", async () => {
     const name = `theorypad-migration-v6-${Math.random()}`;
