@@ -116,8 +116,9 @@ page. **2.86 MB total**: piano 1.67 MB, guitar 936 KB, bass 178 KB, kit 82 KB.
   `drum_splash_hard`, stick `perc_snap`. Sonic Pi also has real rides (`ride_tri`, `ride_via`);
   they lost the audition. Long tails are cut with a fade (open hat 1.2 s, ride 1.5 s, crash
   2.5 s) and leading silence removed.
-- **Stick stays.** The player wants the count-in sound to be a choice: open hat, or a click,
-  even under the full kit. Task 4 decides where that choice lives.
+- **Stick stays**, for the click's count-in. The player first wanted the count-in sound to be
+  a choice; at task 4 it was settled as code instead — the click counts in on the stick, a drum
+  beat on the open hat — to be changed in code if living with it says so.
 - **mp3 throughout.** The pitched sources are already mp3 (~40–48 kbps), so another format
   would only be a bigger copy. The kit is encoded here (LAME `-q:a 2`, 82 KB against ~330 KB as
   FLAC). Measured in Chromium, each kit mp3's onset matches its FLAC twin within 0.2 ms — the
@@ -408,6 +409,11 @@ the code:
 ---
 
 ## Part 5 — UI
+
+_Agreed 2026-09-23, after task 4: the menu is **usable while playing** (task 4's fixed grid
+makes a mid-run swap safe), the Settings row is a **dropdown** of all six, and Off's
+count-in is the synth click because Off loads no samples. STATUS "Sounds — progress" has the
+task-5 brief._
 
 - **`MetronomeMenu.tsx`** in `src/routes/practice/`, modelled on `BackingMenu.tsx` — same
   popover, same `Option` rows with a one-line detail, same disabled-while-running treatment.

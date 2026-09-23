@@ -1,8 +1,10 @@
 # Status — start here
 
-**Last updated:** 2026-09-22. **A new run is planned and not yet started: "Sounds — sampled
-instruments and drum metronomes", specced in `docs/plan/12-SOUNDS.md` and summarized under
-"Remaining work". It goes before M7b.** Before that, two things merged today: **a routine's theory reps are now its
+**Last updated:** 2026-09-23. **In progress: "Sounds — sampled instruments and drum
+metronomes", on branch `sounds`. Tasks 1–4 are committed and reviewed; task 5 (the metronome
+menu) is next, then the gate.** Nothing is pushed or merged yet — `main` is unchanged. See
+"Sounds — progress" under "Remaining work", and `docs/plan/12-SOUNDS.md`, whose per-task
+**Outcome** sections record every decision made along the way. It goes before M7b. Before that, two things merged today: **a routine's theory reps are now its
 question count**, and **the exercise follows YouTube's own pause and play**, which closes the
 backing-track run — see those sections. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
 numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
@@ -41,7 +43,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | M7b — Ear training and "hear it" | after Sounds — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
-M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
+On `sounds`: 713 unit tests in 52 files, 67 E2E, `pnpm check` green. M5 was deliberately built before M4. Everything else is on `main`, and every merged branch has been
 deleted — `main` is the only branch, local and origin in sync. 692 unit tests in 48 files,
 66 E2E, `pnpm check` green.
 
@@ -644,7 +646,56 @@ is already set. Two things to resolve while doing it:
 hands-on check on https://jrharmon.github.io/theoryPad/ — including in a signed-out browser, to
 see what a viewer without Premium gets. Test track: `WkIijba-HcU`.
 
-**Sounds — sampled instruments and drum metronomes** (next; planned 2026-09-22)
+**Sounds — sampled instruments and drum metronomes** (in progress on `sounds`; planned 2026-09-22)
+
+**Sounds — progress (2026-09-23).** A commit per task on `sounds`, unpushed, each reviewed by
+the player before the next began:
+
+| # | Task | Commit | State |
+| --- | --- | --- | --- |
+| 1 | `scripts/fetch-samples.mjs`, samples, `CREDITS.md` | `d8b21c9` | ✅ reviewed |
+| 2 | `SampledVoice`, voice slot, Settings → Sound Instrument row | `a74c573` | ✅ reviewed |
+| 3 | `src/domain/drums/`, `DrumKit` | `790163f` | ✅ reviewed |
+| 4 | Metronome voices, per-exercise choice, migration | `41b9798` | ✅ reviewed |
+| 5 | Metronome menu, Settings row, `M`, E2E | — | **next** |
+| 6 | Gate — with a guitar; then merge `sounds` into `main` and push | — | after 5 |
+
+What changed from the plan, in short (doc 12's Outcome sections have the reasons):
+- **Picked by ear** on a scratch audition page: steel-string acoustic guitar **every
+  semitone** (minor thirds sounded synthetic), acoustic bass, and a kit of `drum_heavy_kick`,
+  `drum_snare_hard`, `drum_cymbal_closed/open`, `drum_cymbal_soft` (ride), `drum_splash_hard`
+  (crash), `perc_snap` (stick). 2.86 MB. mp3 throughout — measured, no encoder padding.
+- **No bass voice**: guitar tab reaches E6, the bass samples stop at G3. They wait for
+  generated backing. The Instrument row is Synth · Piano · Guitar, **default guitar**; a v6
+  migration moved everyone off the never-chosen `'synth'`.
+- **The metronome runs one fixed sixteenth grid**; a voice can be swapped mid-run (routine
+  items each have their own), so the menu need not be disabled while playing.
+- **Count-ins are fixed in code**: the click counts in on the stick, a drum beat on the open
+  hat. **Off loads no samples**, so its count-in is the synth click (accepted by the player).
+- **Only what the choice can play is downloaded**: Off nothing, Click the stick, a beat its
+  drums plus the open hat and Simple's. A beat plays the click until its drums are in, or if
+  they fail.
+- Levels were set by offline RMS measurement (guitar +8 dB, piano −2 dB to match the synth;
+  kit −12 dB with per-drum trims) — all still for the ear at the gate.
+
+**Task 5, agreed before starting** — build these, don't reopen them:
+- `MetronomeMenu.tsx` in `src/routes/practice/`, modelled on `BackingMenu.tsx`, replacing the
+  metronome toggle in `TransportBar`'s `PlaybackToggles`. Off, Click, then
+  `patternsFor(phrase.timeSignature)` as "Drums — Simple" etc. with each pattern's `detail`.
+  **Usable while playing** — a choice is heard from the next grid step. Disabled under a
+  backing track, as the toggle is now. Calls `practice.setMetronomeVoice(id)`; the current
+  choice is `usePractice((s) => s.metronome)`.
+- Settings → Sound's Metronome row becomes a **dropdown** (Select) of all six, for exercises
+  that have not chosen their own. Today it is an On/Off pill mapped to click/off.
+- `M` keeps toggling between Off and the last choice that was on (`toggleMetronome()`, done).
+- One E2E test: open the menu, choose a beat, reload, the exercise still has it. The existing
+  "transport toggles are remembered" test already checks `M` saves to the exercise.
+- Update STATUS "What works today" and the Keys list, and `06-AUDIO.md` if anything moves.
+
+**The gate** — doc 12 lists what only the player can judge: guitar vs piano as the default,
+whether snare and ride keep time over a guitar, the kit and notes levels, whether Upbeat,
+Soft and Heavy each earn their place, the open-hat count-in, Simple in 3/4 and 6/8.
+
 
 **The full spec is `docs/plan/12-SOUNDS.md`. Read it before starting — the design choices below
 were answered by the player and should not be reopened.** Six tasks, in order; sizes there.
@@ -737,6 +788,15 @@ These need a guitar:
 - Whether "Stay on this" feels right mid-routine.
 
 ## Decisions, newest first
+
+**Sounds run (2026-09-22/23)** — doc 12's Outcome sections have the detail
+- Guitar samples every semitone; piano and bass every minor third. Steel acoustic guitar and
+  acoustic bass over the electric ones. mp3 for everything.
+- No bass voice for the notes; default instrument guitar, migrated once.
+- The kit's count-ins are code, not a setting: stick for the click, open hat for a beat.
+- Load only what the chosen metronome can play; Off loads nothing and counts in on the synth
+  click. A missing kit plays the click, never silence.
+- Metronome voices swap mid-run on a fixed grid; the menu stays usable while playing.
 
 **Feedback round 3**
 - Between routine items the count-in is the next item's own, however short — no floor.
@@ -855,6 +915,14 @@ back. **Screenshot in both themes** — a context with `colorScheme: 'dark'`:
   rollup and stats update as they would in use. A few weeks of plausible reps is enough to
   look at the heatmap, report and explorer. For the real write path, raise the tempo
   (Shift+] repeatedly) and play one pass of Position shifting — about 40 s.
+
+- **Probing app state from a script:** on a dev server that has hot-reloaded, the app imports
+  changed modules with a `?t=` suffix, so a bare `await import('/src/store/practice.ts')` gets a
+  *second, empty copy* of the store — calls go nowhere and reads come back as defaults. Drive
+  the UI, or read and write IndexedDB directly (`e2e/helpers.ts`' `readStore` shows how).
+- **Audio levels without ears:** render through `Tone.Offline` in the page and compare RMS and
+  peak (Sounds tasks 2 and 3 did this for voices and the kit). Tone is at
+  `node_modules/.vite/deps/tone.js` — find the exact URL in `performance.getEntriesByType`.
 
 ## Things that bit, and would bite again
 
