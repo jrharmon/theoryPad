@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { repos, findRedundantExercises, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
+import { resolveGeneratedBacking } from '@/exercises/params';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { serialWrites } from './util';
@@ -129,13 +130,15 @@ export const useExercises = create<ExercisesState>((set, get) => ({
       const current = await repos().exercises.byId(id);
       if (!current) return;
 
-      const defaults = newExerciseFrom(exerciseDefinition(current.definitionId));
+      const definition = exerciseDefinition(current.definitionId);
+      const defaults = newExerciseFrom(definition);
       const updated = await repos().exercises.update(id, {
         params: defaults.params,
         axisPolicies: defaults.axisPolicies,
         heldAxisValues: {},
         tempo: defaults.tempo,
         defaultReps: defaults.defaultReps,
+        generatedBacking: resolveGeneratedBacking(definition, undefined),
       });
       set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
     });

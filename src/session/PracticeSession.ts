@@ -205,6 +205,14 @@ export abstract class PracticeSession {
   protected abstract endRunner(): void;
   /** The generated-backing settings of this exercise — or, in a routine, this item. */
   protected abstract generatedSettings(): GeneratedBackingSettings;
+  /**
+   * Pick the progression again after the generated-backing settings changed.
+   * Same roll, same seed: only the progression moves, never an axis.
+   */
+  protected replanGenerated(): void {
+    this.planned = { runner: null, variation: null };
+    this.update({});
+  }
   /** After an action that can start an item: a routine may need its track caught up. */
   protected afterAdvance(): void {}
 

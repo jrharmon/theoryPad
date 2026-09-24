@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { repos, type BackingChoice, type Exercise, type Routine } from '@/data';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { CountInBars } from '@/domain/phrase';
-import type { Reconfiguration } from '@/exercises/runner';
 import {
   ExerciseSession,
   NO_BACKING,
@@ -11,6 +10,7 @@ import {
   type PracticeSession,
   type SessionDeps,
   type SessionState,
+  type SettingsChanges,
 } from '@/session';
 import { useExercises } from './exercises';
 import { useRoutines } from './routines';
@@ -52,7 +52,7 @@ interface PracticeState extends SessionState {
   /** Routine overview only: a fresh roll of one item. */
   rerollItem: (index: number) => void;
   /** Apply settings changed from the practice screen, and save them to the exercise. */
-  reconfigure: (changes: Reconfiguration) => Promise<void>;
+  reconfigure: (changes: SettingsChanges) => Promise<void>;
   /** Tear the session down. Leaving the screen calls this; there is no End button. */
   end: () => Promise<void>;
   setFreeTime: (freeTime: boolean) => void;

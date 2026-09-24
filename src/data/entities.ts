@@ -1,5 +1,6 @@
 import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
+import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { CountInBars } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
@@ -96,6 +97,8 @@ export interface Exercise extends Row {
   /** The backing last chosen for it; absent is the synth notes. */
   backing?: BackingChoice;
   backingCriteria?: BackingCriteria;
+  /** What the generated backing plays for it; absent is the definition's. */
+  generatedBacking?: GeneratedBackingSettings;
   notes?: string;
 }
 
@@ -122,6 +125,8 @@ export interface RoutineItem {
   countInBars?: CountInBars;
   /** Copied from the exercise too; absent is the setting's. */
   metronome?: MetronomeVoiceId;
+  /** Copied from the exercise too; absent is the definition's. */
+  generatedBacking?: GeneratedBackingSettings;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
 }

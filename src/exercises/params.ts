@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
 import type { AnyExerciseDefinition } from './types';
 
 /**
@@ -117,6 +118,17 @@ export function resolveParams(definition: AnyExerciseDefinition, stored: unknown
   const parsed = definition.params.safeParse(stored ?? {});
   if (parsed.success) return parsed.data as unknown;
   return definition.params.parse({}) as unknown;
+}
+
+/**
+ * What the generated backing plays for an exercise or routine item: its own
+ * settings, else its definition's, else the plain default.
+ */
+export function resolveGeneratedBacking(
+  definition: AnyExerciseDefinition,
+  stored: GeneratedBackingSettings | undefined,
+): GeneratedBackingSettings {
+  return stored ?? definition.backing?.generated ?? DEFAULT_GENERATED_BACKING;
 }
 
 /** The param a theory set sizes itself by. */

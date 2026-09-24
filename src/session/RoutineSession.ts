@@ -4,6 +4,7 @@ import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
 import { RoutineRunner, type ExerciseRunner, type RoutineRunItem } from '@/exercises/runner';
+import { resolveGeneratedBacking } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
 import type { SessionDeps } from './ports';
 import {
@@ -61,10 +62,8 @@ export class RoutineSession extends PracticeSession {
       if (item.metronome) this.metronomes.set(item.id, item.metronome);
     }
     for (const item of items) {
-      this.generatedBacking.set(
-        item.id,
-        item.definition.backing?.generated ?? DEFAULT_GENERATED_BACKING,
-      );
+      const stored = routine.items.find((i) => i.id === item.id)?.generatedBacking;
+      this.generatedBacking.set(item.id, resolveGeneratedBacking(item.definition, stored));
     }
     // Every item's, before Play: the routine runs straight through.
     const chosen = routine.items.map((item) => item.metronome ?? settings.audio.metronome);

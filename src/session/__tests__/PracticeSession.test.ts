@@ -13,7 +13,11 @@ import {
   type Settings,
   type Video,
 } from '@/data';
-import { formatProgression, type RenderedPass } from '@/domain/backing';
+import {
+  formatProgression,
+  type GeneratedBackingSettings,
+  type RenderedPass,
+} from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import { chordOnDegree, chroma, type KeyMode } from '@/domain/music';
 import { countInTicks, ticksPerBar, type Phrase } from '@/domain/phrase';
@@ -326,13 +330,21 @@ function barRoots(pass: RenderedPass, bar: number): number[] {
   return pass.bass.filter((note) => note.tick % bar === 0).map((note) => note.midi % 12);
 }
 
-/** The roots a plan's progression puts on each bar, a bar per chord, from bar 1. */
+/** The roots a plan's progression puts on each bar, from bar 1. */
 function planRoots(plan: GeneratedPlan, keyMode: KeyMode, bars: number): number[] {
-  const { progression } = plan;
+  const perBar = plan.progression.flatMap((step) =>
+    Array.from({ length: step.bars }, () => step.degree),
+  );
   return Array.from({ length: bars }, (_, b) =>
-    chroma(chordOnDegree(keyMode, progression[b % progression.length]!.degree).root),
+    chroma(chordOnDegree(keyMode, perBar[b % perBar.length]!).root),
   );
 }
+
+const GO_TO_SWING: GeneratedBackingSettings = {
+  source: { kind: 'goTo' },
+  style: 'swing',
+  chords: 'triads',
+};
 const IN_G = {
   key: { mode: 'fixed', value: 'G' },
   mode: { mode: 'fixed', value: 'ionian' },
@@ -524,7 +536,7 @@ describe('ExerciseSession', () => {
     const session = await ExerciseSession.open(exercise, deps);
     // Picked from the roll, and there to name before anything is chosen.
     const plan = session.state.generated!;
-    expect(plan.settings).toMatchObject({ source: { kind: 'goTo' }, style: 'strum' });
+    expect(plan.settings).toMatchObject({ source: { kind: 'custom' }, style: 'pulse' });
     await session.chooseBacking({ kind: 'generated' });
     const backing = audio.generated[0]!;
     expect(backing.loading).toBe(true);
@@ -566,6 +578,33 @@ describe('ExerciseSession', () => {
       picked.add(formatProgression(session.state.generated!.progression));
     }
     expect(picked.size).toBeGreaterThan(1);
+  });
+
+  it('picks only the progression again when its settings change, and keeps them', async () => {
+    const { deps, repos } = world();
+    const exercise = await addExercise(repos, 'free-improv-target');
+    const session = await ExerciseSession.open(exercise, deps);
+    const { variation } = session.state.snapshot!;
+    const custom: GeneratedBackingSettings = {
+      source: { kind: 'custom', progressions: [[{ degree: 4, bars: 2 }]] },
+      style: 'swing',
+      chords: 'triads',
+    };
+
+    await session.reconfigure({ generatedBacking: custom });
+    // The same roll: nothing rolled again but the progression.
+    expect(session.state.snapshot!.variation).toEqual(variation);
+    expect(session.state.generated).toEqual({
+      settings: custom,
+      progression: [{ degree: 4, bars: 2 }],
+    });
+
+    // Saved to the exercise, so it is what plays next time.
+    const reopened = await ExerciseSession.open(
+      (await repos.exercises.byId(exercise.id))!,
+      deps,
+    );
+    expect(reopened.state.generated!.settings).toEqual(custom);
   });
 
   it('drops a track that will not start, says why, and plays the notes instead', async () => {
@@ -720,7 +759,10 @@ describe('RoutineSession', () => {
 
   it('plays each item’s own generated progression, and nothing under a theory set', async () => {
     const { deps, repos, audio } = world();
-    const improv = await addExercise(repos, 'free-improv-target');
+    // Its own settings, copied onto the routine's item.
+    const improv = await addExercise(repos, 'free-improv-target', {
+      generatedBacking: GO_TO_SWING,
+    });
     const circle = await addExercise(repos, 'circle-of-fifths');
     const scales = await addExercise(repos, 'modes-through-key');
     const stored = await repos.routines.add({
@@ -738,6 +780,7 @@ describe('RoutineSession', () => {
     await settle();
     const backing = audio.generated[0]!;
     const first = session.runner!.currentPhrase!;
+    expect(session.state.generated!.settings).toEqual(GO_TO_SWING);
     const bar = ticksPerBar(first.timeSignature);
     expect(backing.passes).toHaveLength(1);
     expect(barRoots(backing.passes[0]!.pass, bar)).toEqual(

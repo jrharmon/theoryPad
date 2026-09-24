@@ -2,6 +2,9 @@ import { useState } from 'react';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import type { AxisId, AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
+import type { GeneratedBackingSettings } from '@/domain/backing';
+import { GeneratedBackingEditor } from '@/components/backing/GeneratedBackingEditor';
+import type { ChordContext } from '@/components/backing/chordContext';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +25,8 @@ export interface ExerciseSettings {
   tempo: TempoConfig;
   params: unknown;
   axisPolicies: AxisPolicies;
+  /** A played exercise's; a theory one has no backing. */
+  generatedBacking?: GeneratedBackingSettings;
 }
 
 /**
@@ -39,6 +44,7 @@ export function SettingsDialog({
   held,
   axes = definition.axes,
   hiddenParams,
+  chordsIn,
   onApply,
 }: {
   open: boolean;
@@ -52,6 +58,8 @@ export function SettingsDialog({
   axes?: AxisId[];
   /** Params set somewhere else — a routine's theory item takes its question count from its reps. */
   hiddenParams?: string[];
+  /** What the generated backing's custom chords are shown in. */
+  chordsIn: ChordContext;
   onApply: (changed: Partial<ExerciseSettings>) => void;
 }) {
   // Mounted fresh on every open, so the draft always starts from what is saved.
@@ -66,6 +74,7 @@ export function SettingsDialog({
           held={held}
           axes={axes}
           {...(hiddenParams ? { hiddenParams } : {})}
+          chordsIn={chordsIn}
           onApply={onApply}
           onClose={() => onOpenChange(false)}
         />
@@ -82,6 +91,7 @@ function Draft({
   held,
   axes,
   hiddenParams,
+  chordsIn,
   onApply,
   onClose,
 }: {
@@ -92,6 +102,7 @@ function Draft({
   held: Record<string, string>;
   axes: AxisId[];
   hiddenParams?: string[];
+  chordsIn: ChordContext;
   onApply: (changed: Partial<ExerciseSettings>) => void;
   onClose: () => void;
 }) {
@@ -99,6 +110,7 @@ function Draft({
   const [tempo, setTempo] = useState<TempoConfig>(initial.tempo);
   const [params, setParams] = useState<unknown>(initial.params);
   const [policies, setPolicies] = useState<AxisPolicies>(initial.axisPolicies);
+  const [generated, setGenerated] = useState(initial.generatedBacking);
 
   const apply = () => {
     const changed: Partial<ExerciseSettings> = {
@@ -106,6 +118,9 @@ function Draft({
       ...(JSON.stringify(params) !== JSON.stringify(initial.params) ? { params } : {}),
       ...(JSON.stringify(policies) !== JSON.stringify(initial.axisPolicies)
         ? { axisPolicies: policies }
+        : {}),
+      ...(generated && JSON.stringify(generated) !== JSON.stringify(initial.generatedBacking)
+        ? { generatedBacking: generated }
         : {}),
     };
     if (Object.keys(changed).length > 0) onApply(changed);
@@ -157,19 +172,35 @@ function Draft({
           />
         </div>
 
-        {axes.length > 0 && (
-          <div>
-            <Kicker>What varies</Kicker>
-            <div className="mt-2">
-              <AxisPolicyEditor
-                axes={axes}
-                policies={policies}
-                held={held}
-                instrument={instrument}
-                allowed={definition.allowedValues}
-                onChange={(axis, policy) => setPolicies({ ...policies, [axis]: policy })}
-              />
-            </div>
+        {(axes.length > 0 || generated) && (
+          <div className="space-y-6">
+            {axes.length > 0 && (
+              <div>
+                <Kicker>What varies</Kicker>
+                <div className="mt-2">
+                  <AxisPolicyEditor
+                    axes={axes}
+                    policies={policies}
+                    held={held}
+                    instrument={instrument}
+                    allowed={definition.allowedValues}
+                    onChange={(axis, policy) => setPolicies({ ...policies, [axis]: policy })}
+                  />
+                </div>
+              </div>
+            )}
+            {generated && (
+              <div data-testid="generated-backing">
+                <Kicker>Generated backing</Kicker>
+                <div className="mt-2">
+                  <GeneratedBackingEditor
+                    initial={generated}
+                    chordsIn={chordsIn}
+                    onChange={setGenerated}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -4,8 +4,9 @@
 `generated-backing` (not merged, not pushed). It adds bass and piano chords over a progression in
 the key, as a Backing-menu choice, with chord symbols over the tab.
 **`docs/plan/13-GENERATED-BACKING.md` is the full spec**, with the task list and a per-task
-outcome and review record. **Tasks 1–3 are done; task 4 (settings) is next** — see "Generated
-backing" under "Remaining work" for exactly where it stands. It goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
+outcome and review record. **Tasks 1–4 are done; task 4 (settings) awaits the player's review,
+then task 5 (showing the chords)** — see "Generated backing" under "Remaining work" for exactly
+where it stands. It goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
 and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
 Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
 beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
@@ -47,13 +48,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
-| Generated backing — bass and piano over the key's chords | **in progress** on `generated-backing` — tasks 1–3 of 6 done; task 4 next. Spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
+| Generated backing — bass and piano over the key's chords | **in progress** on `generated-backing` — tasks 1–4 of 6 done; task 4 in review, then 5. Spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | M7b — Ear training and "hear it" | after generated backing — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
 deleted — `main` is the only branch, local and origin in sync. (Since then: `generated-backing`
-is open and `main` is a commit ahead — see "Generated backing" under "Remaining work".) 714 unit tests in 52 files,
+is open and `main` is a commit ahead — see "Generated backing" under "Remaining work".) 734 unit tests in 55 files,
 68 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -738,12 +739,12 @@ Note that the old click's 2 kHz reasoning does **not** carry over to the kit: th
 are high and cut through on their own, and the kick is there for feel rather than timekeeping.
 
 **Generated backing** (in progress on `generated-backing`; agreed 2026-09-23)
-- **Where it stands (2026-09-24).** Branch `generated-backing`, five commits over `main`: the
-  plan (`c733492`), task 1 (`2d1087f`), task 2 (`3645f72`), task 3 (`54b3f2f`) and task 3's
-  review fix (`19c7b77`). Not merged, not pushed. `main` itself is one commit ahead of `origin`
-  (`4672906`, closing the Sounds gate's open questions), also unpushed — the gate pushes both.
-  732 unit tests in 54 files, 68 E2E, `pnpm check` and the full E2E green at `54b3f2f`; `pnpm
-  check` green at `19c7b77`.
+- **Where it stands (2026-09-24).** Branch `generated-backing`, over `main`: the plan
+  (`c733492`), task 1 (`2d1087f`), task 2 (`3645f72`), task 3 (`54b3f2f`), task 3's review fix
+  (`19c7b77`), a STATUS note (`b8eda8d`) and **task 4 (settings)**, the latest commit. Not merged,
+  not pushed. `main` itself is one commit ahead of `origin` (`4672906`, closing the Sounds gate's
+  open questions), also unpushed — the gate pushes both. 734 unit tests in 55 files, 68 E2E,
+  `pnpm check` and the full E2E green at task 4.
 - **Done:** pure progressions (`src/domain/backing/generated/`: types, `pickProgression`,
   custom-text parse/format, `chordTimeline`); pure rendering (`compTab`, `comps.ts`,
   `voiceChord`, `renderPass`); sound (`src/audio/GeneratedBacking.ts`, `BASS_PRESET`,
@@ -754,19 +755,18 @@ are high and cut through on their own, and the kick is there for feel rather tha
   trimmed samples, and there was no dynamics. The patterns were rewritten — **Pulse** (default),
   **Strum**, **Swing** — each striking the chord more than once a beat, with a ghost level `g`
   in the piano line. **These await the player's listen**; take it at task 4's review.
-- **Still temporary:** *Improvise to a target*'s definition sets `backing.generated` to the
-  go-to progressions with Strum, marked `TEMPORARY`. Task 4 decides its real default. Every other
-  exercise plays `DEFAULT_GENERATED_BACKING` (vamp on 1, Pulse, sevenths). Swing can't be chosen
-  until task 4.
-- **Next, task 4 — settings:** `Exercise.generatedBacking` and `RoutineItem.generatedBacking`
-  (no Dexie version: optional, unindexed), the definition default, export/import carrying them,
-  one settings component (source, custom lists with parsed chords shown in the key, style pills,
-  7ths/triads) on the exercise config page, the practice settings dialog and a routine item's
-  Edit, and re-picking only the progression on a change. The sessions currently read settings
-  from the definition only — `ExerciseSession.generatedBacking` and `RoutineSession`'s per-item
-  map are where the saved fields slot in, and `PracticeSession.update` recomputes the plan only
-  when the runner or variation changes, so a settings change must refresh it explicitly.
-- Then task 5 (showing the chords) and task 6 (the gate).
+- **Task 4 — settings (done, awaiting review; doc 13 "Task 4 — outcome").** Saved on the
+  exercise and on each routine item (`resolveGeneratedBacking`: the row's, the definition's, the
+  default). One component, `GeneratedBackingEditor`, on the config page, in the practice settings
+  dialog and in a routine item's Edit: source, custom lines (saved only when every line parses),
+  style, 7ths/triads. Chords are spelled in the roll's key in the practice dialog, roman numerals
+  elsewhere. A change re-picks only the progression (`replanGenerated`). *Improvise to a
+  target* now defaults to Custom `1 4 5 1` · `2 5 1*2` · `1 6 4 1`, Pulse, 7ths — each ends on
+  the tonic, so a 4-bar phrase lands over i. **Take at the review:** the Pulse/Strum/Swing
+  listen carried from task 3 (Swing is reachable now), and those three lists.
+- **Next, task 5 — showing the chords:** session `chords` state (build on
+  `SessionState.generated`), the `TabStaff` chord lane with the highlight, the improv strip, E2E.
+  Then task 6 (the gate).
 - Six tasks on branch `generated-backing`, a commit and a player review each — **read
   `docs/plan/13-GENERATED-BACKING.md` first**; its "Decisions already taken" were answered by
   the player and should not be reopened.

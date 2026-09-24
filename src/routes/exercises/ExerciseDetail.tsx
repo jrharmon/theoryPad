@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
+import { resolveGeneratedBacking } from '@/exercises/params';
+import { GeneratedBackingEditor } from '@/components/backing/GeneratedBackingEditor';
+import { settledMode } from '@/components/backing/chordContext';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,8 @@ export function ExerciseDetail() {
   const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
+  // Bumped by a reset, which the generated-backing editor must start again from.
+  const [resets, setResets] = useState(0);
 
   useEffect(() => {
     void load();
@@ -60,7 +65,12 @@ export function ExerciseDetail() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" onClick={() => void resetToDefaults(exercise.id)}>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void resetToDefaults(exercise.id).then(() => setResets((n) => n + 1))
+            }
+          >
             Reset to defaults
           </Button>
           <Button
@@ -136,6 +146,27 @@ export function ExerciseDetail() {
               exercise={exercise}
               requiredTags={definition.backing?.requiredTags}
             />
+          )}
+          {definition.kind === 'played' && (
+            <div className="sheet px-5 py-4" data-testid="generated-backing">
+              <Kicker>Generated backing</Kicker>
+              <p className="mt-1 text-meta text-ink-muted">
+                Bass and piano over the key’s chords, when Generated is chosen in the Backing
+                menu.
+              </p>
+              <div className="mt-3">
+                <GeneratedBackingEditor
+                  key={`${exercise.id}-${resets}`}
+                  initial={resolveGeneratedBacking(definition, exercise.generatedBacking)}
+                  chordsIn={{
+                    mode: settledMode(exercise.axisPolicies, exercise.heldAxisValues),
+                  }}
+                  onChange={(generatedBacking) =>
+                    void update(exercise.id, { generatedBacking })
+                  }
+                />
+              </div>
+            </div>
           )}
         </div>
 

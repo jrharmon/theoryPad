@@ -1,12 +1,12 @@
 import { withRequiredTags, type BackingChoice, type Exercise } from '@/data';
-import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
+import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CoverageCounts } from '@/domain/variation';
 import { countInTicks, type CountInBars } from '@/domain/phrase';
 import type { RunnerState } from '@/exercises/runner';
 import { ExerciseRunner, type Reconfiguration } from '@/exercises/runner';
-import { resolveParams } from '@/exercises/params';
+import { resolveGeneratedBacking, resolveParams } from '@/exercises/params';
 import { exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { definedProps } from '@/lib/definedProps';
@@ -21,12 +21,17 @@ import {
   openSessionRow,
 } from './PracticeSession';
 
+/** What the practice screen's settings dialog can change. */
+export interface SettingsChanges extends Reconfiguration {
+  generatedBacking?: GeneratedBackingSettings;
+}
+
 /** One exercise, played as often as asked. Its settings are saved to the exercise. */
 export class ExerciseSession extends PracticeSession {
   readonly exerciseId: string;
   private readonly exercise: ExerciseRunner;
   private metronome: MetronomeVoiceId;
-  private readonly generatedBacking: GeneratedBackingSettings;
+  private generatedBacking: GeneratedBackingSettings;
 
   /**
    * Roll a variation and generate the material, without touching audio.
@@ -58,7 +63,7 @@ export class ExerciseSession extends PracticeSession {
     this.exerciseId = exercise.id;
     const settings = deps.settings();
     this.metronome = exercise.metronome ?? settings.audio.metronome;
-    this.generatedBacking = definition.backing?.generated ?? DEFAULT_GENERATED_BACKING;
+    this.generatedBacking = resolveGeneratedBacking(definition, exercise.generatedBacking);
     deps.audio.preloadMetronome(this.metronome);
 
     this.exercise = new ExerciseRunner({
@@ -160,10 +165,16 @@ export class ExerciseSession extends PracticeSession {
    * exercise: the dialog is a shortcut to the config page, not a separate,
    * temporary set of settings.
    */
-  async reconfigure(changes: Reconfiguration): Promise<void> {
+  async reconfigure({ generatedBacking, ...changes }: SettingsChanges): Promise<void> {
+    // First, so a re-rolled axis picks its progression from the new settings too.
+    if (generatedBacking) this.generatedBacking = generatedBacking;
     this.exercise.reconfigure(changes);
+    if (generatedBacking) this.replanGenerated();
     this.backing.refresh();
-    await this.deps.saveExercise(this.exerciseId, definedProps(changes));
+    await this.deps.saveExercise(
+      this.exerciseId,
+      definedProps({ ...changes, generatedBacking }),
+    );
   }
 
   async setCountIn(bars: CountInBars): Promise<void> {

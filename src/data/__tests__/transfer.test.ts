@@ -26,6 +26,19 @@ async function populated(now = () => 1_000) {
     heldAxisValues: {},
     tempo: { targetTempo: 70, maxTempo: 90 },
     defaultReps: 2,
+    generatedBacking: {
+      source: {
+        kind: 'custom',
+        progressions: [
+          [
+            { degree: 2, bars: 1 },
+            { degree: 5, bars: 2 },
+          ],
+        ],
+      },
+      style: 'pulse',
+      chords: 'triads',
+    },
   });
   const gone = await repos.exercises.add({ ...exercise, definitionId: 'interval-sequences' });
   await repos.exercises.softDelete(gone.id);

@@ -344,6 +344,51 @@ Task 3 is the first time it can be heard, so its review is a listen. Use the def
 (Vamp on 1 unless the exercise's definition says otherwise). Temporarily point one exercise's
 definition at `goTo`, so there are changes to hear.
 
+### Task 4 — outcome (2026-09-24)
+
+Settings, in all three places. Asked before building: *Improvise to a target*'s default, and
+what the chords show where no key has been rolled.
+
+- **Fields.** `Exercise.generatedBacking` and `RoutineItem.generatedBacking`, optional and
+  unindexed (no Dexie version). `resolveGeneratedBacking(definition, stored)` in
+  `exercises/params.ts` gives the row's, else the definition's, else
+  `DEFAULT_GENERATED_BACKING`. Nothing is written when an exercise is created, so an untouched one
+  follows its definition; **Reset to defaults writes the resolved default**; adding to a routine
+  copies the exercise's.
+- **Export/import** needed no change: rows pass through validation, and routine items are
+  `unknown`. The round-trip test's exercise now carries custom settings, so a stricter schema
+  that dropped them would fail it.
+- **The component**, `components/backing/GeneratedBackingEditor.tsx`: source pills (Vamp on 1 ·
+  Go-to · Custom, with a line saying what each does), the custom lines, style pills with the
+  pattern's `detail` under them, and 7ths/Triads. A new line starts empty; a line that doesn't
+  parse shows why in red and **nothing is saved until every non-empty line parses**; empty lines
+  are left out; the last line can't be removed (an empty Custom is what Vamp is for).
+- **What the chords show** (player's call): the practice dialog spells them in the roll's key
+  (`Dm7 – G7 – Cmaj7 ×2`); the config page and a routine item's Edit show **roman numerals**, in
+  the mode if a policy settles it (fixed or held; for an item, the routine's own), else Ionian,
+  and say which.
+- **Where.** Config page: its own sheet under "Backing tracks offered". The settings dialog
+  (practice and a routine item's Edit): under "What varies", for played exercises only.
+- **It keeps its own state after mount.** The exercises store writes before it updates memory,
+  so following the saved value back flicked the pills to the old choice and could drop a
+  quick second click — seen in a screenshot, not a test. The config page remounts it (a `key`)
+  after a reset; the dialog mounts fresh on every open anyway.
+- **Re-pick.** The dialog reports `generatedBacking` alongside tempo, params and policies
+  (`SettingsChanges`). `ExerciseSession.reconfigure` sets it before the runner reconfigures, so
+  an axis re-rolled in the same change picks from the new settings, then `replanGenerated()`
+  works the plan out again from the same seed. Like any dialog change, it goes back to the
+  brief. Checked in the dev server: B♭ Mixolydian's "ii – v – I · Pulse" became "Vamp on I ·
+  Strum", brief and key unchanged.
+- ***Improvise to a target*** (player's call): **Custom, `1 4 5 1` · `2 5 1*2` · `1 6 4 1`,
+  Pulse, 7ths.** Each is four bars ending on the tonic, so a 4- or 8-bar phrase lands its
+  target over i. A phrase length that isn't a multiple of four won't always end there. Landing
+  on the next phrase's bar 1 instead (over `1 5 6 4`) was considered and left: it changes the
+  exercise, not its backing. The `TEMPORARY` mark is gone.
+- Tests: a session test (a settings change re-picks only the progression, is saved, and is what
+  a reopened session plays); the routine test's improv item now brings its own settings through
+  the copy; one editor test (spelled chords, nothing saved while a line is wrong, both lists once
+  fixed). 734 unit tests in 55 files, 68 E2E, all green.
+
 ## Tests
 
 Few and useful: one happy-path test per function that checks the whole outcome, then only edge cases that matter. No screenshot tests.

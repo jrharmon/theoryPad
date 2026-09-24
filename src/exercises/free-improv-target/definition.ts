@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { noteAtDegree } from '@/domain/music';
+import { noteAtDegree, type DegreeNumber } from '@/domain/music';
 import { allStrings, scaleOnNeck } from '@/domain/instrument';
 import { FOUR_FOUR, phraseBuilder, ticksPerBar } from '@/domain/phrase';
 import type { PlayedDefinition, PlayedInstance } from '../types';
@@ -29,6 +29,9 @@ export type FreeImprovTargetParams = z.infer<typeof params>;
 /** Where the neck diagram stops when nothing narrows it: past this, few improvise. */
 const HIGHEST_FRET = 15;
 
+/** One chord of the backing's progression, for a bar. */
+const oneBar = (degree: DegreeNumber) => ({ degree, bars: 1 });
+
 /** The label on each phrase's first bar — also how the screen counts phrases. */
 export const PHRASE_LABEL = 'Phrase';
 
@@ -54,9 +57,23 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
   },
   // The clock counts the phrases, so it runs — the click can be muted.
   timing: 'either',
-  // TEMPORARY (doc 13, task 3): chord changes to hear before the generated
-  // backing has settings. Task 4 decides what this exercise really defaults to.
-  backing: { generated: { source: { kind: 'goTo' }, style: 'strum', chords: 'sevenths' } },
+  // Four bars, each ending on the tonic: a four- or eight-bar phrase lands its
+  // target over i, where the target's colour is heard against the mode.
+  backing: {
+    generated: {
+      source: {
+        kind: 'custom',
+        // 1 4 5 1 · 2 5 1*2 · 1 6 4 1
+        progressions: [
+          [oneBar(1), oneBar(4), oneBar(5), oneBar(1)],
+          [oneBar(2), oneBar(5), { degree: 1, bars: 2 }],
+          [oneBar(1), oneBar(6), oneBar(4), oneBar(1)],
+        ],
+      },
+      style: 'pulse',
+      chords: 'sevenths',
+    },
+  },
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
     const target = optionalAxis(variation, 'targetScaleDegree') ?? 1;

@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router';
 import type { Exercise, Routine, RoutineItem } from '@/data';
 import type { AxisId } from '@/domain/variation';
 import { describePolicies, describeReps } from '@/exercises/describe';
-import { repsAreQuestions } from '@/exercises/params';
+import { repsAreQuestions, resolveGeneratedBacking } from '@/exercises/params';
 import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
+import { settledMode } from '@/components/backing/chordContext';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -321,8 +322,17 @@ function ItemRow({
         title={definition.name}
         description="This copy only — the exercise in your library is left as it is."
         definition={definition}
-        initial={{ tempo: item.tempo, params: item.params, axisPolicies: item.axisPolicies }}
+        initial={{
+          tempo: item.tempo,
+          params: item.params,
+          axisPolicies: item.axisPolicies,
+          ...(definition.kind === 'played'
+            ? { generatedBacking: resolveGeneratedBacking(definition, item.generatedBacking) }
+            : {}),
+        }}
         held={item.heldAxisValues}
+        // Key and mode are the routine's, rolled when it runs.
+        chordsIn={{ mode: settledMode(routine.sessionAxisPolicies) }}
         axes={axes}
         {...(questions ? { hiddenParams: ['questionCount'] } : {})}
         onApply={(changed) => void routines.updateItem(routine.id, item.id, changed)}
