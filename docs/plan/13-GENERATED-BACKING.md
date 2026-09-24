@@ -163,7 +163,8 @@ export interface ChordSpan {
 - `voiceChord(chordTones, previous): Midi[]`. Piano chords stay in a close position between
   C3 and C5, each chord voice-led to the nearest voicing of the last. The bass takes the root
   in E1–D♯2, chosen as `droneNotes` chooses its root.
-- `renderPass(timeline, pattern, keyMode) → { bass: NoteEvent[]; piano: NoteEvent[] }`, each
+- `renderPass(timeline, pattern, keyMode, chords, copyTicks?) → { bass: NoteEvent[]; piano:
+  NoteEvent[] }` (`chords` and `copyTicks` added in task 2 — see its outcome), each
   event `{ tick, durationTicks, midi, velocity }`. This is pure, so it can be tested
   thoroughly and heard in the session with `FakeClock`.
 
@@ -250,6 +251,38 @@ from `@/domain/backing`. Eight tests.
 - **Fallbacks**: a custom source with no usable list vamps on 1; an empty progression lays
   out no chords.
 - Symbols are `diatonicChords`' own (`Ebm7`, `Cm7b5`), as the Key & mode view shows them.
+
+### Task 2 — outcome (2026-09-23)
+
+`compTab.ts` (the parser), `comps.ts` (Pad, Straight, Swing), `voicing.ts` (`voiceChord`,
+`bassRoot`), `render.ts` (`renderPass`, `NoteEvent`). Eight more tests.
+
+- **Tab.** `PN` cells: `x` 0.8, `X` 1, `=`, `-`. `BS` cells: `1 3 5 7 o`, `=`, `-`; the bass
+  has no accent (digits have no capital) and plays at 0.8. `=` rings across a bar line; `=`
+  with nothing before it, an unknown line, a second `PN`, a stray cell or mismatched bars
+  throw with the pattern and line named. Either line may be left out. Cells need only give
+  whole ticks — no metronome-grid rule, the backing is scheduled per note.
+- **The patterns as written.** Pad `X===…` over a held root. Straight: `X==-x==-X==-x==-`
+  over `1===5===1===5===`. Swing, on eighth triplets: `X=---x====--` (beat 1 and the swung
+  "and" of 2) over `1==3==5==3==`. All three are one bar.
+- **The pattern sits on the pass's bar grid**, not on each chord, and restarts at every
+  repeat copy: `renderPass` takes `copyTicks` (the phrase's `totalTicks`). It also takes
+  `chords`, since the timeline doesn't carry triads-or-sevenths.
+- **A ringing note that meets a chord change moves to the new chord** — cut on the old one
+  and struck on the new one for the rest of its length — rather than falling silent until the
+  pattern's next hit. With one-bar patterns and bar-long chords this never happens; it matters
+  for a longer pattern the player writes.
+- **A bass `7` under triads plays the root an octave up**, so the bass never plays a 7th the
+  chord symbol doesn't show.
+- **Voicing** is close position in C3–C5, scored by total voice movement **plus the distance of
+  the chord's middle from middle C**. Pure nearest-voicing crept a looping progression to one
+  end of the range within two cycles (A aeolian `1 6 7 1` sank to C3–A3, G mixolydian `1 7 4 1`
+  climbed to D4–B4); with the pull they hold their place. One case still sinks a step per cycle,
+  A aeolian `1 4 5 1` (all minor chords a step apart), to about C3 — in range; judge at the gate.
+  Each repeat copy's first chord is voiced afresh, so copies sound alike. The bass root is
+  E1–D♯2, like the drone's, with tones stacked above it (up to D♯3).
+- No instrument reaches `renderPass`, so "a 7-string has no effect" is true by construction and
+  has no test.
 
 Task 3 is the first time it can be heard, so its review is a listen. Use the default settings
 (Vamp on 1 unless the exercise's definition says otherwise). Temporarily point one exercise's
