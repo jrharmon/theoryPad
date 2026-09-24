@@ -7,9 +7,12 @@ import { compTab } from './compTab';
  * line and it is heard on the next load; add a `compTab({ … })` to COMPS and
  * it appears as a style in the generated-backing settings.
  *
- *   PN piano, the whole chord:   x  hit     X  accent
+ *   PN piano, the whole chord:   g  ghost (soft)     x  hit     X  accent
  *   BS bass, one chord tone:     1 3 5 7    o  the root an octave up
  *   both:                        =  keep ringing     -  silence
+ *
+ * The samples fade within a few seconds, so a chord that should last is
+ * struck again rather than held. The bass plays every note at one level.
  *
  * A line per instrument, `|` between bars; both lines have the same bars, and
  * within a bar the same number of cells. In 4/4, 16 cells to a bar are
@@ -22,43 +25,43 @@ import { compTab } from './compTab';
  * default.
  */
 
-const PAD = compTab({
-  id: 'pad',
-  name: 'Pad',
-  detail: 'The chord held for the bar over its root.',
+const PULSE = compTab({
+  id: 'pulse',
+  name: 'Pulse',
+  detail: 'Even eighths, the beats louder, over a root-and-fifth bass.',
   signature: '4/4',
   //    1   2   3   4
   tab: `
-    PN |X===============|
-    BS |1===============|
+    PN |X=g=x=g=X=g=x=g=|
+    BS |1===1===5===1===|
   `,
 });
 
-const STRAIGHT = compTab({
-  id: 'straight',
-  name: 'Straight',
-  detail: 'Chords on the beats, the bass on root and fifth.',
+const STRUM = compTab({
+  id: 'strum',
+  name: 'Strum',
+  detail: 'A pop strum that skips beat 3 and pushes its upbeat, over a 3-3-2 bass.',
   signature: '4/4',
   //    1   2   3   4
   tab: `
-    PN |X==-x==-X==-x==-|
-    BS |1===5===1===5===|
+    PN |X=g=x=g=--x=x=gg|
+    BS |1=====1=5=====5=|
   `,
 });
 
 const SWING = compTab({
   id: 'swing',
   name: 'Swing',
-  detail: 'A Charleston comp over a walking 1–3–5–3.',
+  detail: 'Every beat and its swung upbeat, 2 and 4 accented, over a walking 1–3–5–3.',
   signature: '4/4',
   //    1  2  3  4
   tab: `
-    PN |X=---x====--|
+    PN |x=gX=gx=gX=g|
     BS |1==3==5==3==|
   `,
 });
 
-export const COMPS: readonly CompPattern[] = [PAD, STRAIGHT, SWING];
+export const COMPS: readonly CompPattern[] = [PULSE, STRUM, SWING];
 
 /** The pattern saved under `id`, or the first one if it has gone. */
 export function compById(id: string): CompPattern {

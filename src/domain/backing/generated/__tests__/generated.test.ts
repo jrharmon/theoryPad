@@ -10,7 +10,7 @@ const BAR = ticksPerBar(FOUR_FOUR);
 const C_IONIAN: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
 
 function settings(source: GeneratedBackingSettings['source']): GeneratedBackingSettings {
-  return { source, style: 'pad', chords: 'sevenths' };
+  return { source, style: 'pulse', chords: 'sevenths' };
 }
 
 function parsed(text: string): Progression {

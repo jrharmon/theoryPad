@@ -56,7 +56,7 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
   timing: 'either',
   // TEMPORARY (doc 13, task 3): chord changes to hear before the generated
   // backing has settings. Task 4 decides what this exercise really defaults to.
-  backing: { generated: { source: { kind: 'goTo' }, style: 'straight', chords: 'sevenths' } },
+  backing: { generated: { source: { kind: 'goTo' }, style: 'strum', chords: 'sevenths' } },
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
     const target = optionalAxis(variation, 'targetScaleDegree') ?? 1;

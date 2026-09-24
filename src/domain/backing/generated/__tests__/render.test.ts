@@ -43,7 +43,7 @@ const notesOf = (events: NoteEvent[]) => events.map((e) => [e.tick, e.durationTi
 describe('comp tab', () => {
   it('reads strikes, ringing across bar lines, and bass chord tones', () => {
     const pattern = tab(`
-      PN |X===x===|==x-|
+      PN |X===x===|==xg|
       BS |1-3-5=7=|o=--|
     `);
     expect(pattern.bars).toBe(2);
@@ -52,6 +52,7 @@ describe('comp tab', () => {
       { tick: 0, durationTicks: 960, velocity: 1 },
       { tick: 960, durationTicks: 1920, velocity: 0.8 },
       { tick: 2880, durationTicks: 480, velocity: 0.8 },
+      { tick: 3360, durationTicks: 480, velocity: 0.35 },
     ]);
     expect(pattern.bass.map((h) => [h.tick, h.durationTicks, h.tone])).toEqual([
       [0, 240, 1],
@@ -64,7 +65,7 @@ describe('comp tab', () => {
 
   it('names the pattern and line when the tab is wrong', () => {
     expect(() => tab('DR |x-------|')).toThrow(/unknown line "DR"/);
-    expect(() => tab('PN |x-1-----|')).toThrow(/"1" in bar 1 — use x X = -/);
+    expect(() => tab('PN |x-1-----|')).toThrow(/"1" in bar 1 — use g x X = -/);
     expect(() => tab('BS |1-x-----|')).toThrow(/"x" in bar 1 — use 1 3 5 7 o = -/);
     expect(() => tab('PN |=-------|')).toThrow(/nothing before it/);
     expect(() => tab('PN |x-------|\nPN |x-------|')).toThrow(/a second PN line/);
@@ -75,7 +76,7 @@ describe('comp tab', () => {
 
   it('parses every shipped pattern', () => {
     // Importing COMPS ran each through compTab; a typo would have thrown already.
-    expect(COMPS.map((c) => c.id)).toEqual(['pad', 'straight', 'swing']);
+    expect(COMPS.map((c) => c.id)).toEqual(['pulse', 'strum', 'swing']);
     for (const comp of COMPS) {
       expect(comp.timeSignature, comp.id).toEqual(FOUR_FOUR);
       expect(comp.piano.length, comp.id).toBeGreaterThan(0);
@@ -111,7 +112,11 @@ describe('renderPass', () => {
       totalTicks: 2 * BAR,
       timeSignature: FOUR_FOUR,
     });
-    const { piano, bass } = renderPass(timeline, compById('straight'), C_IONIAN, 'sevenths');
+    const pattern = tab(`
+      PN |X==-x==-X==-x==-|
+      BS |1===5===1===5===|
+    `);
+    const { piano, bass } = renderPass(timeline, pattern, C_IONIAN, 'sevenths');
     const dm7 = [57, 60, 62, 65];
     const g7 = [55, 59, 62, 65];
     expect(chordsOf(piano)).toEqual([

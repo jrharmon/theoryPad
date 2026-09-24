@@ -151,14 +151,13 @@ export interface ChordSpan {
 
   ```
   //    1   2   3   4
-  PN |x-------x-------|     x hit  X accent  = keep ringing  - silence
+  PN |x-------x-------|     g ghost  x hit  X accent  = keep ringing  - silence
   BS |1===5===1===5===|     1 3 5 7 chord tone, o the root an octave up
   ```
 
   Each pattern has an `id`, `name`, `detail` and `signature`, and is one bar or more; it loops
-  over whatever chord is sounding. Start with **Pad** (a whole-bar chord, the root held),
-  **Straight** (chords on the beats, bass 1–5) and **Swing** (a Charleston comp, a walking-ish
-  1-3-5-3). The player tweaks and adds to these, as with the beats. A chord that changes
+  over whatever chord is sounding. Started with Pad, Straight and Swing; after task 3's review
+  they are **Pulse**, **Strum** and **Swing**, with dynamics (see "Task 3 — review"). The player tweaks and adds to these, as with the beats. A chord that changes
   mid-pattern cuts the ringing notes.
 - `voiceChord(chordTones, previous): Midi[]`. Piano chords stay in a close position between
   C3 and C5, each chord voice-led to the nearest voicing of the last. The bass takes the root
@@ -314,9 +313,32 @@ option counts in `backing.spec` grew by one).
   ("i – ♭II · Straight", "Vamp on i · Pad"), or why it's disabled ("Needs the clock, so not in
   free time." / "Only in 4/4 for now."). `MenuOption` gained `disabled`. Checked in both themes;
   the free-time case forced through the store, since nothing in the UI sets free time today.
-- **Temporary:** *Improvise to a target*'s definition points at `goTo` with Straight, marked
+- **Temporary:** *Improvise to a target*'s definition points at `goTo` with Straight (Strum since the review), marked
   `TEMPORARY` — task 4 decides its real default. Everything else plays the default (Pad over a
   vamp). **Swing can't be reached until task 4's settings.**
+
+### Task 3 — review (2026-09-24)
+
+The player listened. **Levels are good** (8 dB under). The patterns were not:
+
+- **Pad went.** The piano samples are trimmed to 4 s and fade well before that, so a chord
+  struck once a bar dies away; longer samples would cost memory. A chord that should last is
+  **struck again** instead — every pattern now hits the chord more than once a beat.
+- **Dynamics, like the drum beats.** `PN` gains `g`, a ghost, at the drum tab's levels
+  (`g` 0.35, `x` 0.8, `X` 1). The bass stays at one level for now — no one has asked, and
+  digits have no capital to accent with.
+- **The patterns now** (`comps.ts`; nothing had shipped, so the ids changed):
+  - **Pulse** (default): `X=g=x=g=X=g=x=g=` — even eighths, 1 and 3 accented, upbeats ghosted —
+    over `1===1===5===1===`.
+  - **Strum**: `X=g=x=g=--x=x=gg` — a pop strum that skips beat 3 and pushes its upbeat — over a
+    3-3-2 bass, `1=====1=5=====5=`.
+  - **Swing**: `x=gX=gx=gX=g` — every beat and its swung upbeat, 2 and 4 accented — over the
+    walking `1==3==5==3==`.
+- Recounted on the real clock: two bars of Strum played the bass 8 times and the piano 64
+  (eight four-note chords a bar).
+- The tests no longer read the shipped patterns' contents, only that each parses, so editing
+  one can't break a test that isn't about a typo.
+- Answered, not changed: choosing a progression is task 4; showing the chords is task 5.
 
 Task 3 is the first time it can be heard, so its review is a listen. Use the default settings
 (Vamp on 1 unless the exercise's definition says otherwise). Temporarily point one exercise's

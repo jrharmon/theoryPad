@@ -524,7 +524,7 @@ describe('ExerciseSession', () => {
     const session = await ExerciseSession.open(exercise, deps);
     // Picked from the roll, and there to name before anything is chosen.
     const plan = session.state.generated!;
-    expect(plan.settings).toMatchObject({ source: { kind: 'goTo' }, style: 'straight' });
+    expect(plan.settings).toMatchObject({ source: { kind: 'goTo' }, style: 'strum' });
     await session.chooseBacking({ kind: 'generated' });
     const backing = audio.generated[0]!;
     expect(backing.loading).toBe(true);
@@ -759,9 +759,10 @@ describe('RoutineSession', () => {
     expect(backing.passes[1]!.atTick).toBe(
       audio.clock.ticks + session.state.snapshot!.countInRemaining,
     );
-    expect(new Set(backing.passes[1]!.pass.bass.map((note) => note.midi % 12))).toEqual(
-      new Set([chroma(G_IONIAN.tonic)]),
-    );
+    const scalesPhrase = session.runner!.currentPhrase!;
+    expect(
+      new Set(barRoots(backing.passes[1]!.pass, ticksPerBar(scalesPhrase.timeSignature))),
+    ).toEqual(new Set([chroma(G_IONIAN.tonic)]));
   });
 
   it('counts each item in by its own, and never by the exercise it came from', async () => {

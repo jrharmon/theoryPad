@@ -44,7 +44,8 @@ export interface CompTabSpec {
   tab: string;
 }
 
-const PIANO_VELOCITY: Readonly<Record<string, number>> = { x: 0.8, X: 1 };
+/** As the drum tab's: ghost, hit, accent. */
+const PIANO_VELOCITY: Readonly<Record<string, number>> = { g: 0.35, x: 0.8, X: 1 };
 const BASS_TONE: Readonly<Record<string, CompTone>> = {
   '1': 1,
   '3': 3,
@@ -131,7 +132,7 @@ export function compTab(spec: CompTabSpec): CompPattern {
         };
         hits.push(ringing);
       } else {
-        fail(`"${cell}" in bar ${bar + 1} — use ${name === 'PN' ? 'x X' : '1 3 5 7 o'} = -`);
+        fail(`"${cell}" in bar ${bar + 1} — use ${name === 'PN' ? 'g x X' : '1 3 5 7 o'} = -`);
       }
     }
     if (name === 'PN') piano = hits;

@@ -736,7 +736,8 @@ are high and cut through on their own, and the kick is there for feel rather tha
 
 **Generated backing** (in progress on `generated-backing`; agreed 2026-09-23)
 - **Tasks 1–3 are committed** (pure progressions; pure rendering; sound, the session wiring and
-  the Backing-menu entry); task 3 awaits review — a listen. Doc 13's per-task "outcome"
+  the Backing-menu entry). Task 3's review rewrote the comping patterns with rhythm and
+  dynamics (Pulse, Strum, Swing; see doc 13's "Task 3 — review"), which await a listen. Doc 13's per-task "outcome"
   sections have what was decided while building them. *Improvise to a target* temporarily
   plays the go-to progressions (task 4 undoes that). Task 4 (settings) is next.
 - Six tasks on branch `generated-backing`, a commit and a player review each — **read
