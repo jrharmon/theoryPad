@@ -88,6 +88,7 @@ async function audioPort(): Promise<AudioPort> {
     init: () => engine.init(),
     setMasterVolume: (decibels) => engine.setMasterVolume(decibels),
     drone: (keyMode) => new audio.Drone(keyMode),
+    generated: () => new audio.GeneratedBacking(engine.clock),
     track: (track) => new audio.VideoBacking(track, engine.clock),
   };
 }
@@ -128,6 +129,7 @@ const CLOSED = {
   backing: NO_BACKING,
   audioReady: false,
   metronome: 'click',
+  generated: null,
 } satisfies Partial<PracticeState>;
 
 export const usePractice = create<PracticeState>((set, get) => {

@@ -1,4 +1,5 @@
 import { withRequiredTags, type BackingChoice, type Exercise } from '@/data';
+import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CoverageCounts } from '@/domain/variation';
@@ -25,6 +26,7 @@ export class ExerciseSession extends PracticeSession {
   readonly exerciseId: string;
   private readonly exercise: ExerciseRunner;
   private metronome: MetronomeVoiceId;
+  private readonly generatedBacking: GeneratedBackingSettings;
 
   /**
    * Roll a variation and generate the material, without touching audio.
@@ -56,6 +58,7 @@ export class ExerciseSession extends PracticeSession {
     this.exerciseId = exercise.id;
     const settings = deps.settings();
     this.metronome = exercise.metronome ?? settings.audio.metronome;
+    this.generatedBacking = definition.backing?.generated ?? DEFAULT_GENERATED_BACKING;
     deps.audio.preloadMetronome(this.metronome);
 
     this.exercise = new ExerciseRunner({
@@ -187,5 +190,9 @@ export class ExerciseSession extends PracticeSession {
 
   protected endRunner(): void {
     this.exercise.end();
+  }
+
+  protected generatedSettings(): GeneratedBackingSettings {
+    return this.generatedBacking;
   }
 }

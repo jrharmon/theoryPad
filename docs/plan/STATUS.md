@@ -735,9 +735,10 @@ Note that the old click's 2 kHz reasoning does **not** carry over to the kit: th
 are high and cut through on their own, and the kick is there for feel rather than timekeeping.
 
 **Generated backing** (in progress on `generated-backing`; agreed 2026-09-23)
-- **Tasks 1 (pure progressions) and 2 (pure rendering: comp tab, voicing, `renderPass`) are
-  committed**; task 2 awaits review. Doc 13's per-task "outcome" sections have what was decided
-  while building them. Task 3 (sound) is next.
+- **Tasks 1–3 are committed** (pure progressions; pure rendering; sound, the session wiring and
+  the Backing-menu entry); task 3 awaits review — a listen. Doc 13's per-task "outcome"
+  sections have what was decided while building them. *Improvise to a target* temporarily
+  plays the go-to progressions (task 4 undoes that). Task 4 (settings) is next.
 - Six tasks on branch `generated-backing`, a commit and a player review each — **read
   `docs/plan/13-GENERATED-BACKING.md` first**; its "Decisions already taken" were answered by
   the player and should not be reopened.

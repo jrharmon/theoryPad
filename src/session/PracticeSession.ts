@@ -1,10 +1,25 @@
 import { coverageCounts, type BackingChoice, type BackingCriteria, type Session } from '@/data';
+import {
+  chordTimeline,
+  compById,
+  pickProgression,
+  renderPass,
+  type GeneratedBackingSettings,
+  type Progression,
+} from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { canonicalKeyMode, pitchClass, type KeyMode } from '@/domain/music';
 import type { MetronomeVoiceId } from '@/domain/drums';
-import type { CountInBars, TimeSignature } from '@/domain/phrase';
+import type { CountInBars, Phrase, TimeSignature } from '@/domain/phrase';
 import { answerWeights } from '@/domain/progress';
-import { AXIS_IDS, type AxisValueKeys, type CoverageCounts } from '@/domain/variation';
+import {
+  AXIS_IDS,
+  hashSeed,
+  mulberry32,
+  type AxisValueKeys,
+  type CoverageCounts,
+  type RolledVariation,
+} from '@/domain/variation';
 import type {
   ExerciseRunner,
   RepStartInfo,
@@ -29,6 +44,17 @@ export interface SessionState {
   audioReady: boolean;
   /** The metronome for this exercise — in a routine, this item — or the setting's. */
   metronome: MetronomeVoiceId;
+  /**
+   * What the generated backing would play on this roll, whether or not it is
+   * chosen: the menu names it. Null for a theory set.
+   */
+  generated: GeneratedPlan | null;
+}
+
+export interface GeneratedPlan {
+  settings: GeneratedBackingSettings;
+  /** Picked from the roll's seed: the same roll, the same progression. */
+  progression: Progression;
 }
 
 /**
@@ -108,6 +134,12 @@ export abstract class PracticeSession {
     backing: NO_BACKING,
     audioReady: false,
     metronome: 'click',
+    generated: null,
+  };
+  /** What `generated` was worked out from, so it changes only with them. */
+  private planned: { runner: ExerciseRunner | null; variation: RolledVariation | null } = {
+    runner: null,
+    variation: null,
   };
   /** What `M` turns the metronome back on to. */
   private lastMetronome: MetronomeVoiceId = 'click';
@@ -146,6 +178,12 @@ export abstract class PracticeSession {
 
   protected update(changes: Partial<SessionState>): void {
     this.current = { ...this.current, ...changes };
+    const { runner } = this.current;
+    const variation = runner?.snapshot.variation ?? null;
+    if (runner !== this.planned.runner || variation !== this.planned.variation) {
+      this.planned = { runner, variation };
+      this.current = { ...this.current, generated: this.planFor(runner) };
+    }
     for (const listener of this.listeners) listener(this.current);
   }
 
@@ -165,6 +203,8 @@ export abstract class PracticeSession {
   /** Remember a metronome on the exercise or item: in memory at once, then saved. */
   protected abstract rememberMetronome(id: MetronomeVoiceId): Promise<void>;
   protected abstract endRunner(): void;
+  /** The generated-backing settings of this exercise — or, in a routine, this item. */
+  protected abstract generatedSettings(): GeneratedBackingSettings;
   /** After an action that can start an item: a routine may need its track caught up. */
   protected afterAdvance(): void {}
 
@@ -292,6 +332,7 @@ export abstract class PracticeSession {
   protected silence(): void {
     this.deps.audio.metronome.stop();
     this.deps.audio.phrase.clear();
+    this.backing.generated?.clear();
     this.backing.stop();
   }
 
@@ -303,6 +344,47 @@ export abstract class PracticeSession {
     });
   }
 
+  /**
+   * The progression this roll picks. Seeded from the variation, so the same
+   * roll always picks the same one and a re-roll may pick another.
+   */
+  private planFor(runner: ExerciseRunner | null): GeneratedPlan | null {
+    const variation = runner?.snapshot.variation;
+    if (!runner || !variation || runner.currentInstance?.kind !== 'played') return null;
+    const settings = this.generatedSettings();
+    const rng = mulberry32(hashSeed(variation.seed, 'backing'));
+    return { settings, progression: pickProgression(settings, runner.snapshot.keyMode, rng) };
+  }
+
+  /**
+   * Hand the generated backing this pass, from its bar 1 — every pass, so each
+   * sounds the same and a routine's next item plays its own progression. It
+   * needs a clock, and a pattern written for the phrase's signature.
+   */
+  private loadGenerated(phrase: Phrase | null, atTick: number, freeTime: boolean): void {
+    const source = this.backing.generated;
+    if (!source) return;
+    const runner = this.runner;
+    const plan = this.planFor(runner);
+    const pattern = plan && compById(plan.settings.style);
+    if (
+      !runner ||
+      !plan ||
+      !pattern ||
+      !phrase ||
+      freeTime ||
+      pattern.timeSignature.beats !== phrase.timeSignature.beats ||
+      pattern.timeSignature.unit !== phrase.timeSignature.unit
+    ) {
+      source.clear();
+      return;
+    }
+    const { keyMode } = runner.snapshot;
+    const { chords } = plan.settings;
+    const timeline = chordTimeline(plan.progression, keyMode, chords, phrase);
+    source.loadPass(renderPass(timeline, pattern, keyMode, chords, phrase.totalTicks), atTick);
+  }
+
   /** What to do with the audio as each pass starts. */
   protected readonly sound = ({
     phrase,
@@ -312,7 +394,7 @@ export abstract class PracticeSession {
     countInFrom,
   }: RepStartInfo): void => {
     const { audio } = this.deps;
-    // A track plays instead of the notes; the drone plays under them. Under a
+    // A track plays instead of the notes; the drone and generated play under them. Under a
     // track the recording is the click and the count-in, so the metronome says
     // nothing.
     const underTrack = this.backing.underTrack;
@@ -329,17 +411,20 @@ export abstract class PracticeSession {
       }
       audio.phrase.clear();
       if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
+      this.loadGenerated(phrase, countInTicks, freeTime);
       return;
     }
     audio.metronome.stop();
     audio.phrase.clear();
+    this.backing.generated?.clear();
     if (freeTime) return;
     // The metronome always runs, muted or not: the count-in clicks either way,
     // and switching it mid-bar must not shift the beat.
     if (phrase) audio.configureMetronome({ timeSignature: phrase.timeSignature, countInTicks });
     this.syncMetronome(phrase?.timeSignature);
     audio.metronome.start();
-    // The phrase goes after the count-in, not at zero.
+    // The phrase goes after the count-in, not at zero, and the backing with it.
     if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
+    this.loadGenerated(phrase, countInTicks, freeTime);
   };
 }

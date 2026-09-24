@@ -6,3 +6,4 @@ export * from './voices';
 export * from './Drone';
 export * from './DrumKit';
 export * from './backing';
+export * from './GeneratedBacking';

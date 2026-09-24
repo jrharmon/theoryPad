@@ -2,12 +2,12 @@ import type { PlayOptions } from './YouTubePlayer';
 
 /**
  * Something that plays under the exercise: a YouTube track, which replaces the
- * synth notes, or the drone, which plays beneath them. The practice store holds one and does not ask
- * which kind for anything but display. A generated source, if it is ever
- * built, is a third implementation and touches nothing above this line.
+ * synth notes, or the drone and the generated bass and piano, which play
+ * beneath them. The practice store holds one and does not ask which kind for
+ * anything but display.
  */
 export interface BackingSource {
-  readonly kind: 'video' | 'drone';
+  readonly kind: 'video' | 'drone' | 'generated';
   /** Speeds it can play at; null when it has no tempo (the drone). */
   readonly rates: { min: number; max: number; step: number } | null;
   /** The tempo coming out of the speakers; null for the drone. */

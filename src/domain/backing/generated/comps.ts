@@ -1,4 +1,5 @@
 import type { CompPattern } from './compTab';
+import type { GeneratedBackingSettings } from './types';
 import { compTab } from './compTab';
 
 /**
@@ -63,3 +64,10 @@ export const COMPS: readonly CompPattern[] = [PAD, STRAIGHT, SWING];
 export function compById(id: string): CompPattern {
   return COMPS.find((c) => c.id === id) ?? COMPS[0]!;
 }
+
+/** What the generated backing plays when neither the exercise nor its definition says. */
+export const DEFAULT_GENERATED_BACKING: GeneratedBackingSettings = {
+  source: { kind: 'vamp' },
+  style: COMPS[0]!.id,
+  chords: 'sevenths',
+};

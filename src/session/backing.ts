@@ -4,13 +4,13 @@ import { effectiveTempo, speedFor, stepSpeed } from '@/domain/backing';
 import type { KeyMode } from '@/domain/music';
 import type { BackingSource, PlayOptions, YouTubePlayer } from '@/audio';
 import type { ExerciseRunner } from '@/exercises/runner';
-import type { AudioPort, DroneSource } from './ports';
+import type { AudioPort, DroneSource, GeneratedSource } from './ports';
 
 /** What plays instead of the synth notes, and everything the screen shows about it. */
 export interface BackingState {
   /** What was chosen, as remembered on the exercise or routine. */
   choice: BackingChoice;
-  /** What that means in the current key: the drone, a track, or none. */
+  /** What that means in the current key: the drone, generated, a track, or none. */
   resolved: ResolvedBacking;
   /** Tracks the menu offers in the current key. */
   options: Video[];
@@ -117,6 +117,12 @@ export class BackingController {
     return this.current;
   }
 
+  /** The generated backing, when it is what is chosen. The session hands it each pass. */
+  get generated(): GeneratedSource | null {
+    const { resolved, source } = this.current;
+    return resolved.kind === 'generated' ? (source as GeneratedSource | null) : null;
+  }
+
   /** A track is chosen and playable here: it replaces the notes and owns the tempo. */
   get underTrack(): boolean {
     return this.current.resolved.kind === 'video';
@@ -188,6 +194,11 @@ export class BackingController {
 
     if (resolved.kind === 'drone') {
       next.source = this.audio.drone(keyMode);
+    } else if (resolved.kind === 'generated') {
+      // Never rejects, and nothing waits: the synth plays until the samples are in.
+      const source = this.audio.generated();
+      void source.load();
+      next.source = source;
     } else if (resolved.kind === 'video' && resolved.video.bpm !== undefined) {
       const { video } = resolved;
       const bpm = video.bpm!;

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { BackingChoice, Video } from '@/data';
-import { modeTitle } from '@/domain/music';
-import { SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
+import { chordOnDegree, modeTitle, romanNumeral, type KeyMode } from '@/domain/music';
+import { compById, SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
+import type { TimeSignature } from '@/domain/phrase';
+import type { GeneratedPlan } from '@/session';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { usePractice } from '@/store/practice';
@@ -13,12 +15,40 @@ function label(
   resolved: ReturnType<typeof usePractice.getState>['backing']['resolved'],
 ): string {
   if (resolved.kind === 'drone') return 'Drone';
+  if (resolved.kind === 'generated') return 'Generated';
   if (resolved.kind === 'video') return resolved.video.title;
   return 'None';
 }
 
 /**
- * None, the drone, or a track in the current key. Nothing is chosen for you;
+ * What the generated backing will play on this roll — "ii – V – I · Straight" —
+ * or why it can't play here.
+ */
+function generatedDetail(
+  plan: GeneratedPlan | null,
+  keyMode: KeyMode | undefined,
+  timeSignature: TimeSignature | undefined,
+  freeTime: boolean,
+): { detail: string; disabled: boolean } {
+  if (freeTime) return { detail: 'Needs the clock, so not in free time.', disabled: true };
+  if (!plan || !keyMode || !timeSignature) {
+    return { detail: 'Bass and piano over the key’s chords.', disabled: !plan };
+  }
+  const pattern = compById(plan.settings.style);
+  const { beats, unit } = pattern.timeSignature;
+  if (beats !== timeSignature.beats || unit !== timeSignature.unit) {
+    return { detail: `Only in ${beats}/${unit} for now.`, disabled: true };
+  }
+  const numerals = plan.progression.map((step) =>
+    romanNumeral(chordOnDegree(keyMode, step.degree)),
+  );
+  const what =
+    plan.settings.source.kind === 'vamp' ? `Vamp on ${numerals[0]}` : numerals.join(' – ');
+  return { detail: `${what} · ${pattern.name}`, disabled: false };
+}
+
+/**
+ * None, the drone, generated, or a track in the current key. Nothing is chosen for you;
  * what you choose is remembered. Changed between passes, not during one.
  */
 export function BackingMenu() {
@@ -26,6 +56,12 @@ export function BackingMenu() {
   const state = usePractice((s) => s.snapshot?.state);
   const keyMode = usePractice((s) => s.routineSnapshot?.keyMode ?? s.snapshot?.keyMode);
   const choose = usePractice((s) => s.chooseBacking);
+  const plan = usePractice((s) => s.generated);
+  const freeTime = usePractice((s) => s.snapshot?.freeTime ?? false);
+  const timeSignature = usePractice((s) =>
+    s.instance?.kind === 'played' ? s.instance.phrase.timeSignature : undefined,
+  );
+  const generated = generatedDetail(plan, keyMode, timeSignature, freeTime);
   const [open, setOpen] = useState(false);
   const running = state === 'playing' || state === 'count-in' || state === 'paused';
   const key = keyMode ? `${keyMode.tonic} ${modeTitle(keyMode.mode)}` : 'this key';
@@ -63,6 +99,13 @@ export function BackingMenu() {
             title="Drone"
             detail={`Root and fifth of ${key}, held under the notes and the metronome.`}
             onPick={() => pick({ kind: 'drone' })}
+          />
+          <MenuOption
+            selected={backing.resolved.kind === 'generated'}
+            title="Generated"
+            detail={generated.detail}
+            disabled={generated.disabled}
+            onPick={() => pick({ kind: 'generated' })}
           />
           {backing.options.map((video) => (
             <MenuOption

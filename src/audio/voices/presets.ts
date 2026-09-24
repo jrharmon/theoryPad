@@ -4,7 +4,8 @@ export type SampledVoiceId = Exclude<VoiceId, 'synth'>;
 
 /** One sample set, as cut by scripts/fetch-samples.mjs. */
 export interface VoicePreset {
-  id: SampledVoiceId;
+  /** The bass is the generated backing's own, never offered for the notes. */
+  id: SampledVoiceId | 'bass';
   name: string;
   /** Under public/samples/v1/. */
   dir: string;
@@ -57,6 +58,21 @@ export const VOICE_PRESETS: Record<SampledVoiceId, VoicePreset> = {
     volumeDb: 8,
     release: 0.8,
   },
+};
+
+/**
+ * The generated backing's bass: FluidR3's acoustic bass, every minor third,
+ * Bb0 (22) to G3 (55), anchored on E so the open strings are real samples.
+ * Not in the Instrument row.
+ */
+export const BASS_PRESET: VoicePreset = {
+  id: 'bass',
+  name: 'Bass',
+  dir: 'bass',
+  urls: sampled(22, 55, 3),
+  volumeDb: 0,
+  release: 0.4,
+  maxSeconds: 4,
 };
 
 /**

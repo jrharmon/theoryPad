@@ -188,7 +188,8 @@ test('a key with no track offers none, and says where to add one', async ({ page
   test.skip(key?.includes('A Aeolian') ?? false, 'rolled the one key with a track');
   await page.getByTestId('backing-menu').click();
   await expect(page.getByText(/No tracks in .* yet/)).toBeVisible();
-  await expect(page.getByRole('option')).toHaveCount(2);
+  // None, the drone and generated: they fit every key.
+  await expect(page.getByRole('option')).toHaveCount(3);
 });
 
 test('a shared track is added from Settings, and fills its cell of the grid', async ({
@@ -307,8 +308,8 @@ test('a track added in another tab is offered on the next visit to a practice sc
   // reload brought it in, which is what this test must not do.
   await inAMinor(page, 'Modes up the neck');
   await page.getByTestId('backing-menu').click();
-  // None, the drone, and the track this app ships with.
-  await expect(page.getByRole('option')).toHaveCount(3);
+  // None, the drone, generated, and the track this app ships with.
+  await expect(page.getByRole('option')).toHaveCount(4);
   await page.keyboard.press('Escape');
   await page.getByRole('link', { name: 'Home' }).click();
   await page.evaluate(() => ((window as Window & { stayed?: boolean }).stayed = true));

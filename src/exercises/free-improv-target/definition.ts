@@ -54,6 +54,9 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
   },
   // The clock counts the phrases, so it runs — the click can be muted.
   timing: 'either',
+  // TEMPORARY (doc 13, task 3): chord changes to hear before the generated
+  // backing has settings. Task 4 decides what this exercise really defaults to.
+  backing: { generated: { source: { kind: 'goTo' }, style: 'straight', chords: 'sevenths' } },
 
   generate({ keyMode, instrument, variation, params: config }): PlayedInstance {
     const target = optionalAxis(variation, 'targetScaleDegree') ?? 1;

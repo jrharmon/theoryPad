@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
+import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
 import type { Instrument } from '@/domain/instrument';
@@ -146,7 +147,11 @@ interface DefinitionBase<P> {
    * single-chord vamp for an exercise that stays on one chord. Added to the
    * player's own criteria; the exercise's own videos are never filtered.
    */
-  backing?: { requiredTags: readonly string[] };
+  backing?: {
+    requiredTags?: readonly string[];
+    /** What the generated backing plays here unless the exercise says otherwise. */
+    generated?: GeneratedBackingSettings;
+  };
 
   /** Per-instance configuration. A Zod schema gives typed params and a form. */
   params?: z.ZodType<P>;

@@ -125,7 +125,10 @@ export function tagsInUse(videos: readonly Video[]): string[] {
 }
 
 export type ResolvedBacking =
-  { kind: 'none'; dropped: boolean } | { kind: 'drone' } | { kind: 'video'; video: Video };
+  | { kind: 'none'; dropped: boolean }
+  | { kind: 'drone' }
+  | { kind: 'generated' }
+  | { kind: 'video'; video: Video };
 
 /**
  * What a remembered choice means now. A track that no longer fits — a re-roll
@@ -138,6 +141,8 @@ export function resolveBacking(
 ): ResolvedBacking {
   if (!choice || choice.kind === 'none') return { kind: 'none', dropped: false };
   if (choice.kind === 'drone') return { kind: 'drone' };
+  // Generated fits every key and mode, so a re-roll can never drop it.
+  if (choice.kind === 'generated') return { kind: 'generated' };
   const video = backingTracks(videos, query).find((v) => v.id === choice.id);
   return video ? { kind: 'video', video } : { kind: 'none', dropped: true };
 }

@@ -13,9 +13,10 @@ import {
   type Settings,
   type Video,
 } from '@/data';
+import { formatProgression, type RenderedPass } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
-import type { KeyMode } from '@/domain/music';
-import { countInTicks, type Phrase } from '@/domain/phrase';
+import { chordOnDegree, chroma, type KeyMode } from '@/domain/music';
+import { countInTicks, ticksPerBar, type Phrase } from '@/domain/phrase';
 import { FakeClock } from '@/domain/time';
 import { exerciseDefinition } from '@/exercises/registry';
 import { newExerciseFrom } from '@/store/exercises';
@@ -27,6 +28,8 @@ import {
   RoutineSession,
   type AudioPort,
   type DroneSource,
+  type GeneratedPlan,
+  type GeneratedSource,
   type PracticeSession,
   type SessionDeps,
   type TrackSource,
@@ -128,6 +131,43 @@ class FakeDrone implements DroneSource {
   }
 }
 
+class FakeGenerated implements GeneratedSource {
+  readonly kind = 'generated';
+  readonly rates = null;
+  readonly effectiveBpm = null;
+  status: Status = 'loaded';
+  loading = false;
+  /** Every pass it was handed, in order. */
+  passes: { pass: RenderedPass; atTick: number }[] = [];
+  cleared = 0;
+
+  load() {
+    this.loading = true;
+    return Promise.resolve();
+  }
+  start() {
+    this.status = 'playing';
+    return Promise.resolve();
+  }
+  pause() {}
+  resume() {
+    return Promise.resolve();
+  }
+  stop() {
+    this.status = 'stopped';
+  }
+  setRate() {}
+  loadPass(pass: RenderedPass, atTick: number) {
+    this.passes.push({ pass, atTick });
+  }
+  clear() {
+    this.cleared += 1;
+  }
+  dispose() {
+    this.status = 'disposed';
+  }
+}
+
 /** The audio engine as a session sees it, recording what it was told to sound. */
 function fakeAudio() {
   const clock = new FakeClock(120);
@@ -144,6 +184,7 @@ function fakeAudio() {
     sound,
     tracks: [] as FakeTrack[],
     drones: [] as FakeDrone[],
+    generated: [] as FakeGenerated[],
     /** Every track made from now on fails to start with this. */
     failTracks: null as Error | null,
     port: null as unknown as AudioPort,
@@ -172,6 +213,11 @@ function fakeAudio() {
       const drone = new FakeDrone(keyMode);
       fake.drones.push(drone);
       return drone;
+    },
+    generated: () => {
+      const made = new FakeGenerated();
+      fake.generated.push(made);
+      return made;
     },
     track: (track) => {
       const made = new FakeTrack(track, fake.failTracks);
@@ -274,6 +320,19 @@ function playOut(session: PracticeSession, clock: FakeClock) {
 }
 
 const G_IONIAN = { tonic: 'G', mode: 'ionian' } as unknown as KeyMode;
+
+/** The root the generated bass plays on each bar line of a pass, as a chroma. */
+function barRoots(pass: RenderedPass, bar: number): number[] {
+  return pass.bass.filter((note) => note.tick % bar === 0).map((note) => note.midi % 12);
+}
+
+/** The roots a plan's progression puts on each bar, a bar per chord, from bar 1. */
+function planRoots(plan: GeneratedPlan, keyMode: KeyMode, bars: number): number[] {
+  const { progression } = plan;
+  return Array.from({ length: bars }, (_, b) =>
+    chroma(chordOnDegree(keyMode, progression[b % progression.length]!.degree).root),
+  );
+}
 const IN_G = {
   key: { mode: 'fixed', value: 'G' },
   mode: { mode: 'fixed', value: 'ionian' },
@@ -459,6 +518,56 @@ describe('ExerciseSession', () => {
     expect(String(audio.drones[0]!.keyMode.tonic)).toBe('C');
   });
 
+  it('plays generated bass and piano under the notes, from every pass’s bar 1', async () => {
+    const { deps, repos, audio } = world();
+    const exercise = await addExercise(repos, 'free-improv-target', { countInBars: 1 });
+    const session = await ExerciseSession.open(exercise, deps);
+    // Picked from the roll, and there to name before anything is chosen.
+    const plan = session.state.generated!;
+    expect(plan.settings).toMatchObject({ source: { kind: 'goTo' }, style: 'straight' });
+    await session.chooseBacking({ kind: 'generated' });
+    const backing = audio.generated[0]!;
+    expect(backing.loading).toBe(true);
+
+    await session.setLoop(true);
+    await session.play();
+    const phrase = session.runner.currentPhrase!;
+    const countIn = countInTicks(phrase.timeSignature, 1);
+    const bar = ticksPerBar(phrase.timeSignature);
+    const { keyMode } = session.state.snapshot!;
+    // Under the notes and the click, not instead of them.
+    expect(audio.sound).toMatchObject({ notes: phrase, clicking: true, silenced: false });
+    expect(backing.passes).toHaveLength(1);
+    expect(backing.passes[0]!.atTick).toBe(countIn);
+    expect(barRoots(backing.passes[0]!.pass, bar)).toEqual(
+      planRoots(plan, keyMode, phrase.totalTicks / bar),
+    );
+
+    // Looping, the next pass starts the progression again at its own bar 1.
+    playOut(session, audio.clock);
+    expect(backing.passes).toHaveLength(2);
+    expect(backing.passes[1]).toEqual({
+      pass: backing.passes[0]!.pass,
+      atTick: countIn + phrase.totalTicks,
+    });
+
+    // Stopping silences it; playing again keeps the roll, and so the progression.
+    const cleared = backing.cleared;
+    session.stop();
+    expect(backing.cleared).toBeGreaterThan(cleared);
+    await session.play();
+    expect(backing.passes.at(-1)!.pass).toEqual(backing.passes[0]!.pass);
+
+    // A re-roll picks again.
+    session.stop();
+    const picked = new Set<string>();
+    for (let i = 0; i < 12; i += 1) {
+      session.reroll();
+      picked.add(formatProgression(session.state.generated!.progression));
+    }
+    expect(picked.size).toBeGreaterThan(1);
+  });
+
   it('drops a track that will not start, says why, and plays the notes instead', async () => {
     const inG = track();
     const { deps, repos, audio } = world([inG]);
@@ -606,6 +715,52 @@ describe('RoutineSession', () => {
     expect(saved.lastPlayedAt).toBeDefined();
     expect(saved.items[0]!.heldAxisValues).toEqual(
       reps[0]!.find((r) => r.routineItemId === items[0]!.id)!.axes,
+    );
+  });
+
+  it('plays each item’s own generated progression, and nothing under a theory set', async () => {
+    const { deps, repos, audio } = world();
+    const improv = await addExercise(repos, 'free-improv-target');
+    const circle = await addExercise(repos, 'circle-of-fifths');
+    const scales = await addExercise(repos, 'modes-through-key');
+    const stored = await repos.routines.add({
+      name: 'Over the changes',
+      items: [improv, circle, scales].map((e) => ({
+        ...itemFromExercise(e),
+        reps: 1,
+        countInBars: 1 as const,
+      })),
+      sessionAxisPolicies: IN_G,
+      backing: { kind: 'generated' },
+    });
+    const session = await RoutineSession.open(stored, deps);
+    await session.play();
+    await settle();
+    const backing = audio.generated[0]!;
+    const first = session.runner!.currentPhrase!;
+    const bar = ticksPerBar(first.timeSignature);
+    expect(backing.passes).toHaveLength(1);
+    expect(barRoots(backing.passes[0]!.pass, bar)).toEqual(
+      planRoots(session.state.generated!, G_IONIAN, first.totalTicks / bar),
+    );
+
+    // A theory set: nothing to play over, and nothing left ringing.
+    const cleared = backing.cleared;
+    playOut(session, audio.clock);
+    expect(session.state.instance?.kind).toBe('theory');
+    expect(backing.cleared).toBeGreaterThan(cleared);
+    expect(backing.passes).toHaveLength(1);
+
+    // The next played item brings its own: the default, a vamp on the tonic.
+    session.submitSet([{ subject: 'G', correct: true }]);
+    await settle();
+    expect(session.state.generated!.settings.source).toEqual({ kind: 'vamp' });
+    expect(backing.passes).toHaveLength(2);
+    expect(backing.passes[1]!.atTick).toBe(
+      audio.clock.ticks + session.state.snapshot!.countInRemaining,
+    );
+    expect(new Set(backing.passes[1]!.pass.bass.map((note) => note.midi % 12))).toEqual(
+      new Set([chroma(G_IONIAN.tonic)]),
     );
   });
 

@@ -170,8 +170,8 @@ export interface ChordSpan {
 
 ## Audio (`src/audio/`)
 
-- A **bass preset** in `voices/presets.ts`: `sampled(34, 55, 3)` over the shipped files, not
-  offered in the Instrument row.
+- A **bass preset** in `voices/presets.ts`: `sampled(22, 55, 3)` over the shipped files (Bb0–G3;
+  `34` was a slip — it would have skipped E1), not offered in the Instrument row.
 - `GeneratedBacking implements BackingSource` (`rates: null`, `effectiveBpm: null`, like the
   drone). It holds two `SampledVoice`s (bass, piano) on their own gain below the notes.
   `loadPass(events, atTick)` schedules on the clock as `PhrasePlayer.load` does. `clear()`
@@ -283,6 +283,40 @@ from `@/domain/backing`. Eight tests.
   E1–D♯2, like the drone's, with tones stacked above it (up to D♯3).
 - No instrument reaches `renderPass`, so "a 7-string has no effect" is true by construction and
   has no test.
+
+### Task 3 — outcome (2026-09-23)
+
+Heard for the first time. **Checked on the real clock** in the dev server (bite 1): wrapping the
+voices' `play`, 8 s of *Improvise to a target* at 90 bpm played the sampled bass 8 times and the
+sampled piano 32 — two bars of Straight after a one-bar count-in, exactly. Full E2E green (two
+option counts in `backing.spec` grew by one).
+
+- **`BASS_PRESET`** is its own export beside `VOICE_PRESETS`, so the Instrument row never sees
+  it; `VoicePreset.id` widened to allow `'bass'`. Level 0 dB for now.
+- **`GeneratedBacking`** (`src/audio/GeneratedBacking.ts`): each instrument is sampled once its
+  download lands and the synth until then (`SynthVoice('bass')` and `'pad'`) — or for good, if
+  it fails. Both sit **8 dB under their own preset level** (`LEVEL_DB`), to be set by ear at the
+  gate. `loadPass` drops the last pass's schedule **without** releasing voices — the pass's notes
+  were already cut at its end, and releasing at the continuation would clip the last chord by the
+  clock's lookahead. `clear()` does release. `pause()` releases what rings; `resume()` and
+  `reanchor()` strike again whatever spans the clock's position, for the rest of its length, so
+  a Pad chord doesn't go silent until the next bar after a pause or a seek.
+- **Session.** `SessionState.generated: { settings, progression } | null` — the roll's pick,
+  worked out whenever the runner or its variation changes, whether or not Generated is chosen,
+  so the menu can name it before Play. Task 5's `chords` builds on it. `sound()` hands the
+  source each pass (continuations included) through `loadGenerated`, which clears instead when
+  there's no phrase (a theory item), in free time, or when the style's signature isn't the
+  phrase's. `silence()` clears it too, whether or not the backing had "started".
+- **Settings, for now**: the definition's `backing.generated`, else `DEFAULT_GENERATED_BACKING`
+  (`comps.ts`: vamp, the first comp, sevenths). A definition's `backing.requiredTags` became
+  optional so it can carry only `generated`. Routines keep a map of each item's settings.
+- **Menu**: "Generated" after Drone; its detail is the roll's pick in roman numerals and the style
+  ("i – ♭II · Straight", "Vamp on i · Pad"), or why it's disabled ("Needs the clock, so not in
+  free time." / "Only in 4/4 for now."). `MenuOption` gained `disabled`. Checked in both themes;
+  the free-time case forced through the store, since nothing in the UI sets free time today.
+- **Temporary:** *Improvise to a target*'s definition points at `goTo` with Straight, marked
+  `TEMPORARY` — task 4 decides its real default. Everything else plays the default (Pad over a
+  vamp). **Swing can't be reached until task 4's settings.**
 
 Task 3 is the first time it can be heard, so its review is a listen. Use the default settings
 (Vamp on 1 unless the exercise's definition says otherwise). Temporarily point one exercise's

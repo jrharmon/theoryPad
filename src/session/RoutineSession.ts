@@ -1,4 +1,5 @@
 import { withRequiredTags, type BackingChoice, type Routine } from '@/data';
+import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
@@ -22,6 +23,8 @@ export class RoutineSession extends PracticeSession {
   private readonly routine: RoutineRunner;
   /** Each item's own metronome, by item id; absent is the setting's. */
   private readonly metronomes = new Map<string, MetronomeVoiceId>();
+  /** Each item's own generated-backing settings, by item id. */
+  private readonly generatedBacking = new Map<string, GeneratedBackingSettings>();
 
   /** Roll a whole routine for its overview. Nothing plays until `play`. */
   static async open(routine: Routine, deps: SessionDeps): Promise<RoutineSession> {
@@ -56,6 +59,12 @@ export class RoutineSession extends PracticeSession {
     const settings = deps.settings();
     for (const item of routine.items) {
       if (item.metronome) this.metronomes.set(item.id, item.metronome);
+    }
+    for (const item of items) {
+      this.generatedBacking.set(
+        item.id,
+        item.definition.backing?.generated ?? DEFAULT_GENERATED_BACKING,
+      );
     }
     // Every item's, before Play: the routine runs straight through.
     const chosen = routine.items.map((item) => item.metronome ?? settings.audio.metronome);
@@ -199,6 +208,12 @@ export class RoutineSession extends PracticeSession {
 
   protected endRunner(): void {
     this.routine.end();
+  }
+
+  protected generatedSettings(): GeneratedBackingSettings {
+    const { items, index } = this.routine.snapshot;
+    const item = items[index];
+    return (item && this.generatedBacking.get(item.id)) ?? DEFAULT_GENERATED_BACKING;
   }
 
   /**

@@ -59,7 +59,8 @@ export type VideoScope = { kind: 'shared' } | { kind: 'exercise'; exerciseId: Uu
  * What plays instead of the synth notes. None (or absent) is the synth playing
  * the notes, with the metronome. Never chosen automatically.
  */
-export type BackingChoice = { kind: 'none' } | { kind: 'drone' } | { kind: 'video'; id: Uuid };
+export type BackingChoice =
+  { kind: 'none' } | { kind: 'drone' } | { kind: 'generated' } | { kind: 'video'; id: Uuid };
 
 /** Narrows which shared tracks the backing menu offers. */
 export interface BackingCriteria {

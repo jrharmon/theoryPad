@@ -1,6 +1,7 @@
 import type { Repositories, Routine, RoutineItem, Settings, Exercise, Video } from '@/data';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { Instrument } from '@/domain/instrument';
+import type { RenderedPass } from '@/domain/backing';
 import type { KeyMode } from '@/domain/music';
 import type { Phrase, TimeSignature } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
@@ -33,12 +34,24 @@ export interface AudioPort {
   init(): Promise<void>;
   setMasterVolume(decibels: number): void;
   drone(keyMode: KeyMode): DroneSource;
+  /** Bass and piano chords under the notes. Its samples start downloading on `load`. */
+  generated(): GeneratedSource;
   /** A YouTube track kept in time with the clock. */
   track(track: VideoTrack): TrackSource;
 }
 
 export interface DroneSource extends BackingSource {
   setKeyMode(keyMode: KeyMode): void;
+}
+
+export interface GeneratedSource extends BackingSource {
+  /**
+   * Schedule a pass's bass and piano from `atTick`, its bar 1, dropping what
+   * was scheduled for the last pass.
+   */
+  loadPass(pass: RenderedPass, atTick: number): void;
+  /** Nothing scheduled, nothing ringing. */
+  clear(): void;
 }
 
 export interface TrackSource extends BackingSource {
