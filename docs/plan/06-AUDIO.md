@@ -338,11 +338,15 @@ tracks or starts adding one there.
 
 ### The `backingProgression` axis
 
+_Superseded 2026-09-23 by `13-GENERATED-BACKING.md`: the progression is not an axis._
+
 Only meaningful for generated backing. When a track is in use, the progression is
 whatever the recording plays, and the axis resolves to the track's `progression` string for
 display rather than being rolled. Exercises should not assume they can control it.
 
 ### Generated backing — deferred
+
+_Superseded 2026-09-23 by `13-GENERATED-BACKING.md`, which is the spec now._
 
 Specced here so the shape is settled, but **not built until the shared tracks prove
 insufficient.** The drone (M7) is its first and smallest piece: no rhythm, no chords, just the

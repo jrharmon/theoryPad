@@ -1,6 +1,9 @@
 # Status — start here
 
-**Last updated:** 2026-09-23. **"Sounds — sampled instruments and drum metronomes" is merged
+**Last updated:** 2026-09-23. **Next: "Generated backing"** — bass and piano chords over a
+progression in the key, a Backing-menu choice, with chord symbols over the tab. Planned and
+agreed, not started: **`docs/plan/13-GENERATED-BACKING.md` is the full spec**, with the task
+list; it goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
 and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
 Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
 beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
@@ -42,7 +45,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
-| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
+| Generated backing — bass and piano over the key's chords | **next** — planned 2026-09-23, spec and tasks in `docs/plan/13-GENERATED-BACKING.md` |
+| M7b — Ear training and "hear it" | after generated backing — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -730,7 +734,17 @@ first removes the question rather than answering it.
 Note that the old click's 2 kHz reasoning does **not** carry over to the kit: the snare and ride
 are high and cut through on their own, and the kick is there for feel rather than timekeeping.
 
-**M7b — Ear training and "hear it"** (after the ad work)
+**Generated backing** (next; agreed 2026-09-23)
+- Six tasks on branch `generated-backing`, a commit and a player review each — **read
+  `docs/plan/13-GENERATED-BACKING.md` first**; its "Decisions already taken" were answered by
+  the player and should not be reopened.
+- In short: "Generated" in the Backing menu plays sampled bass and piano chords **under** the
+  notes (like the drone; drums stay the metronome's). The progression is scale degrees — vamp
+  on 1, the mode's go-to progressions, or custom lists — picked from the roll's seed, restarted
+  every pass. Chords always show: a lane over the tab, a strip in the improv counter, the current
+  one highlighted. Routines play each item's own progression.
+
+**M7b — Ear training and "hear it"** (after generated backing)
 - 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
   drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
   settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
@@ -765,7 +779,8 @@ are high and cut through on their own, and the kick is there for feel rather tha
   progress bar still moves it out from under the exercise; nobody has asked.
 - Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
 - Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
-- Generated backing — deferred past M9; 75% on a real track was fine, so likely unneeded.
+- ~~Generated backing — deferred past M9.~~ **Promoted 2026-09-23** to "Generated backing"
+  above. See `docs/plan/13-GENERATED-BACKING.md`.
 - ~~Sampled instruments — decided by the M7b gate.~~ **Promoted 2026-09-22** to the
   "Sounds" run above, with drum metronomes alongside it. See `docs/plan/12-SOUNDS.md`.
 - M7a leftovers, ask whether wanted: a criteria editor for routines; reference videos on a theory
