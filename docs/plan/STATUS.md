@@ -1,9 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-09-23. **Next: "Generated backing"** — bass and piano chords over a
-progression in the key, a Backing-menu choice, with chord symbols over the tab. Planned and
-agreed, not started: **`docs/plan/13-GENERATED-BACKING.md` is the full spec**, with the task
-list; it goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
+**Last updated:** 2026-09-24. **In progress: "Generated backing"**, on the branch
+`generated-backing` (not merged, not pushed). It adds bass and piano chords over a progression in
+the key, as a Backing-menu choice, with chord symbols over the tab.
+**`docs/plan/13-GENERATED-BACKING.md` is the full spec**, with the task list and a per-task
+outcome and review record. **Tasks 1–3 are done; task 4 (settings) is next** — see "Generated
+backing" under "Remaining work" for exactly where it stands. It goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
 and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
 Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
 beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
@@ -45,12 +47,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
-| Generated backing — bass and piano over the key's chords | **next** — planned 2026-09-23, spec and tasks in `docs/plan/13-GENERATED-BACKING.md` |
+| Generated backing — bass and piano over the key's chords | **in progress** on `generated-backing` — tasks 1–3 of 6 done; task 4 next. Spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | M7b — Ear training and "hear it" | after generated backing — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 714 unit tests in 52 files,
+deleted — `main` is the only branch, local and origin in sync. (Since then: `generated-backing`
+is open and `main` is a commit ahead — see "Generated backing" under "Remaining work".) 714 unit tests in 52 files,
 68 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -735,11 +738,35 @@ Note that the old click's 2 kHz reasoning does **not** carry over to the kit: th
 are high and cut through on their own, and the kick is there for feel rather than timekeeping.
 
 **Generated backing** (in progress on `generated-backing`; agreed 2026-09-23)
-- **Tasks 1–3 are committed** (pure progressions; pure rendering; sound, the session wiring and
-  the Backing-menu entry). Task 3's review rewrote the comping patterns with rhythm and
-  dynamics (Pulse, Strum, Swing; see doc 13's "Task 3 — review"), which await a listen. Doc 13's per-task "outcome"
-  sections have what was decided while building them. *Improvise to a target* temporarily
-  plays the go-to progressions (task 4 undoes that). Task 4 (settings) is next.
+- **Where it stands (2026-09-24).** Branch `generated-backing`, five commits over `main`: the
+  plan (`c733492`), task 1 (`2d1087f`), task 2 (`3645f72`), task 3 (`54b3f2f`) and task 3's
+  review fix (`19c7b77`). Not merged, not pushed. `main` itself is one commit ahead of `origin`
+  (`4672906`, closing the Sounds gate's open questions), also unpushed — the gate pushes both.
+  732 unit tests in 54 files, 68 E2E, `pnpm check` and the full E2E green at `54b3f2f`; `pnpm
+  check` green at `19c7b77`.
+- **Done:** pure progressions (`src/domain/backing/generated/`: types, `pickProgression`,
+  custom-text parse/format, `chordTimeline`); pure rendering (`compTab`, `comps.ts`,
+  `voiceChord`, `renderPass`); sound (`src/audio/GeneratedBacking.ts`, `BASS_PRESET`,
+  `AudioPort.generated`, the `generated` choice, the session handing it every pass, per-item
+  settings in routines, the Backing-menu entry naming the roll's pick). Heard by the player:
+  **levels are right** (8 dB under the notes).
+- **Task 3's review** (doc 13, "Task 3 — review"): chords struck once a bar died away on the
+  trimmed samples, and there was no dynamics. The patterns were rewritten — **Pulse** (default),
+  **Strum**, **Swing** — each striking the chord more than once a beat, with a ghost level `g`
+  in the piano line. **These await the player's listen**; take it at task 4's review.
+- **Still temporary:** *Improvise to a target*'s definition sets `backing.generated` to the
+  go-to progressions with Strum, marked `TEMPORARY`. Task 4 decides its real default. Every other
+  exercise plays `DEFAULT_GENERATED_BACKING` (vamp on 1, Pulse, sevenths). Swing can't be chosen
+  until task 4.
+- **Next, task 4 — settings:** `Exercise.generatedBacking` and `RoutineItem.generatedBacking`
+  (no Dexie version: optional, unindexed), the definition default, export/import carrying them,
+  one settings component (source, custom lists with parsed chords shown in the key, style pills,
+  7ths/triads) on the exercise config page, the practice settings dialog and a routine item's
+  Edit, and re-picking only the progression on a change. The sessions currently read settings
+  from the definition only — `ExerciseSession.generatedBacking` and `RoutineSession`'s per-item
+  map are where the saved fields slot in, and `PracticeSession.update` recomputes the plan only
+  when the runner or variation changes, so a settings change must refresh it explicitly.
+- Then task 5 (showing the chords) and task 6 (the gate).
 - Six tasks on branch `generated-backing`, a commit and a player review each — **read
   `docs/plan/13-GENERATED-BACKING.md` first**; its "Decisions already taken" were answered by
   the player and should not be reopened.
