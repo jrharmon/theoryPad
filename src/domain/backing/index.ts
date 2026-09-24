@@ -4,3 +4,4 @@ export * from './youtube';
 export * from './tap';
 export * from './drone';
 export * from './startWatch';
+export * from './generated';

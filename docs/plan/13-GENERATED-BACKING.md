@@ -140,8 +140,11 @@ export interface ChordSpan {
 
 - `pickProgression(settings, keyMode, rng): Progression`. Vamp is `[{1, bars: 1}]`. Go-to picks
   from `MODE_CHARACTER[mode].progressions`, one bar per chord. Custom picks from the lists.
-- `chordTimeline(progression, keyMode, chords, passTicks, timeSignature): ChordSpan[]` lays the
-  progression out from tick 0, loops it and cuts it at the pass's end. Symbols come from
+- `chordTimeline(progression, keyMode, chords, phrase): ChordSpan[]` lays the progression out
+  from tick 0, loops it and cuts it at the pass's end. (It takes the phrase's `totalTicks`,
+  `timeSignature` and `repeat` rather than a bare pass length: it needs the copy length to
+  restart at.) The same degree twice in a row is **one span**, so the lane marks changes, not
+  bars; a span never crosses into the next copy (player's call, task 1). Symbols come from
   `diatonicChords`. **If a phrase has `repeat > 1`, the timeline restarts at every copy**, so
   the tab (one copy, with a repeat marker) and what you hear agree.
 - `comps.ts` holds comping patterns as tab, parsed by `compTab()` in the style of `drumTab()`:
@@ -228,6 +231,25 @@ commit, and a stop for the player's review.
 | 4 | Settings: data fields and definition default, export/import, the settings component in all three places, re-pick on change | M |
 | 5 | Showing the chords: session `chords` state, `TabStaff` chord lane with highlight, the improv strip, E2E | M |
 | 6 | Gate: levels, patterns and voicings by ear; fixes; merge | — |
+
+### Task 1 — outcome (2026-09-23)
+
+`src/domain/backing/generated/` (`types.ts`, `progression.ts`, `timeline.ts`), exported
+from `@/domain/backing`. Eight tests.
+
+- **Same chord twice is one span** — asked and answered: vamp shows its chord once, and a
+  loop that brings the same chord back (`1 4 5 1`) holds it across the seam. Never across a
+  repeat copy. The sound is unaffected: task 2 lays comp patterns on the pass's bar grid, not
+  per span, so a held chord still re-strikes every bar.
+- **`chordTimeline` takes the phrase** (`totalTicks`, `timeSignature`, `repeat`) instead of
+  `passTicks, timeSignature` — it needs the copy length to restart at. The improv exercise
+  builds a real phrase (rests, one label per phrase), so it fits too.
+- **Custom text**: whitespace or commas between steps; `1*0`, `1*`, `8`, `ii`, fractions and
+  an empty field are errors, each with a short message for the settings component to show.
+  No upper limit on bars. `formatProgression` writes `*1` as nothing.
+- **Fallbacks**: a custom source with no usable list vamps on 1; an empty progression lays
+  out no chords.
+- Symbols are `diatonicChords`' own (`Ebm7`, `Cm7b5`), as the Key & mode view shows them.
 
 Task 3 is the first time it can be heard, so its review is a listen. Use the default settings
 (Vamp on 1 unless the exercise's definition says otherwise). Temporarily point one exercise's
