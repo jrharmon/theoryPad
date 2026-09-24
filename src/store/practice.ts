@@ -130,6 +130,7 @@ const CLOSED = {
   audioReady: false,
   metronome: 'click',
   generated: null,
+  chords: null,
 } satisfies Partial<PracticeState>;
 
 export const usePractice = create<PracticeState>((set, get) => {

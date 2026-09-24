@@ -1,11 +1,12 @@
 import type { Instrument } from '@/domain/instrument';
-import type { DegreeNumber } from '@/domain/music';
-import { noteAtDegree } from '@/domain/music';
+import type { DegreeNumber, KeyMode } from '@/domain/music';
+import { chordOnDegree, noteAtDegree } from '@/domain/music';
 import { overlayFretRange } from '@/domain/neck';
 import { ticksPerBar } from '@/domain/phrase';
 import { ordinal } from '@/exercises/shared';
 import { PHRASE_LABEL } from '@/exercises/free-improv-target/definition';
 import type { PlayedInstance } from '@/exercises/types';
+import type { GeneratedPlan } from '@/session';
 import { Fretboard } from '@/components/music';
 import { Kicker } from '@/components/ui/kicker';
 import { cn } from 'cn';
@@ -27,6 +28,25 @@ function phraseShape(instance: PlayedInstance) {
 }
 
 /**
+ * One cycle of the generated backing's progression, as it is spelled here, and
+ * which step of it `tick` falls in. The progression starts again at every
+ * pass, and loops within it.
+ */
+function chordCycle(plan: GeneratedPlan, keyMode: KeyMode, tick: number, perBar: number) {
+  const steps = plan.progression.map(({ degree, bars }) => {
+    const chord = chordOnDegree(keyMode, degree);
+    return {
+      symbol: plan.settings.chords === 'triads' ? chord.triadSymbol : chord.seventhSymbol,
+      bars,
+    };
+  });
+  const cycleBars = steps.reduce((sum, step) => sum + step.bars, 0);
+  let bar = Math.floor(tick / perBar) % Math.max(1, cycleBars);
+  const current = steps.findIndex((step) => (bar -= step.bars) < 0);
+  return { steps, current };
+}
+
+/**
  * An improvisation: nothing written, so no tab. What matters while playing is
  * which phrase this is, how far through it, and the note to land on — big
  * enough to read from the guitar. The neck shows the whole mode.
@@ -40,7 +60,10 @@ export function ImprovBody({
 }) {
   const snapshot = usePractice((s) => s.snapshot);
   const state = snapshot?.state;
-  const tick = usePhraseTick(state === 'playing' || state === 'count-in');
+  // Paused holds its place, as the tab's playhead does.
+  const tick = usePhraseTick(state === 'playing' || state === 'count-in' || state === 'paused');
+  const chords = usePractice((s) => s.chords);
+  const plan = usePractice((s) => s.generated);
   const videoColumn = useVideoColumn();
   const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
   const side = useSettings((s) => s.settings.ui.showInfoColumn !== false);
@@ -56,6 +79,8 @@ export function ImprovBody({
 
   const degree = snapshot.variation?.axes.targetScaleDegree?.value as DegreeNumber | undefined;
   const target = degree === undefined ? null : noteAtDegree(snapshot.keyMode, degree);
+  // Shown while Generated is chosen and can play; highlighted once it does.
+  const cycle = chords && plan ? chordCycle(plan, snapshot.keyMode, tick, perBar) : null;
 
   return (
     <div
@@ -97,6 +122,35 @@ export function ImprovBody({
                 {target}
               </p>
               <p className="mt-2 text-lead text-ink-muted">the {ordinal(degree!)}</p>
+            </div>
+          )}
+          {cycle && (
+            <div className="sm:col-span-2" data-testid="chord-strip">
+              <Kicker>Over the chords</Kicker>
+              <ol className="mt-2 flex flex-wrap gap-1.5">
+                {cycle.steps.map((step, i) => {
+                  const current = running && i === cycle.current;
+                  return (
+                    <li
+                      key={i}
+                      data-testid="chord-symbol"
+                      data-current={current}
+                      className={cn(
+                        'num face-title rounded-[8px] px-3 py-1.5 text-display leading-none font-extrabold',
+                        current ? 'bg-playhead' : 'bg-ink/[0.03]',
+                      )}
+                    >
+                      {step.symbol}
+                      {step.bars > 1 && (
+                        <span className="text-lead font-semibold text-ink-muted">
+                          {' '}
+                          ×{step.bars}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
           )}
         </div>

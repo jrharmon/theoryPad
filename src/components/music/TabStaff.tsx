@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
 import type { Articulation, Bar, Phrase, TabNote } from '@/domain/phrase';
@@ -16,6 +17,12 @@ export interface TabStaffProps {
   subdivision?: number;
   /** Current transport position; null hides the playhead. */
   playheadTick?: number | null;
+  /**
+   * The generated backing's chords, from bar 1: drawn above the tab where each
+   * starts, and again, in parentheses, at the start of a line it is still
+   * sounding into. The one under the playhead is highlighted.
+   */
+  chords?: readonly ChordSpan[] | null;
   /**
    * Called with a note's start tick when it is clicked. Given, every written
    * note becomes a target you can move the playhead to; omitted, the tab is
@@ -82,6 +89,7 @@ export function TabStaff({
   size = 'compact',
   subdivision,
   playheadTick = null,
+  chords = null,
   onSeek,
   showBarLabels = true,
   showPickStrokes = false,
@@ -136,6 +144,19 @@ export function TabStaff({
       : ((playheadTick % phrase.totalTicks) + phrase.totalTicks) % phrase.totalTicks;
   const playheadColumn = wrappedTick === null ? null : Math.floor(wrappedTick / ticksPerColumn);
 
+  // One copy is drawn, and the chords restart at every copy, so the first
+  // copy's are the ones to draw.
+  const lane = useMemo(
+    () => chords?.filter((c) => c.startTick < phrase.totalTicks) ?? null,
+    [chords, phrase.totalTicks],
+  );
+  const currentChord =
+    lane && wrappedTick !== null
+      ? lane.findIndex(
+          (c) => wrappedTick >= c.startTick && wrappedTick < c.startTick + c.durationTicks,
+        )
+      : -1;
+
   const systems = chunk(phrase.bars, perSystem);
 
   const columnsPerSystem = perSystem * columnsPerBar;
@@ -186,6 +207,8 @@ export function TabStaff({
           columnsPerBar={columnsPerBar}
           slotColumns={slotColumns}
           playheadColumn={playheadColumn}
+          chords={lane}
+          currentChord={currentChord}
           showBarLabels={showBarLabels}
           showPickStrokes={showPickStrokes}
           {...(onSeek ? { onSeek } : {})}
@@ -208,6 +231,9 @@ interface TabSystemProps {
   /** Columns the line is laid out to — the same on every line, so bars match. */
   slotColumns: number;
   playheadColumn: number | null;
+  chords: readonly ChordSpan[] | null;
+  /** Index into `chords` of the one under the playhead; -1 for none. */
+  currentChord: number;
   showBarLabels: boolean;
   showPickStrokes: boolean;
   onSeek?: (startTick: number) => void;
@@ -225,6 +251,8 @@ function TabSystem({
   columnsPerBar,
   slotColumns,
   playheadColumn,
+  chords,
+  currentChord,
   showBarLabels,
   showPickStrokes,
   onSeek,
@@ -257,6 +285,17 @@ function TabSystem({
       className={systemIndex > 0 ? 'mt-6' : undefined}
       data-testid={`tab-system-${systemIndex}`}
     >
+      {chords && (
+        <ChordLane
+          systemIndex={systemIndex}
+          chords={chords}
+          currentChord={localPlayhead === null ? -1 : currentChord}
+          startTick={firstColumn * ticksPerColumn}
+          endTick={(firstColumn + columnCount) * ticksPerColumn}
+          ticksPerColumn={ticksPerColumn}
+          gridColumns={gridColumns}
+        />
+      )}
       <div className="relative">
         {localPlayhead !== null && (
           <div
@@ -329,6 +368,66 @@ function TabSystem({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The chords over one line of tab: each symbol above the column its chord
+ * starts on, and a chord still sounding from the line before in parentheses at
+ * the start. The one being played carries the highlighter — only on the line
+ * the playhead is on.
+ */
+function ChordLane({
+  systemIndex,
+  chords,
+  currentChord,
+  startTick,
+  endTick,
+  ticksPerColumn,
+  gridColumns,
+}: {
+  systemIndex: number;
+  chords: readonly ChordSpan[];
+  currentChord: number;
+  startTick: number;
+  endTick: number;
+  ticksPerColumn: number;
+  gridColumns: string;
+}) {
+  const labels = chords.flatMap((chord, index) => {
+    const end = chord.startTick + chord.durationTicks;
+    if (end <= startTick || chord.startTick >= endTick) return [];
+    const carried = chord.startTick < startTick;
+    const from = Math.max(chord.startTick, startTick);
+    const column = Math.floor((from - startTick) / ticksPerColumn);
+    const span = Math.max(1, Math.ceil((Math.min(end, endTick) - from) / ticksPerColumn));
+    return [{ chord, index, carried, column, span }];
+  });
+
+  return (
+    <div
+      style={{ display: 'grid', gridTemplateColumns: gridColumns }}
+      className="pb-1"
+      data-testid={`chord-lane-${systemIndex}`}
+    >
+      {labels.map(({ chord, index, carried, column, span }) => (
+        <span
+          key={index}
+          className="min-w-0 truncate"
+          style={{ gridRow: 1, gridColumn: `${column + 2} / span ${span}` }}
+        >
+          <span
+            data-testid="chord-symbol"
+            data-current={index === currentChord}
+            className={`num rounded-[5px] px-1 text-caption font-semibold text-ink ${
+              index === currentChord ? 'bg-playhead' : ''
+            }`}
+          >
+            {carried ? `(${chord.symbol})` : chord.symbol}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

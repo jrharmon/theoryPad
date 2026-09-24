@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import {
   BASS_4_STRING,
   SEVEN_STRING_GUITAR,
@@ -350,5 +350,40 @@ describe('TabStaff', () => {
       />,
     );
     expect(scroll).not.toHaveBeenCalled();
+  });
+  it('marks each chord where it starts, carries one over a line, and highlights the one playing', () => {
+    // Four bars of quarters, two to a line: Am7 for three bars, then Dm7.
+    const bar = 4 * 480;
+    const chords = [
+      { startTick: 0, durationTicks: 3 * bar, degree: 1 as const, symbol: 'Am7' },
+      { startTick: 3 * bar, durationTicks: bar, degree: 4 as const, symbol: 'Dm7' },
+    ];
+    const lane = (line: number) =>
+      within(screen.getByTestId(`chord-lane-${line}`))
+        .getAllByTestId('chord-symbol')
+        .map((el) => `${el.textContent}${el.dataset.current === 'true' ? '*' : ''}`);
+
+    const { rerender } = render(
+      <TabStaff
+        phrase={run(QUARTER, 16)}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={2}
+        chords={chords}
+      />,
+    );
+    // Nothing is playing, so nothing is "here".
+    expect([lane(0), lane(1)]).toEqual([['Am7'], ['(Am7)', 'Dm7']]);
+
+    // In bar 3, Am7 is still sounding: its carried mark, on the playhead's line, lights.
+    rerender(
+      <TabStaff
+        phrase={run(QUARTER, 16)}
+        instrument={STANDARD_GUITAR}
+        barsPerSystem={2}
+        chords={chords}
+        playheadTick={2 * bar + 480}
+      />,
+    );
+    expect([lane(0), lane(1)]).toEqual([['Am7'], ['(Am7)*', 'Dm7']]);
   });
 });

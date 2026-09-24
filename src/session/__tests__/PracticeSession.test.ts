@@ -14,6 +14,7 @@ import {
   type Video,
 } from '@/data';
 import {
+  chordTimeline,
   formatProgression,
   type GeneratedBackingSettings,
   type RenderedPass,
@@ -537,9 +538,23 @@ describe('ExerciseSession', () => {
     // Picked from the roll, and there to name before anything is chosen.
     const plan = session.state.generated!;
     expect(plan.settings).toMatchObject({ source: { kind: 'custom' }, style: 'pulse' });
+    expect(session.state.chords).toBeNull();
     await session.chooseBacking({ kind: 'generated' });
     const backing = audio.generated[0]!;
     expect(backing.loading).toBe(true);
+    // Chosen, its chords are there to read before Play; free time has none to play.
+    const { keyMode: rolled } = session.state.snapshot!;
+    expect(session.state.chords).toEqual(
+      chordTimeline(
+        plan.progression,
+        rolled,
+        plan.settings.chords,
+        session.runner.currentPhrase!,
+      ),
+    );
+    session.setFreeTime(true);
+    expect(session.state.chords).toBeNull();
+    session.setFreeTime(false);
 
     await session.setLoop(true);
     await session.play();

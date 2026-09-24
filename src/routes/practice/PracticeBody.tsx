@@ -72,6 +72,7 @@ function PlayedBody({
   // reached: the count-in is a fresh start, and a restart must look like one.
   const playheadTick = showPlayhead ? (state === 'count-in' ? 0 : tick) : null;
   const seekable = playing || state === 'paused';
+  const chords = usePractice((s) => s.chords);
   /**
    * Clicking a note moves the playhead to it. A repeating phrase is drawn once
    * but played several times over, so the click lands in the pass being played
@@ -142,6 +143,7 @@ function PlayedBody({
             phrase={instance.phrase}
             instrument={instrument}
             playheadTick={playheadTick}
+            chords={chords}
             {...(seekable ? { onSeek: seek } : {})}
             size="large"
             zoom={zoom}

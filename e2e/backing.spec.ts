@@ -182,6 +182,30 @@ test('the drone plays under the notes, and the metronome keeps the beat', async 
   await expect(page.getByTestId('pause')).toBeVisible();
 });
 
+test('generated backing shows its chords over the tab, and the highlight follows the playhead', async ({
+  page,
+}) => {
+  // Custom starts from 1 4 5 1: in A minor, Am7 – Dm7 – Em7 – Am7, a bar each.
+  await page.goto('/#/exercises');
+  await page.getByRole('link', { name: 'Modes up the neck', exact: true }).click();
+  await page.getByTestId('generated-backing').getByRole('button', { name: 'Custom' }).click();
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /Generated/ }).click();
+
+  // There to read before Play, spelled in the key, with nothing "here" yet.
+  const current = page.locator('[data-testid="chord-symbol"][data-current="true"]');
+  await expect(page.getByTestId('chord-lane-0').getByTestId('chord-symbol').first()).toHaveText(
+    'Am7',
+  );
+  await expect(page.getByTestId('chord-lane-0')).toContainText('Dm7');
+  await expect(current).toHaveCount(0);
+
+  await page.getByTestId('play').click();
+  await expect(current).toHaveText('Am7', { timeout: 10_000 });
+  await expect(current).toHaveText('Dm7', { timeout: 15_000 });
+});
+
 test('a key with no track offers none, and says where to add one', async ({ page }) => {
   await open(page, 'Modes up the neck');
   const key = await page.getByTestId('axis-key').textContent();

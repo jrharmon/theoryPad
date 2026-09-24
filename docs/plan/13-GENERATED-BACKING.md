@@ -389,6 +389,38 @@ what the chords show where no key has been rolled.
   the copy; one editor test (spelled chords, nothing saved while a line is wrong, both lists once
   fixed). 734 unit tests in 55 files, 68 E2E, all green.
 
+### Task 5 — outcome (2026-09-24)
+
+The chords on screen. Nothing needed asking; built as specified.
+
+- **Session.** `SessionState.chords: ChordSpan[] | null` — the current pass's `chordTimeline`
+  while Generated is chosen *and can play* (not in free time, not a theory set, not a style in
+  another signature), from the brief on; null otherwise. Worked out in `update()` and kept
+  while its inputs (plan, phrase, choice, free time) are the same objects, so a runner emit
+  doesn't hand the screen a new array. `passTimeline` is shared with `loadGenerated`, so what is
+  shown and what is heard can't disagree about when the backing plays. The store mirrors it.
+- **The chord lane** (`TabStaff`'s `chords` prop, `ChordLane`): a row over each line of tab, on
+  the tab's own grid, with each symbol above the column its chord starts on and a chord still
+  sounding from the line before in parentheses at the line's start. The first copy's chords are
+  drawn (the timeline restarts every copy). The chord under the playhead gets the highlighter,
+  and **only on the playhead's line**, so a carried `(Am7)` lights when you reach it, not the
+  original a line up. Nothing is highlighted before Play. `num`, semibold, at the tab's label
+  size (`text-caption`) as specified — **it does not grow with the tab size**; see the review.
+- **The improv strip** ("Over the chords", in the phrase counter): one cycle of the
+  progression as big symbols (`text-display`, like the counter's own), `×2` on a two-bar step,
+  the step being played highlighted while playing or paused. It counts steps, not chords, so
+  `1 4 5 1` lights its last I separately from its first.
+- **Fixed on the way:** the improv counter's ticks stopped on pause, so a paused phrase showed
+  bar 1 of phrase 1 (and would have jumped the strip back to its first chord). It now holds its
+  place while paused, as the tab's playhead does.
+- Checked by looking, both themes: A Aeolian (Modes up the neck, custom `1 4 5 1`) before Play,
+  playing, and at the smallest and largest tab size; the strip in F Dorian and G Locrian
+  (`Gm7b5 – Eb7 – Cm7 – Gm7b5`).
+- Tests: the generated session test now checks `chords` is null until chosen, is the pass's
+  timeline once chosen, and null in free time; a `TabStaff` test for placement, the carried
+  mark and the highlight; the E2E the spec asked for (spelled symbols, none lit before Play, the
+  highlight moving from Am7 to Dm7). 735 unit tests in 55 files, 69 E2E, all green.
+
 ## Tests
 
 Few and useful: one happy-path test per function that checks the whole outcome, then only edge cases that matter. No screenshot tests.

@@ -4,6 +4,7 @@ import {
   compById,
   pickProgression,
   renderPass,
+  type ChordSpan,
   type GeneratedBackingSettings,
   type Progression,
 } from '@/domain/backing';
@@ -49,6 +50,12 @@ export interface SessionState {
    * chosen: the menu names it. Null for a theory set.
    */
   generated: GeneratedPlan | null;
+  /**
+   * The chords of the current pass, from its bar 1, while Generated is chosen
+   * and can play here — before Play too, so they can be read first. Null
+   * otherwise.
+   */
+  chords: ChordSpan[] | null;
 }
 
 export interface GeneratedPlan {
@@ -135,7 +142,16 @@ export abstract class PracticeSession {
     audioReady: false,
     metronome: 'click',
     generated: null,
+    chords: null,
   };
+  /** What `chords` was laid out from, so it changes only with them. */
+  private laidOut: {
+    plan: GeneratedPlan | null;
+    phrase: Phrase | null;
+    chosen: boolean;
+    freeTime: boolean;
+    chords: ChordSpan[] | null;
+  } | null = null;
   /** What `generated` was worked out from, so it changes only with them. */
   private planned: { runner: ExerciseRunner | null; variation: RolledVariation | null } = {
     runner: null,
@@ -184,6 +200,8 @@ export abstract class PracticeSession {
       this.planned = { runner, variation };
       this.current = { ...this.current, generated: this.planFor(runner) };
     }
+    const chords = this.chordsNow();
+    if (chords !== this.current.chords) this.current = { ...this.current, chords };
     for (const listener of this.listeners) listener(this.current);
   }
 
@@ -364,6 +382,30 @@ export abstract class PracticeSession {
     return { settings, progression: pickProgression(settings, runner.snapshot.keyMode, rng) };
   }
 
+  /** The chords the generated backing plays this pass, if it is chosen and can play. */
+  private chordsNow(): ChordSpan[] | null {
+    const { runner, generated: plan, backing } = this.current;
+    const phrase = runner?.currentPhrase ?? null;
+    const chosen = backing.resolved.kind === 'generated';
+    const freeTime = runner?.snapshot.freeTime ?? false;
+    const last = this.laidOut;
+    if (
+      last &&
+      last.plan === plan &&
+      last.phrase === phrase &&
+      last.chosen === chosen &&
+      last.freeTime === freeTime
+    ) {
+      return last.chords;
+    }
+    const chords =
+      chosen && runner && plan
+        ? passTimeline(plan, runner.snapshot.keyMode, phrase, freeTime)
+        : null;
+    this.laidOut = { plan, phrase, chosen, freeTime, chords };
+    return chords;
+  }
+
   /**
    * Hand the generated backing this pass, from its bar 1 — every pass, so each
    * sounds the same and a routine's next item plays its own progression. It
@@ -374,23 +416,17 @@ export abstract class PracticeSession {
     if (!source) return;
     const runner = this.runner;
     const plan = this.planFor(runner);
-    const pattern = plan && compById(plan.settings.style);
-    if (
-      !runner ||
-      !plan ||
-      !pattern ||
-      !phrase ||
-      freeTime ||
-      pattern.timeSignature.beats !== phrase.timeSignature.beats ||
-      pattern.timeSignature.unit !== phrase.timeSignature.unit
-    ) {
+    const keyMode = runner?.snapshot.keyMode;
+    const timeline = plan && keyMode ? passTimeline(plan, keyMode, phrase, freeTime) : null;
+    if (!plan || !keyMode || !phrase || !timeline) {
       source.clear();
       return;
     }
-    const { keyMode } = runner.snapshot;
-    const { chords } = plan.settings;
-    const timeline = chordTimeline(plan.progression, keyMode, chords, phrase);
-    source.loadPass(renderPass(timeline, pattern, keyMode, chords, phrase.totalTicks), atTick);
+    const { chords, style } = plan.settings;
+    source.loadPass(
+      renderPass(timeline, compById(style), keyMode, chords, phrase.totalTicks),
+      atTick,
+    );
   }
 
   /** What to do with the audio as each pass starts. */
@@ -435,4 +471,27 @@ export abstract class PracticeSession {
     if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
     this.loadGenerated(phrase, countInTicks, freeTime);
   };
+}
+
+/**
+ * The chords of one pass, or null where the generated backing can't play: no
+ * phrase (a theory set), free time (no clock), or a style written for another
+ * time signature.
+ */
+function passTimeline(
+  plan: GeneratedPlan,
+  keyMode: KeyMode,
+  phrase: Phrase | null,
+  freeTime: boolean,
+): ChordSpan[] | null {
+  const { timeSignature } = compById(plan.settings.style);
+  if (
+    !phrase ||
+    freeTime ||
+    timeSignature.beats !== phrase.timeSignature.beats ||
+    timeSignature.unit !== phrase.timeSignature.unit
+  ) {
+    return null;
+  }
+  return chordTimeline(plan.progression, keyMode, plan.settings.chords, phrase);
 }
