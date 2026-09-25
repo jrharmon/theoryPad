@@ -1,6 +1,10 @@
 # Status — start here
 
-**Last updated:** 2026-09-25. **Nothing is in progress. M7b is next.** **"Generated backing"
+**Last updated:** 2026-09-25 (later). **Feedback round 7 is built and waiting at its gate** on
+branch `feedback-round-7` (unmerged, unpushed): the settings dialog's Done stays on screen, faint
+beat lines in the tab, "Land on" kept only in *Improvise to a target*, and a routine opens paused
+on its first item instead of an overview — see "Feedback round 7" below. **Next: the Scales run**
+(`docs/plan/14-SCALES.md`, agreed, not started), then M7b. Before that: **"Generated backing"
 is merged and pushed** (2026-09-25): "Generated" in the Backing menu plays sampled bass and
 piano chords under the notes, over a progression of scale degrees (vamp on 1, the mode's go-to
 progressions, or custom lists) picked from the roll, set per exercise and per routine item, with
@@ -49,11 +53,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
-| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
+| Feedback round 7 — Done button, beat lines, landing note, no routine overview | **at the gate** on `feedback-round-7` — see below |
+| Scales — pentatonics, blues, harmonic and melodic minor | agreed, not started — `docs/plan/14-SCALES.md` |
+| M7b — Ear training and "hear it" | after Scales — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 735 unit tests in 55 files,
+deleted. `main` is in sync with origin; `feedback-round-7` is the one open branch, at its gate. 735 unit tests in 55 files,
 69 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -135,7 +141,7 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 - **Backing** (M7a): a Backing menu in the transport — None, Drone, or tracks in the key (the
   exercise's own first, then shared, narrowed by its saved criteria). A track shows in the right
   column (held open; Enlarge; Escape shrinks) with its speed beside the tempo. Routines choose
-  one on the overview; it plays straight through, re-speeded per item, stopped by a theory set.
+  one from the transport before Play; it plays straight through, re-speeded per item, stopped by a theory set.
 - **Settings → Backing tracks**: the 12×7 coverage grid (a filled cell lists its tracks, an
   empty one adds one there), the shared tracks, and the form: paste a link, tap along (T) for
   bar 1 and the bpm, nudge ±0.05 s, **Check with a click**, a loop point, key, mode, tags.
@@ -156,8 +162,9 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   key and mode are both fixed or held.
 - **Routine builder**: name, key/mode policies, items (passes, Edit, reorder, remove), and an
   estimated length.
-- **Running a routine**: an overview (re-roll one item or all), then hands-off play; Skip (or
-  S); "Stay on this"; a summary.
+- **Running a routine**: opens paused on item 1 (no overview since round 7), then hands-off
+  play; Re-roll (the current item); Skip (or S); "Stay on this"; a summary. Items are edited
+  in the routine builder.
 - **Exercises** (library with favorites and tag filter; config page with generated settings and
   What varies):
   - *Modes up the neck* — plain, arpeggio-then-scale, pause-on-root
@@ -192,6 +199,35 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Feedback round 7 — at the gate (2026-09-25)
+
+From the player's list after "Generated backing". Branch `feedback-round-7`, a commit per item;
+`pnpm check` green (735 unit tests) and all 69 E2E pass. Merge into `main` at the gate.
+
+- **Done stays on screen.** The shared settings dialog (practice and routine item) is a column:
+  the body scrolls, Done sits on a footer pinned to the bottom.
+- **Beat lines.** A faint rule (`--color-tab-beat`, ink 16%) between the beats of every bar,
+  under the stronger bar lines; compound time (6/8, 9/8, 12/8) is ruled in threes of eighths.
+- **"Land on" only where you land.** *Modes up the neck* and *Interval sequences* rolled a
+  target degree that only colored the note yellow, competing with the circled roots; their
+  briefs claimed "landing each on the 5th" though nothing ended there. The axis is gone from
+  both; *Improvise to a target* keeps it. Stored policies for it are simply ignored.
+- **No routine overview.** Start opens the routine on item 1, paused, with Play, Loop, Backing,
+  Re-roll and Skip in the transport. `RoutinePhase` is `'running' | 'done'`; `startedAt` is null
+  until the first Play (which also stamps `lastPlayedAt`), and the backing is fitted to the item
+  from that first Play, as it was when the overview's Start did it. `rerollAll`/`rerollItem` are
+  gone. The player chose this over adding Edit buttons to the overview.
+- **Fixed on the way — a flaky E2E.** "generated backing shows its chords" read both chords off
+  the first tab line, which holds one bar when a fine rhythm is rolled; it failed on `main` too.
+
+**For the player at the gate:** do the beat lines read at a glance without cluttering dense
+sixteenth bars; does opening a routine paused feel right; is anything missing now the overview
+is gone (it showed every item's headline and the routine's length up front).
+
+**Next after the gate: the Scales run** — `docs/plan/14-SCALES.md` has the decisions (asked and
+answered 2026-09-25), the defaults taken, the model and seven tasks. Its "Defaults taken" section
+is what to confirm at the first review.
 
 ## Feedback rounds 1–3 — merged (2026-09-16)
 

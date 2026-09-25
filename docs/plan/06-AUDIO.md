@@ -112,8 +112,8 @@ between off and the last choice that was on.
 It is chosen from the **Metronome menu** in the transport (`MetronomeMenu.tsx`): Off, Click,
 and the beats that fit the phrase's signature. It works while playing — the new voice is heard
 from the next grid step — and is disabled under a backing track, which mutes it anyway.
-Settings → Sound's Metronome dropdown sets the fallback. A routine's overview has no menu:
-each item's metronome is its own, set from the transport while that item plays.
+Settings → Sound's Metronome dropdown sets the fallback. In a routine each item's metronome
+is its own, set from the transport while that item is in front of you.
 
 **Only what a choice can play is downloaded** (`metronomeSounds(id)`): Off loads nothing,
 so its count-in is the synth click; Click loads the stick; a beat loads its own drums, the
@@ -250,8 +250,8 @@ shared, A Aeolian, 100 bpm, bar 1 at 216 s.
 ### Choosing backing — never automatic
 
 Nothing is picked or rolled for you. **The default is what played before M7: the synth plays the
-notes, with the metronome.** The backing menu on the practice screen (and on a routine's
-overview) offers:
+notes, with the metronome.** The backing menu in the practice transport (a routine's
+too) offers:
 
 - **None** — the default.
 - **Drone** — root and fifth of the session key, sustained, under the synth notes and the

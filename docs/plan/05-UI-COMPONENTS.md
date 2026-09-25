@@ -293,7 +293,7 @@ Hash router. `/` redirects to `/home`.
 | `/exercises`             | Exercise library — everything in the registry, plus your configured instances; filtered by tag                   | —            | M2        |
 | `/exercises/:id`         | Exercise detail — description, config (target tempo, max tempo, params, video), history, **Practice this** | —            | M2        |
 | `/practice/exercise/:id` | Standalone runner for one exercise                                                                               | 1b/1c merged | M2        |
-| `/practice/routine/:id`  | Routine: overview (re-roll one or all) → hands-off run (Skip, "Stay on this") → summary                          | 1b/1c/3a-3c  | M5        |
+| `/practice/routine/:id`  | Routine: opens paused on item 1 (the overview went in feedback round 7) → hands-off run (Skip, "Stay on this") → summary                          | 1b/1c/3a-3c  | M5        |
 | `/fretboard`             | A key and mode across the neck, one 3nps shape at a time; notes-played heat; key × mode grid; the full key/mode view | 1d           | M6        |
 | `/report`                | Practice summary over a date range — a table, not a document                                                     | 1e           | M6        |
 | `/settings`              | Tuning, sound (metronome, volume), keys and modes struck out, display (neck, circle, tab size), export/import      | —            | M5        |
