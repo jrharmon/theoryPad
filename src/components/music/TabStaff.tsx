@@ -324,12 +324,12 @@ function TabSystem({
             key={`bar-line-${k}`}
             data-testid="bar-line"
             aria-hidden
-            className="pointer-events-none absolute w-px bg-tab-bar"
+            className="pointer-events-none absolute w-[2px] bg-tab-bar"
             style={{
               top: rowHeight / 2,
               bottom: rowHeight / 2,
               left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${(k * columnsPerBar) / slotColumns})`,
-              ...(k === bars.length ? { transform: 'translateX(-1px)' } : {}),
+              ...(k === bars.length ? { transform: 'translateX(-2px)' } : {}),
             }}
           />
         ))}
@@ -509,7 +509,7 @@ function NoteChip({
       {note.role === 'root' ? (
         <span
           data-testid={`tab-root-ring-${stringIndex}-${column}`}
-          className="rounded-full border border-tab-digit/45 px-[0.34em] py-[0.1em]"
+          className="rounded-full border border-tab-root px-[0.34em] py-[0.1em]"
         >
           {note.display ?? note.fret}
         </span>

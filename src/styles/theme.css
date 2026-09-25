@@ -163,6 +163,8 @@
   --color-tab-line: color-mix(in srgb, var(--color-ink) 26%, transparent);
   --color-tab-bar: color-mix(in srgb, var(--color-ink) 52%, transparent);
   --color-tab-beat: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  /* The ring round a root: ballpoint blue, so the roots stand out; the digit stays ink. */
+  --color-tab-root: var(--color-accent);
   --color-tab-digit: var(--ink-base);
   --color-playhead: rgba(255, 225, 77, 0.75);
 
