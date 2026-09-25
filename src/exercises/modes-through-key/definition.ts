@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { DegreeNumber } from '@/domain/music';
-import { noteAtDegree } from '@/domain/music';
 import { EIGHTH, QUARTER, phraseBuilder, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { AxisId, Direction } from '@/domain/variation';
@@ -11,7 +9,6 @@ import {
   keyModeLabel,
   makeBrief,
   noteOptionsFor,
-  ordinal,
   orderedHighlights,
   overlayFromPositions,
   shapeRuns,
@@ -27,7 +24,7 @@ const params = z.object({
 
 export type ModesThroughKeyParams = z.infer<typeof params>;
 
-const AXES = ['mode', 'key', 'direction', 'rhythmPattern', 'targetScaleDegree'] as const;
+const AXES = ['mode', 'key', 'direction', 'rhythmPattern'] as const;
 
 export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
   id: 'modes-through-key',
@@ -39,9 +36,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
   description: [
     'A key is rolled. Play its seven shapes in order up the neck, each starting',
     'on whichever scale degree falls next on the lowest string — so you cover',
-    'the whole neck instead of the one box you are comfortable in. Each shape',
-    'lands on the rolled target degree, which is usually the note that makes',
-    'the mode sound like itself.',
+    'the whole neck instead of the one box you are comfortable in.',
   ].join(' '),
 
   axes: [...AXES],
@@ -61,7 +56,6 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     const direction = (variation.axes.direction?.value ?? 'ascending') as Direction;
     const rhythm = (variation.axes.rhythmPattern?.value ??
       rhythmById('straight-eighths')) as RhythmPattern;
-    const targetDegree = variation.axes.targetScaleDegree?.value as DegreeNumber | undefined;
 
     const runs = shapeRuns({
       instrument,
@@ -79,7 +73,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
         variant === 'arpeggio-then-scale'
           ? [...arpeggioRun(run.positions, run.startDegree), ...[...run.positions].reverse()]
           : run.positions;
-      const options = (i: number) => noteOptionsFor(positions[i]!, targetDegree);
+      const options = (i: number) => noteOptionsFor(positions[i]!);
 
       builder.labelBar(`Fret ${run.startFret} · degree ${run.startDegree}`);
       if (variant === 'pause-on-root') {
@@ -94,25 +88,21 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
 
     const phrase = builder.build();
     const shapes = runs.length === 7 ? 'All seven shapes' : `${runs.length} shapes`;
-    const landing =
-      targetDegree === undefined
-        ? ''
-        : `, landing each on the ${ordinal(targetDegree)} (${noteAtDegree(keyMode, targetDegree)})`;
     const [headline, instruction, highlights] = {
       plain: [
         `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}.`,
-        `Work up the neck, one shape at a time${landing}.`,
-        ['key', 'direction', 'targetScaleDegree', 'rhythmPattern'],
+        'Work up the neck, one shape at a time.',
+        ['key', 'direction', 'rhythmPattern'],
       ],
       'arpeggio-then-scale': [
         `${shapes} in ${keyModeLabel(keyMode)}, each chord then scale.`,
-        `For each shape, arpeggiate its 7th chord up, then run the scale down${landing}.`,
-        ['key', 'targetScaleDegree', 'rhythmPattern'],
+        'For each shape, arpeggiate its 7th chord up, then run the scale down.',
+        ['key', 'rhythmPattern'],
       ],
       'pause-on-root': [
         `${shapes} in ${keyModeLabel(keyMode)}, holding every root.`,
-        `Work up the neck, giving each root a full beat${landing}.`,
-        ['key', 'direction', 'targetScaleDegree'],
+        'Work up the neck, giving each root a full beat.',
+        ['key', 'direction'],
       ],
     }[variant] as [string, string, AxisId[]];
 
@@ -121,10 +111,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       phrase,
       neck: overlayFromPositions(
         runs.flatMap((run) => run.positions),
-        {
-          ...(targetDegree !== undefined ? { targetDegree } : {}),
-          emphasisFrets: runs.map((run) => run.startFret),
-        },
+        { emphasisFrets: runs.map((run) => run.startFret) },
       ),
       brief: makeBrief(headline, instruction, orderedHighlights(variation, highlights)),
     };

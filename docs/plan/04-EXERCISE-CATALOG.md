@@ -36,7 +36,7 @@ Your headline exercise, and the first one we build.
 (Ionian → Locrian), each starting from its own position on the neck, ascending and descending.
 
 **Axes:** `shapeSystem`, `direction`, `rhythmPattern`, `neckPosition` (the starting point for
-mode 1; the rest follow up the neck), `targetScaleDegree`.
+mode 1; the rest follow up the neck). No `targetScaleDegree` since feedback round 7 — see A3.
 
 **Params:**
 
@@ -130,11 +130,12 @@ multiple: 70 notes on six strings, 28 on three, plus the closing root.
 The mockup's "Ascending 4ths in D Dorian, 7th position."
 
 **Player does:** run the scale in the rolled interval through the rolled position, ascending
-then descending, landing on the rolled target degree.
+then descending. (It once also rolled a target degree to "land on"; that only colored the
+degree, competed with the circled roots, and was removed in feedback round 7. Only D1 has one.)
 
 **Axes:** `key`, `mode`, `neckPosition`, `intervalPattern` (3rds–7ths, groups of 3 and 4),
 `intervalPairing` (same direction: 1-3, 2-4…; alternating: 1-3, 4-2, 3-5…), `direction`,
-`rhythmPattern`, `targetScaleDegree`.
+`rhythmPattern`.
 
 **Params:** none. Positional shapes arrive through the `shapeSystem` axis in M8.
 

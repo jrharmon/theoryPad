@@ -1,4 +1,3 @@
-import { noteAtDegree } from '@/domain/music';
 import { STRAIGHT_EIGHTHS, phraseBuilder } from '@/domain/phrase';
 import type { AxisId } from '@/domain/variation';
 import { INTERVAL_PATTERNS } from '@/domain/variation';
@@ -10,8 +9,6 @@ import {
   keyModeLabel,
   makeBrief,
   noteOptionsFor,
-  optionalAxis,
-  ordinal,
   orderedHighlights,
   overlayFromPositions,
   shapeFrom,
@@ -24,7 +21,6 @@ const HIGHLIGHTS: AxisId[] = [
   'intervalPairing',
   'neckPosition',
   'direction',
-  'targetScaleDegree',
 ];
 
 export const intervalSequences: PlayedDefinition = {
@@ -49,7 +45,6 @@ export const intervalSequences: PlayedDefinition = {
     'intervalPairing',
     'direction',
     'rhythmPattern',
-    'targetScaleDegree',
   ],
   defaults: { targetTempo: 80, reps: 2 },
   timing: 'either',
@@ -60,7 +55,6 @@ export const intervalSequences: PlayedDefinition = {
     const pairing = axisValue(variation, 'intervalPairing', 'same-direction');
     const direction = axisValue(variation, 'direction', 'up-down');
     const rhythm = axisValue(variation, 'rhythmPattern', STRAIGHT_EIGHTHS);
-    const target = optionalAxis(variation, 'targetScaleDegree');
 
     const shape = shapeFrom({ instrument, keyMode, fret: position.fret });
     if (!shape)
@@ -69,26 +63,19 @@ export const intervalSequences: PlayedDefinition = {
 
     const phrase = phraseBuilder()
       .labelBar(`${pattern.name} · fret ${shape.startFret}`)
-      .withRhythm(positions, rhythm, (_p, i) => noteOptionsFor(positions[i]!, target))
+      .withRhythm(positions, rhythm, (_p, i) => noteOptionsFor(positions[i]!))
       .build();
 
     const where = axisDisplay(variation, 'neckPosition').toLowerCase();
     const headline = `${pattern.name} in ${keyModeLabel(keyMode)}, ${where}.`;
     const eachFigure = pairing === 'alternating' ? 'Alternating' : 'Every figure the same way';
     const how = axisDisplay(variation, 'direction', 'up then down').toLowerCase();
-    const leaning =
-      target === undefined
-        ? '.'
-        : `, leaning on the ${ordinal(target)} (${noteAtDegree(keyMode, target)}) wherever it falls.`;
-    const instruction = `${eachFigure}, ${how}${leaning}`;
+    const instruction = `${eachFigure}, ${how}.`;
 
     return {
       kind: 'played',
       phrase,
-      neck: overlayFromPositions(shape.positions, {
-        ...(target !== undefined ? { targetDegree: target } : {}),
-        emphasisFrets: [shape.startFret],
-      }),
+      neck: overlayFromPositions(shape.positions, { emphasisFrets: [shape.startFret] }),
       brief: makeBrief(headline, instruction, orderedHighlights(variation, HIGHLIGHTS)),
     };
   },

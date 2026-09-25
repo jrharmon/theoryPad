@@ -1,6 +1,6 @@
 {
   "headline": "5ths in D Dorian, 12th position.",
-  "instruction": "Every figure the same way, down then up, leaning on the 4th (G) wherever it falls.",
+  "instruction": "Every figure the same way, down then up.",
   "bars": [
     [
       0,
@@ -26,7 +26,7 @@
       5,
       15,
       320,
-      "target",
+      "none",
       null
     ],
     [
@@ -75,7 +75,7 @@
       3,
       12,
       1440,
-      "target",
+      "none",
       null
     ],
     [
@@ -124,7 +124,7 @@
       3,
       12,
       2560,
-      "target",
+      "none",
       null
     ],
     [
@@ -173,7 +173,7 @@
       0,
       15,
       3680,
-      "target",
+      "none",
       null
     ],
     [
@@ -236,7 +236,7 @@
       0,
       15,
       5120,
-      "target",
+      "none",
       null
     ],
     [
@@ -285,7 +285,7 @@
       3,
       12,
       6240,
-      "target",
+      "none",
       null
     ],
     [
@@ -334,7 +334,7 @@
       3,
       12,
       7360,
-      "target",
+      "none",
       null
     ],
     [
@@ -383,7 +383,7 @@
       5,
       15,
       8480,
-      "target",
+      "none",
       null
     ],
     [

@@ -104,11 +104,10 @@ describe('modes-through-key', () => {
     }
   });
 
-  it('marks the roots and the rolled target degree', () => {
+  it('marks the roots and nothing else', () => {
     const instance = generate(7);
     const roles = new Set(instance.phrase.notes.map((n) => n.role));
-    expect(roles.has('root')).toBe(true);
-    expect(roles.has('target')).toBe(true);
+    expect(roles).toEqual(new Set(['root', 'none']));
   });
 
   it('reverses when the direction rolls descending', () => {

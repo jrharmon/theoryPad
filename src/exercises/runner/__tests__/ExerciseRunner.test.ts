@@ -569,7 +569,7 @@ describe('reconfigure', () => {
     runner.reconfigure({ axisPolicies: { key: { mode: 'fixed', value: 'G' } } });
     const after = runner.snapshot.variation!;
     expect(after.axes.key!.key).toBe('G');
-    for (const id of ['mode', 'direction', 'rhythmPattern', 'targetScaleDegree'] as const) {
+    for (const id of ['mode', 'direction', 'rhythmPattern'] as const) {
       expect(after.axes[id]!.key, id).toBe(before.axes[id]!.key);
       // Kept, and shown as it was — not suddenly "fixed".
       expect(after.axes[id]!.source, id).toBe(before.axes[id]!.source);
