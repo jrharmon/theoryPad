@@ -1,12 +1,12 @@
 # Status — start here
 
-**Last updated:** 2026-09-24. **In progress: "Generated backing"**, on the branch
-`generated-backing` (not merged, not pushed). It adds bass and piano chords over a progression in
-the key, as a Backing-menu choice, with chord symbols over the tab.
-**`docs/plan/13-GENERATED-BACKING.md` is the full spec**, with the task list and a per-task
-outcome and review record. **Tasks 1–5 are done; task 5 (showing the chords) awaits the
-player's review, then task 6 (the gate)** — see "Generated backing" under "Remaining work" for exactly
-where it stands. It goes before M7b. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
+**Last updated:** 2026-09-25. **Nothing is in progress. M7b is next.** **"Generated backing"
+is merged and pushed** (2026-09-25): "Generated" in the Backing menu plays sampled bass and
+piano chords under the notes, over a progression of scale degrees (vamp on 1, the mode's go-to
+progressions, or custom lists) picked from the roll, set per exercise and per routine item, with
+the chords shown over the tab and in the improv counter. **`docs/plan/13-GENERATED-BACKING.md`**
+has the spec and every task's outcome and review; "Generated backing" under "Remaining work"
+summarizes it. `main` is the only branch, local and origin in sync. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
 and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
 Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
 beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
@@ -48,13 +48,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 5 — transport clock, reloads, tab bar widths | ✅ merged, live — see below |
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
-| Generated backing — bass and piano over the key's chords | **in progress** on `generated-backing` — tasks 1–5 of 6 done; task 5 in review, then the gate. Spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
-| M7b — Ear training and "hear it" | after generated backing — see "Remaining work" |
+| Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. (Since then: `generated-backing`
-is open and `main` is a commit ahead — see "Generated backing" under "Remaining work".) 735 unit tests in 55 files,
+deleted — `main` is the only branch, local and origin in sync. 735 unit tests in 55 files,
 69 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -738,7 +737,13 @@ first removes the question rather than answering it.
 Note that the old click's 2 kHz reasoning does **not** carry over to the kit: the snare and ride
 are high and cut through on their own, and the kick is there for feel rather than timekeeping.
 
-**Generated backing** (in progress on `generated-backing`; agreed 2026-09-23)
+**Generated backing** (✅ merged and pushed 2026-09-25; agreed 2026-09-23)
+- **The gate (2026-09-25):** the player listened and everything sounds good — levels, Pulse /
+  Strum / Swing, voicings, the restart at every pass, 7ths by default; the chord lane at the
+  tab's label size is fine for now, and the improv strip helps. Spelling checked by looking in
+  E♭ Dorian and F♯ Dorian (F♯ Lydian is written G♭ Lydian by the key axis, as everywhere).
+  Fast-forwarded into `main` and pushed with the Sounds gate's closing commit; the branch is
+  deleted. The notes below are the run's history.
 - **Where it stands (2026-09-24).** Branch `generated-backing`, over `main`: the plan
   (`c733492`), task 1 (`2d1087f`), task 2 (`3645f72`), task 3 (`54b3f2f`), task 3's review fix
   (`19c7b77`), a STATUS note (`b8eda8d`), task 4 (`3a2e40c`) and **task 5 (showing the

@@ -421,6 +421,15 @@ The chords on screen. Nothing needed asking; built as specified.
   mark and the highlight; the E2E the spec asked for (spelled symbols, none lit before Play, the
   highlight moving from Am7 to Dm7). 735 unit tests in 55 files, 69 E2E, all green.
 
+### Task 6 — the gate (2026-09-25)
+
+The player listened: **everything sounds good.** Levels (8 dB under, guitar and piano notes),
+Pulse, Strum and Swing, the voicings, the restart at every pass on a looped exercise, and 7ths
+as the default all stand. The chord lane stays at the tab's label size for now; the improv strip
+helps. Spelling was checked by looking: E♭ Dorian (`Ebm7`, `Fm7`, `Ab7`) and F♯ Dorian (`F#m7
+G#m7 Amaj7 B7 C#m7 D#m7b5 Emaj7`); F♯ Lydian comes out as G♭ Lydian, the key axis's usual
+respelling, with every chord right for it. No fixes. Merged into `main` and pushed.
+
 ## Tests
 
 Few and useful: one happy-path test per function that checks the whole outcome, then only edge cases that matter. No screenshot tests.
