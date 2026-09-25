@@ -195,10 +195,10 @@ test('generated backing shows its chords over the tab, and the highlight follows
 
   // There to read before Play, spelled in the key, with nothing "here" yet.
   const current = page.locator('[data-testid="chord-symbol"][data-current="true"]');
-  await expect(page.getByTestId('chord-lane-0').getByTestId('chord-symbol').first()).toHaveText(
-    'Am7',
-  );
-  await expect(page.getByTestId('chord-lane-0')).toContainText('Dm7');
+  // Across lines: a fine rhythm puts one bar on a line, a coarse one several.
+  const symbols = page.locator('[data-testid^="chord-lane-"]').getByTestId('chord-symbol');
+  await expect(symbols.nth(0)).toHaveText('Am7');
+  await expect(symbols.nth(1)).toHaveText('Dm7');
   await expect(current).toHaveCount(0);
 
   await page.getByTestId('play').click();
