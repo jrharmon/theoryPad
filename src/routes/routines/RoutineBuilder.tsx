@@ -248,7 +248,10 @@ function ItemRow({
       </span>
       <div className="min-w-0">
         <p className="face-title text-body">{definition.name}</p>
-        <p className="truncate text-meta text-ink-muted">{described.join(' · ')}</p>
+        <p className="text-meta text-ink-muted">{definition.summary}</p>
+        {described.length > 0 && (
+          <p className="truncate text-meta text-ink-muted">{described.join(' · ')}</p>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
