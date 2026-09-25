@@ -129,7 +129,8 @@ function Draft({
 
   return (
     <DialogContent
-      className="max-h-[85vh] overflow-y-auto sm:max-w-[860px]"
+      // Only the body scrolls: Done stays on screen however long the settings run.
+      className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-[860px]"
       // Not the tempo field: a stray keypress would change it.
       onOpenAutoFocus={(e) => e.preventDefault()}
       // Closing by Escape or the overlay applies too: the draft is what you meant.
@@ -147,7 +148,7 @@ function Draft({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
 
-      <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+      <div className="-mx-6 grid min-h-0 flex-1 gap-6 overflow-y-auto px-6 md:grid-cols-[220px_1fr]">
         <div className="space-y-4">
           {tempo.targetTempo !== null && (
             <Field label="Target tempo" htmlFor="dialog-target-tempo">
@@ -205,7 +206,7 @@ function Draft({
         )}
       </div>
 
-      <DialogFooter>
+      <DialogFooter className="-mx-6 -mb-6 border-t border-rule px-6 py-3">
         <Button onClick={apply}>Done</Button>
       </DialogFooter>
     </DialogContent>
