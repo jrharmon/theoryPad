@@ -162,6 +162,7 @@
   /* Tab. The playhead is a highlighter swipe, multiplied over the digits. */
   --color-tab-line: color-mix(in srgb, var(--color-ink) 26%, transparent);
   --color-tab-bar: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  --color-tab-beat: color-mix(in srgb, var(--color-ink) 16%, transparent);
   --color-tab-digit: var(--ink-base);
   --color-playhead: rgba(255, 225, 77, 0.75);
 

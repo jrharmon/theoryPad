@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type { Articulation, Bar, Phrase, TabNote } from '@/domain/phrase';
-import { PPQ, requiredSubdivision, ticksPerBar } from '@/domain/phrase';
+import type { Articulation, Bar, Phrase, TabNote, TimeSignature } from '@/domain/phrase';
+import { PPQ, requiredSubdivision, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
 import { barsPerLine, zoomScale } from './tabLayout';
 
 export interface TabStaffProps {
@@ -101,6 +101,7 @@ export function TabStaff({
   const resolution = subdivision ?? requiredSubdivision(phrase);
   const ticksPerColumn = PPQ / resolution;
   const columnsPerBar = ticksPerBar(phrase.timeSignature) / ticksPerColumn;
+  const columnsPerBeat = beatTicks(phrase.timeSignature) / ticksPerColumn;
   const scale = zoomScale(zoom);
   const fretSize = FRET_SIZE[size] * scale;
   const rowHeight = Math.round(ROW_HEIGHT[size] * scale);
@@ -205,6 +206,7 @@ export function TabStaff({
           fretSize={fretSize}
           ticksPerColumn={ticksPerColumn}
           columnsPerBar={columnsPerBar}
+          columnsPerBeat={columnsPerBeat}
           slotColumns={slotColumns}
           playheadColumn={playheadColumn}
           chords={lane}
@@ -228,6 +230,7 @@ interface TabSystemProps {
   fretSize: number;
   ticksPerColumn: number;
   columnsPerBar: number;
+  columnsPerBeat: number;
   /** Columns the line is laid out to — the same on every line, so bars match. */
   slotColumns: number;
   playheadColumn: number | null;
@@ -249,6 +252,7 @@ function TabSystem({
   fretSize,
   ticksPerColumn,
   columnsPerBar,
+  columnsPerBeat,
   slotColumns,
   playheadColumn,
   chords,
@@ -329,6 +333,24 @@ function TabSystem({
             }}
           />
         ))}
+
+        {/* A fainter rule between the beats of a bar, so the count can be read
+            off the tab: the notes carry no durations of their own. */}
+        {Array.from({ length: bars.length * columnsPerBar }, (_, column) => column)
+          .filter((column) => column % columnsPerBar !== 0 && column % columnsPerBeat === 0)
+          .map((column) => (
+            <div
+              key={`beat-line-${column}`}
+              data-testid="beat-line"
+              aria-hidden
+              className="pointer-events-none absolute w-px bg-tab-beat"
+              style={{
+                top: rowHeight / 2,
+                bottom: rowHeight / 2,
+                left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${column / slotColumns})`,
+              }}
+            />
+          ))}
 
         <div style={{ display: 'grid', gridTemplateColumns: gridColumns }}>
           {rows.map((stringIndex) => (
@@ -600,4 +622,15 @@ function TabRow({
       )}
     </>
   );
+}
+
+/**
+ * The beat the tab marks: the signature's unit, except in compound time
+ * (6/8, 9/8, 12/8), where eighths are felt in threes.
+ */
+function beatTicks(timeSignature: TimeSignature): number {
+  const beat = ticksPerBeat(timeSignature);
+  const compound =
+    timeSignature.unit === 8 && timeSignature.beats % 3 === 0 && timeSignature.beats > 3;
+  return compound ? beat * 3 : beat;
 }

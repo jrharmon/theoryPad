@@ -107,6 +107,22 @@ describe('TabStaff', () => {
     }
   });
 
+  it('rules the beats inside each bar, at any rhythm, and in threes in compound time', () => {
+    // Two bars of 4/4 in sixteenths: three beat lines a bar, none on a bar line.
+    const { unmount } = render(
+      <TabStaff phrase={run(SIXTEENTH, 32)} instrument={STANDARD_GUITAR} barsPerSystem={2} />,
+    );
+    expect(screen.getAllByTestId('beat-line')).toHaveLength(6);
+    unmount();
+
+    const sixEight = phraseBuilder({ timeSignature: { beats: 6, unit: 8 } })
+      .rhythm(EIGHTH)
+      .sequence(Array.from({ length: 6 }, (_, i) => p(0, i)))
+      .build();
+    render(<TabStaff phrase={sixEight} instrument={STANDARD_GUITAR} />);
+    expect(screen.getAllByTestId('beat-line')).toHaveLength(1);
+  });
+
   it('labels bars, using a bar’s own label, unless labels are turned off', () => {
     const phrase = phraseBuilder()
       .rhythm(QUARTER)
