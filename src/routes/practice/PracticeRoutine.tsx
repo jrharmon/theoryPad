@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import type { Routine } from '@/data';
 import type { RoutineSnapshot } from '@/exercises/runner';
 import { describeReps } from '@/exercises/describe';
-import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
+import { formatDuration } from '@/exercises/estimate';
 import { repsAreQuestions } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { Button } from '@/components/ui/button';
@@ -14,17 +14,15 @@ import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
 import { RunningChrome } from './RunningChrome';
-import { LoopToggle, TransportBar } from './TransportBar';
-import { BackingMenu } from './BackingMenu';
+import { TransportBar } from './TransportBar';
 import { useKeyModeView } from '@/store/keyModeView';
-import { ReferenceTrigger } from './ReferenceTrigger';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
-import { LoadingState, PageIntro } from '@/components/ui/page-header';
+import { LoadingState } from '@/components/ui/page-header';
 
 /**
- * A routine, start to finish. The overview shows everything that was rolled,
- * so it can be read — and re-rolled — before committing to it. Once started
- * nothing needs touching: each item counts in when the last one ends.
+ * A routine, start to finish. It opens on the first item, waiting for Play;
+ * once started nothing needs touching: each item counts in when the last one
+ * ends. Items are edited in the routine builder, not here.
  */
 export function PracticeRoutine() {
   const { routineId } = useParams();
@@ -72,10 +70,6 @@ export function PracticeRoutine() {
 
   return (
     <section className="pb-28">
-      {routineSnapshot.phase === 'overview' && (
-        <Overview routine={routine} snapshot={routineSnapshot} />
-      )}
-
       {routineSnapshot.phase === 'running' && (
         <>
           <RunningChrome name={routine.name} />
@@ -90,72 +84,6 @@ export function PracticeRoutine() {
         <Summary routine={routine} snapshot={routineSnapshot} />
       )}
     </section>
-  );
-}
-
-function Overview({ routine, snapshot }: { routine: Routine; snapshot: RoutineSnapshot }) {
-  const instrument = useSettings((s) => s.settings.instrument);
-  const practice = usePractice();
-  const total = routine.items.reduce((sum, item) => {
-    const definition = findExerciseDefinition(item.definitionId);
-    return definition ? sum + estimateItemSeconds(definition, item, instrument) : sum;
-  }, 0);
-  const key = `${snapshot.keyMode.tonic} ${snapshot.keyMode.mode.charAt(0).toUpperCase()}${snapshot.keyMode.mode.slice(1)}`;
-
-  return (
-    <>
-      <div className="px-8 py-7">
-        <Kicker accent>Routine · about {formatDuration(total)}</Kicker>
-        <h1>{routine.name}</h1>
-        <PageIntro>
-          Everything in{' '}
-          <ReferenceTrigger keyMode={snapshot.keyMode}>
-            <strong>{key}</strong>
-          </ReferenceTrigger>
-          . Read it through, re-roll anything you would rather not play, then start — it runs to
-          the end on its own.
-        </PageIntro>
-      </div>
-
-      <ol className="sheet mx-8 px-5">
-        {snapshot.items.map((item, index) => {
-          const definition = findExerciseDefinition(item.definitionId);
-          return (
-            <li
-              key={item.id}
-              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 border-b border-rule py-4 last:border-b-0"
-              data-testid="overview-item"
-            >
-              <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">
-                {index + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="kicker">
-                  {definition?.name} · {describeReps(definition, item.reps)}
-                </p>
-                <p className="face-title text-lead">{item.instance?.brief.headline}</p>
-              </div>
-              <Button variant="secondary" size="sm" onClick={() => practice.rerollItem(index)}>
-                Re-roll
-              </Button>
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="fixed inset-x-4 bottom-3.5 z-20 flex flex-wrap items-center gap-3 rounded-[14px] bg-transport px-[18px] py-2.5 text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
-        <Button size="lg" onClick={() => void practice.play()} data-testid="start-routine">
-          Start
-        </Button>
-        <LoopToggle />
-        <BackingMenu />
-        <div className="ml-auto">
-          <Button variant="secondary" size="sm" onClick={() => practice.rerollAll()}>
-            Re-roll all
-          </Button>
-        </div>
-      </div>
-    </>
   );
 }
 

@@ -34,12 +34,9 @@ export function useRunnerHotkeys({
       const practice = usePractice.getState();
       const phase = practice.routineSnapshot?.phase;
 
-      // A routine's overview and summary have no transport, only these.
-      if (phase === 'overview' || phase === 'done') {
-        if ((event.key === 'Enter' || event.key === ' ') && phase === 'overview') {
-          event.preventDefault();
-          void practice.play();
-        } else if (event.key === 'k' || event.key === 'K') {
+      // A routine's summary has no transport, only these.
+      if (phase === 'done') {
+        if (event.key === 'k' || event.key === 'K') {
           useKeyModeView.getState().togglePopover();
         } else if (event.key === 'Escape') {
           onLeave();

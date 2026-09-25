@@ -311,7 +311,7 @@ test('a routine starts its track with the first item, and brings it back after a
   });
 
   await page.goto(`/#/practice/routine/${routineId}`);
-  await page.getByRole('button', { name: 'Start' }).click();
+  await page.getByTestId('play').click();
   await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-state', '1');
   await expect(page.getByTestId('pause')).toBeVisible();
 

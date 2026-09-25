@@ -728,7 +728,8 @@ describe('RoutineSession', () => {
       backing: { kind: 'video', id: inG.id },
     });
     const session = await RoutineSession.open(stored, deps);
-    expect(session.state.routineSnapshot?.phase).toBe('overview');
+    // Opened on the first item, waiting for Play.
+    expect(session.state.snapshot?.state).toBe('brief');
     expect(audio.tracks[0]!.speed).toBe(0.8);
 
     // The track starts a count-in ahead of bar 1, with the clock held until it sounds.

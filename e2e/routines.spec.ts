@@ -61,19 +61,19 @@ test('an item’s settings are its own copy', async ({ page }) => {
   await expect(page.getByLabel('Target tempo')).toHaveValue('70');
 });
 
-test('a routine shows its overview, then runs and logs against its exercises', async ({
+test('a routine opens paused on its first item, then runs and logs against its exercises', async ({
   page,
 }) => {
   await newRoutine(page, 'Run', ['Interval sequences', 'Modes up the neck']);
   await page.getByRole('link', { name: 'Start' }).click();
 
-  // Everything rolled, in one key, before committing.
-  await expect(page.getByTestId('overview-item')).toHaveCount(2);
-  await page.getByRole('button', { name: 'Re-roll all' }).click();
-  await expect(page.getByTestId('overview-item')).toHaveCount(2);
+  // Straight onto the first item, waiting for Play rather than counting in.
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  await expect(page.getByTestId('play')).toBeVisible();
+  await expect(page.getByTestId('tab-staff')).toBeVisible();
 
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  await expect(page.getByTestId('pause')).toBeVisible();
   await expect(page.getByTestId('routine-chrome')).toContainText('Next: Modes up the neck');
 
   // S skips, without a hand off the guitar.
@@ -95,8 +95,7 @@ test('a routine item can be stopped and played again, staying where it is', asyn
 }) => {
   await newRoutine(page, 'Stop', ['Modes up the neck', 'Interval sequences']);
   await page.getByRole('link', { name: 'Start' }).click();
-  await expect(page.getByTestId('overview-item')).toHaveCount(2);
-  await page.getByTestId('start-routine').click();
+  await page.getByTestId('play').click();
   await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
   await expect(page.getByTestId('position')).toBeVisible({ timeout: 10_000 });
 

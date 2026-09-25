@@ -51,11 +51,11 @@ export interface RoutineRunnerConfig {
 }
 
 /**
- * `overview`: everything rolled and shown, nothing started. `running`: an item
- * is current — ready, counting in, playing or paused. `done`: every item has
- * had its passes.
+ * `running`: an item is current — ready, counting in, playing or paused; a
+ * routine opens here, on its first item, waiting for Play. `done`: every item
+ * has had its passes.
  */
-export type RoutinePhase = 'overview' | 'running' | 'done';
+export type RoutinePhase = 'running' | 'done';
 
 export interface RoutineItemSnapshot {
   id: string;
@@ -76,6 +76,7 @@ export interface RoutineSnapshot {
   items: RoutineItemSnapshot[];
   /** The current item's own snapshot, while running. */
   current: RunnerSnapshot | null;
+  /** When Play was first pressed; null until then. */
   startedAt: number | null;
   endedAt: number | null;
 }
@@ -83,9 +84,9 @@ export interface RoutineSnapshot {
 /**
  * A routine: several exercises played through without touching anything.
  *
- * Every item is rolled up front, so the whole session can be read on the
- * overview before committing to it, and nothing changes after that unless
- * the player re-rolls. Key and mode are rolled once and shared.
+ * Every item is rolled up front, and nothing changes after that unless the
+ * player re-rolls the item in front of them. Key and mode are rolled once and
+ * shared.
  *
  * One clock runs the whole thing. When an item has had its passes the next
  * counts in on the same running clock at its own tempo — the count-in is the
@@ -96,10 +97,9 @@ export class RoutineRunner {
   private readonly listeners = new Set<(snapshot: RoutineSnapshot) => void>();
   private runners: ExerciseRunner[] = [];
   private unsubscribers: (() => void)[] = [];
-  private phase: RoutinePhase = 'overview';
+  private phase: RoutinePhase = 'running';
   private index = 0;
   private keyMode: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
-  private rollAttempt = 0;
   private startedAt: number | null = null;
   private endedAt: number | null = null;
   private results = new Map<string, { completed: number; skipped: boolean }>();
@@ -149,35 +149,14 @@ export class RoutineRunner {
     for (const listener of this.listeners) listener(snapshot);
   }
 
-  // -------------------------------------------------------------- overview
+  // ------------------------------------------------------------------ open
 
-  /** Roll key and mode, then every item, and show the overview. */
+  /** Roll key and mode, then every item, and wait on the first for Play. */
   open(): void {
-    this.rollAll();
-  }
-
-  /** A fresh roll of everything, key and mode included. Only before starting. */
-  rerollAll(): void {
-    if (this.phase !== 'overview') return;
-    this.rollAttempt += 1;
-    this.rollAll();
-  }
-
-  /** A fresh roll of one item, keeping the routine's key and mode. */
-  rerollItem(index: number): void {
-    if (this.phase === 'done') return;
-    this.runners[index]?.reroll();
-    this.emit();
-  }
-
-  private rollAll(): void {
-    for (const off of this.unsubscribers) off();
-    this.unsubscribers = [];
-
     const { instrument, sessionId, sessionAxisPolicies } = this.config;
     const session = rollVariation({
       axes: SESSION_AXIS_ORDER,
-      seed: hashSeed(sessionId, 'routine', 0, this.rollAttempt),
+      seed: hashSeed(sessionId, 'routine', 0, 0),
       instrument,
       ...(sessionAxisPolicies ? { policies: sessionAxisPolicies } : {}),
       ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
@@ -194,7 +173,7 @@ export class RoutineRunner {
         clock: this.config.clock,
         definition: item.definition,
         exerciseId: item.exerciseId,
-        seedKey: `${item.id}:${this.rollAttempt}`,
+        seedKey: `${item.id}:0`,
         instrument,
         sessionId,
         sessionKeyMode: this.keyMode,
@@ -237,21 +216,15 @@ export class RoutineRunner {
       });
     });
 
-    this.phase = 'overview';
-    this.index = 0;
-    this.results = new Map();
     this.emit();
   }
 
   // --------------------------------------------------------------- running
 
-  /** Start the routine, or play the current item if it is waiting. */
+  /** Play the current item if it is waiting — the first time, the routine starts. */
   play(): void {
-    if (this.phase === 'overview') {
-      this.phase = 'running';
-      this.startedAt = this.config.now();
-    }
     if (this.phase !== 'running') return;
+    this.startedAt ??= this.config.now();
     this.current?.begin();
     this.emit();
   }

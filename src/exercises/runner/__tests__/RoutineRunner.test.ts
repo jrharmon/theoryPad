@@ -53,14 +53,17 @@ function playPass(routine: RoutineRunner, clock: FakeClock) {
 }
 
 describe('RoutineRunner', () => {
-  it('rolls everything up front, sharing one key and mode', () => {
+  it('rolls everything up front, sharing one key and mode, and waits on the first item', () => {
     const { routine } = makeRoutine([
       item('a'),
       item('b'),
       item('c', { definition: intervalSequences, params: undefined }),
     ]);
-    const { phase, items, keyMode } = routine.snapshot;
-    expect(phase).toBe('overview');
+    const { phase, items, keyMode, index, current, startedAt } = routine.snapshot;
+    expect(phase).toBe('running');
+    expect(index).toBe(0);
+    expect(current?.state).toBe('brief');
+    expect(startedAt).toBeNull();
     expect(items).toHaveLength(3);
     for (const it of items) {
       expect(it.instance).not.toBeNull();
@@ -168,23 +171,13 @@ describe('RoutineRunner', () => {
     expect(routine.snapshot.index).toBe(1);
   });
 
-  it('re-rolls everything on the overview, key and mode included', () => {
-    const { routine } = makeRoutine([item('a'), item('b')]);
-    const seen = new Set<string>();
-    for (let i = 0; i < 12; i += 1) {
-      seen.add(`${routine.snapshot.keyMode.tonic} ${routine.snapshot.keyMode.mode}`);
-      routine.rerollAll();
-    }
-    expect(seen.size).toBeGreaterThan(1);
-  });
-
-  it('re-rolls one item without touching the routine’s key', () => {
+  it('re-rolls the current item without touching the routine’s key', () => {
     const { routine } = makeRoutine([item('a'), item('b')]);
     const key = routine.snapshot.keyMode.tonic;
-    const before = routine.snapshot.items[1]!.variation!.seed;
-    routine.rerollItem(1);
-    expect(routine.snapshot.items[1]!.variation!.seed).not.toBe(before);
-    expect(routine.snapshot.items[1]!.variation!.axes.key!.key).toBe(key);
+    const before = routine.snapshot.items[0]!.variation!.seed;
+    routine.rerollCurrent();
+    expect(routine.snapshot.items[0]!.variation!.seed).not.toBe(before);
+    expect(routine.snapshot.items[0]!.variation!.axes.key!.key).toBe(key);
     expect(routine.snapshot.keyMode.tonic).toBe(key);
   });
 

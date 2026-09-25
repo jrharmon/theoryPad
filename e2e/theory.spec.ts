@@ -76,7 +76,7 @@ test('a routine moves on from a theory set to the next exercise', async ({ page 
     await expect(page.getByRole('dialog')).toBeHidden();
   }
   await page.getByRole('link', { name: 'Start' }).click();
-  await page.getByTestId('start-routine').click();
+  await page.getByTestId('play').click();
 
   await answerSet(page);
   await expect(page.getByTestId('routine-chrome')).toContainText('02 / 02');

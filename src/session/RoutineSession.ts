@@ -27,7 +27,7 @@ export class RoutineSession extends PracticeSession {
   /** Each item's own generated-backing settings, by item id. */
   private readonly generatedBacking = new Map<string, GeneratedBackingSettings>();
 
-  /** Roll a whole routine for its overview. Nothing plays until `play`. */
+  /** Roll a whole routine and wait on its first item. Nothing plays until `play`. */
   static async open(routine: Routine, deps: SessionDeps): Promise<RoutineSession> {
     const session = await openSessionRow(deps, routine.id);
     // An item whose exercise no longer exists in code is left out rather than
@@ -102,7 +102,8 @@ export class RoutineSession extends PracticeSession {
         instance: current?.currentInstance ?? null,
       });
       if (snapshot.phase === 'done' || snapshot.current?.state === 'brief') this.silence();
-      if (snapshot.phase !== 'running' || !current) return;
+      // Nothing to fit the backing to until the routine is under way.
+      if (snapshot.phase !== 'running' || !current || snapshot.startedAt === null) return;
 
       // One track through the routine, at each item's own tempo.
       if (current !== lastItem) {
@@ -142,7 +143,7 @@ export class RoutineSession extends PracticeSession {
   async play(): Promise<void> {
     const starting = this.deps.audio.init();
     await this.startAudio(starting);
-    if (this.routine.snapshot.phase === 'overview') {
+    if (this.routine.snapshot.startedAt === null) {
       this.persist(this.deps.saveRoutine(this.routineId, { lastPlayedAt: this.deps.now() }));
     }
     this.routine.play();
@@ -163,17 +164,6 @@ export class RoutineSession extends PracticeSession {
   skip(): void {
     this.routine.skip();
     this.afterAdvance();
-  }
-
-  /** Overview only: a fresh roll of everything, key and mode included. */
-  rerollAll(): void {
-    this.routine.rerollAll();
-    this.backing.refresh();
-  }
-
-  /** Overview only: a fresh roll of one item. */
-  rerollItem(index: number): void {
-    this.routine.rerollItem(index);
   }
 
   async setCountIn(bars: CountInBars): Promise<void> {

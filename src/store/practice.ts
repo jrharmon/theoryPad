@@ -27,7 +27,7 @@ interface PracticeState extends SessionState {
 
   /** Open an exercise, rolled and shown. Nothing plays until `play`. */
   prepare: (exercise: Exercise) => Promise<void>;
-  /** Roll a whole routine for its overview. Nothing plays until `play`. */
+  /** Roll a whole routine and wait on its first item. Nothing plays until `play`. */
   prepareRoutine: (routine: Routine) => Promise<void>;
   /** Start the clock. Must be called from a click or keypress. */
   play: () => Promise<void>;
@@ -47,10 +47,6 @@ interface PracticeState extends SessionState {
   skip: () => void;
   /** Theory: the set is answered. */
   submitSet: (answers: { subject: string; correct: boolean }[]) => void;
-  /** Routine overview only: a fresh roll of everything, key and mode included. */
-  rerollAll: () => void;
-  /** Routine overview only: a fresh roll of one item. */
-  rerollItem: (index: number) => void;
   /** Apply settings changed from the practice screen, and save them to the exercise. */
   reconfigure: (changes: SettingsChanges) => Promise<void>;
   /** Tear the session down. Leaving the screen calls this; there is no End button. */
@@ -180,8 +176,6 @@ export const usePractice = create<PracticeState>((set, get) => {
     reroll: () => get().session?.reroll(),
     skip: () => routine()?.skip(),
     submitSet: (answers) => get().session?.submitSet(answers),
-    rerollAll: () => routine()?.rerollAll(),
-    rerollItem: (index) => routine()?.rerollItem(index),
     setFreeTime: (freeTime) => exercise()?.setFreeTime(freeTime),
     reconfigure: (changes) => exercise()?.reconfigure(changes) ?? Promise.resolve(),
     setCountIn: (bars) => get().session?.setCountIn(bars) ?? Promise.resolve(),
