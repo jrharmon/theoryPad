@@ -1,10 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-09-25 (later). **Feedback round 7 is built and waiting at its gate** on
-branch `feedback-round-7` (unmerged, unpushed): the settings dialog's Done stays on screen, faint
-beat lines in the tab, "Land on" kept only in *Improvise to a target*, and a routine opens paused
-on its first item instead of an overview — see "Feedback round 7" below. **Next: the Scales run**
-(`docs/plan/14-SCALES.md`, agreed, not started), then M7b. Before that: **"Generated backing"
+**Last updated:** 2026-09-25 (later). **Nothing is in progress. Next: the Scales run**
+(`docs/plan/14-SCALES.md`, agreed, not started), then M7b. **Feedback round 7 is merged and
+pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
+the tab, roots ringed in blue, "Land on" kept only in *Improvise to a target*, a routine opens
+paused on its first item instead of an overview, and the builder shows each item's summary —
+see "Feedback round 7" below. `main` is the only branch, local and origin in sync. Before that: **"Generated backing"
 is merged and pushed** (2026-09-25): "Generated" in the Backing menu plays sampled bass and
 piano chords under the notes, over a progression of scale degrees (vamp on 1, the mode's go-to
 progressions, or custom lists) picked from the roll, set per exercise and per routine item, with
@@ -53,13 +54,13 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 6 — circled tab roots, pass counter, chord families | ✅ merged, live — see below |
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
-| Feedback round 7 — Done button, beat lines, landing note, no routine overview | **at the gate** on `feedback-round-7` — see below |
-| Scales — pentatonics, blues, harmonic and melodic minor | agreed, not started — `docs/plan/14-SCALES.md` |
+| Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
+| Scales — pentatonics, blues, harmonic and melodic minor | **next** — agreed, not started — `docs/plan/14-SCALES.md` |
 | M7b — Ear training and "hear it" | after Scales — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted. `main` is in sync with origin; `feedback-round-7` is the one open branch, at its gate. 735 unit tests in 55 files,
+deleted — `main` is the only branch, local and origin in sync. 735 unit tests in 55 files,
 69 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -200,10 +201,10 @@ deleted. `main` is in sync with origin; `feedback-round-7` is the one open branc
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Feedback round 7 — at the gate (2026-09-25)
+## Feedback round 7 — merged (2026-09-25)
 
-From the player's list after "Generated backing". Branch `feedback-round-7`, a commit per item;
-`pnpm check` green (735 unit tests) and all 69 E2E pass. Merge into `main` at the gate.
+From the player's list after "Generated backing". A commit per item, fast-forwarded into `main`
+and pushed; the branch is deleted. `pnpm check` green (735 unit tests), all 69 E2E pass.
 
 - **Done stays on screen.** The shared settings dialog (practice and routine item) is a column:
   the body scrolls, Done sits on a footer pinned to the bottom.
@@ -221,9 +222,11 @@ From the player's list after "Generated backing". Branch `feedback-round-7`, a c
 - **Fixed on the way — a flaky E2E.** "generated backing shows its chords" read both chords off
   the first tab line, which holds one bar when a fine rhythm is rolled; it failed on `main` too.
 
-**For the player at the gate:** do the beat lines read at a glance without cluttering dense
-sixteenth bars; does opening a routine paused feel right; is anything missing now the overview
-is gone (it showed every item's headline and the routine's length up front).
+**Gate (2026-09-25):** beat lines approved. Asked for and done at the gate: **bar lines 2px**
+(the beat lines had made them harder to pick out); **the root's ring in ballpoint blue**
+(`--color-tab-root`, the fret number stays ink); and, as the overview is not missed, **each
+item's exercise summary under its name in the routine builder**, whose header already shows
+the routine's length.
 
 **Next after the gate: the Scales run** — `docs/plan/14-SCALES.md` has the decisions (asked and
 answered 2026-09-25), the defaults taken, the model and seven tasks. Its "Defaults taken" section
