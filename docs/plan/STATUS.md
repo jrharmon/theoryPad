@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **A Start string axis for Modes up the neck is built on `start-string`, awaiting the gate** — see "Start string" below. Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -63,7 +63,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
-| Start string axis — Modes up the neck | at the gate on `start-string` — see below |
+| Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -209,9 +209,10 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Start string — at the gate (2026-09-26)
+## Start string — merged (2026-09-26)
 
-Asked for directly (no spec doc), on branch `start-string`, one commit; not yet merged.
+Asked for directly (no spec doc). Built on `start-string`, passed at the gate with no
+changes, fast-forwarded into `main` and pushed; the branch is deleted.
 `pnpm check` green (958 unit tests), all 71 E2E pass.
 
 - **The axis** `startString` (label "Start string", exercise scope): "Outer string", then
