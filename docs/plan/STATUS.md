@@ -207,6 +207,54 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
+## Scales run — in progress on `scales` (2026-09-25)
+
+Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
+before task 4. Branch `scales`, a commit per task, a stop for the player's review after each;
+unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (792 unit tests in
+56 files), E2E 69/69.
+
+| Task | State |
+| --- | --- |
+| 1 — Music domain: scales, spelling, chords | ✅ committed, reviewed |
+| 2 — Pentatonic and blues boxes | ✅ committed, reviewed ("the boxes I play") |
+| 3 — Scale axis, settings, routines, editor, strip | ✅ committed, reviewed |
+| Revision — no pentatonic shapes (decision 16) | ✅ committed, reviewed ("looks right") |
+| 4 — Played exercises on every scale | **next** |
+| 5 — Theory, reference, explorer | not started |
+| 6 — Generated backing per scale | not started |
+| 7 — The gate | — |
+
+**The model now, in one paragraph.** A key is `{ tonic, scale, mode }`. Seven scales: Major,
+Minor pentatonic, Major pentatonic, Blues (minor blues), Harmonic minor, Phrygian dominant,
+Melodic minor. **Only Major has modes**; every other scale has one mode whose id is its own, and
+the Mode control is hidden for it. **Where on the neck is never a mode**: the rolled position
+picks the 3nps shape or the pentatonic box, by the same rule (the first scale note at or above
+that fret on the lowest string). Pentatonics and blues borrow their parent mode's chords, key
+signature and progressions (`harmonyOf`, `parentMode`); harmonic minor, Phrygian dominant and
+melodic minor use their own chords and have no key signature (the circle of fifths draws nothing
+for them, and its drill stays Major-only). Scale is a session axis rolled before mode, **Fixed:
+Major by default**, so everything stored before it plays as before; the three rare scales are
+struck out of rolls in Settings by default.
+
+**How the player decided it** (worth knowing before proposing anything): he dropped the 14
+harmonic/melodic minor modes as clutter (only Phrygian dominant kept, as a scale), then dropped
+pentatonic shapes as a setting because a shape never changes the notes — "the point of picking a
+mode is that it changes the root". Future rare scales (whole tone…) must come with no baggage:
+one scale entry, no modes.
+
+**Known gaps, by the task that closes them** (the spec's Outcomes list them in full):
+- Task 4: the played exercises accept any scale but still play 3nps material on pentatonics
+  (Interval sequences on a pentatonic runs 3nps across the neck); Position shifting is limited
+  to non-pentatonic scales by `allowedValues`; `arpeggioRun`'s `% 7`, `oneNotePerString`'s
+  coprime-to-seven, `shapesPerRep` max 7, and `exercises/shared/roles.ts` comparing degree
+  numbers only.
+- Task 5: the diatonic drill declares no scale yet (in a non-Major routine it rolls its own Major
+  mode); the reference panel shows a pentatonic's parent chords unlabeled and has a seven-column
+  note row; the explorer has no Scale picker and its "last key" is Major-only.
+- Task 6: progressions parse only `[1-7]`; blues 12-bar with dominant 7ths; Phrygian
+  dominant's progressions are a draft (vamp on I; I–♭II).
+
 ## Feedback round 7 — merged (2026-09-25)
 
 From the player's list after "Generated backing". A commit per item, fast-forwarded into `main`

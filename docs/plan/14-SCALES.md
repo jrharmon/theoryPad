@@ -1,8 +1,8 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
 _Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–3 done,
-then revised at task 3's review to drop pentatonic shapes as a setting (decision 16); the
-revision awaits review** (see the Outcomes at the end). It
+then revised at task 3's review to drop pentatonic shapes as a setting (decision 16). All
+reviewed; task 4 is next** (see "Where task 4 starts" at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -386,4 +386,36 @@ Decision 16, applied to tasks 1–3:
 
 `pnpm check` green (792 unit tests), E2E 69/69. Looked at: the editor on Blues (no Mode row),
 the strip ("A blues"), and the gallery boxes.
+
+Reviewed: "looks right".
+
+### Where task 4 starts
+
+Task 4 is **Played exercises on every scale**: Modes up the neck, Interval sequences, One note
+per string, Position shifting, Improvise to a target, and their briefs. What is already true and
+what isn't:
+- **All five declare `scale`**, and none crashes on any scale except Position shifting on a
+  pentatonic ("No run of … fits"), which is why its `allowedValues.scale` leaves the three box
+  scales out. Remove that limit once it plays boxes.
+- **Nothing routes pentatonics to boxes yet.** `exercises/shared/scaleRun.ts`'s `shapeFrom`
+  builds 3nps at the position; for `playsInBoxes(scale)` it should take `boxShape(instrument,
+  keyMode, fret)` (same rule, already built and tested). `shapeRuns` → `shapesUpTheNeck` already
+  walks the five boxes for a box scale. `horizontalRun` (Position shifting) shifts through 3nps
+  shapes with a four-note string; how a pentatonic run shifts between boxes is the one design
+  question here — ask the player, with a recommendation, before building it.
+- **Sevens to fix:** `shapesPerRep` (`.max(7)`, "All seven shapes") becomes a maximum per scale
+  (decision 15: five boxes on a pentatonic); `arpeggioRun`'s `% 7` and the arpeggio-then-scale
+  variant, which should arpeggiate the scale's tonic chord in each shape (m7 for minor pentatonic
+  and blues, 6 for major pentatonic — "Defaults taken"); `oneNotePerString`'s step-2-is-coprime-
+  to-seven cycle (5 and 6 notes differ); `roles.ts` marking the target by degree number only
+  (blues has a ♭5 and a 5 — match the full degree, as `domain/neck/overlay.ts` now does).
+- **Interval patterns count scale steps** ("3rds" on a pentatonic is every other note), per
+  "Defaults taken". "7ths" on a five-note scale is two octaves' worth of steps apart — check it
+  makes sense or leave it out for box scales, and say which at the review.
+- **Improvise to a target** already lands only on the scale's own degrees (never blues' ♭5).
+- A scratch smoke test that rolls every played exercise on every scale (fixed scale, a few
+  seeds) and calls `generate` found the crashes above in one run; worth repeating, then keeping
+  as a real invariant test in `src/exercises/__tests__/exercises.test.ts`.
+- **Screenshot each exercise** on a pentatonic, blues and harmonic minor, light and dark, and
+  read the tab: the box must be the one at the rolled position.
 
