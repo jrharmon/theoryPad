@@ -1,17 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
-(`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes), 3
-(the scale axis and settings), 4 (played exercises on every scale), 5 (theory, reference,
-explorer) and 6 (generated backing per scale) are committed, plus a revision at task 3's
-review; **task 6 awaits the player's review**, then the gate. Only Major has
-modes: decisions 10–15 (before task 1) made harmonic minor, Phrygian dominant and melodic minor
-mode-less scales, decision 16 (at task 3's review) dropped pentatonic shapes as a setting — the
-position picks the box — decisions 17–19 (before task 4) settled how box scales shift,
-sequence and skip, 20–21 (before task 5) how the theory drills treat them, and 22–25 (before
-task 6) what the generated backing plays on them.
-The spec's "Outcomes"
-section says where each task stands. Then M7b. **Feedback round 7 is merged and
+**Last updated:** 2026-09-26. **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
+pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
+between key and mode, in every played exercise, the theory drill, the reference, the explorer
+and the generated backing. Only Major has modes; the position picks a pentatonic's box.
+Decisions 1–25 and every task's outcome are in the spec; "Scales run" below summarizes it.
+`main` is the only branch, local and origin in sync. **M7b is next.** Before that: **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
 the tab, roots ringed in blue, "Land on" kept only in *Improvise to a target*, a routine opens
 paused on its first item instead of an overview, and the builder shows each item's summary —
@@ -65,8 +59,8 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
-| Scales — pentatonics, blues, harmonic and melodic minor | **in progress** on `scales` — tasks 1–3 of 7 done — `docs/plan/14-SCALES.md` |
-| M7b — Ear training and "hear it" | after Scales — see "Remaining work" |
+| Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
+| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -211,12 +205,11 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Scales run — in progress on `scales` (2026-09-25)
+## Scales run — merged (2026-09-26)
 
-Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
-before the gate. Branch `scales`, a commit per task, a stop for the player's review after each;
-unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (950 unit tests in
-56 files), E2E 69/69.
+Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`**. A commit per
+task and a review after each, then fast-forwarded into `main` and pushed; the branch is
+deleted. `pnpm check` green (950 unit tests in 56 files), E2E 69/69.
 
 | Task | State |
 | --- | --- |
@@ -226,8 +219,8 @@ unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (9
 | Revision — no pentatonic shapes (decision 16) | ✅ committed, reviewed ("looks right") |
 | 4 — Played exercises on every scale | ✅ committed |
 | 5 — Theory, reference, explorer | ✅ committed, reviewed (one change, made) |
-| 6 — Generated backing per scale | ✅ committed — **awaiting review** |
-| 7 — The gate | **next** |
+| 6 — Generated backing per scale | ✅ committed, reviewed |
+| 7 — The gate | ✅ passed 2026-09-26 — merged and pushed |
 
 **The model now, in one paragraph.** A key is `{ tonic, scale, mode }`. Seven scales: Major,
 Minor pentatonic, Major pentatonic, Blues (minor blues), Harmonic minor, Phrygian dominant,

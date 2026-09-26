@@ -1,10 +1,11 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–6 done,
-with a revision at task 3's review that dropped pentatonic shapes as a setting (decision 16).
-Task 6 is awaiting review; the gate (task 7) is next** (see "Where the gate starts" at the
-end). It goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a
-commit per task and a stop for review after each task, as in the last two runs._
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Done: all seven
+tasks built and reviewed, the gate passed, and `scales` fast-forwarded into `main` and pushed
+on 2026-09-26.** Tasks were revised twice on the way — pentatonic shapes dropped as a setting at
+task 3's review (decision 16), and the drill's parent naming at task 5's. It went after
+feedback round 7 and before M7b, on its own branch (`scales`), with a commit per task and a
+stop for review after each._
 
 Today every key has a **mode** of the major scale, and nothing else. This run adds a **scale**
 between them. You pick the key, then the scale, then the mode, and the modes offered depend on
@@ -562,8 +563,10 @@ For the review — **by ear**, which no test can do:
 - Is the 12-bar any good? (Style and levels are the generated backing's own, unchanged.)
 - Harmonic minor's Am–Dm7–E7, and Phrygian dominant's three progressions.
 
-### Where the gate starts
+Reviewed: no changes asked for.
 
-Task 7 is **the gate**: the player plays through the run. "What only the player can judge" above
-lists the questions, and each task's "For the review" notes add to them. At the gate, merge
-`scales` into `main` (fast-forward) and push, as the last runs did; M7b is next.
+### Task 7 — The gate (2026-09-26)
+
+The player passed the run with no changes and asked for it to be merged and pushed. `scales`
+was fast-forwarded into `main` (ten commits) and pushed, and the branch deleted. `pnpm check`
+green (950 unit tests), E2E 69/69 on the merged tree.
