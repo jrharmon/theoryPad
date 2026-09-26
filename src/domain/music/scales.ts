@@ -192,3 +192,8 @@ export type CharacterId = ModeName | Exclude<ScaleId, 'major'>;
 export function characterId(km: Pick<KeyMode, 'scale' | 'mode'>): CharacterId {
   return km.scale === 'major' ? (km.mode as ModeName) : km.scale;
 }
+
+/** 'shape-3' → 3; null for anything that isn't a pentatonic shape. */
+export function shapeNumber(mode: ModeId): number | null {
+  return mode.startsWith('shape-') ? Number(mode.slice('shape-'.length)) : null;
+}

@@ -51,7 +51,13 @@ export function overlayFromScalePositions(
 
 function roleFor(p: ScaleNotePosition, targetDegree?: Degree): NoteRole {
   if (p.isRoot) return 'root';
-  if (targetDegree && p.degree.number === targetDegree.number) return 'target';
+  // The full degree, not its number: blues has a ♭5 and a 5.
+  if (
+    targetDegree &&
+    p.degree.number === targetDegree.number &&
+    p.degree.alteration === targetDegree.alteration
+  )
+    return 'target';
   return 'chord-tone';
 }
 

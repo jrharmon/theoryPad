@@ -1,7 +1,7 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Task 1 done,
-awaiting review** (see its Outcome at the end). It
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–2 done;
+task 2 awaiting review** (see the Outcomes at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -65,8 +65,8 @@ Asked and answered before task 1, 2026-09-25:
     pentatonic, Major pentatonic, Blues, Harmonic minor, Phrygian dominant, Melodic minor*.
 11. **Seven-note scales without modes still get the 3nps shapes**, exactly as Major does: a
     rolled position picks the box, and *Modes up the neck* walks all seven. There is no Shape
-    setting for them (Major has none either); adding one later is additive. _Recommended, not
-    yet confirmed by the player — confirm at task 1's review._
+    setting for them (Major has none either); adding one later is additive. Confirmed at task
+    1's review.
 12. **The circle-of-fifths drill is Major-only.** Harmonic minor, Phrygian dominant and melodic
     minor have no key signature of their own (A harmonic minor is written in A minor's
     signature with G♯ as an accidental), so the drill leaves them out rather than ask a trick
@@ -271,4 +271,39 @@ context (task 3); `shapesPerRep`, `arpeggioRun`'s `% 7`, `oneNotePerString`'s co
 `minMaj7`/`maj7#5`), TheoryBody's `n > 7`, `circleQuestions`, `KeyModeView`/`NoteRow`
 `grid-cols-7`, the explorer (task 5); `progression.ts`'s `[1-7]` parse (task 6). Phrygian
 dominant's backing progressions are a draft (vamp on I, and I–♭II) for task 6 to confirm.
+
+Reviewed: shapes recommendation (decision 11) confirmed; names fine.
+
+### Task 2 — Shapes (2026-09-25)
+
+`src/domain/instrument/shapes.ts`:
+- **A pentatonic box is the 3nps generator at two notes a string**, starting on the shape's
+  step on the lowest string — nothing tabled. In standard tuning that gives exactly the five
+  standard A minor pentatonic boxes (tested fret by fret).
+- **Blues** is the minor pentatonic box with the ♭5 added on the 4th's string, one fret above
+  the 4: between 4 and 5 where they share a string, after the 4 where the 5 starts the next.
+  So box 1 has A string 5-6-7 and G string 5-7-8; box 2 has both E strings 8-10-11 and G
+  string 7-8-9.
+- **`boxShape(instrument, keyMode, nearFret)`** places the key's shape at the octave copy
+  whose first note is nearest `nearFret` (A minor Shape 4 near fret 3 is the open box; near
+  9 it is at 12).
+- **`shapesUpTheNeck`** on a pentatonic scale climbs through all five boxes from `minFret`
+  (A minor from fret 1: shapes 5, 1, 2, 3, 4 at frets 3, 5, 8, 10, 12); on any other scale its
+  default count is the scale's note count, so seven for everything seven-note. `NeckShape`
+  carries `shape` for a box.
+- **Harmonic minor, Phrygian dominant and melodic minor** get all seven 3nps shapes with no
+  change to the generator (tested).
+- **Major pentatonic is numbered from its own root**: C major pentatonic Shape 1 starts on C
+  (fret 8), which is A minor pentatonic's Shape 2 box. For the player to confirm at the gate.
+
+Also fixed, as "Things that will bite" predicted: the neck overlay matched its target by
+degree number, so blues lit both the 5 and the ♭5. It now matches the full degree (tested).
+`exercises/shared/roles.ts` still compares numbers; task 4 takes it with the target axis.
+
+Looked at: the dev gallery (`/#/dev/gallery`) has a new "Pentatonic and blues boxes" section
+with all five shapes of each scale; screenshotted in light and dark. The explorer gets its
+Scale picker in task 5, where its reference panel learns about scales without chords of
+their own. Every box of every pentatonic scale is whole and in reach on standard, drop D,
+7-string and bass (drop D's low string stretches one blues box to six frets).
+`pnpm check` green (788 unit tests), E2E 69/69.
 

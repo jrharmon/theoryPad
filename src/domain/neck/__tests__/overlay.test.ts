@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { makeDegree } from '@/domain/music';
-import { STANDARD_GUITAR } from '@/domain/instrument';
+import { makeDegree, pitchClass } from '@/domain/music';
+import { STANDARD_GUITAR, boxShape } from '@/domain/instrument';
 import type { NeckOverlay } from '../overlay';
-import { overlayFretRange } from '../overlay';
+import { overlayFretRange, overlayFromScalePositions } from '../overlay';
 
 const NECK = { ...STANDARD_GUITAR, fretCount: 22 };
 
@@ -29,5 +29,15 @@ describe('overlayFretRange', () => {
 
   it('falls back to the first twelve frets when there is nothing to show', () => {
     expect(overlayFretRange({ notes: [] }, NECK)).toEqual({ low: 0, high: 12 });
+  });
+});
+
+describe('overlayFromScalePositions', () => {
+  it('marks the target by its full degree — blues’ ♭5, not its 5', () => {
+    const blues = { tonic: pitchClass('A'), scale: 'blues' as const, mode: 'shape-1' as const };
+    const { positions } = boxShape(STANDARD_GUITAR, blues, 5);
+    const overlay = overlayFromScalePositions(positions, { targetDegree: makeDegree(5, -1) });
+    const targets = overlay.notes.filter((n) => n.role === 'target').map((n) => n.degree.label);
+    expect(targets).toEqual(['♭5', '♭5']);
   });
 });

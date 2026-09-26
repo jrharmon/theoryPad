@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { DegreeNumber } from '@/domain/music';
-import { MODE_NAMES, chroma, pitchClass, scaleNotes } from '@/domain/music';
+import type { DegreeNumber, KeyMode, ModeId, ScaleId, ShapeId } from '@/domain/music';
+import { MODE_NAMES, SHAPE_IDS, chroma, pitchClass, scaleNotes } from '@/domain/music';
 import {
   BASS_4_STRING,
   DROP_D_GUITAR,
@@ -8,7 +8,7 @@ import {
   TEST_INSTRUMENTS,
 } from '../instruments';
 import { lowestFret, midiAt, stringCount } from '../fretboard';
-import { scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
+import { boxShape, scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
 
 const G_MAJOR = { tonic: pitchClass('G'), scale: 'major' as const, mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
@@ -210,5 +210,174 @@ describe('shapesUpTheNeck', () => {
 
   it('returns fewer shapes than asked when the neck runs out', () => {
     expect(shapesUpTheNeck(STANDARD_GUITAR, D_DORIAN, { minFret: 18 }).length).toBeLessThan(7);
+  });
+});
+
+describe('pentatonic and blues boxes', () => {
+  const key = (tonic: string, scale: ScaleId, mode: ModeId = 'shape-1'): KeyMode => ({
+    tonic: pitchClass(tonic),
+    scale,
+    mode,
+  });
+  const frets = (k: KeyMode, near: number) => [
+    ...fretsByString(boxShape(STANDARD_GUITAR, k, near).positions).values(),
+  ];
+
+  it.each<[ShapeId, number, number[][]]>([
+    // A minor pentatonic (A C D E G), low string first.
+    [
+      'shape-1',
+      5,
+      [
+        [5, 8],
+        [5, 7],
+        [5, 7],
+        [5, 7],
+        [5, 8],
+        [5, 8],
+      ],
+    ],
+    [
+      'shape-2',
+      8,
+      [
+        [8, 10],
+        [7, 10],
+        [7, 10],
+        [7, 9],
+        [8, 10],
+        [8, 10],
+      ],
+    ],
+    [
+      'shape-3',
+      10,
+      [
+        [10, 12],
+        [10, 12],
+        [10, 12],
+        [9, 12],
+        [10, 13],
+        [10, 12],
+      ],
+    ],
+    [
+      'shape-4',
+      12,
+      [
+        [12, 15],
+        [12, 15],
+        [12, 14],
+        [12, 14],
+        [13, 15],
+        [12, 15],
+      ],
+    ],
+    [
+      'shape-5',
+      15,
+      [
+        [15, 17],
+        [15, 17],
+        [14, 17],
+        [14, 17],
+        [15, 17],
+        [15, 17],
+      ],
+    ],
+  ])('plays A minor pentatonic %s as the standard box at fret %i', (shape, start, expected) => {
+    expect(frets(key('A', 'minor-pentatonic', shape), start)).toEqual(expected);
+  });
+
+  it('adds the blues ♭5 on the 4th’s string, one fret above it', () => {
+    // Box 1: A string D Eb E, G string C D Eb.
+    expect(frets(key('A', 'blues', 'shape-1'), 5)).toEqual([
+      [5, 8],
+      [5, 6, 7],
+      [5, 7],
+      [5, 7, 8],
+      [5, 8],
+      [5, 8],
+    ]);
+    // Box 2: low and high E C D Eb, G string D Eb E.
+    expect(frets(key('A', 'blues', 'shape-2'), 8)).toEqual([
+      [8, 10, 11],
+      [7, 10],
+      [7, 10],
+      [7, 8, 9],
+      [8, 10],
+      [8, 10, 11],
+    ]);
+  });
+
+  it('numbers major pentatonic from its own root', () => {
+    // C major pentatonic is A minor pentatonic's notes from C: its shape n is A minor's n + 1.
+    for (let n = 1; n <= 5; n += 1) {
+      const major = key('C', 'major-pentatonic', `shape-${n}` as ShapeId);
+      const minor = key('A', 'minor-pentatonic', `shape-${(n % 5) + 1}` as ShapeId);
+      const near = boxShape(STANDARD_GUITAR, major, 7).startFret;
+      expect(frets(major, near), `shape ${n}`).toEqual(frets(minor, near));
+    }
+  });
+
+  it('places a box at the octave copy nearest the position', () => {
+    const shape4 = key('A', 'minor-pentatonic', 'shape-4');
+    expect(boxShape(STANDARD_GUITAR, shape4, 3).startFret).toBe(0);
+    expect(boxShape(STANDARD_GUITAR, shape4, 9).startFret).toBe(12);
+  });
+
+  it('gives every shape of every pentatonic scale a whole, playable box on every instrument', () => {
+    for (const instrument of TEST_INSTRUMENTS) {
+      for (const scale of ['minor-pentatonic', 'major-pentatonic', 'blues'] as const) {
+        for (const mode of SHAPE_IDS) {
+          for (const tonic of ['E', 'G', 'Bb', 'C#']) {
+            const k = key(tonic, scale, mode);
+            const label = `${instrument.name} ${tonic} ${scale} ${mode}`;
+            const { positions } = boxShape(instrument, k, 7);
+            const perString = [...fretsByString(positions).values()].map((f) => f.length);
+            expect(perString.length, label).toBe(stringCount(instrument));
+            for (const count of perString) {
+              expect(count === 2 || (scale === 'blues' && count === 3), label).toBe(true);
+            }
+            const pitches = positions.map((p) => midiAt(instrument, p));
+            for (let i = 1; i < pitches.length; i += 1) {
+              expect(pitches[i]!, label).toBeGreaterThan(pitches[i - 1]!);
+            }
+            // Within the hand's reach. Standard tuning's boxes span 4 frets at most;
+            // drop D's low string can stretch a blues box to 6.
+            const span = shapeSpan(positions)!;
+            expect(span.high - span.low, label).toBeLessThanOrEqual(6);
+          }
+        }
+      }
+    }
+  });
+
+  it('climbs the neck through all five shapes', () => {
+    const shapes = shapesUpTheNeck(STANDARD_GUITAR, key('A', 'minor-pentatonic'), {
+      minFret: 1,
+    });
+    expect(shapes.map((s) => s.startFret)).toEqual([3, 5, 8, 10, 12]);
+    expect(shapes.map((s) => s.shape)).toEqual([
+      'shape-5',
+      'shape-1',
+      'shape-2',
+      'shape-3',
+      'shape-4',
+    ]);
+  });
+
+  it('gives harmonic minor, Phrygian dominant and melodic minor all seven 3nps shapes', () => {
+    for (const scale of ['harmonic-minor', 'phrygian-dominant', 'melodic-minor'] as const) {
+      const k = key('A', scale, scale);
+      const inScale = new Set(scaleNotes(k).map(chroma));
+      const shapes = shapesUpTheNeck(STANDARD_GUITAR, k);
+      expect(new Set(shapes.map((s) => s.startDegree)).size, scale).toBe(7);
+      for (const shape of shapes) {
+        expect(shape.positions, scale).toHaveLength(3 * stringCount(STANDARD_GUITAR));
+        for (const p of shape.positions)
+          expect(inScale.has(chroma(p.pitchClass)), scale).toBe(true);
+      }
+    }
   });
 });

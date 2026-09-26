@@ -1,6 +1,24 @@
 import { useState } from 'react';
-import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, DROP_D_GUITAR } from '@/domain/instrument';
-import { diatonicChords, keySignature, scaleNotes, signatureNote } from '@/domain/music';
+import {
+  STANDARD_GUITAR,
+  SEVEN_STRING_GUITAR,
+  DROP_D_GUITAR,
+  boxShape,
+  shapeSpan,
+} from '@/domain/instrument';
+import type { ScaleId } from '@/domain/music';
+import {
+  SHAPE_IDS,
+  diatonicChords,
+  keyModeName,
+  keySignature,
+  pitchClass,
+  scaleNotes,
+  scaleTitle,
+  signatureDegree,
+  signatureNote,
+} from '@/domain/music';
+import { overlayFromScalePositions } from '@/domain/neck';
 import { Fretboard } from '@/components/music';
 import {
   ALL_SHAPES,
@@ -122,6 +140,13 @@ export function Gallery() {
         />
       </Section>
 
+      <Section
+        title="Pentatonic and blues boxes"
+        note="The five shapes of a pentatonic scale, each at the octave nearest fret 7. Blues adds the ♭5 on the 4th's string."
+      >
+        <PentatonicBoxes />
+      </Section>
+
       <Section title="Other instruments" note="Same components, string count from the tuning">
         <div className="grid gap-6 lg:grid-cols-2">
           <div>
@@ -217,6 +242,60 @@ function TransportBar({ transport }: { transport: Transport }) {
           ? `Playing: ${transport.activeId}`
           : 'One clock — starting an example stops any other'}
       </span>
+    </div>
+  );
+}
+
+const BOX_SCALES: ScaleId[] = ['minor-pentatonic', 'major-pentatonic', 'blues'];
+
+function PentatonicBoxes() {
+  const [scale, setScale] = useState<ScaleId>('minor-pentatonic');
+  const tonic = pitchClass(scale === 'major-pentatonic' ? 'C' : 'A');
+  return (
+    <div>
+      <div className="mb-4 flex gap-1">
+        {BOX_SCALES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setScale(s)}
+            className={[
+              'px-3 py-1 text-body-sm',
+              s === scale
+                ? 'bg-accent font-semibold text-on-accent'
+                : 'border border-rule hover:bg-ink/5',
+            ].join(' ')}
+          >
+            {scaleTitle(s)}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-6" data-testid="pentatonic-boxes">
+        {SHAPE_IDS.map((mode) => {
+          const keyMode = { tonic, scale, mode };
+          const box = boxShape(STANDARD_GUITAR, keyMode, 7);
+          const span = shapeSpan(box.positions)!;
+          const overlay = overlayFromScalePositions(box.positions, {
+            targetDegree: signatureDegree(keyMode),
+            emphasisFrets: Array.from(
+              { length: span.high - span.low + 1 },
+              (_, i) => span.low + i,
+            ),
+          });
+          return (
+            <div key={mode}>
+              <p className="kicker mb-2">
+                {keyModeName(keyMode)} · fret {box.startFret}
+              </p>
+              <Fretboard
+                instrument={STANDARD_GUITAR}
+                overlay={overlay}
+                fretRange={{ low: 0, high: 17 }}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

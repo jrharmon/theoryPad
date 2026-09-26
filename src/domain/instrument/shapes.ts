@@ -1,5 +1,14 @@
-import type { DegreeNumber, KeyMode, PitchClass } from '@/domain/music';
-import { chroma, degreeOf, scaleNotes } from '@/domain/music';
+import type { DegreeNumber, KeyMode, PitchClass, ShapeId } from '@/domain/music';
+import {
+  chroma,
+  degreeOf,
+  makeDegree,
+  modesOf,
+  noteAtDegree,
+  scaleKind,
+  scaleNotes,
+  shapeNumber,
+} from '@/domain/music';
 import type { FretPosition, Instrument, ScaleNotePosition } from './types';
 import { lowestFret, noteAt, pitchClassAt, stringCount } from './fretboard';
 
@@ -12,14 +21,18 @@ import { lowestFret, noteAt, pitchClassAt, stringCount } from './fretboard';
  * work, and the awkward major-third gap between G and B falls out of "find the
  * next scale note nearest the hand" rather than being a special case.
  *
- * Three notes per string is the default and what v1 ships. CAGED/positional
- * shapes are genuinely conventional fingerings rather than derivable, so they
- * arrive later as tables (milestone 8).
+ * Three notes per string is the default for seven-note scales. A pentatonic
+ * box is the same generator at two notes a string (see `boxShape`), which is
+ * all the five pentatonic shapes are: consecutive scale notes, two a string,
+ * starting on the shape's step on the lowest string.
  */
 
 export interface ScaleShapeOptions {
   keyMode: KeyMode;
-  /** The scale degree the shape starts on. */
+  /**
+   * The scale step the shape starts on, from 1 — the degree number in a
+   * seven-note scale; in a pentatonic, step 2 is the ♭3 or the 2.
+   */
   startDegree?: DegreeNumber;
   /** Lowest fret the shape may use. */
   minFret?: number;
@@ -178,8 +191,13 @@ export function scaleShape(
 }
 
 export interface NeckShape {
-  /** Which scale degree this shape begins on — which mode it is. */
+  /**
+   * Which scale step this shape begins on — which mode it is. For a pentatonic
+   * box, the step is the shape's number.
+   */
   startDegree: DegreeNumber;
+  /** The pentatonic shape, for a pentatonic or blues box. */
+  shape?: ShapeId;
   /** Lowest fretted note in the shape. */
   startFret: number;
   positions: ScaleNotePosition[];
@@ -205,7 +223,10 @@ export function shapesUpTheNeck(
   keyMode: KeyMode,
   options: { minFret?: number; count?: number; notesPerString?: number } = {},
 ): NeckShape[] {
-  const { minFret = 1, count = 7, notesPerString = 3 } = options;
+  if (scaleKind(keyMode.scale) === 'shapes') {
+    return boxesUpTheNeck(instrument, keyMode, options.minFret ?? 1, options.count);
+  }
+  const { minFret = 1, count = scaleNotes(keyMode).length, notesPerString = 3 } = options;
   const notes = scaleNotes(keyMode);
   const lowestString = 0;
   const shapes: NeckShape[] = [];
@@ -232,6 +253,124 @@ export function shapesUpTheNeck(
     shapes.push({ startDegree, startFret: fret, positions });
   }
 
+  return shapes;
+}
+
+/**
+ * A pentatonic or blues box starting at `startFret` on the lowest string, or
+ * null if the shape's first note isn't there or the box runs off the neck.
+ *
+ * The pentatonic box is the scale two notes a string from the shape's step.
+ * Blues is the minor pentatonic box with the ♭5 added on the 4th's string,
+ * one fret above it — between 4 and 5 where both share a string, or after the
+ * 4 where the 5 starts the next string — so those strings get three notes.
+ */
+function boxAt(
+  instrument: Instrument,
+  keyMode: KeyMode,
+  step: number,
+  startFret: number,
+): ScaleNotePosition[] | null {
+  const blues = keyMode.scale === 'blues';
+  const pentatonic: KeyMode = blues ? { ...keyMode, scale: 'minor-pentatonic' } : keyMode;
+  const box = scaleShape(instrument, {
+    keyMode: pentatonic,
+    startDegree: step as DegreeNumber,
+    minFret: startFret,
+    notesPerString: 2,
+  });
+  if (box.length < 2 * stringCount(instrument) || box[0]!.fret !== startFret) return null;
+  if (!blues) return box;
+
+  const flatFive = makeDegree(5, -1);
+  const pc = noteAtDegree(keyMode, flatFive);
+  return box.flatMap((p) => {
+    if (p.degree.number !== 4 || p.fret + 1 > instrument.fretCount) return [p];
+    const position = { string: p.string, fret: p.fret + 1 };
+    return [
+      p,
+      {
+        ...position,
+        pitchClass: pc,
+        note: noteAt(instrument, position),
+        degree: flatFive,
+        isRoot: false,
+      },
+    ];
+  });
+}
+
+/** The frets on the lowest string where a shape's first note sounds. */
+function boxStarts(instrument: Instrument, keyMode: KeyMode, step: number): number[] {
+  const first = pentatonicNotes(keyMode)[step - 1]!;
+  const frets: number[] = [];
+  for (let fret = lowestFret(instrument); fret <= instrument.fretCount; fret += 1) {
+    if (chroma(pitchClassAt(instrument, { string: 0, fret })) === chroma(first))
+      frets.push(fret);
+  }
+  return frets;
+}
+
+/** The five box notes: blues without its ♭5. */
+function pentatonicNotes(keyMode: KeyMode): PitchClass[] {
+  return scaleNotes(
+    keyMode.scale === 'blues' ? { ...keyMode, scale: 'minor-pentatonic' } : keyMode,
+  );
+}
+
+/**
+ * The key's pentatonic or blues box — the shape its mode names — at whichever
+ * octave copy starts nearest `nearFret`. A shape sits at one fret, give or
+ * take an octave; position only chooses low or high on the neck.
+ */
+export function boxShape(instrument: Instrument, keyMode: KeyMode, nearFret = 0): NeckShape {
+  const step = shapeNumber(keyMode.mode);
+  if (step === null) throw new Error(`${keyMode.mode} is not a pentatonic shape`);
+
+  let best: NeckShape | null = null;
+  for (const fret of boxStarts(instrument, keyMode, step)) {
+    const positions = boxAt(instrument, keyMode, step, fret);
+    if (!positions) continue;
+    if (best === null || Math.abs(fret - nearFret) < Math.abs(best.startFret - nearFret)) {
+      best = {
+        startDegree: step as DegreeNumber,
+        shape: keyMode.mode as ShapeId,
+        startFret: fret,
+        positions,
+      };
+    }
+  }
+  if (best === null)
+    throw new Error(`No room on the neck for ${keyMode.tonic} ${keyMode.mode}`);
+  return best;
+}
+
+/**
+ * Pentatonic or blues boxes up the neck from `minFret`: at each fret, the
+ * shape whose first note sounds there on the lowest string. Five of them by
+ * default, which is every shape once.
+ */
+function boxesUpTheNeck(
+  instrument: Instrument,
+  keyMode: KeyMode,
+  minFret: number,
+  count = modesOf(keyMode.scale).length,
+): NeckShape[] {
+  const notes = pentatonicNotes(keyMode);
+  const shapes: NeckShape[] = [];
+  for (let fret = minFret; fret <= instrument.fretCount && shapes.length < count; fret += 1) {
+    const sounding = chroma(pitchClassAt(instrument, { string: 0, fret }));
+    const step = notes.findIndex((n) => chroma(n) === sounding) + 1;
+    if (step === 0) continue;
+    const positions = boxAt(instrument, keyMode, step, fret);
+    if (!positions) continue;
+    shapes.push({
+      startDegree: step as DegreeNumber,
+      shape: `shape-${step}` as ShapeId,
+      startFret: fret,
+      positions,
+    });
+  }
   return shapes;
 }
 
