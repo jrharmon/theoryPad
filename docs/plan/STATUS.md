@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **Triplet brackets and the neck window are built on `triplets-neck-window`, awaiting the gate** — see "Triplets and the neck window" below. Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -62,6 +62,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
+| Triplet brackets, neck window | at the gate on `triplets-neck-window` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -206,6 +207,30 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Triplets and the neck window — at the gate (2026-09-26)
+
+Asked for directly (no spec doc), on branch `triplets-neck-window`, a commit each; not yet
+merged. `pnpm check` green (956 unit tests), all 71 E2E pass. The player took every
+recommendation:
+
+- **Triplet brackets.** A beat played in eighth triplets gets a bracket with an italic "3"
+  above the top string (under any chord symbols), running from the first triplet's column to
+  the third's. `tripletGroups(phrase)` in `src/domain/phrase/time.ts` finds them: every note in
+  the quarter-note beat on the triplet grid, and one on the second triplet. That last rule is
+  what keeps **swung 8ths unmarked** — a swung pair sits on the first and third positions, and
+  swing is a feel, never bracketed. Only a line with triplets on it gets the lane.
+  Quarter and sixteenth triplets aren't detected; nothing generates them yet.
+- **Neck window.** The side panel's "Shape on the neck" shows **7 frets** at a time
+  (`NECK_WINDOW_FRETS`), with ‹ › under it moving **5 frets** a click (`NECK_WINDOW_STEP`) and a
+  "Frets 6–12" caption. It opens on the window that holds the phrase's first note and the most
+  of the shape (`openingFretWindow`), stops at the ends of the notes (`stepFretWindow`, both in
+  `src/domain/neck/overlay.ts`), and **doesn't follow the playhead**. A shape that fits in 7
+  frets is shown whole, with no arrows. A new roll reopens it. Improvise's neck, in the main
+  column, still shows everything.
+
+**For the gate:** is the "3" readable from playing distance without crowding the tab, and
+are 7 frets / a 5-fret step right with a guitar in your hands (Modes up the neck spans 18)?
 
 ## Practice list — merged (2026-09-26)
 
