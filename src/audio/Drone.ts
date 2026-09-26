@@ -2,6 +2,7 @@ import * as Tone from 'tone';
 import type { KeyMode } from '@/domain/music';
 import { droneNotes } from '@/domain/backing';
 import type { BackingSource } from './backing/types';
+import { mixer } from './Mixer';
 
 /**
  * The drone: the key's root and fifth, held. The simplest generated backing —
@@ -28,7 +29,7 @@ export class Drone implements BackingSource {
 
   /** Built on first sound, after the AudioContext has started from a gesture. */
   private voice(): Tone.PolySynth {
-    this.filter ??= new Tone.Filter(1100, 'lowpass').toDestination();
+    this.filter ??= new Tone.Filter(1100, 'lowpass').connect(mixer.bus('generated'));
     if (!this.synth) {
       this.synth = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'fattriangle', count: 3, spread: 14 },

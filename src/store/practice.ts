@@ -76,6 +76,8 @@ async function audioPort(): Promise<AudioPort> {
   // straight into practice, and loading them twice is a no-op.
   await useSettings.getState().load();
   void useSounds.getState().choose(useSettings.getState().settings.audio.voice);
+  // Now rather than on Play, so a track that loads before then is at its level.
+  engine.setMix(useSettings.getState().settings.audio.mix);
   return {
     clock: engine.clock,
     metronome: engine.metronome,
@@ -84,7 +86,7 @@ async function audioPort(): Promise<AudioPort> {
     setMetronomeVoice: (id, timeSignature) => engine.setMetronomeVoice(id, timeSignature),
     preloadMetronome: (id) => engine.preloadMetronome(id),
     init: () => engine.init(),
-    setMasterVolume: (decibels) => engine.setMasterVolume(decibels),
+    setMix: (mix) => engine.setMix(mix),
     drone: (keyMode) => new audio.Drone(keyMode),
     generated: () => new audio.GeneratedBacking(engine.clock),
     track: (track) => new audio.VideoBacking(track, engine.clock),

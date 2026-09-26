@@ -1,5 +1,6 @@
 import * as Tone from 'tone';
 import type { NoteName } from '@/domain/music';
+import { mixer, type Bus } from '../Mixer';
 import type { InstrumentVoice } from './InstrumentVoice';
 import { sampleDir, type VoicePreset } from './presets';
 
@@ -18,9 +19,11 @@ export class SampledVoice implements InstrumentVoice {
   private sampler: Tone.Sampler | null = null;
   private readonly preset: VoicePreset;
   private readonly dir: string;
+  private readonly bus: Bus;
 
-  constructor(preset: VoicePreset, dir: string = sampleDir(preset)) {
+  constructor(preset: VoicePreset, bus: Bus = 'notes', dir: string = sampleDir(preset)) {
     this.preset = preset;
+    this.bus = bus;
     this.dir = dir;
     this.id = preset.id;
   }
@@ -41,7 +44,7 @@ export class SampledVoice implements InstrumentVoice {
       }),
     );
     const sampler = new Tone.Sampler({ urls: Object.fromEntries(buffers), release });
-    sampler.toDestination();
+    sampler.connect(mixer.bus(this.bus));
     sampler.volume.value = volumeDb;
     this.sampler = sampler;
   }

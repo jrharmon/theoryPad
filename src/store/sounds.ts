@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { VoiceId } from '@/data';
 import type { VoiceStatus } from '@/audio';
+import type { MetronomeVoiceId } from '@/domain/drums';
+import type { Mix } from '@/domain/mix';
 import type { NoteName } from '@/domain/music';
 
 interface SoundsState {
@@ -8,8 +10,15 @@ interface SoundsState {
   status: VoiceStatus;
   /** Start loading a voice. Nothing waits on it; the synth plays until it is ready. */
   choose: (id: VoiceId) => Promise<void>;
-  /** Chords through the chosen voice, at this volume. Must be called from a click. */
-  hear: (chords: readonly (readonly NoteName[])[], volumeDb: number) => Promise<void>;
+  /** Chords through the chosen voice, at this mix. Must be called from a click. */
+  hear: (chords: readonly (readonly NoteName[])[], mix: Mix) => Promise<void>;
+  /** Settings' mix preview is looping. */
+  previewing: boolean;
+  /** Loop the mix preview at this mix, with this metronome. Must be called from a click. */
+  startPreview: (mix: Mix, metronome: MetronomeVoiceId) => Promise<void>;
+  stopPreview: () => void;
+  /** Every channel's level, heard at once if anything is playing. */
+  setMix: (mix: Mix) => void;
 }
 
 /**
@@ -17,7 +26,7 @@ interface SoundsState {
  * Tone stays off first paint; the practice screen starts the load when it
  * opens, and Settings when the voice is changed.
  */
-export const useSounds = create<SoundsState>((set) => {
+export const useSounds = create<SoundsState>((set, get) => {
   let subscribed = false;
   const engine = async () => {
     const audio = await import('@/audio');
@@ -33,11 +42,26 @@ export const useSounds = create<SoundsState>((set) => {
   return {
     status: 'synth',
     choose: async (id) => (await engine()).chooseVoice(id),
-    async hear(chords, volumeDb) {
+    async hear(chords, mix) {
       const e = await engine();
       const hearing = e.hear(chords);
-      e.setMasterVolume(volumeDb);
+      e.setMix(mix);
       await hearing;
+    },
+    previewing: false,
+    async startPreview(mix, metronome) {
+      set({ previewing: true });
+      const e = await engine();
+      e.setMix(mix);
+      await e.startPreview(metronome);
+    },
+    stopPreview() {
+      if (!get().previewing) return;
+      set({ previewing: false });
+      void engine().then((e) => e.stopPreview());
+    },
+    setMix(mix) {
+      void engine().then((e) => e.setMix(mix));
     },
   };
 });

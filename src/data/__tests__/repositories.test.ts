@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import type { KeyMode } from '@/domain/music';
+import { DEFAULT_MIX } from '@/domain/mix';
 import Dexie from 'dexie';
 import { TheoryPadDB } from '../db';
 import { createRepositories, defaultSettings } from '../repositories/dexie';
@@ -597,15 +598,17 @@ describe('the v6 migration', () => {
     });
     await before.open();
     const old = defaultSettings(1);
+    // Before the mixer, the one Volume slider was Master.
+    const { mix: _dropped, ...oldAudio } = old.audio;
     await before
       .table('settings')
-      .put({ ...old, audio: { ...old.audio, voice: 'synth', masterVolumeDb: -4 } });
+      .put({ ...old, audio: { ...oldAudio, voice: 'synth', masterVolumeDb: -4 } });
     before.close();
 
     const after = new TheoryPadDB(name);
     const { audio } = await createRepositories(after).settings.get();
     expect(audio.voice).toBe('guitar');
-    expect(audio.masterVolumeDb).toBe(-4);
+    expect(audio.mix).toEqual({ ...DEFAULT_MIX, master: -4 });
     await after.delete();
   });
 });

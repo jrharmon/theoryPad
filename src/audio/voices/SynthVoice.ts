@@ -1,5 +1,6 @@
 import * as Tone from 'tone';
 import type { NoteName } from '@/domain/music';
+import { mixer, type Bus } from '../Mixer';
 import type { InstrumentVoice } from './InstrumentVoice';
 
 export type SynthVoiceKind = 'guitar' | 'bass' | 'pad';
@@ -43,9 +44,11 @@ export class SynthVoice implements InstrumentVoice {
   readonly id: string;
   private synth: Tone.PolySynth | null = null;
   private readonly kind: SynthVoiceKind;
+  private readonly bus: Bus;
 
-  constructor(kind: SynthVoiceKind = 'guitar') {
+  constructor(kind: SynthVoiceKind = 'guitar', bus: Bus = 'notes') {
     this.kind = kind;
+    this.bus = bus;
     this.id = `synth-${kind}`;
   }
 
@@ -55,7 +58,9 @@ export class SynthVoice implements InstrumentVoice {
 
   load(): Promise<void> {
     if (!this.synth) {
-      this.synth = new Tone.PolySynth(Tone.Synth, SETTINGS[this.kind]).toDestination();
+      this.synth = new Tone.PolySynth(Tone.Synth, SETTINGS[this.kind]).connect(
+        mixer.bus(this.bus),
+      );
       this.synth.volume.value = -8;
     }
     return Promise.resolve();

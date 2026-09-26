@@ -1,4 +1,5 @@
 import { STANDARD_GUITAR } from '@/domain/instrument';
+import { DEFAULT_MIX, completeMix } from '@/domain/mix';
 import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import { db, type TheoryPadDB } from '../db';
 import type {
@@ -299,7 +300,7 @@ export function defaultSettings(at: number): Settings {
       countInBars: 1,
       loop: false,
       voice: 'guitar',
-      masterVolumeDb: 0,
+      mix: DEFAULT_MIX,
     },
     practice: {
       defaultInterExerciseGapSec: 8,
@@ -334,9 +335,11 @@ export function defaultSettings(at: number): Settings {
  */
 export function withDefaults(stored: Settings): Settings {
   const defaults = defaultSettings(stored.updatedAt);
-  const { metronomeEnabled, ...storedAudio } = stored.audio as Settings['audio'] & {
-    metronomeEnabled?: boolean;
-  };
+  const { metronomeEnabled, masterVolumeDb, ...storedAudio } =
+    stored.audio as Settings['audio'] & {
+      metronomeEnabled?: boolean;
+      masterVolumeDb?: number;
+    };
   const audio = { ...defaults.audio, ...storedAudio };
   return {
     ...defaults,
@@ -346,6 +349,8 @@ export function withDefaults(stored: Settings): Settings {
       voice: knownVoice(audio.voice),
       // The metronome was an on/off switch before it was a choice of voice.
       metronome: storedAudio.metronome ?? (metronomeEnabled === false ? 'off' : 'click'),
+      // The one Volume slider before the mixer was Master.
+      mix: completeMix(storedAudio.mix ?? { master: masterVolumeDb ?? 0 }),
     },
     practice: { ...defaults.practice, ...stored.practice },
     ui: { ...defaults.ui, ...stored.ui },

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { answerSet, open, readStore, writeRow } from './helpers';
+import { answerSet, open, readStore, savedSettings, writeRow } from './helpers';
 
 /**
  * A stand-in for YouTube's IFrame API, so these tests never touch the network.
@@ -83,6 +83,9 @@ async function fakeYouTube(page: Page, { blocking = false } = {}) {
         if (this.startedAt !== null) this.startedAt = performance.now();
         this.rate = rate;
       }
+      setVolume(volume: number) {
+        this.stand.dataset.volume = String(volume);
+      }
       getCurrentTime() {
         return this.time;
       }
@@ -145,6 +148,24 @@ test('a backing track takes the tempo over, and the metronome waits it out', asy
   // Remembered on the exercise.
   await page.reload();
   await expect(page.getByTestId('backing-menu')).toContainText('A minor backing track');
+});
+
+test('a backing track plays at its fader and Master together', async ({ page }) => {
+  await page.goto('/#/settings');
+  // Off is the bottom step; -6 and -6 are a quarter of YouTube's full volume.
+  await page.getByRole('slider', { name: 'Master' }).fill('-6');
+  await page.getByRole('slider', { name: 'Video track' }).fill('-6');
+  await expect(page.getByRole('slider', { name: 'Video track' })).toHaveAttribute(
+    'aria-valuetext',
+    '-6 dB',
+  );
+  await savedSettings(page, (s) => (s.audio.mix as { video: number }).video === -6);
+
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /A minor backing track/ }).click();
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-volume', '25');
 });
 
 test('pausing on the video pauses the exercise, and playing there starts it again', async ({

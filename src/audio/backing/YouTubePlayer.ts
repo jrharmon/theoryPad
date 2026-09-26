@@ -21,6 +21,7 @@ interface YTPlayerApi {
   pauseVideo(): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   setPlaybackRate(rate: number): void;
+  setVolume(volume: number): void;
   getCurrentTime(): number;
   getDuration(): number;
   getPlayerState(): number;
@@ -132,6 +133,7 @@ export class YouTubePlayer {
   private readonly cancels = new Set<(error: Error) => void>();
   private destroyed = false;
   private loaded = false;
+  private volume: number | null = null;
 
   constructor(videoId: string, options: { startSec?: number; controls?: boolean } = {}) {
     this.element = document.createElement('div');
@@ -160,6 +162,7 @@ export class YouTubePlayer {
             events: {
               onReady: () => {
                 this.loaded = true;
+                if (this.volume !== null) this.api?.setVolume(this.volume);
                 resolve();
               },
               onStateChange: (event) => {
@@ -220,6 +223,12 @@ export class YouTubePlayer {
 
   setRate(rate: number): void {
     this.live?.setPlaybackRate(rate);
+  }
+
+  /** 0–100. One set before the player has loaded is applied when it does. */
+  setVolume(volume: number): void {
+    this.volume = volume;
+    this.live?.setVolume(volume);
   }
 
   /**

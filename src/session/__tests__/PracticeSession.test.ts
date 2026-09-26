@@ -213,7 +213,7 @@ function fakeAudio() {
     setMetronomeVoice: (id) => (sound.metronome = id),
     preloadMetronome: (id) => sound.preloaded.push(id),
     init: () => Promise.resolve(),
-    setMasterVolume: () => {},
+    setMix: () => {},
     drone: (keyMode) => {
       const drone = new FakeDrone(keyMode);
       fake.drones.push(drone);

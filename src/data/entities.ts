@@ -2,6 +2,7 @@ import type { KeyMode, ModeId, ModeName, PitchClass, ScaleId } from '@/domain/mu
 import type { Instrument } from '@/domain/instrument';
 import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
+import type { Mix } from '@/domain/mix';
 import type { CountInBars } from '@/domain/phrase';
 import type { AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
@@ -240,7 +241,8 @@ export interface Settings {
     /** Keep playing the same material pass after pass. */
     loop: boolean;
     voice: VoiceId;
-    masterVolumeDb: number;
+    /** Each channel's level, and Master's. Rows from before the mixer had only Master. */
+    mix: Mix;
   };
   practice: {
     defaultInterExerciseGapSec: number;

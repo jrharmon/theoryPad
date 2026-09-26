@@ -9,10 +9,14 @@ import {
   patternSounds,
   type MetronomeVoiceId,
 } from '@/domain/drums';
-import type { TimeSignature } from '@/domain/phrase';
+import { mixPreview, type Mix } from '@/domain/mix';
+import { noteNameFromMidi } from '@/domain/music';
+import { FOUR_FOUR, ticksToSeconds, type TimeSignature } from '@/domain/phrase';
 import { DrumKit } from './DrumKit';
+import { GeneratedBacking } from './GeneratedBacking';
 import { Metronome, type MetronomeOptions } from './Metronome';
 import { ClickVoice, DrumVoice, type ClickSink } from './metronomeVoices';
+import { mixer } from './Mixer';
 import { PhrasePlayer } from './PhrasePlayer';
 import {
   SampledVoice,
@@ -47,7 +51,7 @@ class ToneClickSink implements ClickSink {
       oscillator: { type: 'square' },
       // Near-instant attack and a very fast decay: a click, not a tone.
       envelope: { attack: 0.0005, decay: 0.028, sustain: 0, release: 0.01 },
-    }).toDestination();
+    }).connect(mixer.bus('metronome'));
     this.voice.volume.value = -16;
   }
 
@@ -89,6 +93,7 @@ export class AudioEngine {
   private readonly click = new ClickVoice(this.clickSink, this.kit);
   private readonly voices: VoiceSlot;
   private started = false;
+  private previewing: { backing: GeneratedBacking; handles: number[] } | null = null;
 
   constructor(options: { clock?: Clock; voice?: InstrumentVoice } = {}) {
     this.clock = options.clock ?? new ToneClock();
@@ -178,11 +183,59 @@ export class AudioEngine {
     this.kit.load(metronomeSounds(id)).catch(() => {});
   }
 
-  setMasterVolume(decibels: number): void {
-    Tone.getDestination().volume.value = decibels;
+  /**
+   * Settings' mix preview: a line, the metronome given, and the generated
+   * backing, looped until `stopPreview`, so the faders are heard as they move.
+   * Off plays the click — the preview is for hearing it. Must be called from a
+   * click. Nothing else runs on the clock meanwhile: Settings is its own page.
+   */
+  async startPreview(metronome: MetronomeVoiceId): Promise<void> {
+    await this.init();
+    this.stopPreview();
+    const { bpm, totalTicks, melody, backing: pass } = mixPreview();
+    const backing = new GeneratedBacking(this.clock);
+    void backing.load();
+    backing.loadPass(pass, 0);
+    const handles = melody.map((note) =>
+      this.clock.schedule(
+        (audioTime) =>
+          this.voices.voice.play(
+            noteNameFromMidi(note.midi),
+            ticksToSeconds(note.durationTicks, this.clock.bpm),
+            audioTime,
+            note.velocity,
+          ),
+        note.tick,
+      ),
+    );
+    this.setMetronomeVoice(metronome === 'off' ? 'click' : metronome, FOUR_FOUR);
+    this.metronome.setSilenced(false);
+    this.metronome.configure({ timeSignature: FOUR_FOUR, countInTicks: 0 });
+    this.clock.stop();
+    this.clock.setBpm(bpm);
+    this.clock.setLoop(0, totalTicks);
+    this.metronome.start();
+    this.clock.start();
+    this.previewing = { backing, handles };
+  }
+
+  stopPreview(): void {
+    if (!this.previewing) return;
+    this.metronome.stop();
+    for (const handle of this.previewing.handles) this.clock.clear(handle);
+    this.previewing.backing.dispose();
+    this.previewing = null;
+    this.clock.clearLoop();
+    this.clock.stop();
+  }
+
+  /** Every channel's level. Heard at once; a backing track follows it too. */
+  setMix(mix: Mix): void {
+    mixer.set(mix);
   }
 
   dispose(): void {
+    this.stopPreview();
     this.metronome.stop();
     this.phrase.clear();
     this.clock.clearAll();

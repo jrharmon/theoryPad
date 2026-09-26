@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **A mixer in Settings is built on `mixer` and waiting at its gate** (unmerged, unpushed) — see "Mixer" below. **M7b is next** after it. Before that: **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -64,6 +64,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
+| Mixer — Master, notes, metronome, generated, video | **at the gate** on `mixer` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -108,6 +109,7 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 | `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
 | `src/domain/drums/` | Pure drum patterns for the metronome: Simple (generated, any signature), and the 4/4 beats written as drum tab in `beats.ts` — Upbeat, Swing, Heavy — parsed by `tab.ts`; `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
+| `src/domain/mix/` | The mixer's channels and levels, a track's YouTube volume (`videoVolume`), the Settings preview loop's material. `src/audio/Mixer.ts` is the buses. |
 | `src/domain/backing/` | Pure backing maths: speed in 5% steps, the clock↔video timeline (`alignTrack`, `tickAtVideoTime`, `followFactor`), YouTube link and time parsing, tap-along tempo, the drone's notes. |
 | `src/audio/backing/` | `YouTubePlayer` (IFrame API, loaded on first use, host www.youtube.com), `VideoBacking`, `TrackFollower` (the clock follows the video), `clickAlong`. `src/audio/Drone.ts` is the drone. |
 | `src/data/videos.ts` | Matching tracks to a key (exact, spelling-blind) with saved criteria, a remembered choice, coverage, validation. `src/data/seed/videos.ts` is the first-run track. |
@@ -208,6 +210,39 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Mixer — at the gate (2026-09-26)
+
+Asked for directly (no spec doc). Built on `mixer`, **not yet merged**. `pnpm check` green
+(962 unit tests in 57 files), all 72 E2E pass.
+
+- **Settings → Sound → Mix** replaces the single Volume slider: five faders, **Master, Notes,
+  Metronome, Generated, Video track**, each Off or −30 … +6 dB (the video stops at 0), all at
+  0 dB by default so nothing sounds different until one moves. The old Volume value carries
+  over as Master. Stored as `settings.audio.mix` (`null` is Off); `completeMix` fills gaps.
+  Global only, no per-exercise levels. One px-per-dB scale, so every fader's 0 dB lines up.
+- **Generated** is the drone and the bass and piano together (the Backing menu only ever plays
+  one). **Metronome** is everything it plays, so at Off the count-in goes too; the metronome
+  menu's own Off still counts in.
+- **Routing** — `src/audio/Mixer.ts`: a `Tone.Volume` bus per channel (`notes`, `metronome`,
+  `generated`) in front of the destination, Master on the destination itself. Every voice
+  takes its bus: `SynthVoice(kind, bus)`, `SampledVoice(preset, bus)`, the drone's filter, the
+  kit and the click. Levels ramp over 50 ms so a drag doesn't zip.
+- **The video can't join the chain** (YouTube's audio never reaches our context), so it is
+  told a 0–100 volume: `videoVolume` in `src/domain/mix/` adds Master and Video in dB and
+  caps at 100 — Master raised can't push a video past full. `VideoBacking` subscribes to the
+  mixer; `YouTubePlayer.setVolume` holds a level until the player loads. The mix is applied
+  when the practice screen opens, not only on Play. Reference videos keep YouTube's own
+  level, and YouTube's own volume slider still works for the moment (reset on the next load).
+- **Preview** (Play/Stop under the faders) loops four bars at 96: a line in eighths on the
+  chosen voice, the default metronome (the click if that is Off), and generated bass and
+  piano over Am7 Dm7 Am7 Em7 — `mixPreview()` in `src/domain/mix/preview.ts`,
+  `AudioEngine.startPreview/stopPreview`. Leaving Settings stops it. No video in the preview.
+- **Verified** by metering each bus in the page during the preview (all three sound; Notes at
+  −12 read exactly 12 dB down; Off reads silent) and screenshots in both themes; one E2E
+  (`backing.spec.ts`) sets Master and Video to −6 and checks the fake player gets 25.
+- **For the gate, by ear:** whether −30 dB is low enough at the bottom, whether the preview
+  material is useful to set levels against, and a real track's level against the notes.
 
 ## Start string — merged (2026-09-26)
 

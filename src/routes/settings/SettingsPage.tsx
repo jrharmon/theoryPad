@@ -12,6 +12,7 @@ import {
   type TheoryPadExport,
 } from '@/data';
 import type { MetronomeVoiceId } from '@/domain/drums';
+import type { Mix } from '@/domain/mix';
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
 import type { Chroma, ModeId, NoteName, ScaleId } from '@/domain/music';
 import {
@@ -48,6 +49,7 @@ import { downloadFile } from '@/lib/download';
 import { metronomeChoices } from '../practice/metronomeChoices';
 import { clampZoom, nudgeTabZoom } from '../practice/tabZoom';
 import { BackingTracksSection } from './BackingTracksSection';
+import { Mixer } from './Mixer';
 
 export function SettingsPage() {
   const { settings, reload, save } = useSettings();
@@ -59,13 +61,6 @@ export function SettingsPage() {
   }, [reload]);
 
   const { audio, ui, instrument, practice } = settings;
-
-  const setVolume = (db: number) => {
-    void save({ audio: { ...audio, masterVolumeDb: db } });
-    // Heard straight away if the engine is already running; applied on the
-    // next Play otherwise.
-    void import('@/audio').then(({ getAudioEngine }) => getAudioEngine().setMasterVolume(db));
-  };
 
   return (
     <section className="pb-16">
@@ -102,7 +97,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Sound">
-        <InstrumentRow voice={audio.voice} volumeDb={audio.masterVolumeDb} />
+        <InstrumentRow voice={audio.voice} mix={audio.mix} />
         <Row
           label="Metronome"
           hint="For an exercise that hasn’t chosen its own. A beat written for 4/4 plays Simple in any other time."
@@ -131,23 +126,11 @@ export function SettingsPage() {
           </Select>
         </Row>
         {/* The count-in belongs to each exercise now, and is set from its transport. */}
-        <Row label="Volume" hint="The notes and the metronome together.">
-          <div className="flex items-center gap-3">
-            <input
-              type="range"
-              aria-label="Volume"
-              min={-30}
-              max={6}
-              step={1}
-              value={audio.masterVolumeDb}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              className="w-[220px] accent-[var(--color-accent)]"
-            />
-            <span className="w-14 text-body-sm tabular-nums text-ink-muted">
-              {audio.masterVolumeDb > 0 ? '+' : ''}
-              {audio.masterVolumeDb} dB
-            </span>
-          </div>
+        <Row
+          label="Mix"
+          hint="Master is everything, the video too. Generated is the drone, bass and piano. Preview loops all but the video while you move them."
+        >
+          <Mixer mix={audio.mix} metronome={audio.metronome} />
         </Row>
         <Row label="Credits">
           {/* Two of the sample sets are CC-BY: crediting them is the licence, not politeness. */}
@@ -280,7 +263,7 @@ const HEAR_CHORDS: NoteName[][] = [
 ].map((chord) => chord.map(noteName));
 
 /** What the notes play on, and a chord through it. */
-function InstrumentRow({ voice, volumeDb }: { voice: VoiceId; volumeDb: number }) {
+function InstrumentRow({ voice, mix }: { voice: VoiceId; mix: Mix }) {
   const save = useSettings((s) => s.save);
   const status = useSounds((s) => s.status);
   const [hearing, setHearing] = useState(false);
@@ -304,7 +287,7 @@ function InstrumentRow({ voice, volumeDb }: { voice: VoiceId; volumeDb: number }
     void useSounds.getState().choose(voice);
     void useSounds
       .getState()
-      .hear(HEAR_CHORDS, volumeDb)
+      .hear(HEAR_CHORDS, mix)
       .finally(() => setHearing(false));
   };
 

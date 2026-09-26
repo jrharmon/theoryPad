@@ -2,6 +2,7 @@ import type { Repositories, Routine, RoutineItem, Settings, Exercise, Video } fr
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { Instrument } from '@/domain/instrument';
 import type { RenderedPass } from '@/domain/backing';
+import type { Mix } from '@/domain/mix';
 import type { KeyMode } from '@/domain/music';
 import type { Phrase, TimeSignature } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
@@ -32,7 +33,8 @@ export interface AudioPort {
   preloadMetronome(id: MetronomeVoiceId): void;
   /** Must be called from a user gesture. */
   init(): Promise<void>;
-  setMasterVolume(decibels: number): void;
+  /** Every channel's level; a backing track follows it too. */
+  setMix(mix: Mix): void;
   drone(keyMode: KeyMode): DroneSource;
   /** Bass and piano chords under the notes. Its samples start downloading on `load`. */
   generated(): GeneratedSource;

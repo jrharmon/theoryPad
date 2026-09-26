@@ -47,7 +47,7 @@ class Part {
   /** Never rejects: a failed download leaves the synth playing. */
   load(): Promise<void> {
     this.loading ??= (async () => {
-      const voice = new SampledVoice(this.preset);
+      const voice = new SampledVoice(this.preset, 'generated');
       try {
         await voice.load();
       } catch {
@@ -86,8 +86,8 @@ export class GeneratedBacking implements BackingSource {
   readonly effectiveBpm = null;
 
   private readonly clock: Clock;
-  private readonly bass = new Part(BASS_PRESET, new SynthVoice('bass'));
-  private readonly piano = new Part(VOICE_PRESETS.piano, new SynthVoice('pad'));
+  private readonly bass = new Part(BASS_PRESET, new SynthVoice('bass', 'generated'));
+  private readonly piano = new Part(VOICE_PRESETS.piano, new SynthVoice('pad', 'generated'));
   private handles: number[] = [];
   private pass: { events: RenderedPass; atTick: number } | null = null;
 

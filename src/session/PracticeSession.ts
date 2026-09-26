@@ -343,7 +343,7 @@ export abstract class PracticeSession {
    */
   protected async startAudio(starting: Promise<void>): Promise<void> {
     await starting;
-    this.deps.audio.setMasterVolume(this.deps.settings().audio.masterVolumeDb);
+    this.deps.audio.setMix(this.deps.settings().audio.mix);
     this.update({ audioReady: true });
   }
 

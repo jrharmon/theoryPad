@@ -2,6 +2,7 @@ import type { Clock } from '@/domain/time';
 import type { TrackTiming } from '@/domain/backing';
 import type { TrackAlignment } from '@/domain/backing';
 import { SPEED_MAX, SPEED_MIN, SPEED_STEP, alignTrack, effectiveTempo } from '@/domain/backing';
+import { mixer } from '../Mixer';
 import { TrackFollower } from './TrackFollower';
 import { YT_STATE, YouTubePlayer, type PlayOptions } from './YouTubePlayer';
 import type { BackingSource } from './types';
@@ -27,11 +28,13 @@ export class VideoBacking implements BackingSource {
   private speed = 1;
   private readonly track: VideoTrack;
   private readonly clock: Clock;
+  private readonly unmix: () => void;
 
   constructor(track: VideoTrack, clock: Clock) {
     this.track = track;
     this.clock = clock;
     this.player = new YouTubePlayer(track.videoId, { startSec: track.startSec });
+    this.unmix = mixer.onVideoVolume((volume) => this.player.setVolume(volume));
   }
 
   get effectiveBpm(): number {
@@ -115,6 +118,7 @@ export class VideoBacking implements BackingSource {
   }
 
   dispose(): void {
+    this.unmix();
     this.stop();
     this.player.destroy();
   }

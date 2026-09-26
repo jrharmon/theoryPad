@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { mixer } from './Mixer';
 import type { DrumSound } from '@/domain/drums';
 import type { DrumSink } from './metronomeVoices';
 
@@ -76,7 +77,7 @@ export class DrumKit implements DrumSink {
   play(sound: DrumSound, atTime: number, velocity: number): void {
     const buffer = this.buffers.get(sound);
     if (!buffer) return;
-    this.output ??= new Tone.Volume(KIT_VOLUME_DB).toDestination();
+    this.output ??= new Tone.Volume(KIT_VOLUME_DB).connect(mixer.bus('metronome'));
     if (sound === 'hat-closed' || sound === 'hat-open') this.openHat?.stop(atTime);
     const source = new Tone.ToneBufferSource({
       url: buffer,
