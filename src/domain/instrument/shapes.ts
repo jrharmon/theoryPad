@@ -6,6 +6,7 @@ import {
   noteAtDegree,
   playsInBoxes,
   scaleNotes,
+  withoutPassingNotes,
 } from '@/domain/music';
 import type { FretPosition, Instrument, ScaleNotePosition } from './types';
 import { lowestFret, noteAt, pitchClassAt, stringCount } from './fretboard';
@@ -257,9 +258,7 @@ export function shapesUpTheNeck(
  * null if the shape's first note isn't there or the box runs off the neck.
  *
  * The pentatonic box is the scale two notes a string from the shape's step.
- * Blues is the minor pentatonic box with the ♭5 added on the 4th's string,
- * one fret above it — between 4 and 5 where both share a string, or after the
- * 4 where the 5 starts the next string — so those strings get three notes.
+ * Blues is the minor pentatonic box with its ♭5 added (`addBluesFifth`).
  */
 function boxAt(
   instrument: Instrument,
@@ -267,20 +266,30 @@ function boxAt(
   step: number,
   startFret: number,
 ): ScaleNotePosition[] | null {
-  const blues = keyMode.scale === 'blues';
-  const pentatonic: KeyMode = blues ? { ...keyMode, scale: 'minor-pentatonic' } : keyMode;
   const box = scaleShape(instrument, {
-    keyMode: pentatonic,
+    keyMode: withoutPassingNotes(keyMode),
     startDegree: step as DegreeNumber,
     minFret: startFret,
     notesPerString: 2,
   });
   if (box.length < 2 * stringCount(instrument) || box[0]!.fret !== startFret) return null;
-  if (!blues) return box;
+  return keyMode.scale === 'blues' ? addBluesFifth(instrument, keyMode, box) : box;
+}
 
+/**
+ * Minor pentatonic positions, ascending, made blues: the ♭5 goes on the 4th's
+ * string, one fret above it — between 4 and 5 where both share a string, or
+ * after the 4 where the 5 starts the next — so those strings get a note more.
+ * Anything a note carries (a shift) stays on it; the ♭5 is only passed through.
+ */
+export function addBluesFifth<T extends ScaleNotePosition>(
+  instrument: Instrument,
+  keyMode: KeyMode,
+  positions: readonly T[],
+): (T | ScaleNotePosition)[] {
   const flatFive = makeDegree(5, -1);
   const pc = noteAtDegree(keyMode, flatFive);
-  return box.flatMap((p) => {
+  return positions.flatMap((p) => {
     if (p.degree.number !== 4 || p.fret + 1 > instrument.fretCount) return [p];
     const position = { string: p.string, fret: p.fret + 1 };
     return [
@@ -298,9 +307,17 @@ function boxAt(
 
 /** The five box notes: blues without its ♭5. */
 function pentatonicNotes(keyMode: KeyMode): PitchClass[] {
-  return scaleNotes(
-    keyMode.scale === 'blues' ? { ...keyMode, scale: 'minor-pentatonic' } : keyMode,
-  );
+  return scaleNotes(withoutPassingNotes(keyMode));
+}
+
+/**
+ * How many shapes cover the neck once: five boxes for a box scale, otherwise
+ * one 3nps shape per note of the scale.
+ */
+export function shapeCount(keyMode: KeyMode): number {
+  return playsInBoxes(keyMode.scale)
+    ? pentatonicNotes(keyMode).length
+    : scaleNotes(keyMode).length;
 }
 
 /** Which box step starts at a fret on the lowest string, or 0 for none. */

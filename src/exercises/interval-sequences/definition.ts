@@ -31,10 +31,11 @@ export const intervalSequences: PlayedDefinition = {
   summary: 'Run the scale in 3rds, 4ths, 5ths, 6ths or 7ths through one shape.',
   description: [
     'A key, a position and an interval are rolled. Play the scale through the',
-    'three-note-per-string shape at that position as a sequence — 1-3, 2-4,',
-    '3-5 for 3rds — or alternating, 1-3, 4-2, 3-5, so every other pair turns',
-    'round. Hearing the scale in intervals is what gets you off running it',
-    'straight up and down.',
+    'shape at that position — three notes a string, or a pentatonic box — as a',
+    'sequence, 1-3, 2-4, 3-5 for 3rds, or alternating, 1-3, 4-2, 3-5, so every',
+    'other pair turns round. Intervals count scale notes, so 3rds in a',
+    'pentatonic is every other note. Hearing the scale in intervals is what',
+    'gets you off running it straight up and down.',
   ].join(' '),
 
   axes: [

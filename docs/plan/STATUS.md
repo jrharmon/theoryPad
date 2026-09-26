@@ -1,11 +1,13 @@
 # Status — start here
 
 **Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
-(`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes) and 3
-(the scale axis and settings) are committed, plus a revision at task 3's review; task 4 is
-next, after the player reviews the revision. Only Major has modes: decisions 10–15 (before
-task 1) made harmonic minor, Phrygian dominant and melodic minor mode-less scales, and decision
-16 (at task 3's review) dropped pentatonic shapes as a setting — the position picks the box.
+(`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes), 3
+(the scale axis and settings) and 4 (played exercises on every scale) are committed, plus a
+revision at task 3's review; **task 4 awaits the player's review**, then task 5. Only Major has
+modes: decisions 10–15 (before task 1) made harmonic minor, Phrygian dominant and melodic minor
+mode-less scales, decision 16 (at task 3's review) dropped pentatonic shapes as a setting — the
+position picks the box — and decisions 17–19 (before task 4) settled how box scales shift,
+sequence and skip.
 The spec's "Outcomes"
 section says where each task stands. Then M7b. **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
@@ -210,8 +212,8 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 ## Scales run — in progress on `scales` (2026-09-25)
 
 Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
-before task 4. Branch `scales`, a commit per task, a stop for the player's review after each;
-unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (792 unit tests in
+before task 5. Branch `scales`, a commit per task, a stop for the player's review after each;
+unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (936 unit tests in
 56 files), E2E 69/69.
 
 | Task | State |
@@ -220,8 +222,8 @@ unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (7
 | 2 — Pentatonic and blues boxes | ✅ committed, reviewed ("the boxes I play") |
 | 3 — Scale axis, settings, routines, editor, strip | ✅ committed, reviewed |
 | Revision — no pentatonic shapes (decision 16) | ✅ committed, reviewed ("looks right") |
-| 4 — Played exercises on every scale | **next** |
-| 5 — Theory, reference, explorer | not started |
+| 4 — Played exercises on every scale | ✅ committed — **awaiting review** |
+| 5 — Theory, reference, explorer | **next** |
 | 6 — Generated backing per scale | not started |
 | 7 — The gate | — |
 
@@ -243,12 +245,13 @@ pentatonic shapes as a setting because a shape never changes the notes — "the 
 mode is that it changes the root". Future rare scales (whole tone…) must come with no baggage:
 one scale entry, no modes.
 
+**Played exercises on a box scale** (task 4, decisions 17–19): the rolled position picks the
+box; Position shifting slides on a three-note string (the box version of the four-note one);
+Interval sequences offers only 3rds, 4ths and the groups; blues' ♭5 is a step except in One
+note per string's skip-one. `withoutPassingNotes` (blues → minor pentatonic) is the one helper
+for "the ♭5 is passing".
+
 **Known gaps, by the task that closes them** (the spec's Outcomes list them in full):
-- Task 4: the played exercises accept any scale but still play 3nps material on pentatonics
-  (Interval sequences on a pentatonic runs 3nps across the neck); Position shifting is limited
-  to non-pentatonic scales by `allowedValues`; `arpeggioRun`'s `% 7`, `oneNotePerString`'s
-  coprime-to-seven, `shapesPerRep` max 7, and `exercises/shared/roles.ts` comparing degree
-  numbers only.
 - Task 5: the diatonic drill declares no scale yet (in a non-Major routine it rolls its own Major
   mode); the reference panel shows a pentatonic's parent chords unlabeled and has a seven-column
   note row; the explorer has no Scale picker and its "last key" is Major-only.

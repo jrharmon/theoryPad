@@ -131,6 +131,18 @@ export function playsInBoxes(scale: ScaleId): boolean {
   return SCALES[scale].fingering === 'box';
 }
 
+/**
+ * The scale without its passing notes: blues without its ♭5, which is the
+ * minor pentatonic; every other scale is its own. The ♭5 is a note to pass
+ * through — never one to land on or to count in a skip — and blues' boxes are
+ * the minor pentatonic's with it added.
+ */
+export function withoutPassingNotes(km: KeyMode): KeyMode {
+  return km.scale === 'blues'
+    ? { ...km, scale: 'minor-pentatonic', mode: 'minor-pentatonic' }
+    : km;
+}
+
 /** Is `mode` one of `scale`'s? Stored and rolled pairs are checked with this. */
 export function isModeOf(scale: ScaleId, mode: string): mode is ModeId {
   return (SCALES[scale].modes as readonly string[]).includes(mode);

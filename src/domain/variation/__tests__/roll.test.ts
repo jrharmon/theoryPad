@@ -210,6 +210,26 @@ describe('the scale axis', () => {
     });
     expect(fixed.axes.scale?.key).toBe('melodic-minor');
   });
+
+  it('offers a box scale only the interval patterns that fit in a box', () => {
+    const roll = (scale: string, seed: number) =>
+      rollVariation({
+        ...base,
+        seed,
+        axes: ['scale', 'mode', 'key', 'intervalPattern'],
+        policies: {
+          scale: { mode: 'fixed', value: scale },
+          // A 6th on five notes is an octave, so the pin gives way.
+          intervalPattern: { mode: 'fixed', value: '6ths' },
+        },
+      }).axes.intervalPattern!;
+    expect(roll('major', 1).key).toBe('6ths');
+    for (let seed = 0; seed < 40; seed += 1) {
+      const pattern = roll('blues', seed);
+      expect(pattern.source).toBe('roll');
+      expect(['3rds', '4ths', 'groups-of-3', 'groups-of-4']).toContain(pattern.key);
+    }
+  });
 });
 
 describe('freshness', () => {

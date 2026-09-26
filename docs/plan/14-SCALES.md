@@ -1,8 +1,8 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–3 done,
-then revised at task 3's review to drop pentatonic shapes as a setting (decision 16). All
-reviewed; task 4 is next** (see "Where task 4 starts" at the end). It
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–4 done,
+with a revision at task 3's review that dropped pentatonic shapes as a setting (decision 16).
+Task 4 is awaiting review; task 5 is next** (see "Where task 5 starts" at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -90,6 +90,24 @@ Revised at task 3's review, 2026-09-25:
     or above the position on the lowest string, the rule the 3nps shapes follow. *Modes up the
     neck* walks all five boxes. Settings has no Shapes row. What this gives up: a setting to
     drill one numbered box in every key; if wanted later, it is an exercise option, not a mode.
+
+Asked and answered before task 4, 2026-09-25:
+
+17. **Position shifting on a box scale: a three-note string is the shift.** The box version of
+    the 3nps rule — boxes are two notes a string, and a string with three slides the hand into
+    the next box. *Every other string* climbs one box per pair of strings (A minor pentatonic
+    from 5: E 5-8-10, A 7-10, D 7-10-12, G 9-12, B 10-13-15, e 12-15); *every string* is the
+    three-per-string pentatonic diagonal, about seventeen frets. The way down shifts on the
+    other strings and covers the same notes. Blues is the minor pentatonic run with the ♭5
+    added on the 4th's string, as in its boxes.
+18. **Interval sequences on a box scale offer 3rds, 4ths, groups of 3 and groups of 4**,
+    counted in scale steps (3rds is every other note, 4ths skips two), the names pentatonic
+    sequences go by. 5ths, 6ths and 7ths are left out: on five notes a "6th" is an octave and a
+    "7th" passes it. A pinned one rolls another there, as a pinned mode does.
+19. **Blues' ♭5 is a step, except in One note per string's skip-one.** It is in the box under
+    the hand, so interval sequences and the walking sweep count it. Skipping one over six notes
+    would only ever reach A, D and E, so skip-one steps through the five pentatonic notes — the
+    ♭5 treated as passing, as *Land on* already does.
 
 ## Defaults taken (not asked; say if wrong at the first review)
 
@@ -389,33 +407,64 @@ the strip ("A blues"), and the gallery boxes.
 
 Reviewed: "looks right".
 
-### Where task 4 starts
+### Task 4 — Played exercises on every scale (2026-09-25)
 
-Task 4 is **Played exercises on every scale**: Modes up the neck, Interval sequences, One note
-per string, Position shifting, Improvise to a target, and their briefs. What is already true and
-what isn't:
-- **All five declare `scale`**, and none crashes on any scale except Position shifting on a
-  pentatonic ("No run of … fits"), which is why its `allowedValues.scale` leaves the three box
-  scales out. Remove that limit once it plays boxes.
-- **Nothing routes pentatonics to boxes yet.** `exercises/shared/scaleRun.ts`'s `shapeFrom`
-  builds 3nps at the position; for `playsInBoxes(scale)` it should take `boxShape(instrument,
-  keyMode, fret)` (same rule, already built and tested). `shapeRuns` → `shapesUpTheNeck` already
-  walks the five boxes for a box scale. `horizontalRun` (Position shifting) shifts through 3nps
-  shapes with a four-note string; how a pentatonic run shifts between boxes is the one design
-  question here — ask the player, with a recommendation, before building it.
-- **Sevens to fix:** `shapesPerRep` (`.max(7)`, "All seven shapes") becomes a maximum per scale
-  (decision 15: five boxes on a pentatonic); `arpeggioRun`'s `% 7` and the arpeggio-then-scale
-  variant, which should arpeggiate the scale's tonic chord in each shape (m7 for minor pentatonic
-  and blues, 6 for major pentatonic — "Defaults taken"); `oneNotePerString`'s step-2-is-coprime-
-  to-seven cycle (5 and 6 notes differ); `roles.ts` marking the target by degree number only
-  (blues has a ♭5 and a 5 — match the full degree, as `domain/neck/overlay.ts` now does).
-- **Interval patterns count scale steps** ("3rds" on a pentatonic is every other note), per
-  "Defaults taken". "7ths" on a five-note scale is two octaves' worth of steps apart — check it
-  makes sense or leave it out for box scales, and say which at the review.
-- **Improvise to a target** already lands only on the scale's own degrees (never blues' ♭5).
-- A scratch smoke test that rolls every played exercise on every scale (fixed scale, a few
-  seeds) and calls `generate` found the crashes above in one run; worth repeating, then keeping
-  as a real invariant test in `src/exercises/__tests__/exercises.test.ts`.
-- **Screenshot each exercise** on a pentatonic, blues and harmonic minor, light and dark, and
-  read the tab: the box must be the one at the rolled position.
+Decisions 17–19 were asked and answered first. Every played exercise now plays every scale; a
+box scale plays its boxes.
+- **Shapes at a position.** `shapeFrom` hands a box scale to `boxShape` (unless the caller
+  asks for its own notes per string), so *Interval sequences* plays the box at the rolled
+  position. *Modes up the neck* already walked the five boxes through `shapesUpTheNeck`.
+- **Position shifting** (decision 17). `horizontalRun` counts from the scale's own notes per
+  string — three, or two for a box — and a string with one more is the shift. A box scale runs
+  on its five notes (`withoutPassingNotes`, new in `scales.ts`: blues without its ♭5, anything
+  else unchanged) and blues then gets `addBluesFifth`, the ♭5 insertion pulled out of
+  `boxAt` in `shapes.ts`. The `allowedValues` limit is gone.
+- **Modes up the neck.** `shapesPerRep` is clamped to `shapeCount(keyMode)` (decision 15:
+  five on a box scale); the brief reads "All five boxes in A minor pentatonic" and each bar
+  "Fret 8 · shape 2". *Arpeggio then scale* takes its chord from `shapeChord`: each 3nps
+  shape's own 7th chord as before, and on a box scale the scale's tonic chord in every box —
+  Am7 for A minor pentatonic and blues, C6 for C major pentatonic — named in the brief.
+  `arpeggioRun` now matches full degrees, so blues' ♭5 is never taken for the 5.
+- **Interval sequences** (decision 18). The interval axis offers a box scale 3rds, 4ths and
+  the groups (`intervalPatternsFor`); a pinned 5th, 6th or 7th rolls another there.
+- **One note per string** (decision 19). Skip-one steps through `withoutPassingNotes`, so
+  blues skips A D G C E; walking keeps the ♭5.
+- **Roles.** `roleFor`, `noteOptionsFor` and the shared overlay take the target as a full
+  degree; *Improvise to a target* passes its note's degree, so blues rings its 5 and not the
+  ♭5. The unused `signatureDegreeNumber` is gone, and `landingDegrees` uses
+  `withoutPassingNotes` too.
+- **Text.** The descriptions of *Modes up the neck*, *Interval sequences* and *Position
+  shifting* mention boxes; the improv panel reads "The scale on the neck" (was "mode").
 
+Tests: the registry invariant ("plays only real positions, in the key") now runs every played
+exercise on every scale on every test instrument; the shifting run's invariants run on Major,
+minor pentatonic and blues on three guitars; the exact A minor pentatonic run of decision 17
+both ways; blues' ♭5 above every 4 both ways, never carrying a slide; `shapeFrom` taking the
+box; the box scales' tonic chords; blues' skip-one; blues' target; the interval axis on a box
+scale. Golden files unchanged. `pnpm check` green (936 unit tests), E2E 69/69.
+
+Looked at, A as the key, 5th position where there is one: every exercise on minor pentatonic,
+blues and harmonic minor, blues in dark too, and the arpeggio variant on both box scales. The
+tab matched the box at the position every time; Position shifting played exactly decision
+17's run.
+
+For the review:
+- Does the pentatonic shifting run (every other string, and every string) feel right under
+  the hand? Blues' ♭5 sits on the 4th's string, so where the 4 is a shift note the ♭5 follows
+  the slide (E 5-8-/10-11).
+- On a box scale, *Modes up the neck*'s arpeggio variant plays the same Am7 in every box.
+
+### Where task 5 starts
+
+Task 5 is **Theory, reference and explorer**. Known gaps, as the task 1 grep and task 3 left
+them:
+- **The diatonic drill** declares no `scale` yet, so in a non-Major routine it rolls its own
+  Major mode. It should take the scale: pentatonics through `harmonyOf` (decision 6), harmonic
+  minor, Phrygian dominant and melodic minor as themselves. In `theory/diatonic.ts`:
+  `rng.int(7)`, `[1..7]`, `% 7`, `ORDINAL`, and `SEVENTH_OPTIONS` lacking `minMaj7` and
+  `maj7#5`; TheoryBody's `n > 7`.
+- **The circle of fifths** stays Major-only in its questions (decision 12); `circleQuestions`
+  should still be checked for a pentatonic routine (through the parent signature).
+- **The reference panel** (`KeyModeView`) shows a pentatonic's parent chords unlabeled — label
+  them as the parent's — and its note row is `grid-cols-7` (`NoteRow`).
+- **The explorer** has no Scale picker, and its "last key" is Major-only.

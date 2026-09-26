@@ -1,22 +1,30 @@
 import { describe, expect, it } from 'vitest';
+import type { KeyMode } from '@/domain/music';
 import { chroma, pitchClass } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import {
   DROP_D_GUITAR,
   SEVEN_STRING_GUITAR,
   STANDARD_GUITAR,
+  boxShape,
   midiAt,
   stringCount,
 } from '@/domain/instrument';
 import { INTERVAL_PATTERNS } from '@/domain/variation';
 import { intervalFigures, intervalRun } from '../intervalRun';
-import { arpeggioRun, chordDegrees } from '../arpeggioRun';
+import { arpeggioRun, chordDegrees, shapeChord } from '../arpeggioRun';
 import { oneNotePerString, stringSweep, sweepLength } from '../oneNotePerString';
 import { horizontalRun, rotateCounts, shiftCounts } from '../horizontalRun';
 import { scaleRun, shapeFrom } from '../scaleRun';
 
 const C_MAJOR = { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
+const A_MINOR_PENTATONIC = {
+  tonic: pitchClass('A'),
+  scale: 'minor-pentatonic' as const,
+  mode: 'minor-pentatonic' as const,
+};
+const A_BLUES = { tonic: pitchClass('A'), scale: 'blues' as const, mode: 'blues' as const };
 const GUITARS = [STANDARD_GUITAR, DROP_D_GUITAR, SEVEN_STRING_GUITAR].map(
   (i) => [i.id, i] as const,
 );
@@ -104,12 +112,33 @@ describe('arpeggioRun', () => {
       minFret: 5,
       startDegree: 1,
     });
-    const arpeggio = arpeggioRun(shape, 1);
+    const arpeggio = arpeggioRun(shape, shapeChord(D_DORIAN, 1).degrees);
     expect(arpeggio.length).toBeGreaterThanOrEqual(8);
     expect(new Set(arpeggio.map((p) => p.degree.number))).toEqual(new Set([1, 3, 5, 7]));
     expect(arpeggio[0]!.isRoot).toBe(true);
     const midis = arpeggio.map((p) => midiAt(instrument, p));
     for (let i = 1; i < midis.length; i += 1) expect(midis[i]!).toBeGreaterThan(midis[i - 1]!);
+  });
+
+  it('plays a box scale’s own tonic chord in every box', () => {
+    const labels = (keyMode: Parameters<typeof shapeChord>[0], step: 1 | 2) =>
+      shapeChord(keyMode, step).degrees.map((d) => d.label);
+    // A box starting on step 2 is the same notes elsewhere, not another chord.
+    expect(labels(A_MINOR_PENTATONIC, 2)).toEqual(['1', '♭3', '5', '♭7']);
+    expect(shapeChord(A_BLUES, 1).symbol).toBe('m7');
+    expect(
+      labels(
+        { tonic: pitchClass('C'), scale: 'major-pentatonic', mode: 'major-pentatonic' },
+        1,
+      ),
+    ).toEqual(['1', '3', '5', '6']);
+
+    // Blues' ♭5 is never taken for its 5.
+    const box = boxShape(STANDARD_GUITAR, A_BLUES, 5).positions;
+    const arpeggio = arpeggioRun(box, shapeChord(A_BLUES, 1).degrees);
+    expect(new Set(arpeggio.map((p) => p.degree.label))).toEqual(
+      new Set(['1', '♭3', '5', '♭7']),
+    );
   });
 });
 
@@ -150,6 +179,22 @@ describe('oneNotePerString', () => {
     expect(last.string).toBe(strings[0]);
   });
 
+  it('skips through blues without its ♭5, and walks through it', () => {
+    const labels = (step: 1 | 2) =>
+      new Set(
+        oneNotePerString({
+          instrument: STANDARD_GUITAR,
+          keyMode: A_BLUES,
+          strings: [0, 1, 2, 3, 4, 5],
+          step,
+          stop: { kind: 'return-to-root' },
+        }).map((p) => p.degree.label),
+      );
+    // Steps of two over six notes would only reach the 1, 4 and 5.
+    expect(labels(2)).toEqual(new Set(['1', '♭3', '4', '5', '♭7']));
+    expect(labels(1)).toEqual(new Set(['1', '♭3', '4', '♭5', '5', '♭7']));
+  });
+
   it('stops after a fixed number of sweeps, back on the starting string', () => {
     const notes = oneNotePerString({
       instrument: STANDARD_GUITAR,
@@ -172,6 +217,13 @@ describe('shapeFrom', () => {
     expect(shape.positions).toHaveLength(18);
   });
 
+  it('takes a box scale’s box at the position', () => {
+    // A minor pentatonic in 6th position is the box starting on C at 8.
+    const shape = shapeFrom({ instrument: STANDARD_GUITAR, keyMode: A_BLUES, fret: 6 })!;
+    expect(shape).toEqual(boxShape(STANDARD_GUITAR, A_BLUES, 6));
+    expect(shape.startFret).toBe(8);
+  });
+
   it.each(GUITARS)('moves down to fit near the top of the neck (%s)', (_id, instrument) => {
     const shape = shapeFrom({ instrument, keyMode: C_MAJOR, fret: instrument.fretCount })!;
     expect(shape.startFret).toBeLessThan(instrument.fretCount);
@@ -186,14 +238,17 @@ describe('horizontalRun', () => {
     expect(shiftCounts(6, 'every-other-string')).toEqual([4, 3, 4, 3, 4, 3]);
     expect(rotateCounts([4, 3, 4, 3, 4, 3])).toEqual([3, 4, 3, 4, 3, 4]);
     expect(shiftCounts(6, 'every-string')).toEqual([4, 4, 4, 4, 4, 4]);
+    // A box has two notes a string, so three is the shift.
+    expect(shiftCounts(6, 'every-other-string', 2)).toEqual([3, 2, 3, 2, 3, 2]);
   });
 
   function check(
     instrument: Instrument,
     shiftOn: 'every-string' | 'every-other-string',
     minFret: number,
+    keyMode: KeyMode = C_MAJOR,
   ) {
-    const run = horizontalRun({ instrument, keyMode: C_MAJOR, minFret, shiftOn })!;
+    const run = horizontalRun({ instrument, keyMode, minFret, shiftOn })!;
     expect(run).not.toBeNull();
     const up = run.up.map((p) => midiAt(instrument, p));
     const down = run.down.map((p) => midiAt(instrument, p));
@@ -210,10 +265,16 @@ describe('horizontalRun', () => {
     return run;
   }
 
-  it.each(GUITARS)(
+  const SCALES = GUITARS.flatMap(([id, instrument]) =>
+    [C_MAJOR, A_MINOR_PENTATONIC, A_BLUES].map(
+      (keyMode) => [`${id}, ${keyMode.scale}`, instrument, keyMode] as const,
+    ),
+  );
+
+  it.each(SCALES)(
     'climbs the neck and comes back by another route (%s)',
-    (_id, instrument) => {
-      const run = check(instrument, 'every-other-string', 3);
+    (_id, instrument, keyMode) => {
+      const run = check(instrument, 'every-other-string', 3, keyMode);
       expect(run.up[run.up.length - 1]!.fret).toBeGreaterThan(run.up[0]!.fret + 4);
 
       const upShifts = run.up.filter((p) => p.shift === 'up').map((p) => p.string);
@@ -225,21 +286,21 @@ describe('horizontalRun', () => {
     },
   );
 
-  it.each(GUITARS)(
+  it.each(SCALES)(
     'shifts on every string without leaving the neck (%s)',
-    (_id, instrument) => {
-      const run = check(instrument, 'every-string', 12);
+    (_id, instrument, keyMode) => {
+      const run = check(instrument, 'every-string', 12, keyMode);
       expect(run.startFret).toBeLessThanOrEqual(12);
     },
   );
 
-  it.each(GUITARS)(
+  it.each(SCALES)(
     'finds a start where both routes fit, at the nut too (%s)',
-    (_id, instrument) => {
+    (_id, instrument, keyMode) => {
       // The way down shifts on other strings, so it can need a hand position the
       // way up does not: in drop D the three-note low string runs past the open
       // A, and the run starts a shape higher rather than one route going with it.
-      const run = check(instrument, 'every-other-string', 0);
+      const run = check(instrument, 'every-other-string', 0, keyMode);
       expect(run.startFret).toBe(run.up[0]!.fret);
     },
   );
@@ -260,4 +321,57 @@ describe('horizontalRun', () => {
     ]);
     expect(chroma(run.up[3]!.pitchClass)).toBe(chroma(pitchClass('C')));
   });
+
+  it('shifts through the pentatonic boxes on a three-note string', () => {
+    const run = horizontalRun({
+      instrument: STANDARD_GUITAR,
+      keyMode: A_MINOR_PENTATONIC,
+      minFret: 5,
+      shiftOn: 'every-other-string',
+    })!;
+    // Box 1 into 2 into 3: each three-note string slides into the next box.
+    expect(fretsOf(run.up)).toEqual([
+      [5, 8, 10],
+      [7, 10],
+      [7, 10, 12],
+      [9, 12],
+      [10, 13, 15],
+      [12, 15],
+    ]);
+    expect(run.up.filter((p) => p.shift === 'up').map((p) => p.fret)).toEqual([10, 12, 15]);
+    // Down shifts on the other strings.
+    expect(fretsOf([...run.down].reverse())).toEqual([
+      [5, 8],
+      [5, 7, 10],
+      [7, 10],
+      [7, 9, 12],
+      [10, 13],
+      [10, 12, 15],
+    ]);
+  });
+
+  it('adds blues’ ♭5 on the 4th’s string, both ways', () => {
+    const run = horizontalRun({
+      instrument: STANDARD_GUITAR,
+      keyMode: A_BLUES,
+      minFret: 5,
+      shiftOn: 'every-other-string',
+    })!;
+    for (const route of [run.up, [...run.down].reverse()]) {
+      const fourths = route.filter((p) => p.degree.label === '4');
+      const flatFives = route.filter((p) => p.degree.label === '♭5');
+      expect(flatFives.map((p) => [p.string, p.fret])).toEqual(
+        fourths.map((p) => [p.string, p.fret + 1]),
+      );
+    }
+    // The slide stays on the note that carries the hand, never the ♭5.
+    expect(run.up.some((p) => p.degree.label === '♭5' && p.shift)).toBe(false);
+  });
 });
+
+/** Frets string by string, lowest string first. */
+function fretsOf(positions: readonly { string: number; fret: number }[]): number[][] {
+  const byString: number[][] = [];
+  for (const p of positions) (byString[p.string] ??= []).push(p.fret);
+  return byString;
+}

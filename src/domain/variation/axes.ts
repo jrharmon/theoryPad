@@ -17,8 +17,10 @@ import {
   preferredTonic,
   scaleDegrees,
   hasModes,
+  playsInBoxes,
   scaleTitle,
   signatureDegree,
+  withoutPassingNotes,
 } from '@/domain/music';
 import type { NeckPosition, StringSet } from '@/domain/instrument';
 import { defaultStringSets } from '@/domain/instrument';
@@ -218,10 +220,7 @@ const stringSetAxis: AxisDefinition<AxisValues['stringSet']> = {
  */
 function landingDegrees(keyMode: KeyMode | undefined): DegreeNumber[] {
   if (!keyMode) return [1, 2, 3, 4, 5, 6, 7];
-  const numbers = scaleDegrees(keyMode)
-    .filter((d) => !(keyMode.scale === 'blues' && d.alteration !== 0 && d.number === 5))
-    .map((d) => d.number);
-  return [...new Set(numbers)];
+  return scaleDegrees(withoutPassingNotes(keyMode)).map((d) => d.number);
 }
 
 /**
@@ -284,14 +283,27 @@ const shapeSystemAxis: AxisDefinition<AxisValues['shapeSystem']> = {
   parse: (key) => (key === '3nps' || key === 'positional' ? key : null),
 };
 
+/** Patterns too wide for a box: on five notes a "6th" is an octave, a "7th" passes it. */
+const WIDE_PATTERNS = new Set(['5ths', '6ths', '7ths']);
+
+/**
+ * The patterns a scale offers, counted in its steps. A box scale keeps the
+ * ones pentatonic sequences go by — 3rds (every other note), 4ths, groups.
+ */
+function intervalPatternsFor(keyMode: KeyMode | undefined): IntervalPattern[] {
+  if (!keyMode || !playsInBoxes(keyMode.scale)) return [...INTERVAL_PATTERNS];
+  return INTERVAL_PATTERNS.filter((p) => !WIDE_PATTERNS.has(p.id));
+}
+
 const intervalPatternAxis: AxisDefinition<AxisValues['intervalPattern']> = {
   id: 'intervalPattern',
   scope: 'exercise',
   label: 'Interval',
-  candidates: () => [...INTERVAL_PATTERNS],
+  candidates: (context) => intervalPatternsFor(context.keyMode),
   key: (pattern) => pattern.id,
   format: (pattern) => pattern.name,
-  parse: (key) => INTERVAL_PATTERNS.find((p) => p.id === key) ?? null,
+  parse: (key, context) =>
+    intervalPatternsFor(context.keyMode).find((p) => p.id === key) ?? null,
 };
 
 const intervalPairingAxis: AxisDefinition<AxisValues['intervalPairing']> = {

@@ -157,7 +157,7 @@ export function ImprovBody({
 
         <div className="sheet px-5 pt-4 pb-[18px]">
           <div className="flex items-center gap-3">
-            <Kicker>The mode on the neck</Kicker>
+            <Kicker>The scale on the neck</Kicker>
             <span className="ml-auto">
               <InfoColumnToggle />
             </span>

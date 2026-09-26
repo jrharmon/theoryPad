@@ -1,5 +1,5 @@
 import type { KeyMode } from '@/domain/music';
-import { chroma, degreeOf, scaleNotes } from '@/domain/music';
+import { chroma, degreeOf, scaleNotes, withoutPassingNotes } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
 import { fretForPitchOnString, lowestFret, noteAt } from '@/domain/instrument';
 
@@ -46,13 +46,17 @@ export function sweepLength(
  * is there for playback, not for reading.
  *
  * `return-to-root` stops on the tonic on the starting string. That always
- * happens: the string repeats every sweep and the degree every seven notes
- * (step 2 is coprime to seven), so both line up at their least common
- * multiple — 70 notes on six strings, 28 on three, plus the closing root.
+ * happens: the string repeats every sweep and the tonic every cycle of the
+ * steps, so both line up at their least common multiple — 70 notes on six
+ * strings of a seven-note scale, 28 on three, plus the closing root.
+ *
+ * Skipping a note steps through the scale without its passing notes: over
+ * blues' six notes, steps of two would only ever reach the 1, 4 and 5, so it
+ * skips through the minor pentatonic's five instead.
  */
 export function oneNotePerString(options: OneNotePerStringOptions): ScaleNotePosition[] {
   const { instrument, keyMode, strings, step, stop } = options;
-  const notes = scaleNotes(keyMode);
+  const notes = scaleNotes(step === 2 ? withoutPassingNotes(keyMode) : keyMode);
   const sweep = stringSweep(strings);
   const rootChroma = chroma(keyMode.tonic);
   const total = sweepLength(sweep.length, notes.length, step, stop);

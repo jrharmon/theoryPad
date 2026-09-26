@@ -26,18 +26,13 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
   summary: 'Climb the neck through the shapes, sliding into the next one as you go.',
   description: [
     'Play the scale across the neck rather than inside one box. Going up, a',
-    'string with four notes instead of three is a shift: slide into the',
-    'fourth and you are in the next three-note-per-string shape. Coming down,',
-    'the shifts fall on different strings, so the route back is not the',
-    'route up.',
+    'string with a note more than its shape has is a shift — four instead of',
+    "three, or three instead of a pentatonic box's two: slide into the extra",
+    'note and you are in the next shape. Coming down, the shifts fall on',
+    'different strings, so the route back is not the route up.',
   ].join(' '),
 
   axes: ['scale', 'mode', 'key', 'neckPosition', 'direction', 'rhythmPattern'],
-  // A shifting run is three notes a string; the pentatonic boxes are two, and
-  // join the run in the next task of the Scales run.
-  allowedValues: {
-    scale: ['major', 'blues', 'harmonic-minor', 'phrygian-dominant', 'melodic-minor'],
-  },
   params,
   defaults: {
     targetTempo: 72,

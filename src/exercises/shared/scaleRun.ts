@@ -1,7 +1,13 @@
 import type { DegreeNumber, KeyMode } from '@/domain/music';
-import { chroma, scaleNotes } from '@/domain/music';
+import { chroma, playsInBoxes, scaleNotes } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
-import { lowestFret, pitchClassAt, scaleShape, shapesUpTheNeck } from '@/domain/instrument';
+import {
+  boxShape,
+  lowestFret,
+  pitchClassAt,
+  scaleShape,
+  shapesUpTheNeck,
+} from '@/domain/instrument';
 import type { Direction } from '@/domain/variation';
 
 export interface ScaleRunOptions {
@@ -104,6 +110,9 @@ export function scaleNoteFrom(
  * Near the top of the neck the shape may not fit, so the start moves down
  * until it does; at the bottom a shape the hand cannot hold that low starts
  * higher instead. Either way, `startFret` is where it actually landed.
+ *
+ * A box scale takes its box by the same rule (`boxShape`), unless the caller
+ * asks for its own notes per string.
  */
 export function shapeFrom(options: {
   instrument: Instrument;
@@ -111,7 +120,11 @@ export function shapeFrom(options: {
   fret: number;
   notesPerString?: number | readonly number[];
 }): ShapeRun | null {
-  const { instrument, keyMode, fret, notesPerString = 3 } = options;
+  const { instrument, keyMode, fret } = options;
+  if (playsInBoxes(keyMode.scale) && options.notesPerString === undefined) {
+    return boxShape(instrument, keyMode, fret);
+  }
+  const { notesPerString = 3 } = options;
   const strings = instrument.tuning.length;
   const expected =
     typeof notesPerString === 'number'

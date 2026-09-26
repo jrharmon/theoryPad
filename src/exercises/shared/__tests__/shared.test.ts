@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { pitchClass } from '@/domain/music';
-import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, midiAt } from '@/domain/instrument';
+import { makeDegree, pitchClass } from '@/domain/music';
+import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, boxShape, midiAt } from '@/domain/instrument';
 import { QUARTER, phraseBuilder } from '@/domain/phrase';
 import { rollVariation } from '@/domain/variation';
 import { applyDirection, scaleRun, shapeRuns } from '../scaleRun';
-import { noteOptionsFor, roleFor, signatureDegreeNumber } from '../roles';
+import { noteOptionsFor, roleFor } from '../roles';
 import { overlayFromPhrase, overlayFromPositions, overlayFullScale } from '../overlay';
 import { axisDisplay, keyModeLabel, ordinal, orderedHighlights, repsAndTempo } from '../brief';
 
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
+const SIXTH = makeDegree(6, 0);
 
 describe('applyDirection', () => {
   const items = [1, 2, 3, 4];
@@ -139,37 +140,27 @@ describe('roles', () => {
     const sixth = positions.find((p) => p.degree.number === 6)!;
     const other = positions.find((p) => p.degree.number === 2)!;
 
-    expect(roleFor(root, 6)).toBe('root');
-    expect(roleFor(sixth, 6)).toBe('target');
-    expect(roleFor(other, 6)).toBe('none');
+    expect(roleFor(root, SIXTH)).toBe('root');
+    expect(roleFor(sixth, SIXTH)).toBe('target');
+    expect(roleFor(other, SIXTH)).toBe('none');
   });
 
   it('prefers root over target when they are the same note', () => {
     const root = positions.find((p) => p.isRoot)!;
-    expect(roleFor(root, 1)).toBe('root');
+    expect(roleFor(root, makeDegree(1, 0))).toBe('root');
   });
 
   it('annotates with the degree label', () => {
     const flatThird = positions.find((p) => p.degree.label === '♭3')!;
-    expect(noteOptionsFor(flatThird, 6)).toEqual({ role: 'none', annotation: '♭3' });
+    expect(noteOptionsFor(flatThird, SIXTH)).toEqual({ role: 'none', annotation: '♭3' });
   });
 
-  it('knows each mode’s signature degree', () => {
-    expect(signatureDegreeNumber(D_DORIAN)).toBe(6);
-    expect(
-      signatureDegreeNumber({
-        tonic: pitchClass('E'),
-        scale: 'major' as const,
-        mode: 'phrygian',
-      }),
-    ).toBe(2);
-    expect(
-      signatureDegreeNumber({
-        tonic: pitchClass('F'),
-        scale: 'major' as const,
-        mode: 'lydian',
-      }),
-    ).toBe(4);
+  it('targets blues’ 5 without its ♭5', () => {
+    const blues = { tonic: pitchClass('A'), scale: 'blues' as const, mode: 'blues' as const };
+    const box = boxShape(STANDARD_GUITAR, blues, 5).positions;
+    expect(box.some((p) => p.degree.label === '♭5')).toBe(true);
+    const targets = box.filter((p) => roleFor(p, makeDegree(5, 0)) === 'target');
+    expect(new Set(targets.map((p) => p.degree.label))).toEqual(new Set(['5']));
   });
 });
 
@@ -182,7 +173,7 @@ describe('overlays', () => {
       minFret: 5,
     });
     const overlay = overlayFromPositions(positions, {
-      targetDegree: 6,
+      targetDegree: SIXTH,
       emphasisFrets: [5, 6, 7],
     });
     expect(overlay.notes.length).toBe(positions.length);
@@ -201,7 +192,9 @@ describe('overlays', () => {
       ])
       .build();
 
-    const overlay = overlayFromPhrase(phrase, D_DORIAN, STANDARD_GUITAR, { targetDegree: 6 });
+    const overlay = overlayFromPhrase(phrase, D_DORIAN, STANDARD_GUITAR, {
+      targetDegree: SIXTH,
+    });
     expect(overlay.notes).toHaveLength(2);
     expect(overlay.notes[0]!.role).toBe('root');
     expect(overlay.notes[1]!.role).toBe('target');

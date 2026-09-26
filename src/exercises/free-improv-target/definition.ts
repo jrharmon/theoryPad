@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { noteAtDegree, type DegreeNumber } from '@/domain/music';
+import { degreeOf, noteAtDegree, type DegreeNumber } from '@/domain/music';
 import { allStrings, scaleOnNeck } from '@/domain/instrument';
 import { FOUR_FOUR, phraseBuilder, ticksPerBar } from '@/domain/phrase';
 import type { PlayedDefinition, PlayedInstance } from '../types';
@@ -80,6 +80,8 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
     const position = optionalAxis(variation, 'neckPosition');
     const set = axisValue(variation, 'stringSet', allStrings(instrument));
     const note = noteAtDegree(keyMode, target);
+    // The full degree, so blues marks its 5 and not its ♭5 as well.
+    const targetDegree = degreeOf(keyMode, note)!;
 
     const range =
       config.constrainToPosition && position
@@ -108,7 +110,7 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
       kind: 'played',
       phrase: builder.build(),
       neck: overlayFromPositions(positions, {
-        ...(config.showTargetOnNeck ? { targetDegree: target } : {}),
+        ...(config.showTargetOnNeck ? { targetDegree } : {}),
         ...(position ? { emphasisFrets: [position.fret] } : {}),
       }),
       brief: makeBrief(

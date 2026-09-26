@@ -1,4 +1,4 @@
-import type { DegreeNumber, KeyMode } from '@/domain/music';
+import type { Degree, KeyMode } from '@/domain/music';
 import { degreeOf } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
 import { noteAt, pitchClassAt, scaleOnNeck, spellInKey } from '@/domain/instrument';
@@ -7,7 +7,7 @@ import type { Phrase } from '@/domain/phrase';
 import { roleFor } from './roles';
 
 export interface OverlayOptions {
-  targetDegree?: DegreeNumber;
+  targetDegree?: Degree;
   emphasisFrets?: number[];
   labelMode?: NeckOverlay['labelMode'];
 }
