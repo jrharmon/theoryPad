@@ -9,13 +9,14 @@ import {
   boxShape,
   midiAt,
   stringCount,
+  stringLabel,
 } from '@/domain/instrument';
 import { INTERVAL_PATTERNS } from '@/domain/variation';
 import { intervalFigures, intervalRun } from '../intervalRun';
 import { arpeggioRun, chordDegrees, shapeChord } from '../arpeggioRun';
 import { oneNotePerString, stringSweep, sweepLength } from '../oneNotePerString';
 import { horizontalRun, rotateCounts, shiftCounts } from '../horizontalRun';
-import { scaleRun, shapeFrom } from '../scaleRun';
+import { scaleRun, shapeFrom, startOnString } from '../scaleRun';
 
 const C_MAJOR = { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
@@ -375,3 +376,29 @@ function fretsOf(positions: readonly { string: number; fret: number }[]): number
   for (const p of positions) (byString[p.string] ??= []).push(p.fret);
   return byString;
 }
+
+describe('startOnString', () => {
+  /** The strings a run crosses, as the tab numbers them, each once per visit. */
+  const strings = (run: { string: number }[]) =>
+    run
+      .map((p) => stringLabel(STANDARD_GUITAR, p.string))
+      .filter((label, i, all) => label !== all[i - 1])
+      .join(' ');
+  const run = (direction: 'ascending' | 'descending' | 'up-down' | 'down-up') =>
+    scaleRun({ instrument: STANDARD_GUITAR, keyMode: C_MAJOR, direction, minFret: 7 });
+  const FOURTH = 2;
+
+  it('shifts a run that turns, keeping every note', () => {
+    const upDown = startOnString(run('up-down'), FOURTH, true);
+    expect(strings(upDown)).toBe('4 3 2 1 2 3 4 5 6 5');
+    expect(upDown).toHaveLength(run('up-down').length);
+    // The mirror: from the 4th string's top note, down, up, and down to the 3rd.
+    expect(strings(startOnString(run('down-up'), FOURTH, true))).toBe('4 5 6 5 4 3 2 1 2 3');
+    expect(startOnString(run('up-down'), null, true)).toEqual(run('up-down'));
+  });
+
+  it('shortens a run one way, which has nowhere to come back from', () => {
+    expect(strings(startOnString(run('ascending'), FOURTH, false))).toBe('4 3 2 1');
+    expect(strings(startOnString(run('descending'), FOURTH, false))).toBe('4 5 6');
+  });
+});

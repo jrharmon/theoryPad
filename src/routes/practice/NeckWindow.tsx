@@ -18,11 +18,11 @@ export function NeckWindow({
 }: {
   instrument: Instrument;
   overlay: NeckOverlay;
-  /** The phrase's first fret, so the window opens where you start playing. */
+  /** The lowest fret of the phrase's first bar, so the window opens where you start playing. */
   startFret: number;
 }) {
   const range = overlayFretRange(overlay, instrument);
-  const open = () => ({ overlay, frets: openingFretWindow(overlay, range, startFret) });
+  const open = () => ({ overlay, frets: openingFretWindow(range, startFret) });
   const [state, setState] = useState(open);
   // A new roll is a new shape: open where it starts, not where the last one was.
   if (state.overlay !== overlay) setState(open());

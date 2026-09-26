@@ -43,6 +43,31 @@ export function applyDirection<T>(items: T[], direction: Direction): T[] {
   }
 }
 
+/** Whether a direction turns, so its run is a loop that can start anywhere. */
+export function turns(direction: Direction): boolean {
+  return direction === 'up-down' || direction === 'down-up';
+}
+
+/**
+ * Start a run on `string` (a model index; null leaves it alone), at its first
+ * note there.
+ *
+ * A run that turns is a loop — up to the top, down to the bottom, back up —
+ * so starting part-way shifts the cycle and keeps every note: up then down
+ * from the 4th string plays strings 4 3 2 1 2 3 4 5 6 5. A run one way only
+ * has nowhere to come back from, so it just starts later and plays fewer
+ * strings.
+ */
+export function startOnString<T extends { string: number }>(
+  run: readonly T[],
+  string: number | null,
+  loops: boolean,
+): T[] {
+  const at = string === null ? -1 : run.findIndex((p) => p.string === string);
+  if (at <= 0) return [...run];
+  return loops ? [...run.slice(at), ...run.slice(0, at)] : run.slice(at);
+}
+
 /** A scale through one shape, in the given direction. */
 export function scaleRun(options: ScaleRunOptions): ScaleNotePosition[] {
   const { instrument, keyMode, direction, minFret, startDegree, notesPerString, strings } =

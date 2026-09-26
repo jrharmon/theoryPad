@@ -43,14 +43,14 @@ describe('the neck window', () => {
   const range = overlayFretRange(twoShapes, NECK);
 
   it('opens on the shape the phrase starts in, a fret of room below it', () => {
-    expect(openingFretWindow(twoShapes, range, 2)).toEqual({ low: 1, high: 7 });
-    // Starting at the top of the higher shape, as a descending run does.
-    expect(openingFretWindow(twoShapes, range, 15)).toEqual({ low: 10, high: 16 });
+    expect(openingFretWindow(range, 2)).toEqual({ low: 1, high: 7 });
+    // Never past the last of the notes.
+    expect(openingFretWindow(range, 14)).toEqual({ low: 10, high: 16 });
   });
 
   it('shows the whole range when it already fits', () => {
     const one = at(5, 7, 8);
-    expect(openingFretWindow(one, overlayFretRange(one, NECK), 5)).toEqual({ low: 4, high: 9 });
+    expect(openingFretWindow(overlayFretRange(one, NECK), 5)).toEqual({ low: 4, high: 9 });
   });
 
   it('steps less than its width, and stops at the ends of the notes', () => {

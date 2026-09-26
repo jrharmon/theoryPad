@@ -22,14 +22,24 @@ import {
   signatureDegree,
   withoutPassingNotes,
 } from '@/domain/music';
-import type { NeckPosition, StringSet } from '@/domain/instrument';
-import { defaultStringSets } from '@/domain/instrument';
+import type { Instrument, NeckPosition, StringSet } from '@/domain/instrument';
+import { defaultStringSets, stringCount, stringLabel } from '@/domain/instrument';
 import type { RhythmPattern } from '@/domain/phrase';
 import { RHYTHM_PATTERNS, rhythmById } from '@/domain/phrase';
 import type { AxisContext, AxisDefinition, AxisId } from './types';
 
 export type Direction = 'ascending' | 'descending' | 'up-down' | 'down-up';
 export type ShapeSystem = '3nps' | 'positional';
+
+/**
+ * The string a run starts on. `string` is a model index (0 = lowest); null is
+ * the outer string, where the direction starts anyway — the bottom going up,
+ * the top coming down — which leaves the run as it was.
+ */
+export interface StartString {
+  string: number | null;
+  name: string;
+}
 
 /**
  * A figure repeated up the scale: 3rds are 1-3, 2-4, 3-5…; groups of three
@@ -105,6 +115,7 @@ export interface AxisValues {
   targetScaleDegree: DegreeNumber;
   rhythmPattern: RhythmPattern;
   direction: Direction;
+  startString: StartString;
   shapeSystem: ShapeSystem;
   intervalPattern: IntervalPattern;
   intervalPairing: IntervalPairing;
@@ -268,6 +279,35 @@ const directionAxis: AxisDefinition<AxisValues['direction']> = {
   parse: (key) => (DIRECTIONS.includes(key as Direction) ? (key as Direction) : null),
 };
 
+const OUTER_STRING: StartString = { string: null, name: 'Outer string' };
+
+/** The outer string, then every string top to bottom, as the tab reads. */
+function startStrings(instrument: Instrument): StartString[] {
+  const n = stringCount(instrument);
+  return [
+    OUTER_STRING,
+    ...Array.from({ length: n }, (_, i) => n - 1 - i).map((string) => ({
+      string,
+      name: `String ${stringLabel(instrument, string)}`,
+    })),
+  ];
+}
+
+const startStringAxis: AxisDefinition<AxisValues['startString']> = {
+  id: 'startString',
+  scope: 'exercise',
+  label: 'Start string',
+  candidates: (context) => startStrings(context.instrument),
+  key: (start) => (start.string === null ? 'outer' : String(start.string)),
+  format: (start) => start.name,
+  parse: (key, context) =>
+    startStrings(context.instrument).find(
+      (s) => (s.string === null ? 'outer' : String(s.string)) === key,
+    ) ?? null,
+  // Where the direction starts, unless the player says otherwise.
+  defaultPolicy: { mode: 'fixed', value: 'outer' },
+};
+
 /**
  * Only three-note-per-string ships in v1. CAGED shapes are conventional
  * fingerings rather than derivable and arrive as tables in milestone 8, so the
@@ -326,6 +366,7 @@ const DEFINITIONS = [
   targetScaleDegreeAxis,
   rhythmPatternAxis,
   directionAxis,
+  startStringAxis,
   shapeSystemAxis,
   intervalPatternAxis,
   intervalPairingAxis,

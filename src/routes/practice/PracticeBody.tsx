@@ -178,9 +178,13 @@ function PlayedBody({
   );
 }
 
-/** The fret the phrase starts on: where the neck window opens. */
+/**
+ * The lowest fret of the phrase's first bar: where the neck window opens. The
+ * bar, not the first note, so a run that starts at the top of its shape still
+ * opens on the whole shape.
+ */
 function firstFret(phrase: Phrase): number {
-  let first = phrase.notes[0];
-  for (const note of phrase.notes) if (note.startTick < (first?.startTick ?? 0)) first = note;
-  return first?.fret ?? 0;
+  const end = phrase.bars[1]?.startTick ?? phrase.totalTicks;
+  const frets = phrase.notes.filter((n) => n.startTick < end).map((n) => n.fret);
+  return frets.length > 0 ? Math.min(...frets) : 0;
 }

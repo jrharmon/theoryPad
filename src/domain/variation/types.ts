@@ -12,6 +12,7 @@ export const AXIS_IDS = [
   'targetScaleDegree',
   'rhythmPattern',
   'direction',
+  'startString',
   'shapeSystem',
   'intervalPattern',
   'intervalPairing',

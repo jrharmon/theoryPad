@@ -86,36 +86,18 @@ export const NECK_WINDOW_FRETS = 7;
 export const NECK_WINDOW_STEP = 5;
 
 /**
- * The frets to open a small neck on: `size` frets inside `range`, holding
- * `anchor` (where the phrase starts) and as many of the overlay's notes as
- * fit. Ties go to the window that keeps a fret of room below the anchor, the
- * way the full range keeps one either side. A range that fits is returned
- * whole.
+ * The frets to open a small neck on: `size` frets inside `range`, starting a
+ * fret below `lowest` (the lowest fret the phrase opens with), the way the
+ * full range keeps a fret either side. A range that fits is returned whole.
  */
 export function openingFretWindow(
-  overlay: NeckOverlay,
   range: FretRange,
-  anchor: number,
+  lowest: number,
   size: number = NECK_WINDOW_FRETS,
 ): FretRange {
   if (range.high - range.low + 1 <= size) return range;
-  const lowest = range.low;
-  const highest = range.high - size + 1;
-  const clamp = (low: number) => Math.min(highest, Math.max(lowest, low));
-
-  let best = clamp(anchor - 1);
-  let bestCount = -1;
-  for (let low = clamp(anchor - size + 1); low <= clamp(anchor); low += 1) {
-    const count = overlay.notes.filter(
-      (n) => n.position.fret >= low && n.position.fret < low + size,
-    ).length;
-    const nearer = Math.abs(low - (anchor - 1)) < Math.abs(best - (anchor - 1));
-    if (count > bestCount || (count === bestCount && nearer)) {
-      best = low;
-      bestCount = count;
-    }
-  }
-  return { low: best, high: best + size - 1 };
+  const low = Math.min(range.high - size + 1, Math.max(range.low, lowest - 1));
+  return { low, high: low + size - 1 };
 }
 
 /**

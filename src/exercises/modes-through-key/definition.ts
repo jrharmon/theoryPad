@@ -8,6 +8,7 @@ import type { PlayedDefinition, GenerationContext, PlayedInstance } from '../typ
 import {
   arpeggioRun,
   axisDisplay,
+  axisValue,
   keyModeLabel,
   makeBrief,
   noteOptionsFor,
@@ -15,6 +16,8 @@ import {
   overlayFromPositions,
   shapeChord,
   shapeRuns,
+  startOnString,
+  turns,
 } from '../shared';
 
 const params = z.object({
@@ -27,7 +30,7 @@ const params = z.object({
 
 export type ModesThroughKeyParams = z.infer<typeof params>;
 
-const AXES = ['scale', 'mode', 'key', 'direction', 'rhythmPattern'] as const;
+const AXES = ['scale', 'mode', 'key', 'direction', 'startString', 'rhythmPattern'] as const;
 
 /** "All five boxes", "All seven shapes". */
 const COUNT_WORDS: Record<number, string> = { 5: 'five', 6: 'six', 7: 'seven' };
@@ -62,6 +65,9 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     const boxes = playsInBoxes(keyMode.scale);
 
     const direction = (variation.axes.direction?.value ?? 'ascending') as Direction;
+    const start = axisValue(variation, 'startString', { string: null, name: 'Outer string' });
+    // Chord up, scale down comes back to where it began, like a run that turns.
+    const loops = variant === 'arpeggio-then-scale' || turns(direction);
     const rhythm = (variation.axes.rhythmPattern?.value ??
       rhythmById('straight-eighths')) as RhythmPattern;
 
@@ -77,13 +83,16 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     const builder = phraseBuilder().rhythm(EIGHTH);
 
     for (const run of runs) {
-      const positions =
+      const positions = startOnString(
         variant === 'arpeggio-then-scale'
           ? [
               ...arpeggioRun(run.positions, shapeChord(keyMode, run.startDegree).degrees),
               ...[...run.positions].reverse(),
             ]
-          : run.positions;
+          : run.positions,
+        start.string,
+        loops,
+      );
       const options = (i: number) => noteOptionsFor(positions[i]!);
 
       // A box is known by the step it starts on — "shape 2" — and a 3nps shape
@@ -110,23 +119,26 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
           ? `One ${boxes ? 'box' : 'shape'}`
           : `${runs.length} ${noun}`;
     const chord = shapeChord(keyMode, 1).symbol;
+    // Said only when it moves the start: the outer string is where a run starts anyway.
+    const from = start.string === null ? '' : ` from ${start.name.toLowerCase()}`;
+    const startAxis: AxisId[] = start.string === null ? [] : ['startString'];
     const [headline, instruction, highlights] = {
       plain: [
-        `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}.`,
+        `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}${from}.`,
         `Work up the neck, one ${boxes ? 'box' : 'shape'} at a time.`,
-        ['key', 'direction', 'rhythmPattern'],
+        ['key', 'direction', ...startAxis, 'rhythmPattern'],
       ],
       'arpeggio-then-scale': [
-        `${shapes} in ${keyModeLabel(keyMode)}, each chord then scale.`,
+        `${shapes} in ${keyModeLabel(keyMode)}, each chord then scale${from ? `,${from}` : ''}.`,
         chord
           ? `For each box, arpeggiate ${keyMode.tonic}${chord} up, then run the scale down.`
           : 'For each shape, arpeggiate its 7th chord up, then run the scale down.',
-        ['key', 'rhythmPattern'],
+        ['key', ...startAxis, 'rhythmPattern'],
       ],
       'pause-on-root': [
-        `${shapes} in ${keyModeLabel(keyMode)}, holding every root.`,
+        `${shapes} in ${keyModeLabel(keyMode)}${from}, holding every root.`,
         'Work up the neck, giving each root a full beat.',
-        ['key', 'direction'],
+        ['key', 'direction', ...startAxis],
       ],
     }[variant] as [string, string, AxisId[]];
 
