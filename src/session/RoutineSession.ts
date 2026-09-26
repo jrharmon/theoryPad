@@ -166,6 +166,12 @@ export class RoutineSession extends PracticeSession {
     this.afterAdvance();
   }
 
+  /** Jump to another item and wait on it for Play. */
+  goTo(index: number): void {
+    if (this.backing.state.starting) return;
+    this.routine.goTo(index);
+  }
+
   async setCountIn(bars: CountInBars): Promise<void> {
     this.routine.setCountInBars(bars);
     const { items, index } = this.routine.snapshot;

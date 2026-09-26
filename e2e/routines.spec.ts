@@ -79,7 +79,7 @@ test('a routine opens paused on its first item, then runs and logs against its e
   // S skips, without a hand off the guitar.
   await page.keyboard.press('s');
   await expect(page.getByTestId('routine-chrome')).toContainText('02 / 02');
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
 
   await expect(page.getByText('Finished')).toBeVisible();
   const reps = await storedReps(page);
@@ -108,4 +108,31 @@ test('a routine item can be stopped and played again, staying where it is', asyn
   await page.getByTestId('play').click();
   await expect(page.getByTestId('pause')).toBeVisible();
   await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+});
+
+test('the list on the left jumps to any item, forward or back', async ({ page }) => {
+  await newRoutine(page, 'Jump', [
+    'Modes up the neck',
+    'Interval sequences',
+    'Key signature drill',
+  ]);
+  await page.getByRole('link', { name: 'Start' }).click();
+  await page.getByTestId('play').click();
+  await expect(page.getByTestId('position')).toBeVisible({ timeout: 10_000 });
+
+  // Forward over the pass in progress: logged as skipped, and the item waits.
+  const list = page.getByRole('navigation', { name: 'This routine' });
+  await list.getByRole('button', { name: /Key signature drill/ }).click();
+  await expect(page.getByTestId('routine-chrome')).toContainText('03 / 03');
+  await expect(list.getByRole('button', { name: /Modes up the neck/ })).toContainText(
+    'skipped',
+  );
+  await expect
+    .poll(async () => (await storedReps(page)).map((r) => r.status))
+    .toEqual(['skipped']);
+
+  // And back, waiting for Play.
+  await list.getByRole('button', { name: /Modes up the neck/ }).click();
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 03');
+  await expect(page.getByTestId('play')).toBeVisible();
 });

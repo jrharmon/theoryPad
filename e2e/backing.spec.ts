@@ -316,7 +316,7 @@ test('a routine starts its track with the first item, and brings it back after a
   await expect(page.getByTestId('pause')).toBeVisible();
 
   // Skipping to the theory set puts the track away; answering it brings one back.
-  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
   await expect(page.getByTestId('theory-question')).toBeVisible();
   await answerSet(page);
   await expect(page.getByTestId('fake-youtube')).toHaveAttribute('data-state', '1');

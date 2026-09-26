@@ -241,6 +241,25 @@ export class RoutineRunner {
     this.current.skip();
   }
 
+  /**
+   * Jump to another item, forward or back, and wait on it for Play. A pass in
+   * progress is logged as skipped; items jumped over are left as they were.
+   * Going back plays an item again as it was rolled, and the routine carries
+   * on in order from there.
+   */
+  goTo(index: number): void {
+    if (this.phase !== 'running' || index === this.index) return;
+    const target = this.runners[index];
+    if (!target) return;
+    const leaving = this.current;
+    // Moved first, so everything the item being left emits as it stops is
+    // already about the item jumped to.
+    this.index = index;
+    leaving?.rewind();
+    target.rewind();
+    this.emit();
+  }
+
   pause(): void {
     this.current?.pause();
   }

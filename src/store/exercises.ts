@@ -2,7 +2,11 @@ import { create } from 'zustand';
 import { repos, findRedundantExercises, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { resolveGeneratedBacking } from '@/exercises/params';
-import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
+import {
+  EXERCISE_DEFINITIONS,
+  exerciseDefinition,
+  findExerciseDefinition,
+} from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { serialWrites } from './util';
 
@@ -29,6 +33,24 @@ interface ExercisesState {
    */
   resetToDefaults: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
+}
+
+/**
+ * The library in the order it is listed: favorites pinned to the top, the
+ * rest in the order they were added. One whose definition is gone from the
+ * code is left out.
+ */
+export function libraryRows(
+  exercises: Exercise[],
+): { exercise: Exercise; definition: AnyExerciseDefinition }[] {
+  return exercises
+    .flatMap((exercise) => {
+      const definition = findExerciseDefinition(exercise.definitionId);
+      return definition ? [{ exercise, definition }] : [];
+    })
+    .sort(
+      (a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false),
+    );
 }
 
 /** A configured exercise, seeded from its definition's defaults. */

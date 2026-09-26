@@ -361,6 +361,28 @@ test('Hide Info puts the whole right column away, and brings it back', async ({ 
   await expect(page.getByTestId('circle-of-fifths')).toBeVisible();
 });
 
+test('the list on the left opens another exercise, and can be put away', async ({ page }) => {
+  await row(page).getByRole('link', { name: 'Practice', exact: true }).click();
+  const list = page.getByRole('navigation', { name: 'Exercises' });
+  await expect(list.getByRole('link', { name: new RegExp(EXERCISE) })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+
+  const next = list.getByRole('link', { name: /Interval sequences/ });
+  await next.click();
+  await expect(next).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('tab-staff')).toBeVisible();
+
+  // Put away, it stays put away.
+  await page.getByRole('button', { name: 'Hide Exercises' }).click();
+  await expect(list).toHaveCount(0);
+  await savedSettings(page, (s) => s.ui.showPracticeList === false);
+  await page.reload();
+  await page.getByRole('button', { name: 'Show Exercises' }).click();
+  await expect(list).toBeVisible();
+});
+
 test('a roll can leave values out, and the run honours it', async ({ page }) => {
   await page.getByRole('link', { name: EXERCISE }).click();
   const keys = page.getByRole('group', { name: 'Key rolls from' });

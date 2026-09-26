@@ -317,6 +317,7 @@ export function defaultSettings(at: number): Settings {
       showNeck: true,
       showCircle: true,
       showInfoColumn: true,
+      showPracticeList: true,
       tabZoom: 0,
       appearance: 'system',
     },

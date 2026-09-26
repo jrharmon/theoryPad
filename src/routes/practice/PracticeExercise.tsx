@@ -6,6 +6,7 @@ import { useExercises } from '@/store/exercises';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
+import { ExerciseList } from './PracticeList';
 import { PracticeSettingsDialog } from './PracticeSettingsDialog';
 import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
@@ -71,7 +72,12 @@ export function PracticeExercise() {
     <section className="pb-28">
       <RunningChrome name={definition.name} />
 
-      <PracticeBody />
+      <div className="flex">
+        <ExerciseList currentId={exercise.id} />
+        <div className="min-w-0 flex-1">
+          <PracticeBody />
+        </div>
+      </div>
 
       {/* Frozen at the bottom, so a long exercise never means scrolling back
           down to reach the controls. */}

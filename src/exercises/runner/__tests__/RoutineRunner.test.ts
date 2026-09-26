@@ -160,6 +160,37 @@ describe('RoutineRunner', () => {
     expect(routine.current!.snapshot.state).toBe('brief');
   });
 
+  it('jumps to any item, forward or back, and waits on it for Play', () => {
+    const onRepEnd = vi.fn();
+    const { routine, clock } = makeRoutine([item('a'), item('b'), item('c')], { onRepEnd });
+    routine.play();
+    playPass(routine, clock); // a is done; b is counting in
+    clock.advanceTicks(QUARTER);
+
+    // Forward, over b's pass in progress: logged as skipped, and c waits.
+    routine.goTo(2);
+    expect(onRepEnd.mock.calls.at(-1)![0]).toMatchObject({
+      status: 'skipped',
+      routineItemId: 'b',
+    });
+    expect(routine.snapshot.index).toBe(2);
+    expect(routine.current!.snapshot.state).toBe('brief');
+    expect(clock.state).toBe('stopped');
+
+    // Back to a finished item: the same roll, played again, then on in order.
+    const rolled = routine.snapshot.items[0]!.variation;
+    routine.goTo(0);
+    expect(routine.current!.snapshot).toMatchObject({ state: 'brief', passesThisRun: 0 });
+    expect(routine.snapshot.items[0]!.variation).toEqual(rolled);
+    routine.play();
+    playPass(routine, clock);
+    expect(routine.snapshot.index).toBe(1);
+    playPass(routine, clock);
+    playPass(routine, clock);
+    expect(routine.snapshot.phase).toBe('done');
+    expect(routine.snapshot.items.map((i) => i.completed)).toEqual([2, 1, 1]);
+  });
+
   it('stays on the current item while looping, and moves on when it stops', () => {
     const { routine, clock } = makeRoutine([item('a'), item('b')], { loop: true });
     routine.play();

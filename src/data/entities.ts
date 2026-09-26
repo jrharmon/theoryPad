@@ -264,6 +264,8 @@ export interface Settings {
     showCircle: boolean;
     /** The whole right-hand column beside the tab — the neck, the circle, a track. */
     showInfoColumn: boolean;
+    /** The list down the left of a running exercise — the library, or the routine's items. */
+    showPracticeList: boolean;
     /** Tab size, in steps from the default: positive is bigger. Bars per line follow. */
     tabZoom: number;
     /** Light or dark. 'system' follows the computer, and changes when it does. */

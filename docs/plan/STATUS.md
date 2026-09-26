@@ -1,6 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
+**Last updated:** 2026-09-26. **The practice list is built, on branch `exercise-list`, at its
+gate** (unmerged, unpushed): a collapsible list down the left of a running exercise — the
+library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
 and the generated backing. Only Major has modes; the position picks a pentatonic's box.
@@ -60,6 +62,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
+| Practice list — the library or a routine's items, down the left | **at its gate** on `exercise-list` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -204,6 +207,34 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Practice list — at its gate (2026-09-26)
+
+Asked for directly (no spec doc): a panel down the left of a running exercise for jumping
+between them. Built on `exercise-list`, one commit; `pnpm check` green (951 unit tests in 56
+files), all 71 E2E pass. The player took every recommendation:
+
+- **A single exercise** lists the whole library, in library order (favorites first — the
+  order now lives in `libraryRows` in `src/store/exercises.ts`, shared with the library). A
+  row is the name and the definition's one-line summary; the current one is marked. Clicking
+  one opens it — the pass in progress is logged as abandoned, as leaving always did.
+- **A routine** lists its items, numbered, with a tick once an item has played a pass and
+  "skipped" if it was jumped or skipped away from mid-pass. Clicking one **jumps there, forward
+  or back, and waits for Play**: `RoutineRunner.goTo` → `ExerciseRunner.rewind` on both the
+  item left (a pass in progress logged as skipped) and the one jumped to. Items jumped over
+  are untouched. Going back replays the item **as it was rolled**, its passes adding to what it
+  logged, and the routine carries on in order from there.
+- **Collapsible** to a slim rail (chevron + vertical title). Open or collapsed is remembered
+  app-wide as `ui.showPracticeList` **at 1280px and wider** (Tailwind `xl`); below that it starts
+  collapsed and opening it lasts for the visit. The first plan said `lg` (1024), but looking at
+  it there the open list squeezed the tab until its digits ran together.
+- Found by looking: a rewound item's pass counter still read its last run ("2 / 2") until
+  Play — `rewind` now resets `passesThisRun`, and the unit test pins it.
+- Two E2E `Skip` locators became `exact: true`: a list row named "… skipped" matched them.
+
+**For the player to judge at the gate:** is 240px the right width, and is the summary line
+worth its space; does jumping back (same roll) feel right; is the 1280px cut-off right on your
+screen.
 
 ## Scales run — merged (2026-09-26)
 

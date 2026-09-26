@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { describePolicies } from '@/exercises/describe';
-import { findExerciseDefinition } from '@/exercises/registry';
-import { useExercises } from '@/store/exercises';
+import { libraryRows, useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { LoadingState, PageHeader } from '@/components/ui/page-header';
 
@@ -21,19 +20,7 @@ export function ExerciseLibrary() {
     void loadSettings();
   }, [load, loadSettings]);
 
-  const rows = useMemo(
-    () =>
-      exercises
-        .flatMap((exercise) => {
-          const definition = findExerciseDefinition(exercise.definitionId);
-          return definition ? [{ exercise, definition }] : [];
-        })
-        // Favorites pinned to the top; otherwise the order they were added.
-        .sort(
-          (a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false),
-        ),
-    [exercises],
-  );
+  const rows = useMemo(() => libraryRows(exercises), [exercises]);
 
   // Tags rather than a single family: a legato speed drill through a scale is
   // genuinely all three, and would be missing from two searches otherwise.

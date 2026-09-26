@@ -13,6 +13,7 @@ import { usePractice } from '@/store/practice';
 import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { PracticeBody } from './PracticeBody';
+import { RoutineList } from './PracticeList';
 import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
 import { useKeyModeView } from '@/store/keyModeView';
@@ -73,7 +74,12 @@ export function PracticeRoutine() {
       {routineSnapshot.phase === 'running' && (
         <>
           <RunningChrome name={routine.name} />
-          <PracticeBody />
+          <div className="flex">
+            <RoutineList />
+            <div className="min-w-0 flex-1">
+              <PracticeBody />
+            </div>
+          </div>
           <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
             <TransportBar />
           </div>
