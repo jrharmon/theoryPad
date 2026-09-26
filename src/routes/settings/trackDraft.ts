@@ -47,7 +47,7 @@ export function draftFromVideo(video: Video): TrackDraft {
     link: `https://youtu.be/${video.videoId}`,
     title: video.title,
     tonic: video.keyMode?.tonic ?? '',
-    mode: video.keyMode?.mode ?? '',
+    mode: (video.keyMode?.mode as ModeName | undefined) ?? '',
     start: formatVideoTime(video.startSec),
     bpm: video.bpm === undefined ? '' : String(video.bpm),
     beats: String(video.beatsPerBar),
@@ -108,7 +108,11 @@ export function draftToVideo(draft: TrackDraft): {
   if (endSec !== undefined) video.endSec = endSec;
   if (bpm !== undefined) video.bpm = bpm;
   if (draft.tonic && draft.mode) {
-    video.keyMode = { tonic: pitchClass(respell(draft.tonic, draft.mode)), mode: draft.mode };
+    video.keyMode = {
+      tonic: pitchClass(respell(draft.tonic, draft.mode)),
+      scale: 'major',
+      mode: draft.mode,
+    };
   }
   if (draft.progression.trim()) video.progression = draft.progression.trim();
   return { video, problems: videoProblems(video) };

@@ -7,7 +7,7 @@ import type { GeneratedBackingSettings, Progression } from '..';
 import { chordTimeline, formatProgression, parseProgression, pickProgression } from '..';
 
 const BAR = ticksPerBar(FOUR_FOUR);
-const C_IONIAN: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
+const C_IONIAN: KeyMode = { tonic: pitchClass('C'), scale: 'major', mode: 'ionian' };
 
 function settings(source: GeneratedBackingSettings['source']): GeneratedBackingSettings {
   return { source, style: 'pulse', chords: 'sevenths' };
@@ -29,12 +29,12 @@ function bars(count: number, repeat?: number) {
 
 describe('pickProgression', () => {
   it('vamps on 1, picks from the mode’s go-to list, or from the custom lists, by seed', () => {
-    const dorian: KeyMode = { tonic: pitchClass('D'), mode: 'dorian' };
+    const dorian: KeyMode = { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' };
     expect(pickProgression(settings({ kind: 'vamp' }), dorian, mulberry32(1))).toEqual([
       { degree: 1, bars: 1 },
     ]);
 
-    const goTo = MODE_CHARACTER.dorian.progressions.map((p) =>
+    const goTo = MODE_CHARACTER.dorian.progressions!.map((p) =>
       p.degrees.map((degree) => ({ degree, bars: 1 })),
     );
     const picks = Array.from({ length: 40 }, (_, seed) =>
@@ -95,9 +95,12 @@ describe('chordTimeline', () => {
 
   it('takes chord qualities from the mode, and triads when asked', () => {
     const symbols = (mode: KeyMode['mode'], chords: 'sevenths' | 'triads') =>
-      chordTimeline(parsed('1 4'), { tonic: pitchClass('Eb'), mode }, chords, bars(2)).map(
-        (s) => s.symbol,
-      );
+      chordTimeline(
+        parsed('1 4'),
+        { tonic: pitchClass('Eb'), scale: 'major', mode },
+        chords,
+        bars(2),
+      ).map((s) => s.symbol);
     expect(symbols('dorian', 'sevenths')).toEqual(['Ebm7', 'Ab7']);
     expect(symbols('aeolian', 'triads')).toEqual(['Ebm', 'Abm']);
   });

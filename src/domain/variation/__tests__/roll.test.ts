@@ -299,12 +299,20 @@ describe('session axes', () => {
         key: { mode: 'fixed', value: 'D' },
       },
     });
-    expect(variationKeyMode(rolled)).toEqual({ tonic: 'D', mode: 'dorian' });
+    expect(variationKeyMode(rolled)).toEqual({
+      tonic: 'D',
+      scale: 'major' as const,
+      mode: 'dorian',
+    });
   });
 
   it('falls back to the session key when the exercise does not roll one', () => {
     const rolled = rollVariation({ ...base, axes: ['neckPosition'] });
-    const fallback = { tonic: pitchClass('G'), mode: 'mixolydian' as const };
+    const fallback = {
+      tonic: pitchClass('G'),
+      scale: 'major' as const,
+      mode: 'mixolydian' as const,
+    };
     expect(variationKeyMode(rolled, fallback)).toEqual(fallback);
     expect(variationKeyMode(rolled)).toBeNull();
   });

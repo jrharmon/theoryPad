@@ -13,7 +13,7 @@ describe('preferredTonic', () => {
       for (const c of ALL_CHROMAS) {
         const tonic = preferredTonic(c, mode);
         expect(chroma(tonic), `${mode} chroma ${c}`).toBe(c);
-        for (const note of scaleNotes({ tonic, mode })) {
+        for (const note of scaleNotes({ tonic, scale: 'major' as const, mode })) {
           expect(hasDoubleAccidental(note), `${tonic} ${mode} -> ${note}`).toBe(false);
         }
       }
@@ -50,13 +50,17 @@ describe('preferredTonic', () => {
 
 describe('canonicalKeyMode', () => {
   it('respells an awkward tonic without changing the pitches', () => {
-    const canonical = canonicalKeyMode({ tonic: pitchClass('Db'), mode: 'phrygian' });
+    const canonical = canonicalKeyMode({
+      tonic: pitchClass('Db'),
+      scale: 'major' as const,
+      mode: 'phrygian',
+    });
     expect(canonical.tonic).toBe('C#');
     expect(chroma(canonical.tonic)).toBe(chroma(pitchClass('Db')));
   });
 
   it('leaves an already-conventional key alone', () => {
-    const km = { tonic: pitchClass('D'), mode: 'dorian' as const };
+    const km = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
     expect(canonicalKeyMode(km)).toEqual(km);
   });
 });

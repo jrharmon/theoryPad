@@ -10,9 +10,9 @@ import {
 import { lowestFret, midiAt, stringCount } from '../fretboard';
 import { scaleShape, shapeSpan, shapesUpTheNeck } from '../shapes';
 
-const G_MAJOR = { tonic: pitchClass('G'), mode: 'ionian' as const };
-const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
-const A_LYDIAN = { tonic: pitchClass('A'), mode: 'lydian' as const };
+const G_MAJOR = { tonic: pitchClass('G'), scale: 'major' as const, mode: 'ionian' as const };
+const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
+const A_LYDIAN = { tonic: pitchClass('A'), scale: 'major' as const, mode: 'lydian' as const };
 
 function fretsByString(shape: { string: number; fret: number }[]): Map<number, number[]> {
   const map = new Map<number, number[]>();
@@ -44,7 +44,7 @@ describe('scaleShape', () => {
   it('is a playable, ascending run of the key wherever it is asked for', () => {
     for (const instrument of TEST_INSTRUMENTS) {
       for (const mode of MODE_NAMES) {
-        const keyMode = { tonic: pitchClass('A'), mode };
+        const keyMode = { tonic: pitchClass('A'), scale: 'major' as const, mode };
         const notes = scaleNotes(keyMode);
         const inKey = new Set(notes.map((n) => chroma(n)));
 
@@ -188,7 +188,11 @@ describe('shapesUpTheNeck', () => {
 
   it('covers every mode of the key exactly once', () => {
     for (const mode of MODE_NAMES) {
-      const shapes = shapesUpTheNeck(STANDARD_GUITAR, { tonic: pitchClass('A'), mode });
+      const shapes = shapesUpTheNeck(STANDARD_GUITAR, {
+        tonic: pitchClass('A'),
+        scale: 'major' as const,
+        mode,
+      });
       expect(new Set(shapes.map((s) => s.startDegree)).size, mode).toBe(7);
     }
   });

@@ -47,6 +47,12 @@ export function createRepositories(
   const live = <T extends { deletedAt?: number }>(rows: T[]): T[] =>
     rows.filter((row) => row.deletedAt === undefined);
 
+  // A track stored before scales existed has no scale on its key: it was Major.
+  const readVideo = (row: Video): Video =>
+    row.keyMode && row.keyMode.scale === undefined
+      ? { ...row, keyMode: { ...row.keyMode, scale: 'major' } }
+      : row;
+
   return {
     exercises: {
       async add(exercise: NewExercise): Promise<Exercise> {
@@ -259,15 +265,16 @@ export function createRepositories(
 
       async byId(id) {
         const row = await database.videos.get(id);
-        return row?.deletedAt === undefined ? row : undefined;
+        return row?.deletedAt === undefined && row ? readVideo(row) : undefined;
       },
 
       async all() {
-        return live(await database.videos.toArray());
+        return live(await database.videos.toArray()).map(readVideo);
       },
 
       async update(id, changes) {
-        const existing = await database.videos.get(id);
+        const stored = await database.videos.get(id);
+        const existing = stored && readVideo(stored);
         if (!existing) throw new Error(`No video ${id}`);
         const row: Video = { ...existing, ...changes, updatedAt: stamp() };
         await database.videos.put(row);

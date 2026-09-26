@@ -1,8 +1,13 @@
 import type { ModeName } from '@/domain/music';
-import { MODE_NAMES, circlePosition, keySignature, tonicsForMode } from '@/domain/music';
+import {
+  MODE_NAMES,
+  circlePosition,
+  keyModeName,
+  keySignature,
+  tonicsForMode,
+} from '@/domain/music';
 import type { Rng } from '@/domain/variation';
 import { CIRCLE_POSITIONS, majorAt, minorAt, signatureLabel, wrapPosition } from './circle';
-import { keyModeName } from './diatonic';
 import { wantsTrick, withCorrect } from './distractors';
 import type { SinglePickQuestion } from './types';
 
@@ -160,7 +165,7 @@ function neighbourKey(p: number, rng: Rng, id: string): SinglePickQuestion {
 function modeSignature(rng: Rng, id: string): SinglePickQuestion {
   const mode = rng.pick(MODE_NAMES.filter((m) => m !== 'ionian')) as ModeName;
   const tonic = rng.pick(tonicsForMode(mode));
-  const km = { tonic, mode };
+  const km = { tonic, scale: 'major' as const, mode };
   const sig = keySignature(km);
   const position = circlePosition(km);
   // The slip is the major key on the same tonic: 2 sharps for D Dorian.

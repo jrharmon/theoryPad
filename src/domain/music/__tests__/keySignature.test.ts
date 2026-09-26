@@ -18,7 +18,7 @@ describe('relativeMajor', () => {
     ['G', 'dorian', 'F'],
     ['C#', 'phrygian', 'A'],
   ] as const)('%s %s is a rotation of %s major', (tonic, mode, expected) => {
-    expect(relativeMajor({ tonic: pitchClass(tonic), mode })).toBe(expected);
+    expect(relativeMajor({ tonic: pitchClass(tonic), scale: 'major', mode })).toBe(expected);
   });
 });
 
@@ -34,7 +34,7 @@ describe('keySignature', () => {
       ['B', 'locrian'],
     ] as const;
     for (const [tonic, mode] of modesOfC) {
-      const sig = keySignature({ tonic: pitchClass(tonic), mode });
+      const sig = keySignature({ tonic: pitchClass(tonic), scale: 'major', mode });
       expect(sig, `${tonic} ${mode}`).toMatchObject({ sharps: 0, flats: 0 });
       expect(sig.accidentals).toEqual([]);
     }
@@ -55,26 +55,25 @@ describe('keySignature', () => {
     ['A', 'dorian', 1, 0], // parent is G major
     ['E', 'dorian', 2, 0], // parent is D major
   ] as const)('%s %s has %i sharps and %i flats', (tonic, mode, sharps, flats) => {
-    expect(keySignature({ tonic: pitchClass(tonic), mode })).toMatchObject({ sharps, flats });
+    expect(keySignature({ tonic: pitchClass(tonic), scale: 'major', mode })).toMatchObject({
+      sharps,
+      flats,
+    });
   });
 
   it('lists accidentals in signature order', () => {
-    expect(keySignature({ tonic: pitchClass('A'), mode: 'ionian' }).accidentals).toEqual([
-      'F#',
-      'C#',
-      'G#',
-    ]);
-    expect(keySignature({ tonic: pitchClass('Eb'), mode: 'ionian' }).accidentals).toEqual([
-      'Bb',
-      'Eb',
-      'Ab',
-    ]);
+    expect(
+      keySignature({ tonic: pitchClass('A'), scale: 'major', mode: 'ionian' }).accidentals,
+    ).toEqual(['F#', 'C#', 'G#']);
+    expect(
+      keySignature({ tonic: pitchClass('Eb'), scale: 'major', mode: 'ionian' }).accidentals,
+    ).toEqual(['Bb', 'Eb', 'Ab']);
   });
 
   it('never reports both sharps and flats', () => {
     for (const mode of MODE_NAMES) {
       for (let i = 0; i < 12; i += 1) {
-        const km = { tonic: preferredTonic(i as Chroma, mode), mode };
+        const km = { tonic: preferredTonic(i as Chroma, mode), scale: 'major' as const, mode };
         const sig = keySignature(km);
         expect(sig.sharps === 0 || sig.flats === 0, `${km.tonic} ${mode}`).toBe(true);
       }
@@ -84,7 +83,7 @@ describe('keySignature', () => {
   it('has a signature whose accidentals are exactly the scale’s accidentals', () => {
     for (const mode of MODE_NAMES) {
       for (let i = 0; i < 12; i += 1) {
-        const km = { tonic: preferredTonic(i as Chroma, mode), mode };
+        const km = { tonic: preferredTonic(i as Chroma, mode), scale: 'major' as const, mode };
         const sig = keySignature(km);
         const altered = scaleNotes(km).filter((n) => n.length > 1);
         expect(sig.sharps + sig.flats, `${km.tonic} ${mode}`).toBe(altered.length);
@@ -98,9 +97,9 @@ describe('keySignature', () => {
 
 describe('circlePosition', () => {
   it('places keys around the circle of fifths', () => {
-    expect(circlePosition({ tonic: pitchClass('C'), mode: 'ionian' })).toBe(0);
-    expect(circlePosition({ tonic: pitchClass('G'), mode: 'ionian' })).toBe(1);
-    expect(circlePosition({ tonic: pitchClass('F'), mode: 'ionian' })).toBe(-1);
-    expect(circlePosition({ tonic: pitchClass('D'), mode: 'dorian' })).toBe(0);
+    expect(circlePosition({ tonic: pitchClass('C'), scale: 'major', mode: 'ionian' })).toBe(0);
+    expect(circlePosition({ tonic: pitchClass('G'), scale: 'major', mode: 'ionian' })).toBe(1);
+    expect(circlePosition({ tonic: pitchClass('F'), scale: 'major', mode: 'ionian' })).toBe(-1);
+    expect(circlePosition({ tonic: pitchClass('D'), scale: 'major', mode: 'dorian' })).toBe(0);
   });
 });

@@ -1,5 +1,6 @@
 import type { KeyMode, KeySignature, ModeName, PitchClass } from './types';
 import { pitchClass, transposeBy } from './pitch';
+import { keyModeName, parentMode } from './scales';
 
 /** How far each mode's tonic sits above its parent major's tonic. */
 const MODE_OFFSET_FROM_MAJOR: Record<ModeName, string> = {
@@ -34,10 +35,23 @@ const MAJOR_ALTERATION: Record<string, number> = {
   Cb: -7,
 };
 
-/** The major key a mode is a rotation of: D dorian -> C major. */
+/**
+ * The major key a mode is a rotation of: D dorian -> C major. A pentatonic
+ * goes through its parent mode, so A minor pentatonic -> C major too. Harmonic
+ * minor, Phrygian dominant and melodic minor aren't rotations of any major
+ * key and have no signature of their own, so this throws for them — check
+ * `hasKeySignature` first.
+ */
 export function relativeMajor(km: KeyMode): PitchClass {
-  const down = MODE_OFFSET_FROM_MAJOR[km.mode];
+  const parent = parentMode(km);
+  if (parent === null) throw new Error(`${keyModeName(km)} has no key signature of its own`);
+  const down = MODE_OFFSET_FROM_MAJOR[parent.mode as ModeName];
   return transposeBy(km.tonic, `-${down}`);
+}
+
+/** Is the key a mode of major, or inside one? Only those have a signature. */
+export function hasKeySignature(km: KeyMode): boolean {
+  return parentMode(km) !== null;
 }
 
 /**
@@ -48,9 +62,7 @@ export function keySignature(km: KeyMode): KeySignature {
   const major = relativeMajor(km);
   const alteration = MAJOR_ALTERATION[major];
   if (alteration === undefined) {
-    throw new Error(
-      `No key signature for relative major ${major} (from ${km.tonic} ${km.mode})`,
-    );
+    throw new Error(`No key signature for relative major ${major} (from ${keyModeName(km)})`);
   }
 
   const sharps = alteration > 0 ? alteration : 0;

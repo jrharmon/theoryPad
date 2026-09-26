@@ -1,7 +1,7 @@
-import { Scale } from 'tonal';
 import type { Chroma, KeyMode, ModeName, PitchClass } from './types';
 import { MODE_NAMES } from './types';
-import { accidentalCount, chroma, hasDoubleAccidental, pitchClass } from './pitch';
+import { accidentalCount, chroma, hasDoubleAccidental, pitchClass, transposeBy } from './pitch';
+import { SCALES, scaleIntervals } from './scales';
 
 /**
  * Choosing how to spell a tonic.
@@ -19,6 +19,11 @@ import { accidentalCount, chroma, hasDoubleAccidental, pitchClass } from './pitc
  *   1. Reject any spelling whose scale contains a double accidental.
  *   2. Fewest accidentals across the scale.
  *   3. Earliest in SPELLING_PREFERENCE — convention, for exact ties.
+ *
+ * Scales other than Major borrow a related mode's spelling (`spelledAs`):
+ * "E♭ minor pentatonic" to match E♭ Aeolian, C♯ melodic minor to match C♯
+ * Aeolian. Where that spelling would break rule 1 the scale spells itself —
+ * harmonic and melodic minor on G♯ need an F𝄪, so they are A♭.
  *
  * Rule 3 is not derivable and is deliberately a table. Ties are real: F# major
  * and Gb major both need six accidentals, as do Eb and D# aeolian. Which one
@@ -55,33 +60,58 @@ const SPELLING_PREFERENCE = [
   'Cb',
 ].map((s) => pitchClass(s));
 
-function scaleAccidentalTotal(tonic: PitchClass, mode: ModeName): number | null {
-  const notes = Scale.get(`${tonic} ${mode}`).notes;
-  if (notes.length !== 7) return null;
+/**
+ * What a tonic is spelled for: a mode of the Major scale by name, or any
+ * scale and mode.
+ */
+export type Spelling = ModeName | Pick<KeyMode, 'scale' | 'mode'>;
+
+function accidentalTotal(tonic: PitchClass, intervals: readonly string[]): number | null {
   let total = 0;
-  for (const raw of notes) {
-    const pc = pitchClass(raw);
+  for (const interval of intervals) {
+    const pc = transposeBy(tonic, interval);
     if (hasDoubleAccidental(pc)) return null;
     total += accidentalCount(pc);
   }
   return total;
 }
 
-export function preferredTonic(target: Chroma, mode: ModeName): PitchClass {
+function bestTonic(target: Chroma, intervals: readonly string[]): PitchClass | null {
   let best: { tonic: PitchClass; total: number } | null = null;
-
   // SPELLING_PREFERENCE is in preference order, so an equal total never wins.
   for (const candidate of SPELLING_PREFERENCE) {
     if (chroma(candidate) !== target) continue;
-    const total = scaleAccidentalTotal(candidate, mode);
+    const total = accidentalTotal(candidate, intervals);
     if (total === null) continue;
     if (best === null || total < best.total) best = { tonic: candidate, total };
   }
+  return best?.tonic ?? null;
+}
 
-  if (best === null) {
-    throw new Error(`No clean spelling for chroma ${target} in ${mode}`);
+export function preferredTonic(target: Chroma, spelling: Spelling): PitchClass {
+  const sm =
+    typeof spelling === 'string' ? { scale: 'major' as const, mode: spelling } : spelling;
+  const own = scaleIntervals(sm);
+  const borrowed = SCALES[sm.scale].spelledAs;
+
+  // Borrow the related Major mode's spelling while this scale reads cleanly in
+  // it; otherwise spell the scale on its own terms.
+  const conventional =
+    borrowed === null
+      ? null
+      : bestTonic(target, scaleIntervals({ scale: 'major', mode: borrowed }));
+  // A shape scale always takes its parent's tonic: blues reads E♭ like E♭
+  // minor pentatonic, even though its ♭5 is then written enharmonically.
+  const keepsParent = SCALES[sm.scale].kind === 'shapes';
+  const tonic =
+    conventional !== null && (keepsParent || accidentalTotal(conventional, own) !== null)
+      ? conventional
+      : bestTonic(target, own);
+
+  if (tonic === null) {
+    throw new Error(`No clean spelling for chroma ${target} in ${sm.scale} ${sm.mode}`);
   }
-  return best.tonic;
+  return tonic;
 }
 
 /**
@@ -90,15 +120,15 @@ export function preferredTonic(target: Chroma, mode: ModeName): PitchClass {
  * data, a URL) before showing or deriving anything from it.
  */
 export function canonicalKeyMode(km: KeyMode): KeyMode {
-  return { tonic: preferredTonic(chroma(km.tonic), km.mode), mode: km.mode };
+  return { tonic: preferredTonic(chroma(km.tonic), km), scale: km.scale, mode: km.mode };
 }
 
 /**
- * The twelve tonics to offer for a mode, in chromatic order — the candidate
- * set the `key` variation axis rolls from.
+ * The twelve tonics to offer for a mode or scale, in chromatic order — the
+ * candidate set the `key` variation axis rolls from.
  */
-export function tonicsForMode(mode: ModeName): PitchClass[] {
-  return Array.from({ length: 12 }, (_, i) => preferredTonic(i as Chroma, mode));
+export function tonicsForMode(spelling: Spelling): PitchClass[] {
+  return Array.from({ length: 12 }, (_, i) => preferredTonic(i as Chroma, spelling));
 }
 
 /** Every mode name, in the order they appear as rotations of the major scale. */

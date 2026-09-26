@@ -7,7 +7,11 @@ import { chordOnDegree, chordTones, diatonicChords } from '../chords';
 import { scaleNotes } from '../scale';
 
 const ALL_KEYS = MODE_NAMES.flatMap((mode) =>
-  Array.from({ length: 12 }, (_, i) => ({ tonic: preferredTonic(i as Chroma, mode), mode })),
+  Array.from({ length: 12 }, (_, i) => ({
+    tonic: preferredTonic(i as Chroma, mode),
+    scale: 'major' as const,
+    mode,
+  })),
 );
 
 describe('diatonicChords', () => {
@@ -28,11 +32,13 @@ describe('diatonicChords', () => {
 
   it('gives the same qualities in every key of a mode', () => {
     for (const mode of MODE_NAMES) {
-      const reference = diatonicChords({ tonic: preferredTonic(0 as Chroma, mode), mode }).map(
-        (c) => c.seventh,
-      );
+      const reference = diatonicChords({
+        tonic: preferredTonic(0 as Chroma, mode),
+        scale: 'major' as const,
+        mode,
+      }).map((c) => c.seventh);
       for (let i = 0; i < 12; i += 1) {
-        const km = { tonic: preferredTonic(i as Chroma, mode), mode };
+        const km = { tonic: preferredTonic(i as Chroma, mode), scale: 'major' as const, mode };
         expect(
           diatonicChords(km).map((c) => c.seventh),
           `${km.tonic} ${mode}`,
@@ -42,7 +48,11 @@ describe('diatonicChords', () => {
   });
 
   it('builds C major correctly', () => {
-    const chords = diatonicChords({ tonic: pitchClass('C'), mode: 'ionian' });
+    const chords = diatonicChords({
+      tonic: pitchClass('C'),
+      scale: 'major' as const,
+      mode: 'ionian',
+    });
     expect(chords.map((c) => c.triadSymbol)).toEqual(['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim']);
     expect(chords.map((c) => c.seventhSymbol)).toEqual([
       'Cmaj7',
@@ -56,7 +66,11 @@ describe('diatonicChords', () => {
   });
 
   it('builds D dorian correctly, including the major IV that defines it', () => {
-    const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
+    const chords = diatonicChords({
+      tonic: pitchClass('D'),
+      scale: 'major' as const,
+      mode: 'dorian',
+    });
     expect(chords.map((c) => c.triadSymbol)).toEqual(['Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'C']);
     expect(chords.map((c) => c.seventhSymbol)).toEqual([
       'Dm7',
@@ -74,7 +88,11 @@ describe('diatonicChords', () => {
   });
 
   it('puts every chord in a family, the 2nd alongside the 4th', () => {
-    const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
+    const chords = diatonicChords({
+      tonic: pitchClass('D'),
+      scale: 'major' as const,
+      mode: 'dorian',
+    });
     expect(chords.map((c) => c.function)).toEqual([
       'tonic',
       'subdominant',
@@ -88,7 +106,11 @@ describe('diatonicChords', () => {
 
   it('reports no ninth where the diatonic ninth is a minor 9th', () => {
     // In D dorian the note above E is F, a minor 9th — so there is no Em9.
-    const chords = diatonicChords({ tonic: pitchClass('D'), mode: 'dorian' });
+    const chords = diatonicChords({
+      tonic: pitchClass('D'),
+      scale: 'major' as const,
+      mode: 'dorian',
+    });
     const eMinor = chords[1]!;
     expect(eMinor.seventhSymbol).toBe('Em7');
     expect(eMinor.ninthSymbol).toBeNull();
@@ -101,7 +123,11 @@ describe('diatonicChords', () => {
   });
 
   it('spells the ninth chords of C major', () => {
-    const chords = diatonicChords({ tonic: pitchClass('C'), mode: 'ionian' });
+    const chords = diatonicChords({
+      tonic: pitchClass('C'),
+      scale: 'major' as const,
+      mode: 'ionian',
+    });
     expect(chords.map((c) => c.ninthSymbol)).toEqual([
       'Cmaj9',
       'Dm9',
@@ -114,7 +140,7 @@ describe('diatonicChords', () => {
   });
 
   it('exposes the chord on a degree', () => {
-    const km = { tonic: pitchClass('G'), mode: 'mixolydian' as const };
+    const km = { tonic: pitchClass('G'), scale: 'major' as const, mode: 'mixolydian' as const };
     expect(chordOnDegree(km, 7).seventhSymbol).toBe('Fmaj7');
     expect(chordOnDegree(km, 1).seventhSymbol).toBe('G7');
   });

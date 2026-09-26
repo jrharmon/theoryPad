@@ -1,5 +1,5 @@
 import type { KeyMode } from '../../music';
-import { diatonicChords } from '../../music';
+import { diatonicChords, harmonyOf } from '../../music';
 import type { Phrase } from '../../phrase';
 import { ticksPerBar } from '../../phrase';
 import type { ChordSpan, GeneratedBackingSettings, Progression } from './types';
@@ -20,7 +20,7 @@ export function chordTimeline(
   phrase: Pick<Phrase, 'totalTicks' | 'timeSignature' | 'repeat'>,
 ): ChordSpan[] {
   if (progression.length === 0) return [];
-  const diatonic = diatonicChords(keyMode);
+  const diatonic = diatonicChords(harmonyOf(keyMode));
   const bar = ticksPerBar(phrase.timeSignature);
   const copyTicks = phrase.totalTicks;
   const spans: ChordSpan[] = [];

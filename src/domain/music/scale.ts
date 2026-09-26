@@ -1,24 +1,31 @@
-import { Scale } from 'tonal';
-import type { Alteration, Degree, DegreeNumber, KeyMode, ModeName, PitchClass } from './types';
-import { chroma, pitchClass, semitonesBetween } from './pitch';
+import { Interval } from 'tonal';
+import type { Alteration, Degree, DegreeNumber, KeyMode, PitchClass } from './types';
+import { chroma, transposeBy, withoutDoubleAccidental } from './pitch';
+import type { CharacterId } from './scales';
+import { characterId, scaleIntervals } from './scales';
 
 /** Semitones above the tonic for each degree of the major scale. */
 const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11] as const;
 
-const DEGREE_NUMBERS: readonly DegreeNumber[] = [1, 2, 3, 4, 5, 6, 7];
-
 /**
- * The note that gives each mode its identity — the one you land on to make the
- * mode announce itself, and the one the reference screens highlight.
+ * The note that gives each mode or scale its identity — the one you land on to
+ * make it announce itself, and the one the reference screens highlight. A
+ * degree number and its alteration, because blues has two 5ths.
  */
-const SIGNATURE_DEGREE: Record<ModeName, DegreeNumber> = {
-  ionian: 7, // the major 7th, against mixolydian's ♭7
-  dorian: 6, // the natural 6th, against aeolian's ♭6
-  phrygian: 2, // the ♭2
-  lydian: 4, // the ♯4
-  mixolydian: 7, // the ♭7
-  aeolian: 6, // the ♭6
-  locrian: 5, // the ♭5
+const SIGNATURE_DEGREE: Record<CharacterId, [DegreeNumber, Alteration]> = {
+  ionian: [7, 0], // the major 7th, against mixolydian's ♭7
+  dorian: [6, 0], // the natural 6th, against aeolian's ♭6
+  phrygian: [2, -1], // the ♭2
+  lydian: [4, 1], // the ♯4
+  mixolydian: [7, -1], // the ♭7
+  aeolian: [6, -1], // the ♭6
+  locrian: [5, -1], // the ♭5
+  'minor-pentatonic': [3, -1], // the ♭3, against major pentatonic's 3
+  'major-pentatonic': [3, 0], // the 3rd
+  blues: [5, -1], // the ♭5 it adds to minor pentatonic
+  'harmonic-minor': [7, 0], // the raised 7th, against aeolian's ♭7
+  'phrygian-dominant': [3, 0], // the major 3rd, against phrygian's ♭3
+  'melodic-minor': [6, 0], // the natural 6th, against harmonic minor's ♭6
 };
 
 function degreeLabel(number: DegreeNumber, alteration: Alteration): string {
@@ -31,32 +38,36 @@ export function makeDegree(number: DegreeNumber, alteration: Alteration): Degree
   return { number, alteration, label: degreeLabel(number, alteration) };
 }
 
-/**
- * The seven notes of a key/mode, correctly spelled — each letter name used
- * exactly once. Pass a canonical tonic (see `canonicalKeyMode`) or you may get
- * double accidentals back.
- */
-export function scaleNotes(km: KeyMode): PitchClass[] {
-  const notes = Scale.get(`${km.tonic} ${km.mode}`).notes;
-  if (notes.length !== 7) {
-    throw new Error(`Expected 7 notes for ${km.tonic} ${km.mode}, got ${notes.length}`);
+function degreeOfInterval(interval: string): Degree {
+  const { num, semitones } = Interval.get(interval);
+  const number = num as DegreeNumber;
+  const alteration = semitones - MAJOR_STEPS[number - 1]!;
+  if (alteration !== -1 && alteration !== 0 && alteration !== 1) {
+    throw new Error(`Unexpected alteration ${alteration} for interval ${interval}`);
   }
-  return notes.map((n) => pitchClass(n));
+  return makeDegree(number, alteration);
 }
 
-/** The seven degrees, with their alteration relative to the major scale. */
+/**
+ * The notes of a key, one per scale step, correctly spelled. A seven-note
+ * scale uses each letter name exactly once. Pass a canonical tonic (see
+ * `canonicalKeyMode`) or you may get double accidentals back.
+ *
+ * Generators that walk the scale index into this by step; anything that names
+ * a note uses `scaleDegrees` — in a pentatonic, step 2 is degree ♭3.
+ */
+export function scaleNotes(km: KeyMode): PitchClass[] {
+  // Canonical tonics keep every seven-note scale free of double accidentals.
+  // Blues keeps minor pentatonic's tonic, so its ♭5 can land on one — E♭
+  // blues' is B𝄫 — and is written as the plain note (A) instead.
+  return scaleIntervals(km).map((interval) =>
+    withoutDoubleAccidental(transposeBy(km.tonic, interval)),
+  );
+}
+
+/** The degree of each scale step, with its alteration relative to the major scale. */
 export function scaleDegrees(km: KeyMode): Degree[] {
-  const notes = scaleNotes(km);
-  return notes.map((note, i) => {
-    const number = DEGREE_NUMBERS[i]!;
-    const actual = semitonesBetween(km.tonic, note);
-    const expected = MAJOR_STEPS[i]!;
-    const alteration = actual - expected;
-    if (alteration !== -1 && alteration !== 0 && alteration !== 1) {
-      throw new Error(`Unexpected alteration ${alteration} at degree ${number} of ${km.mode}`);
-    }
-    return makeDegree(number, alteration);
-  });
+  return scaleIntervals(km).map(degreeOfInterval);
 }
 
 /** The degree a pitch class occupies in a key, or null if it is not in it. */
@@ -70,28 +81,50 @@ export function degreeOf(km: KeyMode, pc: PitchClass): Degree | null {
   return null;
 }
 
-/** The note at a degree of the key. */
-export function noteAtDegree(km: KeyMode, number: DegreeNumber): PitchClass {
-  return scaleNotes(km)[number - 1]!;
+/** Does the key have a note at this degree number? A pentatonic has no 2 or 6 (or 4 or 7). */
+export function hasDegree(km: KeyMode, number: DegreeNumber): boolean {
+  return scaleDegrees(km).some((d) => d.number === number);
 }
 
-/** The degree that defines the mode's character. */
+/**
+ * The note at a degree of the key. A bare number takes the unaltered note where
+ * the scale has two (blues' 5, not its ♭5); pass the full degree for the other.
+ * Throws where the scale has no such degree — check `hasDegree` first.
+ */
+export function noteAtDegree(km: KeyMode, degree: DegreeNumber | Degree): PitchClass {
+  const degrees = scaleDegrees(km);
+  const matches =
+    typeof degree === 'number'
+      ? (d: Degree) => d.number === degree
+      : (d: Degree) => d.number === degree.number && d.alteration === degree.alteration;
+  const index =
+    typeof degree === 'number' && degrees.filter(matches).length > 1
+      ? degrees.findIndex((d) => matches(d) && d.alteration === 0)
+      : degrees.findIndex(matches);
+  if (index < 0) {
+    const label = typeof degree === 'number' ? degree : degree.label;
+    throw new Error(`${km.tonic} ${km.scale} ${km.mode} has no degree ${label}`);
+  }
+  return scaleNotes(km)[index]!;
+}
+
+/** The degree that defines the mode's (or scale's) character. */
 export function signatureDegree(km: KeyMode): Degree {
-  const number = SIGNATURE_DEGREE[km.mode];
-  return scaleDegrees(km)[number - 1]!;
+  const [number, alteration] = SIGNATURE_DEGREE[characterId(km)];
+  return makeDegree(number, alteration);
 }
 
-/** The note that defines the mode's character. */
+/** The note that defines the mode's (or scale's) character. */
 export function signatureNote(km: KeyMode): PitchClass {
-  return noteAtDegree(km, SIGNATURE_DEGREE[km.mode]);
+  return noteAtDegree(km, signatureDegree(km));
 }
 
 /** Semitone steps between consecutive scale notes, e.g. [2,1,2,2,2,1,2]. */
 export function stepPattern(km: KeyMode): number[] {
-  const notes = scaleNotes(km);
-  return notes.map((note, i) => {
-    const next = notes[(i + 1) % notes.length]!;
-    return semitonesBetween(note, next) || 12;
+  return scaleIntervals(km).map((interval, i, all) => {
+    const here = Interval.semitones(interval) ?? 0;
+    const next = i + 1 < all.length ? (Interval.semitones(all[i + 1]!) ?? 0) : 12;
+    return next - here;
   });
 }
 

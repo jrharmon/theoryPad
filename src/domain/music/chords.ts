@@ -8,6 +8,7 @@ import type {
 } from './types';
 import { pitchClass, semitonesBetween } from './pitch';
 import { scaleDegrees, scaleNotes } from './scale';
+import { hasOwnChords } from './scales';
 
 /**
  * Chord qualities are derived from the actual semitone intervals of the
@@ -30,6 +31,7 @@ const SEVENTH_BY_INTERVALS: Record<string, SeventhQuality> = {
   '3,6,10': 'min7b5',
   '3,6,9': 'dim7',
   '3,7,11': 'minMaj7',
+  '4,8,11': 'maj7sharp5',
 };
 
 const TRIAD_SUFFIX: Record<TriadQuality, string> = {
@@ -46,6 +48,7 @@ const SEVENTH_SUFFIX: Record<SeventhQuality, string> = {
   min7b5: 'm7b5',
   dim7: 'dim7',
   minMaj7: 'mMaj7',
+  maj7sharp5: 'maj7#5',
 };
 
 const NINTH_SUFFIX: Record<SeventhQuality, string> = {
@@ -55,6 +58,7 @@ const NINTH_SUFFIX: Record<SeventhQuality, string> = {
   min7b5: 'm9b5',
   dim7: 'dim9',
   minMaj7: 'mMaj9',
+  maj7sharp5: 'maj9#5',
 };
 
 function intervalKey(root: PitchClass, others: PitchClass[]): string {
@@ -77,7 +81,15 @@ function functionOf(degreeNumber: number): ChordFunction {
   return 'tonic';
 }
 
+/**
+ * The chords built on each degree of a seven-note scale: the Major scale's
+ * modes, harmonic minor, Phrygian dominant and melodic minor. A pentatonic has
+ * none of its own — pass `harmonyOf(km)` for its parent mode's.
+ */
 export function diatonicChords(km: KeyMode): DiatonicChord[] {
+  if (!hasOwnChords(km.scale)) {
+    throw new Error(`${km.scale} has no chords of its own; use harmonyOf()`);
+  }
   const notes = scaleNotes(km);
   const degrees = scaleDegrees(km);
 
@@ -88,7 +100,7 @@ export function diatonicChords(km: KeyMode): DiatonicChord[] {
     const triad = TRIAD_BY_INTERVALS[intervalKey(root, triadNotes.slice(1))];
     const seventh = SEVENTH_BY_INTERVALS[intervalKey(root, seventhNotes.slice(1))];
     if (!triad || !seventh) {
-      throw new Error(`Unrecognised chord on ${root} in ${km.tonic} ${km.mode}`);
+      throw new Error(`Unrecognised chord on ${root} in ${km.tonic} ${km.scale} ${km.mode}`);
     }
 
     // The diatonic ninth is the next scale note up. A minor 9th above the root
@@ -146,6 +158,7 @@ const SEVENTH_INTERVALS: Record<SeventhQuality, number[]> = {
   min7b5: [0, 3, 6, 10],
   dim7: [0, 3, 6, 9],
   minMaj7: [0, 3, 7, 11],
+  maj7sharp5: [0, 4, 8, 11],
 };
 
 /** Semitone offsets from the root for a quality. */

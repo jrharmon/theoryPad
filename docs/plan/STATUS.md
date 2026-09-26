@@ -1,7 +1,10 @@
 # Status — start here
 
-**Last updated:** 2026-09-25 (later). **Nothing is in progress. Next: the Scales run**
-(`docs/plan/14-SCALES.md`, agreed, not started), then M7b. **Feedback round 7 is merged and
+**Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
+(`docs/plan/14-SCALES.md`). Task 1 (the music domain) is committed and awaiting review; the
+spec's decisions 10–15, taken before task 1, replaced the harmonic/melodic minor modes with
+three mode-less scales (harmonic minor, Phrygian dominant, melodic minor). Its "Outcomes"
+section says where each task stands. Then M7b. **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
 the tab, roots ringed in blue, "Land on" kept only in *Improvise to a target*, a routine opens
 paused on its first item instead of an overview, and the builder shows each item's summary —
@@ -55,7 +58,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Sounds — sampled instruments and drum metronomes | ✅ merged, pushed 2026-09-23 — spec, every task's outcome and both gate rounds in `docs/plan/12-SOUNDS.md` |
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
-| Scales — pentatonics, blues, harmonic and melodic minor | **next** — agreed, not started — `docs/plan/14-SCALES.md` |
+| Scales — pentatonics, blues, harmonic and melodic minor | **in progress** on `scales` — task 1 of 7 done — `docs/plan/14-SCALES.md` |
 | M7b — Ear training and "hear it" | after Scales — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 

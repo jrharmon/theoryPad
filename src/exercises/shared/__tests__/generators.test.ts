@@ -15,8 +15,8 @@ import { oneNotePerString, stringSweep, sweepLength } from '../oneNotePerString'
 import { horizontalRun, rotateCounts, shiftCounts } from '../horizontalRun';
 import { scaleRun, shapeFrom } from '../scaleRun';
 
-const C_MAJOR = { tonic: pitchClass('C'), mode: 'ionian' as const };
-const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
+const C_MAJOR = { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' as const };
+const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
 const GUITARS = [STANDARD_GUITAR, DROP_D_GUITAR, SEVEN_STRING_GUITAR].map(
   (i) => [i.id, i] as const,
 );

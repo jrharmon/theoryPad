@@ -135,7 +135,7 @@ describe('positionsOf', () => {
 });
 
 describe('scaleOnNeck', () => {
-  const km = { tonic: pitchClass('D'), mode: 'dorian' as const };
+  const km = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
 
   it('lays the key over the asked-for frets, on every string, roots marked', () => {
     const allowed = new Set(['D', 'E', 'F', 'G', 'A', 'B', 'C']);
@@ -165,11 +165,16 @@ describe('scaleOnNeck', () => {
 });
 
 describe('spelling', () => {
-  const eb = { tonic: pitchClass('Eb'), mode: 'ionian' as const };
+  const eb = { tonic: pitchClass('Eb'), scale: 'major' as const, mode: 'ionian' as const };
 
   it('spells in the key rather than always in sharps, and leaves outsiders alone', () => {
     expect(spellInKey(eb, pitchClass('G#'))).toBe('Ab');
-    expect(spellInKey({ tonic: pitchClass('C'), mode: 'ionian' }, pitchClass('F#'))).toBe('F#');
+    expect(
+      spellInKey(
+        { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' },
+        pitchClass('F#'),
+      ),
+    ).toBe('F#');
 
     const spellings = new Set(
       scaleOnNeck(STANDARD_GUITAR, eb, { low: 0, high: 5 }).map((p) => p.pitchClass),

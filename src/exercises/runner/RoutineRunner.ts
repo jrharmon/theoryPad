@@ -99,7 +99,7 @@ export class RoutineRunner {
   private unsubscribers: (() => void)[] = [];
   private phase: RoutinePhase = 'running';
   private index = 0;
-  private keyMode: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
+  private keyMode: KeyMode = { tonic: pitchClass('C'), scale: 'major', mode: 'ionian' };
   private startedAt: number | null = null;
   private endedAt: number | null = null;
   private results = new Map<string, { completed: number; skipped: boolean }>();

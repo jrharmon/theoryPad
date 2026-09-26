@@ -1,5 +1,5 @@
 import type { DegreeNumber, KeyMode } from '../../music';
-import { MODE_CHARACTER } from '../../music';
+import { progressionsFor } from '../../music';
 import type { Rng } from '../../variation';
 import type { GeneratedBackingSettings, Progression } from './types';
 
@@ -20,7 +20,9 @@ export function pickProgression(
     case 'vamp':
       return VAMP;
     case 'goTo': {
-      const { degrees } = rng.pick(MODE_CHARACTER[keyMode.mode].progressions);
+      const options = progressionsFor(keyMode);
+      if (options.length === 0) return VAMP;
+      const { degrees } = rng.pick(options);
       return degrees.map((degree) => ({ degree, bars: 1 }));
     }
     case 'custom': {

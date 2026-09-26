@@ -172,14 +172,20 @@ describe('tapping along', () => {
 
 describe('the drone', () => {
   it('sounds root, fifth and octave, low in the guitar’s range', () => {
-    expect(droneNotes({ tonic: pitchClass('A'), mode: 'aeolian' })).toEqual(['A2', 'E3', 'A3']);
-    expect(droneNotes({ tonic: pitchClass('E'), mode: 'phrygian' })).toEqual([
+    expect(droneNotes({ tonic: pitchClass('A'), scale: 'major', mode: 'aeolian' })).toEqual([
+      'A2',
+      'E3',
+      'A3',
+    ]);
+    expect(droneNotes({ tonic: pitchClass('E'), scale: 'major', mode: 'phrygian' })).toEqual([
       'E2',
       'B2',
       'E3',
     ]);
     expect(
-      droneNotes({ tonic: pitchClass('D#'), mode: 'dorian' }).map((n) => n.slice(-1)),
+      droneNotes({ tonic: pitchClass('D#'), scale: 'major', mode: 'dorian' }).map((n) =>
+        n.slice(-1),
+      ),
     ).toEqual(['3', '3', '4']);
   });
 });

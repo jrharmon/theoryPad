@@ -2,6 +2,7 @@ import type { ChordFunction, KeyMode, SeventhQuality, TriadQuality } from '@/dom
 import {
   chordOnDegree,
   diatonicChords,
+  keyModeName,
   keySignature,
   scaleDegrees,
   scaleNotes,
@@ -25,10 +26,6 @@ export type DiatonicQuestionType =
   'name-notes' | 'name-chords' | 'spell-chord' | 'chord-function';
 export type ChordDepth = 'triads' | 'sevenths' | 'both';
 
-export function keyModeName(km: KeyMode): string {
-  return `${km.tonic} ${km.mode.charAt(0).toUpperCase()}${km.mode.slice(1)}`;
-}
-
 const ORDINAL = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
 
 const TRIAD_LABEL: Record<TriadQuality, string> = {
@@ -44,6 +41,7 @@ const SEVENTH_LABEL: Record<SeventhQuality, string> = {
   min7b5: 'm7b5',
   dim7: 'dim7',
   minMaj7: 'mMaj7',
+  maj7sharp5: 'maj7#5',
 };
 /** What the table offers: every quality a mode produces, and one that none does. */
 const TRIAD_OPTIONS: TriadQuality[] = ['maj', 'min', 'dim', 'aug'];

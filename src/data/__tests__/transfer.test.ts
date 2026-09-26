@@ -203,7 +203,7 @@ describe('export and import', () => {
       scope: { kind: 'shared' },
       playAlong: true,
       startSec: 0,
-      keyMode: { tonic: 'E' as never, mode: 'phrygian' },
+      keyMode: { tonic: 'E' as never, scale: 'major', mode: 'phrygian' },
       bpm: 120,
       beatsPerBar: 4,
       tags: [],

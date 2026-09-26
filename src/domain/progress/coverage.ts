@@ -36,7 +36,11 @@ export function lastKeyMode(reps: readonly LoggedRep[]): KeyMode | null {
     .filter((r) => keyModeOf(r.axes) !== null)
     .sort((a, b) => b.startedAt - a.startedAt)[0];
   if (!latest) return null;
-  return { tonic: latest.axes.key as PitchClass, mode: latest.axes.mode as ModeName };
+  return {
+    tonic: latest.axes.key as PitchClass,
+    scale: 'major',
+    mode: latest.axes.mode as ModeName,
+  };
 }
 
 /**

@@ -29,7 +29,7 @@ function video(overrides: Loose<Video> = {}): Video {
     scope: { kind: 'shared' },
     playAlong: true,
     startSec: 0,
-    keyMode: { tonic: pitchClass('A'), mode: 'aeolian' },
+    keyMode: { tonic: pitchClass('A'), scale: 'major' as const, mode: 'aeolian' },
     bpm: 100,
     beatsPerBar: 4,
     tags: [],
@@ -39,7 +39,11 @@ function video(overrides: Loose<Video> = {}): Video {
   });
 }
 
-const km = (tonic: string, mode: ModeName) => ({ tonic: pitchClass(tonic), mode });
+const km = (tonic: string, mode: ModeName) => ({
+  tonic: pitchClass(tonic),
+  scale: 'major' as const,
+  mode,
+});
 const own = (exerciseId: string) => ({ kind: 'exercise' as const, exerciseId });
 
 describe('the backing menu', () => {

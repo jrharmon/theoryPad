@@ -89,6 +89,11 @@ export function hasDoubleAccidental(pc: PitchClass): boolean {
   return pc.length > 2;
 }
 
+/** The same pitch without a double accidental: "Bbb" -> "A", "F##" -> "G". */
+export function withoutDoubleAccidental(pc: PitchClass): PitchClass {
+  return hasDoubleAccidental(pc) ? pitchClass(Note.simplify(pc)) : pc;
+}
+
 /** Note name from a pitch class and octave: ("F#", 3) -> "F#3". */
 export function withOctave(pc: PitchClass, octave: number): NoteName {
   return noteName(`${pc}${octave}`);

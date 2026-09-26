@@ -8,7 +8,7 @@ import { noteOptionsFor, roleFor, signatureDegreeNumber } from '../roles';
 import { overlayFromPhrase, overlayFromPositions, overlayFullScale } from '../overlay';
 import { axisDisplay, keyModeLabel, ordinal, orderedHighlights, repsAndTempo } from '../brief';
 
-const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
+const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
 
 describe('applyDirection', () => {
   const items = [1, 2, 3, 4];
@@ -156,8 +156,20 @@ describe('roles', () => {
 
   it('knows each mode’s signature degree', () => {
     expect(signatureDegreeNumber(D_DORIAN)).toBe(6);
-    expect(signatureDegreeNumber({ tonic: pitchClass('E'), mode: 'phrygian' })).toBe(2);
-    expect(signatureDegreeNumber({ tonic: pitchClass('F'), mode: 'lydian' })).toBe(4);
+    expect(
+      signatureDegreeNumber({
+        tonic: pitchClass('E'),
+        scale: 'major' as const,
+        mode: 'phrygian',
+      }),
+    ).toBe(2);
+    expect(
+      signatureDegreeNumber({
+        tonic: pitchClass('F'),
+        scale: 'major' as const,
+        mode: 'lydian',
+      }),
+    ).toBe(4);
   });
 });
 
@@ -230,7 +242,9 @@ describe('overlays', () => {
 describe('brief helpers', () => {
   it('write a brief in words, not values', () => {
     expect(keyModeLabel(D_DORIAN)).toBe('D Dorian');
-    expect(keyModeLabel({ tonic: pitchClass('Bb'), mode: 'mixolydian' })).toBe('Bb Mixolydian');
+    expect(
+      keyModeLabel({ tonic: pitchClass('Bb'), scale: 'major' as const, mode: 'mixolydian' }),
+    ).toBe('Bb Mixolydian');
     expect(repsAndTempo(1, 76)).toBe('One pass at 76 bpm');
     expect(repsAndTempo(2, 76)).toBe('Two passes at 76 bpm');
     expect(repsAndTempo(3, null)).toBe('3 passes, in free time');

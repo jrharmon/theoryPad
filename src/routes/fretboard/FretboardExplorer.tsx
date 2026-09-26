@@ -58,7 +58,7 @@ export function FretboardExplorer() {
   }, [load, loadSettings]);
 
   const keyMode = canonicalKeyMode(
-    picked ?? lastKeyMode ?? { tonic: 'C' as never, mode: 'ionian' },
+    picked ?? lastKeyMode ?? { tonic: 'C' as never, scale: 'major', mode: 'ionian' },
   );
   const choose = (next: KeyMode) => {
     setPicked(canonicalKeyMode(next));
@@ -122,15 +122,15 @@ export function FretboardExplorer() {
           <Select
             value={String(chroma(keyMode.tonic))}
             onValueChange={(c) => {
-              const tonic = tonicsForMode(keyMode.mode)[Number(c) as Chroma];
-              if (tonic) choose({ tonic, mode: keyMode.mode });
+              const tonic = tonicsForMode(keyMode)[Number(c) as Chroma];
+              if (tonic) choose({ tonic, scale: 'major', mode: keyMode.mode });
             }}
           >
             <SelectTrigger aria-label="Key" className="w-[88px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {tonicsForMode(keyMode.mode).map((tonic, c) => (
+              {tonicsForMode(keyMode).map((tonic, c) => (
                 <SelectItem key={c} value={String(c)}>
                   {tonic}
                 </SelectItem>
@@ -139,7 +139,9 @@ export function FretboardExplorer() {
           </Select>
           <Select
             value={keyMode.mode}
-            onValueChange={(mode) => choose({ tonic: keyMode.tonic, mode: mode as ModeName })}
+            onValueChange={(mode) =>
+              choose({ tonic: keyMode.tonic, scale: 'major', mode: mode as ModeName })
+            }
           >
             <SelectTrigger aria-label="Mode" className="w-[140px]">
               <SelectValue />

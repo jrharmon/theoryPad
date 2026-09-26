@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { STANDARD_GUITAR } from '@/domain/instrument';
+import type { KeyMode } from '@/domain/music';
 import Dexie from 'dexie';
 import { TheoryPadDB } from '../db';
 import { createRepositories, defaultSettings } from '../repositories/dexie';
@@ -297,7 +298,7 @@ function suite(
         scope: { kind: 'shared' },
         playAlong: true,
         startSec: 12.5,
-        keyMode: { tonic: 'D' as never, mode: 'dorian' },
+        keyMode: { tonic: 'D' as never, scale: 'major', mode: 'dorian' },
         bpm: 96,
         beatsPerBar: 4,
         tags: ['funk'],
@@ -474,6 +475,20 @@ suite(
     currentDb = null;
   },
 );
+
+describe('a track saved before scales existed', () => {
+  it('reads its key as Major', async () => {
+    const database = new TheoryPadDB(`old-track-${Math.random()}`);
+    const repos = createRepositories(database);
+    const [first] = await repos.videos.all();
+    const { scale: _dropped, ...oldKey } = first!.keyMode!;
+    await database.videos.put({ ...first!, keyMode: oldKey as KeyMode });
+
+    expect((await repos.videos.byId(first!.id))?.keyMode?.scale).toBe('major');
+    expect((await repos.videos.all())[0]?.keyMode?.scale).toBe('major');
+    await database.delete();
+  });
+});
 
 describe('settings saved before a field existed', () => {
   it('fill in the new field from the defaults, not as false', async () => {

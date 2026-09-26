@@ -68,7 +68,7 @@ export function AxisPolicyEditor({
   const mode = axes.includes('mode') ? settled('mode') : undefined;
   const keyMode =
     tonic && mode && MODE_NAMES.includes(mode as ModeName)
-      ? { tonic: tonic as PitchClass, mode: mode as ModeName }
+      ? { tonic: tonic as PitchClass, scale: 'major' as const, mode: mode as ModeName }
       : null;
 
   return (

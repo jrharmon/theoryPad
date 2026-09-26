@@ -12,7 +12,7 @@ import {
 import { overlayFromScalePositions } from '@/domain/neck';
 import { Fretboard } from '../Fretboard';
 
-const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
+const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
 
 function overlayFor(instrument = STANDARD_GUITAR, range = { low: 0, high: 12 }) {
   return overlayFromScalePositions(scaleOnNeck(instrument, D_DORIAN, range), {

@@ -24,7 +24,11 @@ import {
   type SinglePickQuestion,
 } from '..';
 
-const km = (tonic: string, mode: ModeName): KeyMode => ({ tonic: pitchClass(tonic), mode });
+const km = (tonic: string, mode: ModeName): KeyMode => ({
+  tonic: pitchClass(tonic),
+  scale: 'major',
+  mode,
+});
 const D_DORIAN = km('D', 'dorian');
 const C_MAJOR = km('C', 'ionian');
 const pcs = (...names: string[]) => names.map(pitchClass);

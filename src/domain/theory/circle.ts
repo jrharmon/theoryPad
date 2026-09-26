@@ -1,5 +1,6 @@
 import type { KeyMode, KeySignature, ModeName, PitchClass } from '@/domain/music';
 import {
+  parentMode,
   circlePosition,
   keySignature,
   pitchClass,
@@ -121,7 +122,7 @@ const MODE_ROLE: Record<ModeName, ChordRole> = {
  */
 export function keyOnCircle(keyMode: KeyMode): KeyOnCircle {
   const major = relativeMajor(keyMode);
-  const notes = scaleNotes({ tonic: major, mode: 'ionian' });
+  const notes = scaleNotes({ tonic: major, scale: 'major', mode: 'ionian' });
   const p = wrapPosition(circlePosition(keyMode));
   const cell = (
     role: ChordRole,
@@ -147,6 +148,6 @@ export function keyOnCircle(keyMode: KeyMode): KeyOnCircle {
     position: p,
     signature: keySignature(keyMode),
     cells,
-    tonic: cells.find((c) => c.role === MODE_ROLE[keyMode.mode])!,
+    tonic: cells.find((c) => c.role === MODE_ROLE[parentMode(keyMode)!.mode as ModeName])!,
   };
 }

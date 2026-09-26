@@ -360,7 +360,7 @@ describe('coverage', () => {
         rep({ day: '2026-09-10', axes: {} }),
         rep({ day: '2026-09-07' }),
       ]),
-    ).toEqual({ tonic: 'E', mode: 'phrygian' });
+    ).toEqual({ tonic: 'E', scale: 'major', mode: 'phrygian' });
     expect(lastKeyMode([])).toBeNull();
   });
 

@@ -28,7 +28,11 @@ function generate(
 
   const context: GenerationContext<ModesThroughKeyParams> = {
     variation,
-    keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('D'), mode: 'dorian' },
+    keyMode: variationKeyMode(variation) ?? {
+      tonic: pitchClass('D'),
+      scale: 'major',
+      mode: 'dorian',
+    },
     instrument,
     params: DEFAULTS,
     rng: mulberry32(seed),
@@ -75,7 +79,9 @@ describe('modes-through-key', () => {
 
   it('plays only notes of the key', () => {
     const instance = generate();
-    const allowed = new Set(scaleNotes({ tonic: pitchClass('D'), mode: 'dorian' }).map(chroma));
+    const allowed = new Set(
+      scaleNotes({ tonic: pitchClass('D'), scale: 'major', mode: 'dorian' }).map(chroma),
+    );
     expect(instance.phrase.notes.length).toBeGreaterThan(0);
     for (const note of instance.phrase.notes) {
       const sounding = pitchClassAt(STANDARD_GUITAR, note);
@@ -124,7 +130,7 @@ describe('modes-through-key', () => {
     });
     const instance = modesThroughKey.generate({
       variation,
-      keyMode: { tonic: pitchClass('D'), mode: 'dorian' },
+      keyMode: { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' },
       instrument,
       params: DEFAULTS,
       rng: mulberry32(3),

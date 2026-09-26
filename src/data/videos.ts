@@ -106,8 +106,8 @@ export function coverage(videos: readonly Video[]): Record<ModeName, number[]> {
     MODE_NAMES.map((m) => [m, Array<number>(12).fill(0)]),
   ) as Record<ModeName, number[]>;
   for (const video of sharedTracks(videos)) {
-    if (!video.keyMode) continue;
-    const row = grid[video.keyMode.mode];
+    if (video.keyMode?.scale !== 'major') continue;
+    const row = grid[video.keyMode.mode as ModeName];
     const cell = chroma(video.keyMode.tonic);
     row[cell] = (row[cell] ?? 0) + 1;
   }

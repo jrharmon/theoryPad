@@ -1,12 +1,14 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". Not started. It
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Task 1 done,
+awaiting review** (see its Outcome at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
 Today every key has a **mode** of the major scale, and nothing else. This run adds a **scale**
 between them. You pick the key, then the scale, then the mode, and the modes offered depend on
-the scale:
+the scale. _Revised before task 1 (2026-09-25): harmonic and melodic minor have no modes, and
+Phrygian dominant is a scale of its own — see decision 10._
 
 | Scale | Its "modes" |
 | --- | --- |
@@ -14,8 +16,9 @@ the scale:
 | **Minor pentatonic** | Shape 1 – Shape 5 |
 | **Major pentatonic** | Shape 1 – Shape 5 |
 | **Blues** (minor blues: minor pentatonic plus the ♭5) | Shape 1 – Shape 5 |
-| **Harmonic minor** | Harmonic minor, Locrian ♮6, Ionian ♯5, Dorian ♯4, Phrygian dominant, Lydian ♯2, Ultralocrian |
-| **Melodic minor** | Melodic minor, Dorian ♭2, Lydian augmented, Lydian dominant, Mixolydian ♭6, Locrian ♮2, Altered |
+| **Harmonic minor** | none — the Mode control is hidden |
+| **Phrygian dominant** (the 5th mode of harmonic minor, as a scale) | none |
+| **Melodic minor** (one form up and down, as jazz uses it) | none |
 
 **A shape works like a mode, except that it doesn't change the root.** A mode of the major
 scale is a different set of notes on the same tonic. A pentatonic shape is the same five notes
@@ -34,7 +37,9 @@ why here.
    varies. The editor shows **Key, then Scale, then Mode**.
 2. **Major, minor and blues pentatonics are separate scales**, each with Shapes 1–5.
 3. **A pentatonic shape changes the fingering, not the root.** See above.
-4. **All seven modes of harmonic and melodic minor.** The player strikes out any they don't want.
+4. ~~All seven modes of harmonic and melodic minor.~~ **Reopened and replaced by decision 10**
+   before any code: most of the fourteen are obscure, several need double accidentals or a B♯ /
+   E♯ root (C Ultralocrian, F Altered), and they would clutter every mode list.
 5. **Every played exercise takes every scale.**
 6. **Theory exercises map pentatonics to their parent mode.** Major pentatonic becomes Ionian.
    Minor pentatonic and Blues become Aeolian. **Harmonic and melodic minor are used as
@@ -50,23 +55,46 @@ why here.
 9. **Standalone exercises get a Scale setting.** It defaults to Fixed: Major, which is exactly
    today's behavior.
 
+Asked and answered before task 1, 2026-09-25:
+
+10. **A scale has modes, shapes, or neither.** Major has its seven modes. The three pentatonic
+    scales have Shapes 1–5. Harmonic minor, **Phrygian dominant** and melodic minor have
+    neither: the Mode control is hidden, and in the model each has one mode whose id is the
+    scale's own (`harmonic-minor`, `phrygian-dominant`, `melodic-minor`). A future scale such
+    as whole tone arrives the same way, with no baggage. So the scale menu reads *Major, Minor
+    pentatonic, Major pentatonic, Blues, Harmonic minor, Phrygian dominant, Melodic minor*.
+11. **Seven-note scales without modes still get the 3nps shapes**, exactly as Major does: a
+    rolled position picks the box, and *Modes up the neck* walks all seven. There is no Shape
+    setting for them (Major has none either); adding one later is additive. _Recommended, not
+    yet confirmed by the player — confirm at task 1's review._
+12. **The circle-of-fifths drill is Major-only.** Harmonic minor, Phrygian dominant and melodic
+    minor have no key signature of their own (A harmonic minor is written in A minor's
+    signature with G♯ as an accidental), so the drill leaves them out rather than ask a trick
+    question. Pentatonics and blues sit inside a Major mode, so they go through it.
+13. **Spelling.** Harmonic and melodic minor on G♯/A♭ are **A♭** (G♯ would need an F𝄪).
+    Everywhere else the new scales borrow a related Major mode's spelling — see the model.
+14. **Backing tracks.** Pentatonics and blues match their parent mode's tracks (A minor
+    pentatonic finds A Aeolian tracks). Harmonic minor, Phrygian dominant and melodic minor
+    match none this run; the track form stays Major-only. Generated backing covers them.
+15. **`shapesPerRep` is a maximum.** A scale with fewer shapes stops at its own count.
+
 ## Defaults taken (not asked; say if wrong at the first review)
 
 - **Names.**
-  - The scale menu reads *Major, Minor pentatonic, Major pentatonic, Blues, Harmonic minor,
-    Melodic minor*.
-  - A brief reads "A minor pentatonic, shape 2" or "E Phrygian dominant".
-  - For a pentatonic scale the Mode control is labeled **Shape**.
-- **Mode names.**
-  - The seventh mode of harmonic minor is *Ultralocrian*: 1 ♭2 ♭3 ♭4 ♭5 ♭6 𝄫7.
-  - The seventh mode of melodic minor is *Altered*, spelled 1 ♭2 ♭3 ♭4 ♭5 ♭6 ♭7 with one letter
-    per degree. We don't use tonal's spelling, which writes two 2nds and no 5th.
+  - The scale menu: see decision 10.
+  - A brief reads "D Dorian", "A minor pentatonic, shape 2", "E blues, shape 1",
+    "E Phrygian dominant" or "A harmonic minor" (`keyModeName`).
+  - For a pentatonic scale the Mode control is labeled **Shape**; for a scale without modes it
+    is hidden.
 - **"Off by default" uses the existing struck-out mechanism.** Settings → Keys and modes gains
-  **Scales**. Harmonic minor and melodic minor start struck out, so they never roll, while a
-  Fixed choice still plays them. A new install and an existing one both get this default.
-- **Struck-out modes are one list across scales.** Mode ids are unique app-wide (for example
-  `phrygian-dominant`). The five shapes (`shape-1` … `shape-5`) are shared by the three
-  pentatonic scales, so striking out Shape 3 strikes it out for all three.
+  **Scales**. Harmonic minor, Phrygian dominant and melodic minor start struck out, so they
+  never roll, while a Fixed choice still plays them. A new install and an existing one both get
+  this default.
+- **Struck-out modes are one list across scales.** Mode ids are unique app-wide and stored in
+  the rep log, so they are never renamed. The only new ones are the five shapes (`shape-1` …
+  `shape-5`), shared by the three pentatonic scales, so striking out Shape 3 strikes it out for
+  all three. The strike-out list is the seven Major modes plus Shapes 1–5. If every shape is
+  struck out, the roller skips the pentatonic scales rather than roll an empty set.
 - **Existing data doesn't move.** A stored policy, rep, routine or export with no scale reads as
   Major. There is no migration beyond adding the default.
 - **Position and shape together.**
@@ -82,11 +110,7 @@ why here.
     7th chord taken from that scale's own chords.
 - **Interval sequences count scale steps.** "3rds" on a pentatonic means every other note of the
   scale, which is what the pattern already does. The pattern names stay the same.
-- **Circle of fifths.**
-  - Harmonic and melodic minor, and their modes, are written with the key signature of the
-    parent's natural minor, plus accidentals. That is the usual convention.
-  - So "E Phrygian dominant" asks about A minor's signature, and a question never pretends a
-    scale has a signature of its own.
+- **Circle of fifths:** see decision 12.
 - **Key × mode heat grid** on `/fretboard` stays Major-only in this run. Other scales are still
   logged. The grid only shows the Major scale.
 - **Fretboard explorer and the key/mode reference** support every scale.
@@ -96,37 +120,54 @@ why here.
 
 ## The model
 
-- `KeyMode` becomes `{ tonic, scale, mode }`.
+_As built in task 1; `src/domain/music/scales.ts` holds the tables._
+
+- `KeyMode` becomes `{ tonic, scale, mode }`, `scale` required. Stored data with no scale reads
+  as Major at the edge where it is loaded (so far: backing tracks, in the video repository).
   - `ScaleId` is `'major' | 'minor-pentatonic' | 'major-pentatonic' | 'blues' | 'harmonic-minor'
-    | 'melodic-minor'`.
-  - `ModeId` is the union of every scale's mode ids.
+    | 'phrygian-dominant' | 'melodic-minor'`, in menu order (`SCALE_IDS`).
+  - `ModeId` is `ModeName | ShapeId | 'harmonic-minor' | 'phrygian-dominant' | 'melodic-minor'`.
   - `ModeName` (the seven) survives as the Major scale's modes, so existing code that means "a
-    mode of major" can say so.
+    mode of major" can say so. `modesOf(scale)`, `isModeOf(scale, mode)`, `scaleKind(scale)`.
+- **Intervals are our own tables**, one list per Major mode and per other scale; `tonal` only
+  transposes. Notes are spelled by transposing the tonic by each interval.
 - **Scale step vs degree.** Today's code assumes seven notes, where step *n* is degree *n*. That
   stops being true:
   - A pentatonic has five steps.
   - Blues has six, and two of them are 5ths (♭5 and 5).
-  - Ultralocrian's 7th is 𝄫7, so `Alteration` widens to `-2..1`.
+  - With no Ultralocrian, `Alteration` stays `-1..1`.
 
   Generators that walk the scale use steps (an index into `scaleNotes`). Anything that names a
-  note uses the degree. `noteAtDegree(km, n)` is defined only where the scale has that degree,
-  and callers that assume seven must be found (see "Things that will bite").
-- **Parent mode.** `parentMode(km)` gives the Major-scale mode used for theory (decision 6),
-  generated backing (decision 8) and key signatures. The mapping:
-  - Pentatonics go to Ionian or Aeolian.
-  - Blues goes to Aeolian.
-  - Harmonic and melodic minor go to Aeolian of the same tonic's parent minor, for the
-    signature only.
+  note uses the degree. `noteAtDegree(km, n | degree)` throws where the scale has no such degree
+  (`hasDegree` checks); a bare 5 in blues is the natural 5th, and the ♭5 needs the full degree.
+  Callers that assume seven must be found (see "Things that will bite").
+- **Parent mode.** `parentMode(km)` is the Major-scale mode, **on the same root**, whose notes
+  contain the scale's: the mode itself for Major, Aeolian for minor pentatonic and blues, Ionian
+  for major pentatonic, and **null** for harmonic minor, Phrygian dominant and melodic minor,
+  which aren't inside any Major mode. `harmonyOf(km)` is the key whose chords go with the
+  scale: its own, or the parent's for a pentatonic — theory (decision 6) and generated backing
+  (decision 8) use it. Key signatures go through the parent: `keySignature`/`relativeMajor`
+  throw for a scale with none, and `hasKeySignature` checks.
 - **Chords.**
-  - `diatonicChords(km)` works for the Major, harmonic minor and melodic minor scales.
-  - That needs the augmented triad (already a `TriadQuality`) and a new `maj7#5` seventh.
+  - `diatonicChords(km)` works for Major, harmonic minor, Phrygian dominant and melodic minor,
+    and throws for a pentatonic (pass `harmonyOf(km)`).
+  - That needs the augmented triad (already a `TriadQuality`) and a new `maj7sharp5` seventh,
+    written `maj7#5`.
   - Families stay "by degree", as in feedback round 6.
   - Pentatonics have no diatonic chords of their own; callers use the parent mode.
-- **Spelling.** `preferredTonic` and `tonicsForMode` follow the parent mode's spelling, so it's
-  "E♭ minor pentatonic", not "D♯".
-- **Signature degree and mode character.** Each new mode gets a signature degree (for example
-  Phrygian dominant's ♮3, Lydian dominant's ♯4) and a short prose entry for the reference. Each
-  pentatonic scale gets one entry, not one per shape.
+- **Spelling.** `preferredTonic(chroma, spelling)` and `tonicsForMode(spelling)` take a Major
+  mode name, as before, or a `{ scale, mode }`. Each scale borrows a related Major mode's tonic
+  (`spelledAs`): its parent for the pentatonics and blues, Aeolian for harmonic and melodic
+  minor, Phrygian for Phrygian dominant. So "E♭ minor pentatonic" and "C♯ melodic minor". Where
+  the borrowed tonic would give the scale a double accidental, the scale spells itself: A♭
+  harmonic and melodic minor, E♭ (not D♯) Phrygian dominant. Blues always keeps its parent's
+  tonic; where its ♭5 would be a double flat (E♭ blues' B𝄫) that one note is written as the
+  plain enharmonic (A). No tonic is ever E♯, B♯, F♭ or C♭.
+- **Signature degree and mode character.** Keyed by `characterId(km)`: the mode for Major, the
+  scale otherwise (a shape doesn't change how a scale sounds). Signature degrees, drafted for
+  the player to edit: minor pentatonic ♭3, major pentatonic 3, blues ♭5, harmonic minor 7,
+  Phrygian dominant 3, melodic minor 6. Each new scale has prose in `MODE_CHARACTER`, also
+  drafted. Pentatonics carry no progressions; `progressionsFor(km)` gives the parent's.
 
 ## Tasks, in order
 
@@ -174,7 +215,7 @@ why here.
   Grep for `7`, `% 7`, `ModeName` and `MODE_NAMES` before starting task 1.
 - **Blues has two 5ths.** Anything keyed by degree *number* (the tab's degree annotations, the
   neck overlay, the target-degree axis) needs the full degree, alteration included.
-- **Improvise to a target on a pentatonic.** Its target candidates must come from the scale's
+- **Improvise to a target on a pentatonic.** (`hasDegree` exists for this.) Its target candidates must come from the scale's
   own degrees. You can't land on a 2 in minor pentatonic.
 - **Held values and seeds.** Adding a session axis before mode shifts the roll order. Existing
   seeds will roll differently, which is fine. Golden files will change: check that the diff is
@@ -184,13 +225,50 @@ why here.
 
 - Are the pentatonic and blues boxes the ones he plays?
 - Is the position–shape placement right on the neck?
-- Do the HM and MM modes feel usable, or do some want striking out by default too?
+- Are harmonic minor, Phrygian dominant and melodic minor usable as they are?
 - Is the 12-bar blues backing any good?
 - Is "Shape" the right word in the UI?
 
 ## Not in this run
 
 - Other scales: diminished, whole tone, bebop, and the major blues scale.
+- The other modes of harmonic and melodic minor (Lydian dominant, Altered and the rest) —
+  decision 10.
 - A pentatonic CAGED system. The player plays 3nps for seven-note scales, and the pentatonic
   boxes are their own thing.
 - The key × mode grid for non-Major scales.
+
+---
+
+## Outcomes
+
+### Task 1 — Domain: scales, modes, spelling, chords (2026-09-25)
+
+Built as "The model" above describes. New `src/domain/music/scales.ts` holds the scale table
+(title, name, kind, modes, parent, `spelledAs`), the interval tables, `parentMode`,
+`harmonyOf`, `hasOwnChords`, `modeTitle` (moved here; now also "Shape 2" and scale titles),
+`keyModeName` (moved from `theory/diatonic.ts`) and `characterId`. `scale.ts` works in steps
+and degrees; `spelling.ts` borrows spellings; `chords.ts` adds `maj7sharp5`; `keySignature.ts`
+goes through the parent; `modeCharacter.ts` has entries for the six new scales and
+`progressionsFor`.
+
+The rest of the app compiles against the new `KeyMode` with **no change in behavior**: every
+key built today is `scale: 'major'`; code that means a Major mode narrows (`as ModeName`) where
+its task will generalize it; generated backing already takes chords through `harmonyOf`. The
+one data-layer change: a stored backing track with no `scale` reads as Major (tested). No UI
+changed.
+
+Tests: `scales.test.ts` spells every scale × mode × tonic cleanly from a usual tonic name,
+one letter per degree for seven-note scales; formulas and notes of each new scale; tonic lists;
+blues' two 5ths; the chords and numerals of harmonic minor, Phrygian dominant and melodic
+minor; parent mapping and signatures; names. The character tests now cover every scale.
+`pnpm check` green (776 unit tests), E2E 69/69.
+
+Left for later tasks, found by the seven grep: `shapes.ts` `count = 7` (task 2); the axes,
+roller, entities (`sessionMode`, `blockedModes`), strike-out list, policy editor and chord
+context (task 3); `shapesPerRep`, `arpeggioRun`'s `% 7`, `oneNotePerString`'s coprime-to-seven
+(task 4); `diatonic.ts` (`rng.int(7)`, `[1..7]`, `% 7`, `ORDINAL`, `SEVENTH_OPTIONS` lacks
+`minMaj7`/`maj7#5`), TheoryBody's `n > 7`, `circleQuestions`, `KeyModeView`/`NoteRow`
+`grid-cols-7`, the explorer (task 5); `progression.ts`'s `[1-7]` parse (task 6). Phrygian
+dominant's backing progressions are a draft (vamp on I, and I–♭II) for task 6 to confirm.
+

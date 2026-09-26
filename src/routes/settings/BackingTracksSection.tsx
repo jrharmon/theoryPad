@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { KeyMode } from '@/domain/music';
+import type { KeyMode, ModeName } from '@/domain/music';
 import { modeTitle } from '@/domain/music';
 import { formatVideoTime } from '@/domain/backing';
 import { coverage, sameKeyMode, sharedTracks } from '@/data';
@@ -32,7 +32,10 @@ export function BackingTracksSection() {
   const pick = (keyMode: KeyMode) => {
     const matching = tracks.filter((t) => t.keyMode && sameKeyMode(t.keyMode, keyMode));
     if (matching.length === 0) {
-      setEditing({ scope: SHARED, fill: { tonic: keyMode.tonic, mode: keyMode.mode } });
+      setEditing({
+        scope: SHARED,
+        fill: { tonic: keyMode.tonic, mode: keyMode.mode as ModeName },
+      });
       return;
     }
     setFilter(filter && sameKeyMode(filter, keyMode) ? null : keyMode);

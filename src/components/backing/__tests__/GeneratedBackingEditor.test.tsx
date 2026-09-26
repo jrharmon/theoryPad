@@ -27,7 +27,7 @@ describe('GeneratedBackingEditor', () => {
     render(
       <GeneratedBackingEditor
         initial={TWO_FIVE_ONE}
-        chordsIn={{ keyMode: { tonic: pitchClass('C'), mode: 'ionian' } }}
+        chordsIn={{ keyMode: { tonic: pitchClass('C'), scale: 'major', mode: 'ionian' } }}
         onChange={onChange}
       />,
     );

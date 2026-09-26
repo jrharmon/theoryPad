@@ -15,7 +15,7 @@ import {
 } from '..';
 
 const BAR = ticksPerBar(FOUR_FOUR);
-const C_IONIAN: KeyMode = { tonic: pitchClass('C'), mode: 'ionian' };
+const C_IONIAN: KeyMode = { tonic: pitchClass('C'), scale: 'major', mode: 'ionian' };
 
 const tab = (body: string) =>
   compTab({ id: 'test', name: 'Test', detail: '', signature: '4/4', tab: body });
@@ -179,8 +179,8 @@ describe('renderPass', () => {
     const tonics = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'F', 'Bb', 'Eb', 'Ab', 'Db'];
     for (const mode of MODE_NAMES as readonly ModeName[]) {
       for (const tonic of tonics) {
-        const keyMode: KeyMode = { tonic: pitchClass(tonic), mode };
-        for (const { degrees } of MODE_CHARACTER[mode].progressions) {
+        const keyMode: KeyMode = { tonic: pitchClass(tonic), scale: 'major', mode };
+        for (const { degrees } of MODE_CHARACTER[mode].progressions!) {
           const progression = degrees.map((degree) => ({ degree, bars: 1 }));
           for (const chords of ['sevenths', 'triads'] as const) {
             const timeline = chordTimeline(progression, keyMode, chords, {

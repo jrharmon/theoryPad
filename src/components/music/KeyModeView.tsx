@@ -86,7 +86,7 @@ export function KeyModeView({
   onFullView?: () => void;
   className?: string;
 }) {
-  const character = modeCharacter(keyMode.mode);
+  const character = modeCharacter(keyMode);
   const chords = diatonicChords(keyMode);
   const name = `${keyMode.tonic} ${modeTitle(keyMode.mode)}`;
 
@@ -161,7 +161,7 @@ export function KeyModeView({
 
       <Kicker className="mt-6 block">Go-to progressions</Kicker>
       <ul className="mt-1">
-        {character.progressions.map((progression) => (
+        {(character.progressions ?? []).map((progression) => (
           <li key={progression.degrees.join('-')} className="border-b border-rule py-2.5">
             <p className="text-body">
               <span className="font-bold">

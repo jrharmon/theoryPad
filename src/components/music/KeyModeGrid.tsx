@@ -65,7 +65,7 @@ export function KeyModeGrid({
                   title={`${tonic} ${title(mode)} · ${counted}`}
                   aria-label={`${tonic} ${title(mode)}, ${counted}`}
                   aria-pressed={isSelected}
-                  onClick={() => onSelect({ tonic, mode })}
+                  onClick={() => onSelect({ tonic, scale: 'major', mode })}
                   className={cn(
                     'h-[22px] text-caption tabular-nums hover:outline-1 hover:outline-ink',
                     shade(n, max),

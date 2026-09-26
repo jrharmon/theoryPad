@@ -199,7 +199,7 @@ function chordNames(
   const keyMode =
     'keyMode' in context
       ? context.keyMode
-      : { tonic: pitchClass('C'), mode: context.mode ?? 'ionian' };
+      : { tonic: pitchClass('C'), scale: 'major' as const, mode: context.mode ?? 'ionian' };
   return progression
     .map(({ degree, bars }) => {
       const chord = chordOnDegree(keyMode, degree);

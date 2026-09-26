@@ -43,7 +43,11 @@ function generateAny(
   const params: unknown = definition.params?.parse({});
   const instance = definition.generate({
     variation,
-    keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('D'), mode: 'dorian' },
+    keyMode: variationKeyMode(variation) ?? {
+      tonic: pitchClass('D'),
+      scale: 'major',
+      mode: 'dorian',
+    },
     instrument,
     params,
     rng: mulberry32(seed),
@@ -70,7 +74,9 @@ describe.each(PLAYED.map((d) => [d.id, d] as const))('%s', (_id, definition) => 
   it.each(TEST_INSTRUMENTS.map((i) => [i.id, i] as const))(
     'plays only real positions, in the key (%s)',
     (_i, instrument) => {
-      const inKey = new Set(scaleNotes({ tonic: pitchClass('D'), mode: 'dorian' }).map(chroma));
+      const inKey = new Set(
+        scaleNotes({ tonic: pitchClass('D'), scale: 'major', mode: 'dorian' }).map(chroma),
+      );
       for (const seed of SEEDS) {
         const { phrase, brief } = generate(definition, seed, instrument);
         // An improvisation writes nothing; it still has bars to count.
@@ -248,7 +254,7 @@ describe('free-improv-target', () => {
     });
     const instance = definition.generate({
       variation,
-      keyMode: { tonic: pitchClass('D'), mode: 'dorian' },
+      keyMode: { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' },
       instrument: STANDARD_GUITAR,
       params,
       rng: mulberry32(1),

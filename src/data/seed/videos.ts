@@ -15,7 +15,7 @@ export const FIRST_RUN_VIDEOS: readonly Video[] = [
     scope: { kind: 'shared' },
     playAlong: true,
     startSec: 216,
-    keyMode: { tonic: pitchClass('A'), mode: 'aeolian' },
+    keyMode: { tonic: pitchClass('A'), scale: 'major', mode: 'aeolian' },
     bpm: 100,
     beatsPerBar: 4,
     tags: [],

@@ -1,9 +1,12 @@
-import type { DegreeNumber, ModeName } from './types';
+import type { DegreeNumber, KeyMode } from './types';
+import type { CharacterId } from './scales';
+import { characterId, harmonyOf } from './scales';
 
 /**
  * What each mode sounds like and how to use it — the one piece of the
  * key/mode reference that is written rather than computed. It is per mode, not
- * per key, so seven entries cover everything.
+ * per key: one entry per Major-scale mode, and one per other scale (a shape
+ * doesn't change how a pentatonic sounds).
  *
  * Practical voice: what to play, what to land on, what to steer round. No
  * genre labels. Drafted for the player to edit; the wording is theirs to
@@ -18,11 +21,14 @@ export interface ModeCharacter {
   avoid: string;
   /** Against its neighbors: one alteration away in either direction. */
   compare: string;
-  /** Go-to progressions as scale degrees; the view spells them in the key. */
-  progressions: { degrees: DegreeNumber[]; use: string }[];
+  /**
+   * Go-to progressions as scale degrees; the view spells them in the key.
+   * Absent for a scale without chords of its own, which uses its parent's.
+   */
+  progressions?: { degrees: DegreeNumber[]; use: string }[];
 }
 
-export const MODE_CHARACTER: Record<ModeName, ModeCharacter> = {
+export const MODE_CHARACTER: Record<CharacterId, ModeCharacter> = {
   ionian: {
     summary: 'Major and settled — every line wants to come home to 1.',
     soundsLike:
@@ -137,13 +143,85 @@ export const MODE_CHARACTER: Record<ModeName, ModeCharacter> = {
       { degrees: [1, 4, 2], use: 'Lean on the ♭5 over the i°, the root over the iv.' },
     ],
   },
+  'minor-pentatonic': {
+    summary: 'Natural minor with the two notes that rub taken out.',
+    soundsLike:
+      'Minor and open. With no 2nd or ♭6 there is nothing to clash with the chords, so almost any note works over a minor or bluesy progression.',
+    signatureNote:
+      'The ♭3. It is what makes the scale minor: land on it squarely over a minor chord, or bend it a little sharp over a major one for the blues sound.',
+    avoid:
+      'Running the box up and down in order — five notes go stale fast. Skip strings, repeat short figures, and end phrases on 1 or 5.',
+    compare:
+      'Aeolian without its 2nd and ♭6. Add the ♭5 and it is the blues scale; the same notes from its second note are the relative major pentatonic.',
+  },
+  'major-pentatonic': {
+    summary: 'The major scale with the 4th and 7th taken out.',
+    soundsLike:
+      'Bright and open, never tense. With no 4th or 7th there are no half steps, so nothing needs resolving.',
+    signatureNote:
+      'The 3rd. It is what makes it major: slide or bend into it from the 2nd, and land on it over the I chord.',
+    avoid:
+      'Playing it over a minor chord — its 3rd clashes with the chord’s ♭3. Over minor, the same shapes from the relative minor are the minor pentatonic.',
+    compare:
+      'Ionian without its 4th and 7th. The same five notes as the minor pentatonic a minor 3rd lower.',
+  },
+  blues: {
+    summary: 'Minor pentatonic with the ♭5 added.',
+    soundsLike:
+      'Gritty and vocal. The ♭5 sits between the 4th and 5th and turns any climb through it into a smear.',
+    signatureNote:
+      'The ♭5. Pass through it — 4–♭5–5, or 5–♭5–4 — or bend the 4th up to it. It is a passing note, not a resting one.',
+    avoid:
+      'Holding the ♭5 or ending on it: once it stops moving it sounds like a wrong note. Land on 1, ♭3 or 5.',
+    compare:
+      'Minor pentatonic plus one note. Over a dominant-7th blues it works against every chord.',
+  },
+  'harmonic-minor': {
+    summary: 'Natural minor with a raised 7th — a leading tone back to the root.',
+    soundsLike:
+      'Dark and dramatic. The gap from ♭6 up to 7 is a step and a half, which gives it its exotic, classical edge.',
+    signatureNote:
+      'The major 7th, raised from natural minor’s ♭7. A half step under the root, it pulls hard into it: play 7 → 1. The major V chord carries it and makes V–i a strong cadence.',
+    avoid:
+      'Holding the 7th over the i chord — resolve it up. And the ♭6–7 leap is the loudest thing in the scale; use it on purpose.',
+    compare:
+      'Aeolian with the 7th raised; melodic minor with the 6th lowered. Start it from its 5th note and it is Phrygian dominant.',
+    progressions: [{ degrees: [1, 4, 5], use: 'i–iv–V. Play 7 → 1 as the V resolves.' }],
+  },
+  'phrygian-dominant': {
+    summary: 'Phrygian with a major 3rd — the 5th mode of harmonic minor.',
+    soundsLike:
+      'Menacing and exotic. The ♭2 falls onto the root and the major 3rd makes the home chord major — at home in metal and flamenco.',
+    signatureNote:
+      'The major 3rd. Played ♭2 → 3 it is the step and a half that gives the scale its sound; over the I chord it makes it major.',
+    avoid:
+      'Letting the ♭2 sit over the I chord — move it down to the root. And catch Phrygian muscle memory flattening the 3rd.',
+    compare:
+      'Phrygian with the 3rd raised. The same notes as harmonic minor, started from its 5th.',
+    progressions: [
+      { degrees: [1], use: 'Vamp on the I. Let the ♭2 fall to 1, and lean on the 3rd.' },
+      { degrees: [1, 2], use: 'The half-step move up to ♭II and back.' },
+    ],
+  },
+  'melodic-minor': {
+    summary: 'Minor with a raised 6th and 7th — major with a flat 3rd.',
+    soundsLike:
+      'Minor, but smooth and bright on top: from the 5th up it runs like a major scale.',
+    signatureNote:
+      'The natural 6th. It separates melodic minor from harmonic minor; play 5–6–7–1 to hear the major-scale climb into the root.',
+    avoid:
+      'Reaching for natural minor’s ♭6 out of habit. And the 7th wants to resolve up — don’t hold it over the i chord.',
+    compare:
+      'Dorian with the 7th raised; harmonic minor with the 6th raised; Ionian with the 3rd lowered. Played the same up and down here.',
+    progressions: [{ degrees: [1], use: 'Vamp on the i. Lean on the 6th and 7th.' }],
+  },
 };
 
-export function modeCharacter(mode: ModeName): ModeCharacter {
-  return MODE_CHARACTER[mode];
+export function modeCharacter(km: Pick<KeyMode, 'scale' | 'mode'>): ModeCharacter {
+  return MODE_CHARACTER[characterId(km)];
 }
 
-/** "dorian" → "Dorian". */
-export function modeTitle(mode: ModeName): string {
-  return mode.charAt(0).toUpperCase() + mode.slice(1);
+/** The key's go-to progressions: its own, or its parent mode's for a pentatonic. */
+export function progressionsFor(km: KeyMode): { degrees: DegreeNumber[]; use: string }[] {
+  return modeCharacter(harmonyOf(km)).progressions ?? [];
 }

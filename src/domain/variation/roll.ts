@@ -184,7 +184,11 @@ export function rollVariation(options: RollOptions): RolledVariation {
 /** The session key and mode, from this roll or from the session it belongs to. */
 function keyModeFrom(resolved: ResolvedKeys, fallback?: KeyMode): KeyMode | null {
   if (resolved.key && resolved.mode) {
-    return { tonic: resolved.key as PitchClass, mode: resolved.mode as ModeName };
+    return {
+      tonic: resolved.key as PitchClass,
+      scale: 'major',
+      mode: resolved.mode as ModeName,
+    };
   }
   return fallback ?? null;
 }
@@ -196,7 +200,7 @@ export function variationKeyMode(
 ): KeyMode | null {
   const tonic = variation.axes.key?.value as PitchClass | undefined;
   const mode = variation.axes.mode?.value as ModeName | undefined;
-  if (tonic && mode) return { tonic, mode };
+  if (tonic && mode) return { tonic, scale: 'major', mode };
   return fallback ?? null;
 }
 

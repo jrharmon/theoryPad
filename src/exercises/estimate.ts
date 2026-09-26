@@ -31,7 +31,11 @@ export function estimateItemSeconds(
   const run = routineItemRun(definition, item);
   const context = {
     variation,
-    keyMode: variationKeyMode(variation) ?? { tonic: pitchClass('C'), mode: 'ionian' as const },
+    keyMode: variationKeyMode(variation) ?? {
+      tonic: pitchClass('C'),
+      scale: 'major',
+      mode: 'ionian' as const,
+    },
     instrument,
     params: run.params,
     rng: mulberry32(1),

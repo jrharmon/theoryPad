@@ -324,7 +324,7 @@ function playOut(session: PracticeSession, clock: FakeClock) {
   clock.advanceTicks(runner.snapshot.countInRemaining + length - runner.snapshot.phraseTick);
 }
 
-const G_IONIAN = { tonic: 'G', mode: 'ionian' } as unknown as KeyMode;
+const G_IONIAN = { tonic: 'G', scale: 'major', mode: 'ionian' } as unknown as KeyMode;
 
 /** The root the generated bass plays on each bar line of a pass, as a chroma. */
 function barRoots(pass: RenderedPass, bar: number): number[] {

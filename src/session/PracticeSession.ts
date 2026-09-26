@@ -9,7 +9,7 @@ import {
   type Progression,
 } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
-import { canonicalKeyMode, pitchClass, type KeyMode } from '@/domain/music';
+import { canonicalKeyMode, pitchClass, type KeyMode, type ModeName } from '@/domain/music';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { CountInBars, Phrase, TimeSignature } from '@/domain/phrase';
 import { answerWeights } from '@/domain/progress';
@@ -70,6 +70,7 @@ export interface GeneratedPlan {
  */
 export const FALLBACK_KEY_MODE: KeyMode = canonicalKeyMode({
   tonic: pitchClass('C'),
+  scale: 'major',
   mode: 'ionian',
 });
 
@@ -82,7 +83,7 @@ export function openSessionRow(deps: SessionDeps, routineId: string | null): Pro
     startedAt: now,
     endedAt: null,
     sessionKey: FALLBACK_KEY_MODE.tonic,
-    sessionMode: FALLBACK_KEY_MODE.mode,
+    sessionMode: FALLBACK_KEY_MODE.mode as ModeName,
   });
 }
 

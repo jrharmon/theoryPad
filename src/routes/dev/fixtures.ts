@@ -12,7 +12,7 @@ import { overlayFromScalePositions } from '@/domain/neck';
 import { EIGHTH, QUARTER, SIXTEENTH, phraseBuilder } from '@/domain/phrase';
 import { STRAIGHT_EIGHTHS, STRAIGHT_SIXTEENTHS } from '@/domain/phrase';
 
-export const D_DORIAN: KeyMode = { tonic: pitchClass('D'), mode: 'dorian' };
+export const D_DORIAN: KeyMode = { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' };
 export const TARGET_SIXTH = { number: 6 as const, alteration: 0 as const, label: '6' };
 
 /**

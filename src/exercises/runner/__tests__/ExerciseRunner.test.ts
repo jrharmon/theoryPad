@@ -8,7 +8,7 @@ import { diatonicDrill } from '../../diatonic-drill/definition';
 import type { AnyExerciseDefinition } from '../../types';
 import { ExerciseRunner, type RunnerConfig } from '../ExerciseRunner';
 
-const D_DORIAN = { tonic: pitchClass('D'), mode: 'dorian' as const };
+const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
 
 /** A tiny exercise, so a rep is one bar rather than twenty-one. */
 const tinyExercise: AnyExerciseDefinition = { ...modesThroughKey, id: 'tiny' };
