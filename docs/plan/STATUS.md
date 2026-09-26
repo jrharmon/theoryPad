@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **A Start string axis for Modes up the neck is built on `start-string`, awaiting the gate** — see "Start string" below. Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -63,6 +63,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
+| Start string axis — Modes up the neck | at the gate on `start-string` — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -207,6 +208,28 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Start string — at the gate (2026-09-26)
+
+Asked for directly (no spec doc), on branch `start-string`, one commit; not yet merged.
+`pnpm check` green (958 unit tests), all 71 E2E pass.
+
+- **The axis** `startString` (label "Start string", exercise scope): "Outer string", then
+  String 1 … String N, top to bottom as the tab reads. Keys are `outer` or the **model index**
+  (0 = lowest), so they are stable in the rep log. **Fixed at Outer string by default**, which
+  is where the direction starts anyway (bottom going up, top coming down), so nothing changes
+  until the player picks a string. Only Modes up the neck declares it so far.
+- **What it does** — `startOnString` in `src/exercises/shared/scaleRun.ts`: a run that turns
+  is a loop, so it's rotated to start at its first note on the string and keeps every note —
+  up then down from string 4 plays 4 3 2 1 2 3 4 5 6 5; down then up starts on string 4's top
+  note and ends coming down on string 3. Ascending or descending just starts later and plays
+  fewer strings (4–1, or 4–6). Applied per shape. **The arpeggio-then-scale variant uses it
+  too** (the player asked): chord up then scale down is a loop, rotated the same way.
+- The brief says "… up then down from string 4." and the strip shows Start string only when
+  it isn't Outer string. The neck still shows each shape whole.
+- **Neck window fix, found by looking:** it opened around the phrase's first note, which on a
+  descending run is the top of the first shape, and the note-counting drifted a shape higher
+  (tab at fret 1, window 3–9). It now opens a fret below the lowest note of the first bar.
 
 ## Triplets and the neck window — merged (2026-09-26)
 
