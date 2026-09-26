@@ -114,7 +114,11 @@ export async function loadSubjectWeights(
 /** The player's app-wide "never roll these", as the roller takes them. */
 export function blockedValues(deps: SessionDeps): AxisValueKeys {
   const { practice } = deps.settings();
-  return { key: practice.blockedKeys ?? [], mode: practice.blockedModes ?? [] };
+  return {
+    key: practice.blockedKeys ?? [],
+    scale: practice.blockedScales ?? [],
+    mode: practice.blockedModes ?? [],
+  };
 }
 
 export const criteriaQuery = (criteria: BackingCriteria | undefined) =>

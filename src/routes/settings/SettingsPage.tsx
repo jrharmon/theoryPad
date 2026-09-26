@@ -13,8 +13,16 @@ import {
 } from '@/data';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import { OFFERED_INSTRUMENTS } from '@/domain/instrument';
-import type { Chroma, ModeName, NoteName } from '@/domain/music';
-import { MODE_NAMES, modeTitle, noteName, preferredTonic } from '@/domain/music';
+import type { Chroma, ModeId, NoteName, ScaleId } from '@/domain/music';
+import {
+  MODE_NAMES,
+  SCALE_IDS,
+  SHAPE_IDS,
+  modeTitle,
+  noteName,
+  preferredTonic,
+  scaleTitle,
+} from '@/domain/music';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -162,8 +170,9 @@ export function SettingsPage() {
 
       <Section title="Keys and modes">
         <p className="text-body-sm text-ink-muted">
-          Strike out any you don&rsquo;t want to practice. They never come up when a key or mode
-          is rolled, in any exercise or routine. One you pin or hold on purpose still plays.
+          Strike out any you don&rsquo;t want to practice. They never come up when a key, scale
+          or mode is rolled, in any exercise or routine. One you pin or hold on purpose still
+          plays.
         </p>
         <Row label="Keys" hint="By pitch: striking out Db strikes out C# too.">
           <Blockable
@@ -173,13 +182,55 @@ export function SettingsPage() {
             onChange={(blockedKeys) => void save({ practice: { ...practice, blockedKeys } })}
           />
         </Row>
-        <Row label="Modes">
+        <Row
+          label="Scales"
+          hint="Harmonic minor, Phrygian dominant and melodic minor start struck out."
+        >
+          <Blockable
+            label="Scales"
+            options={SCALE_IDS.map((s) => ({ id: s, label: scaleTitle(s) }))}
+            blocked={practice.blockedScales ?? []}
+            onChange={(blocked) =>
+              void save({ practice: { ...practice, blockedScales: blocked as ScaleId[] } })
+            }
+          />
+        </Row>
+        <Row label="Modes" hint="Of the Major scale.">
           <Blockable
             label="Modes"
             options={MODE_NAMES.map((m) => ({ id: m, label: modeTitle(m) }))}
-            blocked={practice.blockedModes ?? []}
+            blocked={(practice.blockedModes ?? []).filter((m) => !m.startsWith('shape-'))}
             onChange={(blocked) =>
-              void save({ practice: { ...practice, blockedModes: blocked as ModeName[] } })
+              void save({
+                practice: {
+                  ...practice,
+                  blockedModes: [
+                    ...(practice.blockedModes ?? []).filter((m) => m.startsWith('shape-')),
+                    ...(blocked as ModeId[]),
+                  ],
+                },
+              })
+            }
+          />
+        </Row>
+        <Row
+          label="Shapes"
+          hint="Of the pentatonic and blues scales. Struck out for all three at once."
+        >
+          <Blockable
+            label="Shapes"
+            options={SHAPE_IDS.map((m) => ({ id: m, label: modeTitle(m) }))}
+            blocked={(practice.blockedModes ?? []).filter((m) => m.startsWith('shape-'))}
+            onChange={(blocked) =>
+              void save({
+                practice: {
+                  ...practice,
+                  blockedModes: [
+                    ...(practice.blockedModes ?? []).filter((m) => !m.startsWith('shape-')),
+                    ...(blocked as ModeId[]),
+                  ],
+                },
+              })
             }
           />
         </Row>

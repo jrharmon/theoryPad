@@ -1,7 +1,7 @@
 import { cn } from 'cn';
 import { ENLARGED, useEnlarge } from '@/components/media/useEnlarge';
 import { EnlargeScrim } from '@/components/media/EnlargeScrim';
-import { modeTitle } from '@/domain/music';
+import { keyModeName, modeTitle } from '@/domain/music';
 import { speedPercent } from '@/domain/backing';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
@@ -128,7 +128,7 @@ export function BackingDroppedNote() {
   if (!dropped || !keyMode) return null;
   return (
     <span className="text-meta text-ink-muted">
-      Your track isn’t in {keyMode.tonic} {modeTitle(keyMode.mode)} — the notes play instead.
+      Your track isn’t in {keyModeName(keyMode)} — the notes play instead.
     </span>
   );
 }

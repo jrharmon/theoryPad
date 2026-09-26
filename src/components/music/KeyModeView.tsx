@@ -2,8 +2,10 @@ import type { ChordFunction, KeyMode } from '@/domain/music';
 import {
   chordOnDegree,
   diatonicChords,
+  harmonyOf,
+  keyModeName,
   modeCharacter,
-  modeTitle,
+  progressionsFor,
   romanNumeral,
   scaleDegrees,
   scaleNotes,
@@ -87,8 +89,10 @@ export function KeyModeView({
   className?: string;
 }) {
   const character = modeCharacter(keyMode);
-  const chords = diatonicChords(keyMode);
-  const name = `${keyMode.tonic} ${modeTitle(keyMode.mode)}`;
+  // A pentatonic's chords are its parent mode's (task 5 of the Scales run labels them so).
+  const harmony = harmonyOf(keyMode);
+  const chords = diatonicChords(harmony);
+  const name = keyModeName(keyMode);
 
   if (variant === 'compact') {
     return (
@@ -161,17 +165,17 @@ export function KeyModeView({
 
       <Kicker className="mt-6 block">Go-to progressions</Kicker>
       <ul className="mt-1">
-        {(character.progressions ?? []).map((progression) => (
+        {progressionsFor(keyMode).map((progression) => (
           <li key={progression.degrees.join('-')} className="border-b border-rule py-2.5">
             <p className="text-body">
               <span className="font-bold">
                 {progression.degrees
-                  .map((d) => romanNumeral(chordOnDegree(keyMode, d)))
+                  .map((d) => romanNumeral(chordOnDegree(harmony, d)))
                   .join(' – ')}
               </span>
               <span className="ml-3 text-ink-muted">
                 {progression.degrees
-                  .map((d) => chordOnDegree(keyMode, d).triadSymbol)
+                  .map((d) => chordOnDegree(harmony, d).triadSymbol)
                   .join(' – ')}
               </span>
             </p>

@@ -1,7 +1,7 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–2 done;
-task 2 awaiting review** (see the Outcomes at the end). It
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–3 done;
+task 3 awaiting review** (see the Outcomes at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -306,4 +306,53 @@ Scale picker in task 5, where its reference panel learns about scales without ch
 their own. Every box of every pentatonic scale is whole and in reach on standard, drop D,
 7-string and bass (drop D's low string stretches one blues box to six frets).
 `pnpm check` green (788 unit tests), E2E 69/69.
+
+Reviewed: these are the boxes the player plays; major pentatonic Shape 1 starts on the root —
+both confirmed.
+
+### Task 3 — The scale axis and settings (2026-09-25)
+
+- **`scale` is a session axis**, rolled first (`SESSION_AXIS_ORDER` is scale, mode, key). Its
+  default policy is **Fixed: Major**, so an exercise, routine or policy stored before scales
+  existed plays exactly as before. The mode axis offers the rolled scale's modes (shapes for a
+  pentatonic, the one own-named mode for harmonic minor, Phrygian dominant and melodic minor);
+  the key axis spells for the scale and mode. An exercise that doesn't declare `scale` is
+  Major.
+- **A pinned value the roll can't use now rolls** instead of throwing: a Dorian pin when the
+  scale rolls a pentatonic, or an unknown value. (It used to throw on an unknown value.)
+- **Land on** (`targetScaleDegree`) offers only the scale's own degrees — no 2 or 6 in minor
+  pentatonic — and never blues' ♭5, a passing note. So a bare degree number always names one
+  note. Its signature weighting compares full degrees.
+- **Settings → Keys and modes** has **Scales** (harmonic minor, Phrygian dominant and melodic
+  minor struck out by default, for new and existing installs — tested), **Modes** (of the Major
+  scale) and **Shapes** (shared by the three pentatonic scales), stored as `blockedScales` and
+  `blockedModes`. A scale whose every mode is struck out is skipped when the mode rolls.
+- **Routines** own the scale with the key and mode: the builder's session editor has it, and
+  every item plays the routine's scale (tested).
+- **The policy editor** reads Key → Scale → Mode. The mode row is "Shape" for a pentatonic,
+  hidden for a scale with one mode, and "Mode or shape" (Major modes and shapes) while the
+  scale rolls. A pinned mode the pinned scale doesn't have shows as Roll, which is what the
+  roller does; it isn't cleared, so it comes back if the scale does. Library rows don't say
+  "Scale: Major" (the default).
+- **The strip** reads "A minor pentatonic, shape 2" in its "Key & scale" cell (or "Key & mode"
+  for Major), fresh when the key, scale or mode changed. Briefs and the backing menu name the
+  key the same way (`keyModeName`).
+- **Data**: reps carry `scale` in their axes when the exercise declares it; a rep without one
+  was Major. The key × mode grid counts Major passes only (`keyModeOf`), and the explorer's
+  "last key" stays Major until task 5. The CSV export gains a `scale` column. Nothing needed
+  migrating: `transfer.ts` round-trips as before (E2E).
+- **Which exercises have it**: the five played exercises declare `scale`. Position shifting is
+  limited to the scales it can play today (not the pentatonics, whose two-note boxes it can't
+  shift through yet); task 4 opens it and makes every exercise play the right shapes. The
+  diatonic drill does not declare it until task 5 — in a pentatonic routine it rolls its own
+  Major mode meanwhile.
+- **To keep a pentatonic from crashing the practice screen**, chords there go through
+  `harmonyOf` (the backing menu, the improv chord counter, the generated backing editor, the
+  reference panel), and the circle of fifths draws nothing for a key without a signature. That
+  is the agreed behavior; task 5 still labels the reference's borrowed chords and fixes its
+  seven-column note row.
+
+Looked at: the editor (pinned pentatonic, rolling scale, harmonic minor), the practice screen
+on A minor pentatonic shape 2, and Settings, in light and dark. `pnpm check` green (793 unit
+tests), E2E 69/69.
 

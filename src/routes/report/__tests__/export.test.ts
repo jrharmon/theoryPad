@@ -30,10 +30,10 @@ describe('reportCsv', () => {
     });
     const [header, line] = csv.trim().split('\r\n');
     expect(header).toBe(
-      'date,started,exercise,routine,status,tempo,free_time,seconds,key,mode,other_settings,correct,questions',
+      'date,started,exercise,routine,status,tempo,free_time,seconds,key,scale,mode,other_settings,correct,questions',
     );
     expect(line).toBe(
-      '2026-09-07,19:05,Modes up the neck,,completed,80,false,90,D,dorian,direction=ascending; rhythmPattern=eighths,,',
+      '2026-09-07,19:05,Modes up the neck,,completed,80,false,90,D,major,dorian,direction=ascending; rhythmPattern=eighths,,',
     );
   });
 
@@ -43,7 +43,7 @@ describe('reportCsv', () => {
       { exercise: () => 'Scales, "fast"', routine: () => 'Morning, long' },
     );
     expect(csv.trim().split('\r\n')[1]).toBe(
-      '2026-09-07,19:05,"Scales, ""fast""","Morning, long",completed,,true,90,,,,8,10',
+      '2026-09-07,19:05,"Scales, ""fast""","Morning, long",completed,,true,90,,,,,8,10',
     );
   });
 });

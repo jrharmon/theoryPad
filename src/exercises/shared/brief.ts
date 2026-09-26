@@ -1,4 +1,5 @@
 import type { KeyMode } from '@/domain/music';
+import { keyModeName } from '@/domain/music';
 import type { AxisId, RolledVariation } from '@/domain/variation';
 import type { Brief } from '../types';
 
@@ -17,7 +18,7 @@ export interface BriefParts {
 }
 
 export function keyModeLabel(keyMode: KeyMode): string {
-  return `${keyMode.tonic} ${keyMode.mode.charAt(0).toUpperCase()}${keyMode.mode.slice(1)}`;
+  return keyModeName(keyMode);
 }
 
 /**

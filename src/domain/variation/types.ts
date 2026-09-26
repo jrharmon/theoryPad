@@ -3,6 +3,7 @@ import type { Instrument } from '@/domain/instrument';
 
 export const AXIS_IDS = [
   // Session-scoped: rolled once and shared by every exercise in a routine.
+  'scale',
   'mode',
   'key',
   // Exercise-scoped.
@@ -44,7 +45,7 @@ export interface AxisContext {
   instrument: Instrument;
   /** Axis values already resolved in this roll — session axes come first. */
   resolved: ResolvedKeys;
-  /** The session key and mode, once both are resolved. */
+  /** The session key, scale and mode, once resolved. */
   keyMode?: KeyMode;
 }
 

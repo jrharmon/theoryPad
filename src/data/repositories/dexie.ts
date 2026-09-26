@@ -306,6 +306,9 @@ export function defaultSettings(at: number): Settings {
       revealBriefBeforeRep: true,
       defaultFretRange: { low: 0, high: 15 },
       blockedKeys: [],
+      // Rare scales stay out of rolls until the player adds them. Stored
+      // settings from before scales existed take this too.
+      blockedScales: ['harmonic-minor', 'phrygian-dominant', 'melodic-minor'],
       blockedModes: [],
     },
     ui: {

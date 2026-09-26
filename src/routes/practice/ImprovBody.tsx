@@ -1,6 +1,6 @@
 import type { Instrument } from '@/domain/instrument';
 import type { DegreeNumber, KeyMode } from '@/domain/music';
-import { chordOnDegree, noteAtDegree } from '@/domain/music';
+import { chordOnDegree, harmonyOf, noteAtDegree } from '@/domain/music';
 import { overlayFretRange } from '@/domain/neck';
 import { ticksPerBar } from '@/domain/phrase';
 import { ordinal } from '@/exercises/shared';
@@ -34,7 +34,7 @@ function phraseShape(instance: PlayedInstance) {
  */
 function chordCycle(plan: GeneratedPlan, keyMode: KeyMode, tick: number, perBar: number) {
   const steps = plan.progression.map(({ degree, bars }) => {
-    const chord = chordOnDegree(keyMode, degree);
+    const chord = chordOnDegree(harmonyOf(keyMode), degree);
     return {
       symbol: plan.settings.chords === 'triads' ? chord.triadSymbol : chord.seventhSymbol,
       bars,

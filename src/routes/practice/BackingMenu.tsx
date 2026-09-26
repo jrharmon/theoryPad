@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { BackingChoice, Video } from '@/data';
-import { chordOnDegree, modeTitle, romanNumeral, type KeyMode } from '@/domain/music';
+import {
+  chordOnDegree,
+  harmonyOf,
+  keyModeName,
+  romanNumeral,
+  type KeyMode,
+} from '@/domain/music';
 import { compById, SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
 import type { TimeSignature } from '@/domain/phrase';
 import type { GeneratedPlan } from '@/session';
@@ -40,7 +46,7 @@ function generatedDetail(
     return { detail: `Only in ${beats}/${unit} for now.`, disabled: true };
   }
   const numerals = plan.progression.map((step) =>
-    romanNumeral(chordOnDegree(keyMode, step.degree)),
+    romanNumeral(chordOnDegree(harmonyOf(keyMode), step.degree)),
   );
   const what =
     plan.settings.source.kind === 'vamp' ? `Vamp on ${numerals[0]}` : numerals.join(' – ');
@@ -64,7 +70,7 @@ export function BackingMenu() {
   const generated = generatedDetail(plan, keyMode, timeSignature, freeTime);
   const [open, setOpen] = useState(false);
   const running = state === 'playing' || state === 'count-in' || state === 'paused';
-  const key = keyMode ? `${keyMode.tonic} ${modeTitle(keyMode.mode)}` : 'this key';
+  const key = keyMode ? keyModeName(keyMode) : 'this key';
 
   const pick = (choice: BackingChoice) => {
     setOpen(false);

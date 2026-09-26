@@ -1,5 +1,5 @@
 import type { KeyMode } from '@/domain/music';
-import { modeTitle } from '@/domain/music';
+import { hasKeySignature, keyModeName } from '@/domain/music';
 import type { CircleCell, CircleRing } from '@/domain/theory';
 import { CIRCLE_POSITIONS, keyOnCircle, majorAt, minorAt } from '@/domain/theory';
 
@@ -36,6 +36,8 @@ const suffix: Record<CircleRing, string> = { major: '', minor: 'm', diminished: 
  * ballpoint blue — so D Dorian shows C major's chords with D minor picked out.
  */
 export function CircleOfFifths({ keyMode }: { keyMode: KeyMode }) {
+  // Harmonic minor and its kind have no signature of their own to mark.
+  if (!hasKeySignature(keyMode)) return null;
   const circle = keyOnCircle(keyMode);
   const inKey = (ring: CircleRing, position: number): CircleCell | undefined =>
     circle.cells.find((c) => c.ring === ring && c.position === position);
@@ -72,7 +74,7 @@ export function CircleOfFifths({ keyMode }: { keyMode: KeyMode }) {
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       className="mx-auto block w-full max-w-[280px]"
       role="img"
-      aria-label={`Circle of fifths: ${keyMode.tonic} ${modeTitle(keyMode.mode)}, from ${relativeMajor} major, ${count === '0' ? 'no sharps or flats' : count}`}
+      aria-label={`Circle of fifths: ${keyModeName(keyMode)}, from ${relativeMajor} major, ${count === '0' ? 'no sharps or flats' : count}`}
       data-testid="circle-of-fifths"
     >
       {cells.map(({ ring, position, label, cell }) => {

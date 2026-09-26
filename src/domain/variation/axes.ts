@@ -1,9 +1,24 @@
-import type { Chroma, DegreeNumber, ModeName, PitchClass } from '@/domain/music';
+import type {
+  Chroma,
+  DegreeNumber,
+  KeyMode,
+  ModeId,
+  PitchClass,
+  ScaleId,
+} from '@/domain/music';
 import {
   MODE_NAMES,
+  SCALE_IDS,
+  SHAPE_IDS,
   chroma,
+  isModeOf,
+  modeTitle,
+  modesOf,
   pitchClass,
   preferredTonic,
+  scaleDegrees,
+  scaleKind,
+  scaleTitle,
   signatureDegree,
 } from '@/domain/music';
 import type { NeckPosition, StringSet } from '@/domain/instrument';
@@ -81,7 +96,8 @@ function positionName(position: NeckPosition): string {
  * something else does not compile.
  */
 export interface AxisValues {
-  mode: ModeName;
+  scale: ScaleId;
+  mode: ModeId;
   key: PitchClass;
   neckPosition: NeckPosition;
   stringSet: StringSet;
@@ -93,36 +109,89 @@ export interface AxisValues {
   intervalPairing: IntervalPairing;
 }
 
+/**
+ * The scale the key is played in. Absent — an exercise that doesn't declare it,
+ * or anything stored before scales existed — is Major, and so is the default:
+ * a scale is a deliberate choice until the player rolls it.
+ */
+const scaleAxis: AxisDefinition<AxisValues['scale']> = {
+  id: 'scale',
+  scope: 'session',
+  label: 'Scale',
+  candidates: () => [...SCALE_IDS],
+  key: (scale) => scale,
+  format: scaleTitle,
+  parse: (key) => (SCALE_IDS.includes(key as ScaleId) ? (key as ScaleId) : null),
+  defaultPolicy: { mode: 'fixed', value: 'major' },
+};
+
+/** The scale this roll is in: the rolled one, or Major. */
+export function resolvedScale(context: AxisContext): ScaleId {
+  return (context.resolved.scale as ScaleId | undefined) ?? 'major';
+}
+
+/**
+ * The scale's modes — or its shapes, for a pentatonic. A scale with neither
+ * has one, whose id is its own. So `scale` resolves first.
+ */
 const modeAxis: AxisDefinition<AxisValues['mode']> = {
   id: 'mode',
   scope: 'session',
   label: 'Mode',
-  candidates: () => [...MODE_NAMES],
+  candidates: (context) => [...modesOf(resolvedScale(context))],
   key: (mode) => mode,
-  format: (mode) => mode.charAt(0).toUpperCase() + mode.slice(1),
-  parse: (key) => (MODE_NAMES.includes(key as ModeName) ? (key as ModeName) : null),
+  format: modeTitle,
+  parse: (key, context) => (isModeOf(resolvedScale(context), key) ? key : null),
 };
 
 /**
- * The key axis rolls a pitch, and the spelling follows from the mode — Db
- * phrygian is written C#. So it depends on `mode` being resolved first, which
- * is why session axes roll in a defined order.
+ * What the mode axis is called: "Shape" for a pentatonic scale, "Mode" for
+ * Major. Null is a scale that varies, which may be either.
+ */
+export function modeAxisLabel(scale: ScaleId | null): string {
+  if (scale === null) return 'Mode or shape';
+  return scaleKind(scale) === 'shapes' ? 'Shape' : 'Mode';
+}
+
+/**
+ * The modes a player chooses between: the scale's own, or — while the scale
+ * varies — every Major mode and shape. None for a scale with a single mode:
+ * there is nothing to choose.
+ */
+export function modeChoices(scale: ScaleId | null): ModeId[] {
+  if (scale === null) return [...MODE_NAMES, ...SHAPE_IDS];
+  return scaleKind(scale) === 'single' ? [] : [...modesOf(scale)];
+}
+
+/** The scale and mode resolved so far, for spelling a tonic. */
+function spellingOf(context: AxisContext): Pick<KeyMode, 'scale' | 'mode'> {
+  const scale = resolvedScale(context);
+  const mode = context.resolved.mode;
+  return {
+    scale,
+    mode: mode !== undefined && isModeOf(scale, mode) ? mode : modesOf(scale)[0]!,
+  };
+}
+
+/**
+ * The key axis rolls a pitch, and the spelling follows from the scale and mode
+ * — Db phrygian is written C#. So it depends on both being resolved first,
+ * which is why session axes roll in a defined order.
  */
 const keyAxis: AxisDefinition<AxisValues['key']> = {
   id: 'key',
   scope: 'session',
   label: 'Key',
   candidates: (context) => {
-    const mode = (context.resolved.mode ?? 'ionian') as ModeName;
-    return Array.from({ length: 12 }, (_, i) => preferredTonic(i as Chroma, mode));
+    const spelling = spellingOf(context);
+    return Array.from({ length: 12 }, (_, i) => preferredTonic(i as Chroma, spelling));
   },
   key: (tonic) => tonic,
   format: (tonic) => tonic,
   parse: (key, context) => {
     if (!/^[A-G](#|b)?$/.test(key)) return null;
-    // Respell into the rolled mode so a stored C# reads as Db where it should.
-    const mode = (context.resolved.mode ?? 'ionian') as ModeName;
-    return preferredTonic(chroma(pitchClass(key)), mode);
+    // Respell into the rolled scale and mode so a stored C# reads as Db where it should.
+    return preferredTonic(chroma(pitchClass(key)), spellingOf(context));
   },
   identity: (key) => (/^[A-G](#|b)?$/.test(key) ? String(chroma(pitchClass(key))) : key),
 };
@@ -153,6 +222,19 @@ const stringSetAxis: AxisDefinition<AxisValues['stringSet']> = {
 };
 
 /**
+ * The degrees a phrase can land on: the scale's own. A pentatonic has no 2 or
+ * 6 to land on. Blues' ♭5 is left out — it is a passing note, never a place to
+ * stop — so a bare number always names one note (see `noteAtDegree`).
+ */
+function landingDegrees(keyMode: KeyMode | undefined): DegreeNumber[] {
+  if (!keyMode) return [1, 2, 3, 4, 5, 6, 7];
+  const numbers = scaleDegrees(keyMode)
+    .filter((d) => !(keyMode.scale === 'blues' && d.alteration !== 0 && d.number === 5))
+    .map((d) => d.number);
+  return [...new Set(numbers)];
+}
+
+/**
  * Weighted toward the mode's signature degree — the note that makes the mode
  * sound like itself is the most useful thing to be asked to land on.
  */
@@ -160,12 +242,14 @@ const targetScaleDegreeAxis: AxisDefinition<AxisValues['targetScaleDegree']> = {
   id: 'targetScaleDegree',
   scope: 'exercise',
   label: 'Land on',
-  candidates: () => [1, 2, 3, 4, 5, 6, 7],
+  candidates: (context) => landingDegrees(context.keyMode),
   key: (degree) => String(degree),
   format: (degree) => String(degree),
-  parse: (key) => {
+  parse: (key, context) => {
     const n = Number(key);
-    return n >= 1 && n <= 7 ? (n as DegreeNumber) : null;
+    return landingDegrees(context.keyMode).includes(n as DegreeNumber)
+      ? (n as DegreeNumber)
+      : null;
   },
 };
 
@@ -232,6 +316,7 @@ const intervalPairingAxis: AxisDefinition<AxisValues['intervalPairing']> = {
 };
 
 const DEFINITIONS = [
+  scaleAxis,
   modeAxis,
   keyAxis,
   neckPositionAxis,
@@ -259,10 +344,11 @@ export function allAxisDefinitions(): readonly AxisDefinition[] {
 }
 
 /**
- * Session axes in resolution order. `mode` comes before `key` because the
- * spelling of the tonic depends on the mode.
+ * Session axes in resolution order. `scale` comes before `mode` because the
+ * modes offered depend on it, and both before `key` because the spelling of
+ * the tonic depends on them.
  */
-export const SESSION_AXIS_ORDER: AxisId[] = ['mode', 'key'];
+export const SESSION_AXIS_ORDER: AxisId[] = ['scale', 'mode', 'key'];
 
 export function isSessionAxis(id: AxisId): boolean {
   return axisDefinition(id).scope === 'session';
@@ -286,8 +372,15 @@ export function axisPreferenceWeight(
 ): number {
   if (id !== 'targetScaleDegree' || !context.keyMode) return 1;
 
+  // By full degree: blues' signature is its ♭5, which is not its 5.
   const degree = Number(valueKey);
-  if (degree === signatureDegree(context.keyMode).number) return SIGNATURE_DEGREE_WEIGHT;
+  const signature = signatureDegree(context.keyMode);
+  const landing = scaleDegrees(context.keyMode).find(
+    (d) => d.number === degree && (d.alteration === 0 || context.keyMode!.scale !== 'blues'),
+  );
+  if (landing?.number === signature.number && landing.alteration === signature.alteration) {
+    return SIGNATURE_DEGREE_WEIGHT;
+  }
   if (degree === 1) return ROOT_DEGREE_WEIGHT;
   return 1;
 }

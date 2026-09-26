@@ -25,8 +25,8 @@ import { useSettings } from '@/store/settings';
 import { SettingsDialog } from '../practice/SettingsDialog';
 import { LoadingState } from '@/components/ui/page-header';
 
-/** Key and mode belong to the routine: rolled once, shared by every item. */
-const SESSION_AXES: AxisId[] = ['mode', 'key'];
+/** Key, scale and mode belong to the routine: rolled once, shared by every item. */
+const SESSION_AXES: AxisId[] = ['scale', 'mode', 'key'];
 
 export function RoutineBuilder() {
   const { routineId } = useParams();
@@ -229,7 +229,7 @@ function ItemRow({
     );
   }
 
-  const axes = definition.axes.filter((a) => a !== 'key' && a !== 'mode');
+  const axes = definition.axes.filter((a) => !SESSION_AXES.includes(a));
   // A theory set's reps are its questions: one set, as long as asked for.
   const questions = repsAreQuestions(definition);
   const unit = questions ? 'questions' : 'passes';

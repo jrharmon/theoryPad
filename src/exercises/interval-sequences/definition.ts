@@ -38,6 +38,7 @@ export const intervalSequences: PlayedDefinition = {
   ].join(' '),
 
   axes: [
+    'scale',
     'mode',
     'key',
     'neckPosition',

@@ -8,6 +8,7 @@ import { toggleSubset } from '../policies';
 
 const base = { seed: 1234, instrument: STANDARD_GUITAR };
 const ALL: AxisId[] = [
+  'scale',
   'mode',
   'key',
   'neckPosition',
@@ -137,14 +138,76 @@ describe('axis policies', () => {
     expect(emptySubset.axes.neckPosition).toBeDefined();
   });
 
-  it('refuses a fixed value that does not exist', () => {
-    expect(() =>
-      rollVariation({
+  it('rolls instead when a fixed value can’t be used', () => {
+    // An unknown value, or a mode the rolled scale doesn't have.
+    const unknown = rollVariation({
+      ...base,
+      axes: ['mode'],
+      policies: { mode: { mode: 'fixed', value: 'lydianish' } },
+    });
+    expect(unknown.axes.mode?.source).toBe('roll');
+    const pentatonic = rollVariation({
+      ...base,
+      axes: ['scale', 'mode', 'key'],
+      policies: {
+        scale: { mode: 'fixed', value: 'minor-pentatonic' },
+        mode: { mode: 'fixed', value: 'dorian' },
+      },
+    });
+    expect(pentatonic.axes.mode?.key).toMatch(/^shape-[1-5]$/);
+  });
+});
+
+describe('the scale axis', () => {
+  const SESSION: AxisId[] = ['scale', 'mode', 'key', 'targetScaleDegree'];
+
+  it('is Fixed Major unless the player says otherwise', () => {
+    const rolled = rollVariation({ ...base, axes: SESSION });
+    expect(rolled.axes.scale?.key).toBe('major');
+    expect(variationKeyMode(rolled)?.scale).toBe('major');
+  });
+
+  it('rolls before the mode, which then comes from the scale, spelled for it', () => {
+    for (let seed = 0; seed < 40; seed += 1) {
+      const rolled = rollVariation({
         ...base,
-        axes: ['mode'],
-        policies: { mode: { mode: 'fixed', value: 'lydianish' } },
-      }),
-    ).toThrow(/lydianish/);
+        seed,
+        axes: SESSION,
+        policies: { scale: { mode: 'roll', from: ['blues', 'harmonic-minor'] } },
+      });
+      const km = variationKeyMode(rolled)!;
+      if (km.scale === 'blues') {
+        expect(km.mode).toMatch(/^shape-[1-5]$/);
+        // Blues lands on its own degrees, never its 2, 6 or passing ♭5.
+        expect(['1', '3', '4', '5', '7']).toContain(rolled.axes.targetScaleDegree?.key);
+      } else {
+        expect(km).toMatchObject({ scale: 'harmonic-minor', mode: 'harmonic-minor' });
+        // Spelled A♭, not G♯, which would need an F𝄪.
+        expect(km.tonic).not.toBe('G#');
+      }
+    }
+  });
+
+  it('never rolls a struck-out scale, or one whose every mode is struck out', () => {
+    const shapes = ['shape-1', 'shape-2', 'shape-3', 'shape-4', 'shape-5'];
+    for (let seed = 0; seed < 40; seed += 1) {
+      const rolled = rollVariation({
+        ...base,
+        seed,
+        axes: SESSION,
+        policies: { scale: { mode: 'roll' } },
+        blocked: { scale: ['harmonic-minor', 'melodic-minor'], mode: shapes },
+      });
+      expect(['major', 'phrygian-dominant']).toContain(rolled.axes.scale?.key);
+    }
+    // Fixed still plays it.
+    const fixed = rollVariation({
+      ...base,
+      axes: SESSION,
+      policies: { scale: { mode: 'fixed', value: 'melodic-minor' } },
+      blocked: { scale: ['melodic-minor'] },
+    });
+    expect(fixed.axes.scale?.key).toBe('melodic-minor');
   });
 });
 

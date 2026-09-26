@@ -49,7 +49,7 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
     'phrases, so all you have to listen for is where the phrase ends.',
   ].join(' '),
 
-  axes: ['mode', 'key', 'targetScaleDegree', 'neckPosition', 'stringSet'],
+  axes: ['scale', 'mode', 'key', 'targetScaleDegree', 'neckPosition', 'stringSet'],
   params,
   defaults: {
     targetTempo: 90,

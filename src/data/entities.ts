@@ -1,4 +1,4 @@
-import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
+import type { KeyMode, ModeId, ModeName, PitchClass, ScaleId } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
@@ -248,10 +248,12 @@ export interface Settings {
     defaultFretRange: { low: number; high: number };
     /**
      * Never rolled, anywhere: keys by pitch (spelled as majors, so Db covers
-     * C#) and modes. A key or mode pinned or held on purpose still plays.
+     * C#), scales, and modes — the Major scale's and the pentatonic shapes. A
+     * key, scale or mode pinned or held on purpose still plays.
      */
     blockedKeys: string[];
-    blockedModes: ModeName[];
+    blockedScales: ScaleId[];
+    blockedModes: ModeId[];
   };
   ui: {
     showFingerings: boolean;

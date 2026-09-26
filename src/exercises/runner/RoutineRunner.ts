@@ -163,6 +163,7 @@ export class RoutineRunner {
     });
     this.keyMode = variationKeyMode(session) ?? this.keyMode;
     const shared: AxisPolicies = {
+      scale: { mode: 'fixed', value: this.keyMode.scale },
       mode: { mode: 'fixed', value: this.keyMode.mode },
       key: { mode: 'fixed', value: this.keyMode.tonic },
     };
@@ -185,7 +186,7 @@ export class RoutineRunner {
         countInBars: item.countInBars ?? this.config.countInBars ?? 0,
         heldAxisValues: item.heldAxisValues,
         ...(item.subjectWeights ? { subjectWeights: item.subjectWeights } : {}),
-        // Key and mode belong to the routine, whatever the item's own policy.
+        // Key, scale and mode belong to the routine, whatever the item's own policy.
         axisPolicies: { ...item.axisPolicies, ...shared },
         now: this.config.now,
         ...(this.config.onRepStart ? { onRepStart: this.config.onRepStart } : {}),

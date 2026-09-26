@@ -505,6 +505,26 @@ describe('settings saved before a field existed', () => {
     await database.delete();
   });
 
+  it('strike out the rare scales when they predate scales', async () => {
+    const database = new TheoryPadDB(`old-settings-${Math.random()}`);
+    const repos = createRepositories(database);
+    const current = await repos.settings.get();
+    const { blockedScales: _dropped, ...oldPractice } = current.practice;
+    await database.settings.put({
+      ...current,
+      practice: { ...oldPractice, blockedModes: ['locrian'] } as typeof current.practice,
+    });
+
+    const loaded = await repos.settings.get();
+    expect(loaded.practice.blockedScales).toEqual([
+      'harmonic-minor',
+      'phrygian-dominant',
+      'melodic-minor',
+    ]);
+    expect(loaded.practice.blockedModes).toEqual(['locrian']);
+    await database.delete();
+  });
+
   it('follow the system when they predate Appearance', async () => {
     const database = new TheoryPadDB(`old-settings-${Math.random()}`);
     const repos = createRepositories(database);

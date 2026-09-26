@@ -1,4 +1,5 @@
 import { axisDefinition } from '@/domain/variation';
+import { keyModeName } from '@/domain/music';
 import { usePractice } from '@/store/practice';
 import { ReferenceTrigger } from './ReferenceTrigger';
 
@@ -24,15 +25,22 @@ export function AxisStrip() {
   // screen and always shows it, so a second copy here is noise.
   if (shown.length === 0) return null;
 
-  // The key cell reads "Bb Ionian": the mode is rolled too, but showing it in
-  // its own cell separates two halves of one idea.
-  const mode = variation.axes.mode;
+  // The key cell reads "Bb Ionian" or "A minor pentatonic, shape 2": the scale
+  // and mode are rolled too, but separate cells would split one idea.
+  const { mode, scale } = variation.axes;
+  const keyMode = snapshot.keyMode;
+  const keyFresh = (mode?.fresh ?? false) || (scale?.fresh ?? false);
 
   const cells = shown.map((axis) => ({
     key: axis.id,
-    label: axis.id === 'key' ? 'Key & mode' : axisDefinition(axis.id).label,
-    value: axis.id === 'key' && mode ? `${axis.display} ${mode.display}` : axis.display,
-    fresh: axis.fresh || (axis.id === 'key' && (mode?.fresh ?? false)),
+    label:
+      axis.id === 'key'
+        ? keyMode.scale === 'major'
+          ? 'Key & mode'
+          : 'Key & scale'
+        : axisDefinition(axis.id).label,
+    value: axis.id === 'key' && mode ? keyModeName(keyMode) : axis.display,
+    fresh: axis.fresh || (axis.id === 'key' && keyFresh),
     note: null as string | null,
   }));
 

@@ -1,4 +1,5 @@
-import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
+import type { KeyMode, ModeId, PitchClass, ScaleId } from '@/domain/music';
+import { SCALE_IDS, modesOf } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { Rng, Weighted } from './rng';
 import { mulberry32 } from './rng';
@@ -89,12 +90,10 @@ function resolveOne(
 
   if (policy.mode === 'fixed') {
     const value = definition.parse(policy.value, context);
-    if (value === null) {
-      throw new Error(`Axis ${id} cannot be fixed to unknown value "${policy.value}"`);
-    }
-    // Pinned to something the exercise does not offer — a policy from before
-    // it said so — rolls within what it does.
-    if (allowedKey(definition.key(value))) return make(value, 'fixed');
+    // Pinned to something this roll can't use — a mode the rolled scale doesn't
+    // have — or the exercise doesn't offer, a policy from before it said so:
+    // roll within what it does.
+    if (value !== null && allowedKey(definition.key(value))) return make(value, 'fixed');
   }
 
   if (policy.mode === 'hold' && heldKey !== undefined) {
@@ -153,6 +152,7 @@ export function rollVariation(options: RollOptions): RolledVariation {
 
   const resolved: ResolvedKeys = {};
   const out: Partial<Record<AxisId, ResolvedAxis>> = {};
+  const blocked = withEmptyScalesBlocked(options);
 
   // Session axes first: the key's spelling depends on the mode.
   for (const id of orderAxes(axes)) {
@@ -171,7 +171,7 @@ export function rollVariation(options: RollOptions): RolledVariation {
       rng,
       held[id],
       coverage[id] ?? {},
-      { allowed: options.allowed?.[id], blocked: options.blocked?.[id] },
+      { allowed: options.allowed?.[id], blocked: blocked?.[id] },
     );
 
     out[id] = axis;
@@ -181,26 +181,49 @@ export function rollVariation(options: RollOptions): RolledVariation {
   return { seed, axes: out };
 }
 
-/** The session key and mode, from this roll or from the session it belongs to. */
+/**
+ * The player's struck-out values, plus any scale whose every mode is struck out
+ * — striking out all five shapes leaves the pentatonics nothing to roll, so
+ * they are skipped rather than rolled with a struck-out shape. Only when the
+ * mode rolls too: a pinned mode is played whatever Settings say.
+ */
+function withEmptyScalesBlocked(options: RollOptions): AxisValueKeys | undefined {
+  const { blocked, axes, policies = {} } = options;
+  const blockedModes = blocked?.mode ?? [];
+  if (!blocked || blockedModes.length === 0 || !axes.includes('mode')) return blocked;
+  if (policyFor(policies, 'mode').mode !== 'roll') return blocked;
+  const empty = SCALE_IDS.filter((scale) =>
+    modesOf(scale).every((mode) => blockedModes.includes(mode)),
+  );
+  return empty.length === 0
+    ? blocked
+    : { ...blocked, scale: [...(blocked.scale ?? []), ...empty] };
+}
+
+/** The session key, scale and mode, from this roll or from the session it belongs to. */
 function keyModeFrom(resolved: ResolvedKeys, fallback?: KeyMode): KeyMode | null {
   if (resolved.key && resolved.mode) {
     return {
       tonic: resolved.key as PitchClass,
-      scale: 'major',
-      mode: resolved.mode as ModeName,
+      scale: (resolved.scale as ScaleId | undefined) ?? 'major',
+      mode: resolved.mode as ModeId,
     };
   }
   return fallback ?? null;
 }
 
-/** Convenience: the resolved key and mode of a variation, if it has both. */
+/**
+ * Convenience: the resolved key, scale and mode of a variation, if it has a
+ * key and mode. No scale is Major.
+ */
 export function variationKeyMode(
   variation: RolledVariation,
   fallback?: KeyMode,
 ): KeyMode | null {
   const tonic = variation.axes.key?.value as PitchClass | undefined;
-  const mode = variation.axes.mode?.value as ModeName | undefined;
-  if (tonic && mode) return { tonic, scale: 'major', mode };
+  const mode = variation.axes.mode?.value as ModeId | undefined;
+  const scale = (variation.axes.scale?.value as ScaleId | undefined) ?? 'major';
+  if (tonic && mode) return { tonic, scale, mode };
   return fallback ?? null;
 }
 

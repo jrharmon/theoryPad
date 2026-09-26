@@ -1,5 +1,6 @@
-import { axisDefinition, policyFor } from '@/domain/variation';
-import type { AxisId, AxisPolicies } from '@/domain/variation';
+import { axisDefinition, modeAxisLabel, modeChoices, policyFor } from '@/domain/variation';
+import type { AxisId, AxisPolicies, ResolvedKeys } from '@/domain/variation';
+import type { ScaleId } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import { repsAreQuestions } from './params';
 import type { AnyExerciseDefinition } from './types';
@@ -18,31 +19,45 @@ export function describePolicies(
 ): string[] {
   const out: string[] = [];
 
+  // The mode reads against a pinned scale: "Shape: Shape 2", and nothing for a
+  // scale with one mode. A scale that isn't pinned leaves it as is.
+  const scalePolicy = policyFor(policies, 'scale');
+  const scale: ScaleId | null = !axes.includes('scale')
+    ? 'major'
+    : scalePolicy.mode === 'fixed'
+      ? (scalePolicy.value as ScaleId)
+      : null;
+  const resolved: ResolvedKeys = scale === null ? {} : { scale };
+
   for (const id of axes) {
     const policy = policyFor(policies, id);
+    const definition = axisDefinition(id);
+    const label = id === 'mode' ? modeAxisLabel(scale) : definition.label;
+    // Major is the default, and every exercise's: saying so on each row is noise.
+    if (id === 'scale' && scale === 'major') continue;
+    if (id === 'mode' && scale !== null && modeChoices(scale).length === 0) continue;
+
     if (policy.mode === 'roll') {
       if (policy.from && policy.from.length > 0) {
-        const definition = axisDefinition(id);
-        const labels = definition
-          .candidates({ instrument, resolved: {} })
+        const candidates: unknown[] =
+          id === 'mode' ? modeChoices(scale) : definition.candidates({ instrument, resolved });
+        const labels = candidates
           .filter((c) => policy.from!.includes(definition.key(c)))
           .map((c) => definition.format(c));
-        if (labels.length > 0) out.push(`${definition.label}: ${labels.join(', ')}`);
+        if (labels.length > 0) out.push(`${label}: ${labels.join(', ')}`);
       }
       continue;
     }
 
-    const definition = axisDefinition(id);
-
     if (policy.mode === 'hold') {
-      out.push(`${definition.label} held`);
+      out.push(`${label} held`);
       continue;
     }
 
-    const value = definition.parse(policy.value, { instrument, resolved: {} });
-    out.push(
-      `${definition.label}: ${value === null ? policy.value : definition.format(value)}`,
-    );
+    const value = definition.parse(policy.value, { instrument, resolved });
+    // A mode pinned that the pinned scale doesn't have rolls; say nothing.
+    if (value === null && id === 'mode') continue;
+    out.push(`${label}: ${value === null ? policy.value : definition.format(value)}`);
   }
 
   return out;

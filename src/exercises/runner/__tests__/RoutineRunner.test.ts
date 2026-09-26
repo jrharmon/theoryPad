@@ -191,6 +191,22 @@ describe('RoutineRunner', () => {
     expect(routine.snapshot.keyMode).toMatchObject({ tonic: 'G', mode: 'dorian' });
   });
 
+  it('shares its scale with every item, as it does its key and mode', () => {
+    const { routine } = makeRoutine([item('a'), item('b')], {
+      sessionAxisPolicies: {
+        scale: { mode: 'fixed', value: 'minor-pentatonic' },
+        key: { mode: 'fixed', value: 'A' },
+        mode: { mode: 'fixed', value: 'shape-2' },
+      },
+    });
+    const shared = { tonic: 'A', scale: 'minor-pentatonic', mode: 'shape-2' };
+    expect(routine.snapshot.keyMode).toEqual(shared);
+    for (const entry of routine.snapshot.items) {
+      expect(entry.variation!.axes.scale?.key).toBe('minor-pentatonic');
+      expect(entry.variation!.axes.mode?.key).toBe('shape-2');
+    }
+  });
+
   it('logs an abandoned pass when left, and does not start the next item', () => {
     const onRepEnd = vi.fn();
     const { routine, clock } = makeRoutine([item('a'), item('b')], { onRepEnd });

@@ -7,7 +7,14 @@ import {
   type GeneratedBackingSettings,
   type Progression,
 } from '@/domain/backing';
-import { chordOnDegree, modeTitle, pitchClass, romanNumeral } from '@/domain/music';
+import {
+  chordOnDegree,
+  harmonyOf,
+  keyModeName,
+  modeTitle,
+  pitchClass,
+  romanNumeral,
+} from '@/domain/music';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -202,7 +209,7 @@ function chordNames(
       : { tonic: pitchClass('C'), scale: 'major' as const, mode: context.mode ?? 'ionian' };
   return progression
     .map(({ degree, bars }) => {
-      const chord = chordOnDegree(keyMode, degree);
+      const chord = chordOnDegree(harmonyOf(keyMode), degree);
       const name =
         'keyMode' in context
           ? chords === 'triads'
@@ -217,7 +224,7 @@ function chordNames(
 /** Which key or mode the chords under each list are in. */
 function contextNote(context: ChordContext): string {
   if ('keyMode' in context) {
-    return `In ${context.keyMode.tonic} ${modeTitle(context.keyMode.mode)}, this roll’s key.`;
+    return `In ${keyModeName(context.keyMode)}, this roll’s key.`;
   }
   if (context.mode) return `Numerals in ${modeTitle(context.mode)}.`;
   return 'Numerals in Ionian; the mode is rolled.';

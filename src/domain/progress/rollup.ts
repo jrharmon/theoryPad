@@ -7,8 +7,13 @@ export function repSeconds(rep: LoggedRep): number {
   return Math.max(0, (rep.endedAt - rep.startedAt) / 1000);
 }
 
-/** `"Bb dorian"`, when the pass had a key and a mode. */
+/**
+ * `"Bb dorian"`, when the pass had a key and a mode of the Major scale — what
+ * the key × mode grid counts. A pass in another scale is logged, not counted
+ * here; one logged before scales existed was Major.
+ */
 export function keyModeOf(axes: Record<string, string>): string | null {
+  if (axes.scale !== undefined && axes.scale !== 'major') return null;
   return axes.key && axes.mode ? `${axes.key} ${axes.mode}` : null;
 }
 

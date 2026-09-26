@@ -20,6 +20,7 @@ const CSV_COLUMNS = [
   'free_time',
   'seconds',
   'key',
+  'scale',
   'mode',
   'other_settings',
   'correct',
@@ -37,7 +38,7 @@ export function reportCsv(
   const lines = [CSV_COLUMNS.join(',')];
   for (const rep of [...reps].sort((a, b) => a.startedAt - b.startedAt)) {
     const started = new Date(rep.startedAt);
-    const { key, mode, ...rest } = rep.axes;
+    const { key, scale, mode, ...rest } = rep.axes;
     const other = Object.entries(rest)
       .map(([axis, value]) => `${axis}=${value}`)
       .join('; ');
@@ -52,6 +53,8 @@ export function reportCsv(
         rep.freeTime,
         Math.round(repSeconds(rep)),
         key,
+        // A pass logged before scales existed was in the Major scale.
+        scale ?? (key && mode ? 'major' : undefined),
         mode,
         other,
         rep.score?.correct,

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { KeyMode } from '@/domain/music';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
-import { modeTitle } from '@/domain/music';
+import { keyModeName } from '@/domain/music';
 import { KeyModeView } from './KeyModeView';
 
 /**
@@ -34,7 +34,7 @@ export function KeyModeTrigger({
   const setPopoverOpen = popover?.onOpenChange ?? setOwnPopover;
   const sheetOpen = sheet?.open ?? ownSheet;
   const setSheetOpen = sheet?.onOpenChange ?? setOwnSheet;
-  const name = `${keyMode.tonic} ${modeTitle(keyMode.mode)}`;
+  const name = keyModeName(keyMode);
 
   return (
     <>

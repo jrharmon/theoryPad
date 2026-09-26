@@ -24,7 +24,7 @@ const params = z.object({
 
 export type ModesThroughKeyParams = z.infer<typeof params>;
 
-const AXES = ['mode', 'key', 'direction', 'rhythmPattern'] as const;
+const AXES = ['scale', 'mode', 'key', 'direction', 'rhythmPattern'] as const;
 
 export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
   id: 'modes-through-key',

@@ -34,7 +34,7 @@ export const oneNotePerString: PlayedDefinition<OneNotePerStringParams> = {
     'by how fast you find the note, never by how fast your hand gets there.',
   ].join(' '),
 
-  axes: ['mode', 'key', 'stringSet'],
+  axes: ['scale', 'mode', 'key', 'stringSet'],
   params,
   defaults: {
     targetTempo: 35,

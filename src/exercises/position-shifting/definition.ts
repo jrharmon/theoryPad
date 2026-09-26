@@ -32,7 +32,12 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
     'route up.',
   ].join(' '),
 
-  axes: ['mode', 'key', 'neckPosition', 'direction', 'rhythmPattern'],
+  axes: ['scale', 'mode', 'key', 'neckPosition', 'direction', 'rhythmPattern'],
+  // A shifting run is three notes a string; the pentatonic boxes are two, and
+  // join the run in the next task of the Scales run.
+  allowedValues: {
+    scale: ['major', 'blues', 'harmonic-minor', 'phrygian-dominant', 'melodic-minor'],
+  },
   params,
   defaults: {
     targetTempo: 72,
