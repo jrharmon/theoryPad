@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **Triplet brackets and the neck window are built on `triplets-neck-window`, awaiting the gate** — see "Triplets and the neck window" below. Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -62,7 +62,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
-| Triplet brackets, neck window | at the gate on `triplets-neck-window` — see below |
+| Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -208,10 +208,10 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Triplets and the neck window — at the gate (2026-09-26)
+## Triplets and the neck window — merged (2026-09-26)
 
-Asked for directly (no spec doc), on branch `triplets-neck-window`, a commit each; not yet
-merged. `pnpm check` green (956 unit tests), all 71 E2E pass. The player took every
+Asked for directly (no spec doc). Built on `triplets-neck-window`, a commit each, passed at
+the gate with no changes, fast-forwarded into `main` and pushed; the branch is deleted. `pnpm check` green (956 unit tests), all 71 E2E pass. The player took every
 recommendation:
 
 - **Triplet brackets.** A beat played in eighth triplets gets a bracket with an italic "3"
@@ -229,8 +229,7 @@ recommendation:
   frets is shown whole, with no arrows. A new roll reopens it. Improvise's neck, in the main
   column, still shows everything.
 
-**For the gate:** is the "3" readable from playing distance without crowding the tab, and
-are 7 frets / a 5-fret step right with a guitar in your hands (Modes up the neck spans 18)?
+**Gate review:** both looked good as built — the "3" and 7 frets with a 5-fret step stand.
 
 ## Practice list — merged (2026-09-26)
 
