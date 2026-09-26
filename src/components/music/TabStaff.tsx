@@ -2,8 +2,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type { Articulation, Bar, Phrase, TabNote, TimeSignature } from '@/domain/phrase';
-import { PPQ, requiredSubdivision, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
+import type {
+  Articulation,
+  Bar,
+  Phrase,
+  TabNote,
+  TimeSignature,
+  TripletGroup,
+} from '@/domain/phrase';
+import {
+  PPQ,
+  requiredSubdivision,
+  ticksPerBar,
+  ticksPerBeat,
+  tripletGroups,
+} from '@/domain/phrase';
 import { barsPerLine, zoomScale } from './tabLayout';
 
 export interface TabStaffProps {
@@ -158,6 +171,8 @@ export function TabStaff({
         )
       : -1;
 
+  const triplets = useMemo(() => tripletGroups(phrase), [phrase]);
+
   const systems = chunk(phrase.bars, perSystem);
 
   const columnsPerSystem = perSystem * columnsPerBar;
@@ -211,6 +226,7 @@ export function TabStaff({
           playheadColumn={playheadColumn}
           chords={lane}
           currentChord={currentChord}
+          triplets={triplets}
           showBarLabels={showBarLabels}
           showPickStrokes={showPickStrokes}
           {...(onSeek ? { onSeek } : {})}
@@ -237,6 +253,7 @@ interface TabSystemProps {
   chords: readonly ChordSpan[] | null;
   /** Index into `chords` of the one under the playhead; -1 for none. */
   currentChord: number;
+  triplets: readonly TripletGroup[];
   showBarLabels: boolean;
   showPickStrokes: boolean;
   onSeek?: (startTick: number) => void;
@@ -257,6 +274,7 @@ function TabSystem({
   playheadColumn,
   chords,
   currentChord,
+  triplets,
   showBarLabels,
   showPickStrokes,
   onSeek,
@@ -300,6 +318,14 @@ function TabSystem({
           gridColumns={gridColumns}
         />
       )}
+      <TripletLane
+        systemIndex={systemIndex}
+        triplets={triplets}
+        startTick={firstColumn * ticksPerColumn}
+        endTick={(firstColumn + columnCount) * ticksPerColumn}
+        ticksPerColumn={ticksPerColumn}
+        gridColumns={gridColumns}
+      />
       <div className="relative">
         {localPlayhead !== null && (
           <div
@@ -450,6 +476,72 @@ function ChordLane({
           </span>
         </span>
       ))}
+    </div>
+  );
+}
+
+/**
+ * A bracket with a "3" over each beat played in triplets, the way notation
+ * marks them. It runs from the first triplet's column to the third's, so it
+ * sits over the notes rather than the whole beat. Only a line with triplets on
+ * it gets the lane.
+ */
+function TripletLane({
+  systemIndex,
+  triplets,
+  startTick,
+  endTick,
+  ticksPerColumn,
+  gridColumns,
+}: {
+  systemIndex: number;
+  triplets: readonly TripletGroup[];
+  startTick: number;
+  endTick: number;
+  ticksPerColumn: number;
+  gridColumns: string;
+}) {
+  const here = triplets.filter((t) => t.startTick >= startTick && t.startTick < endTick);
+  if (here.length === 0) return null;
+
+  return (
+    <div
+      style={{ display: 'grid', gridTemplateColumns: gridColumns }}
+      className="pb-1"
+      data-testid={`triplet-lane-${systemIndex}`}
+    >
+      {here.map((group) => {
+        const span = group.durationTicks / ticksPerColumn;
+        // Column centres of the first and the third triplet, as fractions of the beat.
+        const left = 0.5 / span;
+        const right = 1 / 3 - 0.5 / span;
+        return (
+          <span
+            key={group.startTick}
+            data-testid="triplet-bracket"
+            data-start-tick={group.startTick}
+            aria-label="Triplet"
+            className="relative h-4"
+            style={{
+              gridRow: 1,
+              gridColumn: `${(group.startTick - startTick) / ticksPerColumn + 2} / span ${span}`,
+            }}
+          >
+            <span
+              aria-hidden
+              className="absolute bottom-0 h-1.5 border-x border-t border-ink-muted"
+              style={{ left: `${left * 100}%`, right: `${right * 100}%` }}
+            />
+            <span
+              aria-hidden
+              className="num absolute -bottom-0.5 -translate-x-1/2 bg-paper px-1 text-body-sm leading-none font-semibold text-ink-muted italic"
+              style={{ left: `${((left + 1 - right) / 2) * 100}%` }}
+            >
+              3
+            </span>
+          </span>
+        );
+      })}
     </div>
   );
 }

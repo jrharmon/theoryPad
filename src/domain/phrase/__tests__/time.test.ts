@@ -21,8 +21,10 @@ import {
   ticksPerBeat,
   ticksToSeconds,
   tickToBarBeat,
+  tripletGroups,
 } from '../time';
 import { phraseBuilder } from '../builder';
+import { EIGHTH_TRIPLETS, SWUNG_EIGHTHS } from '../rhythm';
 
 describe('PPQ', () => {
   it('divides cleanly into every note value, triplets included', () => {
@@ -166,5 +168,31 @@ describe('countInTicks', () => {
     expect(countInTicks(FOUR_FOUR, 0.5)).toBe(2 * QUARTER);
     expect(countInTicks(THREE_FOUR, 0.5)).toBe(2 * QUARTER);
     expect(countInTicks(SIX_EIGHT, 0.5)).toBe(3 * EIGHTH);
+  });
+});
+
+describe('tripletGroups', () => {
+  const run = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({ string: 0, fret: 3 + i }));
+
+  it('brackets exactly the beats played in triplets', () => {
+    // Beat 1 in quarters, beats 2–3 in triplets, beat 4 in eighths.
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .note({ string: 0, fret: 3 })
+      .withRhythm(run(6), EIGHTH_TRIPLETS)
+      .rhythm(EIGHTH)
+      .sequence(run(2))
+      .build();
+    expect(tripletGroups(phrase)).toEqual([
+      { startTick: QUARTER, durationTicks: QUARTER },
+      { startTick: QUARTER * 2, durationTicks: QUARTER },
+    ]);
+  });
+
+  it('leaves swung eighths unmarked: swing is a feel, not a triplet', () => {
+    const phrase = phraseBuilder().withRhythm(run(8), SWUNG_EIGHTHS).build();
+    expect(requiredSubdivision(phrase)).toBe(3);
+    expect(tripletGroups(phrase)).toEqual([]);
   });
 });
