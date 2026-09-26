@@ -181,9 +181,7 @@ describe('diatonic questions', () => {
     expect(blues.rows.map((r) => r.correctOptionId)).toEqual(pcs('C', 'D', 'Eb', 'E', 'G'));
 
     const family = chordFamily(pentatonic, mulberry32(3), false, 'q', 'subdominant');
-    expect(family.prompt).toBe(
-      'Which chords are the subdominant family in A Aeolian, the parent of A minor pentatonic?',
-    );
+    expect(family.prompt).toBe('Which chords are the subdominant family in A Aeolian?');
     expect(family.options).toHaveLength(7);
   });
 

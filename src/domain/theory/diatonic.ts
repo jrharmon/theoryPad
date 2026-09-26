@@ -74,17 +74,6 @@ function parentMajorNote(km: KeyMode): string {
     : `${sig.relativeMajor} major, starting on its ${ORDINAL[scaleDegreesFromMajor(km)]} note`;
 }
 
-/**
- * How a chord question names its key. A pentatonic has no chords of its own,
- * so its questions are about its parent's, and say so (decision 20).
- */
-function chordKeyName(km: KeyMode): string {
-  const harmony = harmonyOf(km);
-  return harmony === km
-    ? keyModeName(km)
-    : `${keyModeName(harmony)}, the parent of ${keyModeName(km)}`;
-}
-
 function scaleDegreesFromMajor(km: KeyMode): number {
   const order = ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian'];
   return order.indexOf(km.mode);
@@ -139,8 +128,10 @@ export function nameChords(
   depth: 'triads' | 'sevenths',
   id: string,
 ): TableFillQuestion {
+  // A pentatonic has no chords of its own: the questions are about its parent
+  // mode's, named plainly — the brief says once whose they are (decision 20).
   const harmony = harmonyOf(km);
-  const name = chordKeyName(km);
+  const name = keyModeName(harmony);
   const chords = diatonicChords(harmony);
   const sevenths = harmony.scale === 'major' ? SEVENTH_OPTIONS : MINOR_SEVENTH_OPTIONS;
   const options =
@@ -225,7 +216,7 @@ export function spellChord(
     options,
     correctOptionId: options[index]!.id,
     feedback: {
-      rule: `${symbol} is ${notes.join(' ')}: the ${ORDINAL[degree - 1]} degree of ${chordKeyName(km)}, with every other note of the key stacked on it.`,
+      rule: `${symbol} is ${notes.join(' ')}: the ${ORDINAL[degree - 1]} degree of ${keyModeName(harmony)}, with every other note of the key stacked on it.`,
       whatItIs,
       visual: {
         kind: 'note-row',
@@ -264,7 +255,7 @@ export function chordFamily(
   // The families come off the chords themselves, so this question and the
   // key/mode reference can never drift apart.
   const harmony = harmonyOf(km);
-  const name = chordKeyName(km);
+  const name = keyModeName(harmony);
   const chords = diatonicChords(harmony);
   const degrees = rng.shuffle(chords.map((c) => c.degree.number));
   const options = degrees.map((d) => ({

@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { KeyMode } from '@/domain/music';
+import { harmonyOf, keyModeName } from '@/domain/music';
 import { diatonicQuestions } from '@/domain/theory';
 import type { TheoryDefinition, TheoryInstance } from '../types';
 import { keyModeLabel, makeBrief, orderedHighlights } from '../shared';
@@ -13,6 +15,19 @@ const params = z.object({
 });
 
 export type DiatonicDrillParams = z.infer<typeof params>;
+
+/**
+ * Said once, in the brief, so the questions can name the key they are about:
+ * a pentatonic's chord questions are its parent mode's (decision 20).
+ */
+function chordsNote(keyMode: KeyMode, types: DiatonicDrillParams['questionTypes']): string {
+  const harmony = harmonyOf(keyMode);
+  if (harmony === keyMode || types.every((t) => t === 'name-notes')) return '';
+  return (
+    `${keyModeName(keyMode)} has no chords of its own, so the chord questions are ` +
+    `about ${keyModeName(harmony)}, the mode it comes from. `
+  );
+}
 
 export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
   id: 'diatonic-drill',
@@ -49,7 +64,8 @@ export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
       questions,
       brief: makeBrief(
         `${questions.length} ${questions.length === 1 ? 'question' : 'questions'} on ${keyModeLabel(keyMode)}.`,
-        'Notes, chords and spelling, no guitar. Number keys answer.',
+        chordsNote(keyMode, config.questionTypes) +
+          'Notes, chords and spelling, no guitar. Number keys answer.',
         orderedHighlights(variation, ['key']),
       ),
     };

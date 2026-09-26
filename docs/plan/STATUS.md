@@ -214,7 +214,7 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 
 Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
 before task 6. Branch `scales`, a commit per task, a stop for the player's review after each;
-unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (945 unit tests in
+unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (946 unit tests in
 56 files), E2E 69/69.
 
 | Task | State |
@@ -253,7 +253,8 @@ note per string's skip-one. `withoutPassingNotes` (blues → minor pentatonic) i
 for "the ♭5 is passing".
 
 **Theory, reference and explorer** (task 5, decisions 20–21): the Key signature drill names a
-pentatonic's own notes and asks about its parent's chords, naming the parent; harmonic minor,
+pentatonic's own notes and asks about its parent's chords (the brief says so once; the
+questions just say "A Aeolian"); harmonic minor,
 Phrygian dominant and melodic minor use their own chords (the 7th table adds mMaj7 and maj7#5).
 The Circle of fifths drill stays Major-only. The reference panel labels borrowed chords
 ("Chords · from A Aeolian"); the explorer has a Scale picker and opens on the last key in its

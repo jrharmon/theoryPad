@@ -114,8 +114,10 @@ Asked and answered before task 5, 2026-09-26:
 20. **The Key signature drill on a pentatonic names its own notes and its parent's chords.**
     *Name the notes of A minor pentatonic* asks its own notes (blues' ♭5 included) — the notes
     just played. The chord questions (qualities, spelling, families) use the parent mode's
-    chords and say so: "…in A Aeolian, the parent of A minor pentatonic". This is how decision
-    6 is applied.
+    chords. This is how decision 6 is applied. _Revised at task 5's review:_ the brief says it
+    once ("A minor pentatonic has no chords of its own, so the chord questions are about A
+    Aeolian, the mode it comes from"), and each question then names only the key it is about
+    ("…in A Aeolian") rather than repeating "the parent of A minor pentatonic".
 21. **The Circle of fifths drill stays Major-only.** It roams every key on its own, and a
     pentatonic's signature is its parent mode's, so a pentatonic signature question would be
     the Aeolian or Ionian question again. The circle beside a pentatonic exercise already
@@ -476,8 +478,8 @@ Decisions 20 and 21 were asked and answered first.
   how the scale is made from one the player knows ("A minor pentatonic is A Aeolian without
   its 2nd and 6th", "A harmonic minor is A natural minor with its 7th raised", "E Phrygian
   dominant is E Phrygian with its 3rd raised"; `SCALE_ORIGIN` in `theory/diatonic.ts`). The
-  chord questions work on `harmonyOf`: a pentatonic's are its parent's and name it ("…in A
-  Aeolian, the parent of A minor pentatonic"); harmonic minor, Phrygian dominant and melodic
+  chord questions work on `harmonyOf`: a pentatonic's are its parent's, which the brief says
+  once, and each question names just that key ("…in A Aeolian"); harmonic minor, Phrygian dominant and melodic
   minor ask about their own chords, and their 7th-chord table offers mMaj7 and maj7#5 too
   (seven options, keys 1–7; a Major key still offers five). Families stay by degree. The
   brief says "1 question", not "1 questions".
@@ -504,7 +506,12 @@ back to Major; the drill's name-the-notes and family questions on A minor pentat
 For the review:
 - On a pentatonic, *Name the notes* offers only the scale's other notes (plus the occasional
   spelling trap), so it is mostly "which note is which degree". Enough, or too easy?
-- The prompts naming the parent are long ("…in A Aeolian, the parent of A minor pentatonic").
+- ~~The prompts naming the parent are long.~~ Changed at the review: see below.
+
+**Review (2026-09-26):** every question called the key "C Aeolian, the parent of C minor
+pentatonic". Now the brief's second line says it once and the questions say "C Aeolian" (tested:
+the brief, and a Major key's brief saying nothing of it). `pnpm check` green (946 unit tests),
+E2E 69/69.
 
 ### Where task 6 starts
 

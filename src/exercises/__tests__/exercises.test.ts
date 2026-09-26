@@ -171,6 +171,26 @@ describe('position-shifting', () => {
 
 const THEORY = EXERCISE_DEFINITIONS.filter((d) => d.kind === 'theory');
 
+describe('diatonic-drill', () => {
+  it('says once, in the brief, whose chords a pentatonic’s questions are about', () => {
+    const drill = exerciseDefinition('diatonic-drill');
+    const brief = (policies: AxisPolicies) => {
+      const instance = generateAny(drill, 1, STANDARD_GUITAR, policies);
+      if (instance.kind !== 'theory') throw new Error('expected theory');
+      return instance.brief;
+    };
+    const pentatonic = brief({
+      scale: { mode: 'fixed', value: 'minor-pentatonic' },
+      key: { mode: 'fixed', value: 'C' },
+    });
+    expect(pentatonic.headline).toMatch(/on C minor pentatonic\.$/);
+    expect(pentatonic.instruction).toMatch(
+      /^C minor pentatonic has no chords of its own, so the chord questions are about C Aeolian/,
+    );
+    expect(brief(D_DORIAN).instruction).not.toMatch(/chords of its own/);
+  });
+});
+
 describe.each(THEORY.map((d) => [d.id, d] as const))('%s', (_id, definition) => {
   const questions = (seed: number) => {
     const instance = generateAny(definition, seed);
