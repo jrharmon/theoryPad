@@ -1,14 +1,15 @@
-import { Fretboard, TabStaff } from '@/components/music';
+import { TabStaff } from '@/components/music';
 import { ZOOM_MAX, ZOOM_MIN } from '@/components/music/tabLayout';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
-import { overlayFretRange } from '@/domain/neck';
+import type { Phrase } from '@/domain/phrase';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { AxisStrip } from './AxisStrip';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
 import { CircleSheet } from './CircleSheet';
 import { InfoColumnToggle, SidePanel } from './SidePanel';
+import { NeckWindow } from './NeckWindow';
 import { ImprovBody } from './ImprovBody';
 import { usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
@@ -163,10 +164,10 @@ function PlayedBody({
               open={showNeck}
               onToggle={(open) => void save({ ui: { ...ui, showNeck: open } })}
             >
-              <Fretboard
+              <NeckWindow
                 instrument={instrument}
                 overlay={instance.neck}
-                fretRange={overlayFretRange(instance.neck, instrument)}
+                startFret={firstFret(instance.phrase)}
               />
             </SidePanel>
           )}
@@ -175,4 +176,11 @@ function PlayedBody({
       )}
     </div>
   );
+}
+
+/** The fret the phrase starts on: where the neck window opens. */
+function firstFret(phrase: Phrase): number {
+  let first = phrase.notes[0];
+  for (const note of phrase.notes) if (note.startTick < (first?.startTick ?? 0)) first = note;
+  return first?.fret ?? 0;
 }

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { makeDegree, pitchClass } from '@/domain/music';
 import { STANDARD_GUITAR, boxShape } from '@/domain/instrument';
 import type { NeckOverlay } from '../overlay';
-import { overlayFretRange, overlayFromScalePositions } from '../overlay';
+import {
+  openingFretWindow,
+  overlayFretRange,
+  overlayFromScalePositions,
+  stepFretWindow,
+} from '../overlay';
 
 const NECK = { ...STANDARD_GUITAR, fretCount: 22 };
 
@@ -29,6 +34,30 @@ describe('overlayFretRange', () => {
 
   it('falls back to the first twelve frets when there is nothing to show', () => {
     expect(overlayFretRange({ notes: [] }, NECK)).toEqual({ low: 0, high: 12 });
+  });
+});
+
+describe('the neck window', () => {
+  // Two shapes, frets 2–5 and 12–15, as "Modes up the neck" lays them out.
+  const twoShapes = at(2, 3, 5, 12, 14, 15);
+  const range = overlayFretRange(twoShapes, NECK);
+
+  it('opens on the shape the phrase starts in, a fret of room below it', () => {
+    expect(openingFretWindow(twoShapes, range, 2)).toEqual({ low: 1, high: 7 });
+    // Starting at the top of the higher shape, as a descending run does.
+    expect(openingFretWindow(twoShapes, range, 15)).toEqual({ low: 10, high: 16 });
+  });
+
+  it('shows the whole range when it already fits', () => {
+    const one = at(5, 7, 8);
+    expect(openingFretWindow(one, overlayFretRange(one, NECK), 5)).toEqual({ low: 4, high: 9 });
+  });
+
+  it('steps less than its width, and stops at the ends of the notes', () => {
+    const start = { low: 1, high: 7 };
+    expect(stepFretWindow(start, range, 1)).toEqual({ low: 6, high: 12 });
+    expect(stepFretWindow({ low: 6, high: 12 }, range, 1)).toEqual({ low: 10, high: 16 });
+    expect(stepFretWindow(start, range, -1)).toEqual(start);
   });
 });
 

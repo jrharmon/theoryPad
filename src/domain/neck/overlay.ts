@@ -77,3 +77,61 @@ export function overlayFretRange(
     high: Math.min(fretCount, Math.max(...frets) + 1),
   };
 }
+
+export type FretRange = { low: number; high: number };
+
+/** Frets the side panel's neck shows at once: enough for a shape, big enough to read. */
+export const NECK_WINDOW_FRETS = 7;
+/** How far an arrow moves the window: less than its width, so a little stays in view. */
+export const NECK_WINDOW_STEP = 5;
+
+/**
+ * The frets to open a small neck on: `size` frets inside `range`, holding
+ * `anchor` (where the phrase starts) and as many of the overlay's notes as
+ * fit. Ties go to the window that keeps a fret of room below the anchor, the
+ * way the full range keeps one either side. A range that fits is returned
+ * whole.
+ */
+export function openingFretWindow(
+  overlay: NeckOverlay,
+  range: FretRange,
+  anchor: number,
+  size: number = NECK_WINDOW_FRETS,
+): FretRange {
+  if (range.high - range.low + 1 <= size) return range;
+  const lowest = range.low;
+  const highest = range.high - size + 1;
+  const clamp = (low: number) => Math.min(highest, Math.max(lowest, low));
+
+  let best = clamp(anchor - 1);
+  let bestCount = -1;
+  for (let low = clamp(anchor - size + 1); low <= clamp(anchor); low += 1) {
+    const count = overlay.notes.filter(
+      (n) => n.position.fret >= low && n.position.fret < low + size,
+    ).length;
+    const nearer = Math.abs(low - (anchor - 1)) < Math.abs(best - (anchor - 1));
+    if (count > bestCount || (count === bestCount && nearer)) {
+      best = low;
+      bestCount = count;
+    }
+  }
+  return { low: best, high: best + size - 1 };
+}
+
+/**
+ * The window moved one step lower (-1) or higher (+1), stopping at the ends
+ * of `range` rather than running past the notes.
+ */
+export function stepFretWindow(
+  window: FretRange,
+  range: FretRange,
+  direction: -1 | 1,
+  step: number = NECK_WINDOW_STEP,
+): FretRange {
+  const size = window.high - window.low + 1;
+  const low = Math.min(
+    range.high - size + 1,
+    Math.max(range.low, window.low + direction * step),
+  );
+  return { low, high: low + size - 1 };
+}
