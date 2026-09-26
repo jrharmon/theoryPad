@@ -32,8 +32,11 @@ describe('modeCharacter', () => {
       ]) {
         expect(text.trim().length, mode).toBeGreaterThan(0);
       }
-      // Pentatonics borrow their parent's; a scale with chords has its own.
-      expect(entry.progressions !== undefined, mode).toBe(hasOwnChords(km.scale));
+      // Pentatonics borrow their parent's; a scale with chords has its own, and so
+      // does blues, whose 12-bars aren't its parent's (decision 23).
+      expect(entry.progressions !== undefined, mode).toBe(
+        hasOwnChords(km.scale) || km.scale === 'blues',
+      );
       expect(progressionsFor(km).length, mode).toBeGreaterThan(0);
     }
   });

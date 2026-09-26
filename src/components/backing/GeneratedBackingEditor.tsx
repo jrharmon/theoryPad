@@ -3,18 +3,12 @@ import {
   COMPS,
   compById,
   formatProgression,
+  backingChord,
   parseProgression,
   type GeneratedBackingSettings,
   type Progression,
 } from '@/domain/backing';
-import {
-  chordOnDegree,
-  harmonyOf,
-  keyModeName,
-  modeTitle,
-  pitchClass,
-  romanNumeral,
-} from '@/domain/music';
+import { keyModeName, modeTitle, pitchClass, romanNumeral } from '@/domain/music';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -209,7 +203,7 @@ function chordNames(
       : { tonic: pitchClass('C'), scale: 'major' as const, mode: context.mode ?? 'ionian' };
   return progression
     .map(({ degree, bars }) => {
-      const chord = chordOnDegree(harmonyOf(keyMode), degree);
+      const chord = backingChord(keyMode, degree);
       const name =
         'keyMode' in context
           ? chords === 'triads'

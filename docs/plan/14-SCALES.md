@@ -1,10 +1,10 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–5 done,
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–6 done,
 with a revision at task 3's review that dropped pentatonic shapes as a setting (decision 16).
-Task 5 is awaiting review; task 6 is next** (see "Where task 6 starts" at the end). It
-goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
-task and a stop for review after each task, as in the last two runs._
+Task 6 is awaiting review; the gate (task 7) is next** (see "Where the gate starts" at the
+end). It goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a
+commit per task and a stop for review after each task, as in the last two runs._
 
 Today every key has a **mode** of the major scale, and nothing else. This run adds a **scale**
 between them. You pick the key, then the scale, then the mode, and the modes offered depend on
@@ -122,6 +122,23 @@ Asked and answered before task 5, 2026-09-26:
     pentatonic's signature is its parent mode's, so a pentatonic signature question would be
     the Aeolian or Ionian question again. The circle beside a pentatonic exercise already
     lights the parent key (task 3).
+
+Asked and answered before task 6, 2026-09-26:
+
+22. **In the generated backing, blues' 1, 4 and 5 are dominant 7ths** (A7, D7, E7 in A); its
+    other degrees stay Aeolian's. So a Vamp on blues is an A7 vamp and a custom `1 4 5` is
+    A7–D7–E7, with no new syntax. Minor pentatonic keeps Aeolian's chords — the scale to pick
+    for a minor blues. The theory drill and the reference's chord table stay Aeolian's
+    (decision 6); the reference shows blues' progressions in the dominant chords.
+23. **Blues' go-to progressions are the slow- and quick-change 12-bars**, both ending on the V
+    turnaround: `I I I I | IV IV I I | V IV I V` and `I IV I I | IV IV I I | V IV I V`. A 12-bar
+    loops over the pass like any progression, so a short exercise only hears its start.
+24. **The backing plays a minor-major 7th or a maj7♯5 as its triad**, so harmonic minor's
+    i–iv–V is Am–Dm7–E7 with Chords: Sevenths (as decision 8 wrote it), and melodic minor's
+    vamp is Am. The tab's chord lane agrees. The theory drill and the reference still name the
+    scale's own 7ths.
+25. **Phrygian dominant gains iv–♭II–I** (Am–F–E in E) alongside the drafted vamp on I and
+    I–♭II.
 
 ## Defaults taken (not asked; say if wrong at the first review)
 
@@ -508,18 +525,45 @@ For the review:
   spelling trap), so it is mostly "which note is which degree". Enough, or too easy?
 - ~~The prompts naming the parent are long.~~ Changed at the review: see below.
 
-**Review (2026-09-26):** every question called the key "C Aeolian, the parent of C minor
+**Review (2026-09-26):** accepted, with one change. Every question called the key "C Aeolian, the parent of C minor
 pentatonic". Now the brief's second line says it once and the questions say "C Aeolian" (tested:
 the brief, and a Major key's brief saying nothing of it). `pnpm check` green (946 unit tests),
 E2E 69/69.
 
-### Where task 6 starts
+### Task 6 — Generated backing per scale (2026-09-26)
 
-Task 6 is **Generated backing per scale** (decision 8). Known gaps:
-- `progression.ts` parses only degrees `[1-7]` — check what a scale's progression lists need
-  and keep the lists editable like the drum tab.
-- Minor pentatonic uses Aeolian's progressions and major pentatonic Ionian's (already so via
-  `progressionsFor`). **Blues** gets a 12-bar with dominant 7ths — the chords are not the
-  parent Aeolian's (I7–IV7–V7 aren't diatonic to it), so it needs its own chord source.
-- Harmonic minor: i–iv–V7. Melodic minor: a vamp on i. **Phrygian dominant**'s are a draft
-  from task 1 (vamp on I; I–♭II) for the player to confirm.
+Decisions 22–25 were asked and answered first. Minor and major pentatonic already used their
+parent's progressions, and harmonic minor, Phrygian dominant and melodic minor already had
+their own lists in `modeCharacter.ts` (from task 1), so the work was blues and the chords.
+- **`backingChords(keyMode)`** (`domain/backing/generated/harmony.ts`) is the one place the
+  backing's chord on a degree comes from: the scale's harmony, with blues' 1, 4 and 5 made
+  dominant 7ths (decision 22) and a minor-major 7th or maj7♯5 played as its triad (decision 24).
+  The chord timeline, the renderer, the Backing menu, the generated backing editor's preview
+  and the improv chord counter all go through it (they used `chordOnDegree(harmonyOf(…))`).
+- **Blues' progressions** are its own: the slow- and quick-change 12-bars, written a degree a
+  bar in `modeCharacter.ts` like the other lists. `progressionsFor` takes a scale's own list
+  before its parent's. `heldBars` turns a repeated degree into one held step, so the menu reads
+  "I ×4 – IV ×2 – …" and the reference "I7 ×4 – IV7 ×2 – … A7 ×4 – D7 ×2 – …"
+  (`progressionChordName` names a chord the backing made dominant by its 7th).
+- **Phrygian dominant** gains iv–♭II–I (decision 25).
+- **Not needed after all:** `progression.ts`'s `[1-7]` parse. Every scale's backing has seven
+  degrees (a pentatonic's are its parent's), and blues' dominants need no syntax.
+
+Tests: blues' backing chords (sevenths and triads, D7's spelling) and minor pentatonic's
+staying Aeolian; harmonic minor's i–iv–V as Am–Dm7–E7; Go-to on blues picking one of the two
+12-bars with held bars; the reference's names. `pnpm check` green (950 unit tests), E2E 69/69.
+
+Looked at: *Improvise to a target* on A blues with Go-to (the chord counter: A7 D7 A7 ×2 D7 ×2
+A7 ×2 E7 D7 A7 E7; the Backing menu's summary), *Interval sequences* on A harmonic minor with
+a custom `1 4 5` (the chord lane: Am, Dm7, E7), and blues' go-to progressions in the explorer's
+reference.
+
+For the review — **by ear**, which no test can do:
+- Is the 12-bar any good? (Style and levels are the generated backing's own, unchanged.)
+- Harmonic minor's Am–Dm7–E7, and Phrygian dominant's three progressions.
+
+### Where the gate starts
+
+Task 7 is **the gate**: the player plays through the run. "What only the player can judge" above
+lists the questions, and each task's "For the review" notes add to them. At the gate, merge
+`scales` into `main` (fast-forward) and push, as the last runs did; M7b is next.

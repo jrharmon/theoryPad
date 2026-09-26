@@ -22,14 +22,27 @@ export function pickProgression(
     case 'goTo': {
       const options = progressionsFor(keyMode);
       if (options.length === 0) return VAMP;
-      const { degrees } = rng.pick(options);
-      return degrees.map((degree) => ({ degree, bars: 1 }));
+      return heldBars(rng.pick(options).degrees);
     }
     case 'custom': {
       const usable = source.progressions.filter((p) => p.length > 0);
       return usable.length > 0 ? rng.pick(usable) : VAMP;
     }
   }
+}
+
+/**
+ * A go-to progression's degrees, a bar each, with a degree repeated held as
+ * one step: a 12-bar's `1 1 1 1` is I for four bars.
+ */
+export function heldBars(degrees: readonly DegreeNumber[]): Progression {
+  const steps: { degree: DegreeNumber; bars: number }[] = [];
+  for (const degree of degrees) {
+    const last = steps.at(-1);
+    if (last?.degree === degree) last.bars += 1;
+    else steps.push({ degree, bars: 1 });
+  }
+  return steps;
 }
 
 export type ParsedProgression =

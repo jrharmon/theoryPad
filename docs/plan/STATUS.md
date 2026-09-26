@@ -2,13 +2,14 @@
 
 **Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
 (`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes), 3
-(the scale axis and settings), 4 (played exercises on every scale) and 5 (theory, reference,
-explorer) are committed, plus a revision at task 3's review; **task 5 awaits the player's
-review**, then task 6. Only Major has
+(the scale axis and settings), 4 (played exercises on every scale), 5 (theory, reference,
+explorer) and 6 (generated backing per scale) are committed, plus a revision at task 3's
+review; **task 6 awaits the player's review**, then the gate. Only Major has
 modes: decisions 10–15 (before task 1) made harmonic minor, Phrygian dominant and melodic minor
 mode-less scales, decision 16 (at task 3's review) dropped pentatonic shapes as a setting — the
 position picks the box — decisions 17–19 (before task 4) settled how box scales shift,
-sequence and skip, and 20–21 (before task 5) how the theory drills treat them.
+sequence and skip, 20–21 (before task 5) how the theory drills treat them, and 22–25 (before
+task 6) what the generated backing plays on them.
 The spec's "Outcomes"
 section says where each task stands. Then M7b. **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
@@ -213,8 +214,8 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 ## Scales run — in progress on `scales` (2026-09-25)
 
 Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
-before task 6. Branch `scales`, a commit per task, a stop for the player's review after each;
-unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (946 unit tests in
+before the gate. Branch `scales`, a commit per task, a stop for the player's review after each;
+unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (950 unit tests in
 56 files), E2E 69/69.
 
 | Task | State |
@@ -224,9 +225,9 @@ unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (9
 | 3 — Scale axis, settings, routines, editor, strip | ✅ committed, reviewed |
 | Revision — no pentatonic shapes (decision 16) | ✅ committed, reviewed ("looks right") |
 | 4 — Played exercises on every scale | ✅ committed |
-| 5 — Theory, reference, explorer | ✅ committed — **awaiting review** |
-| 6 — Generated backing per scale | **next** |
-| 7 — The gate | — |
+| 5 — Theory, reference, explorer | ✅ committed, reviewed (one change, made) |
+| 6 — Generated backing per scale | ✅ committed — **awaiting review** |
+| 7 — The gate | **next** |
 
 **The model now, in one paragraph.** A key is `{ tonic, scale, mode }`. Seven scales: Major,
 Minor pentatonic, Major pentatonic, Blues (minor blues), Harmonic minor, Phrygian dominant,
@@ -260,9 +261,10 @@ The Circle of fifths drill stays Major-only. The reference panel labels borrowed
 ("Chords · from A Aeolian"); the explorer has a Scale picker and opens on the last key in its
 scale.
 
-**Known gaps, by the task that closes them** (the spec's Outcomes list them in full):
-- Task 6: progressions parse only `[1-7]`; blues 12-bar with dominant 7ths; Phrygian
-  dominant's progressions are a draft (vamp on I; I–♭II).
+**Generated backing** (task 6, decisions 22–25): every backing chord comes from
+`backingChords` — blues plays A7, D7, E7 on its 1, 4, 5 and has its own slow- and quick-change
+12-bars; harmonic and melodic minor's mMaj7 and maj7♯5 play as triads (Am–Dm7–E7); Phrygian
+dominant gained iv–♭II–I. Minor pentatonic keeps Aeolian's chords, for a minor blues.
 
 ## Feedback round 7 — merged (2026-09-25)
 

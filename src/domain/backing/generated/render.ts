@@ -1,7 +1,8 @@
 import type { KeyMode, Midi } from '../../music';
-import { diatonicChords, harmonyOf, midi, semitonesBetween } from '../../music';
+import { midi, semitonesBetween } from '../../music';
 import type { CompPattern, CompTone } from './compTab';
 import type { ChordSpan, GeneratedBackingSettings } from './types';
+import { backingChords } from './harmony';
 import { bassRoot, voiceChord } from './voicing';
 
 /** One note the backing plays, in ticks from the pass's bar 1. */
@@ -37,7 +38,7 @@ export function renderPass(
   if (!last) return { bass: [], piano: [] };
   const passEnd = last.startTick + last.durationTicks;
   const copy = copyTicks ?? passEnd;
-  const diatonic = diatonicChords(harmonyOf(keyMode));
+  const diatonic = backingChords(keyMode);
 
   // What each span sounds: its piano voicing and its bass tones.
   let previous: Midi[] | null = null;

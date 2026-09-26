@@ -22,8 +22,9 @@ export interface ModeCharacter {
   /** Against its neighbors: one alteration away in either direction. */
   compare: string;
   /**
-   * Go-to progressions as scale degrees; the view spells them in the key.
-   * Absent for a scale without chords of its own, which uses its parent's.
+   * Go-to progressions as scale degrees, a bar each (a degree repeated is held);
+   * the view spells them in the key. Absent for a pentatonic, which uses its
+   * parent mode's.
    */
   progressions?: { degrees: DegreeNumber[]; use: string }[];
 }
@@ -175,6 +176,17 @@ export const MODE_CHARACTER: Record<CharacterId, ModeCharacter> = {
       'Holding the ♭5 or ending on it: once it stops moving it sounds like a wrong note. Land on 1, ♭3 or 5.',
     compare:
       'Minor pentatonic plus one note. Over a dominant-7th blues it works against every chord.',
+    // The generated backing plays blues' 1, 4 and 5 as dominant 7ths (decision 22).
+    progressions: [
+      {
+        degrees: [1, 1, 1, 1, 4, 4, 1, 1, 5, 4, 1, 5],
+        use: 'The 12-bar. Land on the ♭3 over the I7 and on the root of the IV7 as it arrives.',
+      },
+      {
+        degrees: [1, 4, 1, 1, 4, 4, 1, 1, 5, 4, 1, 5],
+        use: 'Quick change: the IV7 comes early in bar 2. Bend the 4th toward the ♭5 there.',
+      },
+    ],
   },
   'harmonic-minor': {
     summary: 'Natural minor with a raised 7th — a leading tone back to the root.',
@@ -201,6 +213,10 @@ export const MODE_CHARACTER: Record<CharacterId, ModeCharacter> = {
     progressions: [
       { degrees: [1], use: 'Vamp on the I. Let the ♭2 fall to 1, and lean on the 3rd.' },
       { degrees: [1, 2], use: 'The half-step move up to ♭II and back.' },
+      {
+        degrees: [4, 2, 1],
+        use: 'Fall iv–♭II–I; let the ♭2 drop onto the root as the I arrives.',
+      },
     ],
   },
   'melodic-minor': {
@@ -221,7 +237,10 @@ export function modeCharacter(km: Pick<KeyMode, 'scale' | 'mode'>): ModeCharacte
   return MODE_CHARACTER[characterId(km)];
 }
 
-/** The key's go-to progressions: its own, or its parent mode's for a pentatonic. */
+/**
+ * The key's go-to progressions: its own, or its parent mode's for a pentatonic.
+ * Blues has its own 12-bars although its chords are Aeolian's.
+ */
 export function progressionsFor(km: KeyMode): { degrees: DegreeNumber[]; use: string }[] {
-  return modeCharacter(harmonyOf(km)).progressions ?? [];
+  return modeCharacter(km).progressions ?? modeCharacter(harmonyOf(km)).progressions ?? [];
 }

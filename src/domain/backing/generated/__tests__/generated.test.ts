@@ -4,10 +4,25 @@ import { MODE_CHARACTER, pitchClass } from '../../../music';
 import { FOUR_FOUR, ticksPerBar } from '../../../phrase';
 import { mulberry32 } from '../../../variation';
 import type { GeneratedBackingSettings, Progression } from '..';
-import { chordTimeline, formatProgression, parseProgression, pickProgression } from '..';
+import {
+  backingChord,
+  backingChords,
+  chordTimeline,
+  formatProgression,
+  parseProgression,
+  pickProgression,
+  progressionChordName,
+} from '..';
 
 const BAR = ticksPerBar(FOUR_FOUR);
+const pcs = (...names: string[]) => names.map(pitchClass);
 const C_IONIAN: KeyMode = { tonic: pitchClass('C'), scale: 'major', mode: 'ionian' };
+const A_BLUES: KeyMode = { tonic: pitchClass('A'), scale: 'blues', mode: 'blues' };
+const A_HARMONIC: KeyMode = {
+  tonic: pitchClass('A'),
+  scale: 'harmonic-minor',
+  mode: 'harmonic-minor',
+};
 
 function settings(source: GeneratedBackingSettings['source']): GeneratedBackingSettings {
   return { source, style: 'pulse', chords: 'sevenths' };
@@ -146,5 +161,48 @@ describe('chordTimeline', () => {
       ['C', 2, 1],
       ['F', 3, 1],
     ]);
+  });
+});
+
+describe('the backing’s chords', () => {
+  it('makes blues’ 1, 4 and 5 dominant 7ths, and leaves the rest Aeolian’s', () => {
+    const chords = backingChords(A_BLUES);
+    expect(chords.map((c) => c.seventhSymbol)).toEqual([
+      'A7',
+      'Bm7b5',
+      'Cmaj7',
+      'D7',
+      'E7',
+      'Fmaj7',
+      'G7',
+    ]);
+    expect(chords.map((c) => c.triadSymbol).slice(0, 5)).toEqual(['A', 'Bdim', 'C', 'D', 'E']);
+    expect(backingChord(A_BLUES, 4).notes.seventh).toEqual(pcs('D', 'F#', 'A', 'C'));
+    // Minor pentatonic keeps Aeolian's: the scale to pick for a minor blues.
+    const minor: KeyMode = { ...A_BLUES, scale: 'minor-pentatonic', mode: 'minor-pentatonic' };
+    expect(backingChord(minor, 1).seventhSymbol).toBe('Am7');
+  });
+
+  it('plays harmonic minor’s i–iv–V as Am–Dm7–E7', () => {
+    const timeline = chordTimeline(parsed('1 4 5'), A_HARMONIC, 'sevenths', bars(3));
+    expect(timeline.map((s) => s.symbol)).toEqual(['Am', 'Dm7', 'E7']);
+    expect(backingChord(A_HARMONIC, 1).notes.seventh).toEqual(pcs('A', 'C', 'E'));
+  });
+
+  it('picks a blues 12-bar, holding each chord for its bars', () => {
+    const slow = parsed('1*4 4*2 1*2 5 4 1 5');
+    const quick = parsed('1 4 1*2 4*2 1*2 5 4 1 5');
+    for (let seed = 0; seed < 20; seed += 1) {
+      const pick = pickProgression(settings({ kind: 'goTo' }), A_BLUES, mulberry32(seed));
+      expect([slow, quick]).toContainEqual(pick);
+    }
+  });
+
+  it('names a progression’s chord as the triad, or the dominant the backing made it', () => {
+    expect(progressionChordName(A_BLUES, 4)).toEqual({ numeral: 'IV7', symbol: 'D7' });
+    const minor: KeyMode = { ...A_BLUES, scale: 'minor-pentatonic', mode: 'minor-pentatonic' };
+    expect(progressionChordName(minor, 4)).toEqual({ numeral: 'iv', symbol: 'Dm' });
+    // Already a dominant in the key: named as the triad, as before.
+    expect(progressionChordName(C_IONIAN, 5)).toEqual({ numeral: 'V', symbol: 'G' });
   });
 });

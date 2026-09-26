@@ -1,6 +1,5 @@
 import type { ChordFunction, KeyMode } from '@/domain/music';
 import {
-  chordOnDegree,
   diatonicChords,
   harmonyOf,
   hasModes,
@@ -12,6 +11,7 @@ import {
   scaleNotes,
   signatureDegree,
 } from '@/domain/music';
+import { heldBars, progressionChordName } from '@/domain/backing';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
 import { cn } from 'cn';
@@ -65,6 +65,9 @@ function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }
     </div>
   );
 }
+
+/** "I7 ×4": a chord held for more than a bar. */
+const held = (name: string, bars: number) => (bars > 1 ? `${name} ×${bars}` : name);
 
 function Prose({ label, children }: { label: string; children: string }) {
   return (
@@ -180,13 +183,17 @@ export function KeyModeView({
           <li key={progression.degrees.join('-')} className="border-b border-rule py-2.5">
             <p className="text-body">
               <span className="font-bold">
-                {progression.degrees
-                  .map((d) => romanNumeral(chordOnDegree(harmony, d)))
+                {heldBars(progression.degrees)
+                  .map(({ degree, bars }) =>
+                    held(progressionChordName(keyMode, degree).numeral, bars),
+                  )
                   .join(' – ')}
               </span>
               <span className="ml-3 text-ink-muted">
-                {progression.degrees
-                  .map((d) => chordOnDegree(harmony, d).triadSymbol)
+                {heldBars(progression.degrees)
+                  .map(({ degree, bars }) =>
+                    held(progressionChordName(keyMode, degree).symbol, bars),
+                  )
                   .join(' – ')}
               </span>
             </p>

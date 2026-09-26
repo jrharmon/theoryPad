@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { BackingChoice, Video } from '@/data';
-import {
-  chordOnDegree,
-  harmonyOf,
-  keyModeName,
-  romanNumeral,
-  type KeyMode,
-} from '@/domain/music';
-import { compById, SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
+import { keyModeName, romanNumeral, type KeyMode } from '@/domain/music';
+import { backingChord, compById, SPEED_MUSHY_BELOW, speedPercent } from '@/domain/backing';
 import type { TimeSignature } from '@/domain/phrase';
 import type { GeneratedPlan } from '@/session';
 import { Button } from '@/components/ui/button';
@@ -45,9 +39,10 @@ function generatedDetail(
   if (beats !== timeSignature.beats || unit !== timeSignature.unit) {
     return { detail: `Only in ${beats}/${unit} for now.`, disabled: true };
   }
-  const numerals = plan.progression.map((step) =>
-    romanNumeral(chordOnDegree(harmonyOf(keyMode), step.degree)),
-  );
+  const numerals = plan.progression.map((step) => {
+    const numeral = romanNumeral(backingChord(keyMode, step.degree));
+    return step.bars > 1 ? `${numeral} ×${step.bars}` : numeral;
+  });
   const what =
     plan.settings.source.kind === 'vamp' ? `Vamp on ${numerals[0]}` : numerals.join(' – ');
   return { detail: `${what} · ${pattern.name}`, disabled: false };
