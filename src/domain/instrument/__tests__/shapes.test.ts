@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { DegreeNumber, KeyMode, ModeId, ScaleId, ShapeId } from '@/domain/music';
-import { MODE_NAMES, SHAPE_IDS, chroma, pitchClass, scaleNotes } from '@/domain/music';
+import type { DegreeNumber, KeyMode } from '@/domain/music';
+import { MODE_NAMES, chroma, pitchClass, scaleNotes } from '@/domain/music';
 import {
   BASS_4_STRING,
   DROP_D_GUITAR,
@@ -214,20 +214,24 @@ describe('shapesUpTheNeck', () => {
 });
 
 describe('pentatonic and blues boxes', () => {
-  const key = (tonic: string, scale: ScaleId, mode: ModeId = 'shape-1'): KeyMode => ({
+  const key = (
+    tonic: string,
+    scale: 'minor-pentatonic' | 'major-pentatonic' | 'blues',
+  ): KeyMode => ({
     tonic: pitchClass(tonic),
     scale,
-    mode,
+    mode: scale,
   });
-  const frets = (k: KeyMode, near: number) => [
-    ...fretsByString(boxShape(STANDARD_GUITAR, k, near).positions).values(),
+  const frets = (k: KeyMode, fret: number) => [
+    ...fretsByString(boxShape(STANDARD_GUITAR, k, fret).positions).values(),
   ];
 
-  it.each<[ShapeId, number, number[][]]>([
-    // A minor pentatonic (A C D E G), low string first.
+  it.each<[number, number, number[][]]>([
+    // A minor pentatonic (A C D E G), low string first. The box starting on
+    // step n is the one players call shape n.
     [
-      'shape-1',
       5,
+      1,
       [
         [5, 8],
         [5, 7],
@@ -238,8 +242,8 @@ describe('pentatonic and blues boxes', () => {
       ],
     ],
     [
-      'shape-2',
       8,
+      2,
       [
         [8, 10],
         [7, 10],
@@ -250,8 +254,8 @@ describe('pentatonic and blues boxes', () => {
       ],
     ],
     [
-      'shape-3',
       10,
+      3,
       [
         [10, 12],
         [10, 12],
@@ -262,8 +266,8 @@ describe('pentatonic and blues boxes', () => {
       ],
     ],
     [
-      'shape-4',
       12,
+      4,
       [
         [12, 15],
         [12, 15],
@@ -274,8 +278,8 @@ describe('pentatonic and blues boxes', () => {
       ],
     ],
     [
-      'shape-5',
       15,
+      5,
       [
         [15, 17],
         [15, 17],
@@ -285,13 +289,18 @@ describe('pentatonic and blues boxes', () => {
         [15, 17],
       ],
     ],
-  ])('plays A minor pentatonic %s as the standard box at fret %i', (shape, start, expected) => {
-    expect(frets(key('A', 'minor-pentatonic', shape), start)).toEqual(expected);
-  });
+  ])(
+    'plays A minor pentatonic at fret %i as the standard shape %i box',
+    (fret, step, expected) => {
+      const k = key('A', 'minor-pentatonic');
+      expect(boxShape(STANDARD_GUITAR, k, fret).startDegree).toBe(step);
+      expect(frets(k, fret)).toEqual(expected);
+    },
+  );
 
   it('adds the blues ♭5 on the 4th’s string, one fret above it', () => {
     // Box 1: A string D Eb E, G string C D Eb.
-    expect(frets(key('A', 'blues', 'shape-1'), 5)).toEqual([
+    expect(frets(key('A', 'blues'), 5)).toEqual([
       [5, 8],
       [5, 6, 7],
       [5, 7],
@@ -300,7 +309,7 @@ describe('pentatonic and blues boxes', () => {
       [5, 8],
     ]);
     // Box 2: low and high E C D Eb, G string D Eb E.
-    expect(frets(key('A', 'blues', 'shape-2'), 8)).toEqual([
+    expect(frets(key('A', 'blues'), 8)).toEqual([
       [8, 10, 11],
       [7, 10],
       [7, 10],
@@ -310,30 +319,31 @@ describe('pentatonic and blues boxes', () => {
     ]);
   });
 
-  it('numbers major pentatonic from its own root', () => {
-    // C major pentatonic is A minor pentatonic's notes from C: its shape n is A minor's n + 1.
-    for (let n = 1; n <= 5; n += 1) {
-      const major = key('C', 'major-pentatonic', `shape-${n}` as ShapeId);
-      const minor = key('A', 'minor-pentatonic', `shape-${(n % 5) + 1}` as ShapeId);
-      const near = boxShape(STANDARD_GUITAR, major, 7).startFret;
-      expect(frets(major, near), `shape ${n}`).toEqual(frets(minor, near));
+  it('numbers major pentatonic’s boxes from its own root', () => {
+    // C major pentatonic is A minor pentatonic's notes: the same boxes, one step on.
+    for (const fret of [3, 5, 8, 10, 12]) {
+      const major = boxShape(STANDARD_GUITAR, key('C', 'major-pentatonic'), fret);
+      const minor = boxShape(STANDARD_GUITAR, key('A', 'minor-pentatonic'), fret);
+      expect(major.positions.map((p) => p.fret)).toEqual(minor.positions.map((p) => p.fret));
+      expect(major.startDegree, `fret ${fret}`).toBe(((minor.startDegree + 3) % 5) + 1);
     }
   });
 
-  it('places a box at the octave copy nearest the position', () => {
-    const shape4 = key('A', 'minor-pentatonic', 'shape-4');
-    expect(boxShape(STANDARD_GUITAR, shape4, 3).startFret).toBe(0);
-    expect(boxShape(STANDARD_GUITAR, shape4, 9).startFret).toBe(12);
+  it('takes the box starting at or above the position, moving down where none fits', () => {
+    const aMinor = key('A', 'minor-pentatonic');
+    expect(boxShape(STANDARD_GUITAR, aMinor, 0).startFret).toBe(0); // E, open
+    expect(boxShape(STANDARD_GUITAR, aMinor, 6).startFret).toBe(8); // C, not A at 5
+    // At 21 the next box note is D at 22, whose box runs off a 22-fret neck.
+    expect(boxShape(STANDARD_GUITAR, aMinor, 21).startFret).toBe(20);
   });
 
-  it('gives every shape of every pentatonic scale a whole, playable box on every instrument', () => {
+  it('gives every position of every pentatonic scale a whole, playable box on every instrument', () => {
     for (const instrument of TEST_INSTRUMENTS) {
       for (const scale of ['minor-pentatonic', 'major-pentatonic', 'blues'] as const) {
-        for (const mode of SHAPE_IDS) {
+        for (const fret of [0, 3, 5, 7, 10, 12]) {
           for (const tonic of ['E', 'G', 'Bb', 'C#']) {
-            const k = key(tonic, scale, mode);
-            const label = `${instrument.name} ${tonic} ${scale} ${mode}`;
-            const { positions } = boxShape(instrument, k, 7);
+            const label = `${instrument.name} ${tonic} ${scale} fret ${fret}`;
+            const { positions } = boxShape(instrument, key(tonic, scale), fret);
             const perString = [...fretsByString(positions).values()].map((f) => f.length);
             expect(perString.length, label).toBe(stringCount(instrument));
             for (const count of perString) {
@@ -353,23 +363,17 @@ describe('pentatonic and blues boxes', () => {
     }
   });
 
-  it('climbs the neck through all five shapes', () => {
-    const shapes = shapesUpTheNeck(STANDARD_GUITAR, key('A', 'minor-pentatonic'), {
+  it('climbs the neck through all five boxes', () => {
+    const boxes = shapesUpTheNeck(STANDARD_GUITAR, key('A', 'minor-pentatonic'), {
       minFret: 1,
     });
-    expect(shapes.map((s) => s.startFret)).toEqual([3, 5, 8, 10, 12]);
-    expect(shapes.map((s) => s.shape)).toEqual([
-      'shape-5',
-      'shape-1',
-      'shape-2',
-      'shape-3',
-      'shape-4',
-    ]);
+    expect(boxes.map((s) => s.startFret)).toEqual([3, 5, 8, 10, 12]);
+    expect(boxes.map((s) => s.startDegree)).toEqual([5, 1, 2, 3, 4]);
   });
 
   it('gives harmonic minor, Phrygian dominant and melodic minor all seven 3nps shapes', () => {
     for (const scale of ['harmonic-minor', 'phrygian-dominant', 'melodic-minor'] as const) {
-      const k = key('A', scale, scale);
+      const k: KeyMode = { tonic: pitchClass('A'), scale, mode: scale };
       const inScale = new Set(scaleNotes(k).map(chroma));
       const shapes = shapesUpTheNeck(STANDARD_GUITAR, k);
       expect(new Set(shapes.map((s) => s.startDegree)).size, scale).toBe(7);

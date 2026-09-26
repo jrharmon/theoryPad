@@ -17,7 +17,6 @@ import type { Chroma, ModeId, NoteName, ScaleId } from '@/domain/music';
 import {
   MODE_NAMES,
   SCALE_IDS,
-  SHAPE_IDS,
   modeTitle,
   noteName,
   preferredTonic,
@@ -199,38 +198,9 @@ export function SettingsPage() {
           <Blockable
             label="Modes"
             options={MODE_NAMES.map((m) => ({ id: m, label: modeTitle(m) }))}
-            blocked={(practice.blockedModes ?? []).filter((m) => !m.startsWith('shape-'))}
+            blocked={practice.blockedModes ?? []}
             onChange={(blocked) =>
-              void save({
-                practice: {
-                  ...practice,
-                  blockedModes: [
-                    ...(practice.blockedModes ?? []).filter((m) => m.startsWith('shape-')),
-                    ...(blocked as ModeId[]),
-                  ],
-                },
-              })
-            }
-          />
-        </Row>
-        <Row
-          label="Shapes"
-          hint="Of the pentatonic and blues scales. Struck out for all three at once."
-        >
-          <Blockable
-            label="Shapes"
-            options={SHAPE_IDS.map((m) => ({ id: m, label: modeTitle(m) }))}
-            blocked={(practice.blockedModes ?? []).filter((m) => m.startsWith('shape-'))}
-            onChange={(blocked) =>
-              void save({
-                practice: {
-                  ...practice,
-                  blockedModes: [
-                    ...(practice.blockedModes ?? []).filter((m) => !m.startsWith('shape-')),
-                    ...(blocked as ModeId[]),
-                  ],
-                },
-              })
+              void save({ practice: { ...practice, blockedModes: blocked as ModeId[] } })
             }
           />
         </Row>

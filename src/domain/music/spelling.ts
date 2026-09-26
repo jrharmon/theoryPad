@@ -100,9 +100,9 @@ export function preferredTonic(target: Chroma, spelling: Spelling): PitchClass {
     borrowed === null
       ? null
       : bestTonic(target, scaleIntervals({ scale: 'major', mode: borrowed }));
-  // A shape scale always takes its parent's tonic: blues reads E♭ like E♭
+  // A pentatonic scale always takes its parent's tonic: blues reads E♭ like E♭
   // minor pentatonic, even though its ♭5 is then written enharmonically.
-  const keepsParent = SCALES[sm.scale].kind === 'shapes';
+  const keepsParent = sm.scale !== 'major' && SCALES[sm.scale].parent !== null;
   const tonic =
     conventional !== null && (keepsParent || accidentalTotal(conventional, own) !== null)
       ? conventional

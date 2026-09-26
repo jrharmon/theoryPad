@@ -3,12 +3,11 @@ import {
   STANDARD_GUITAR,
   SEVEN_STRING_GUITAR,
   DROP_D_GUITAR,
-  boxShape,
+  shapesUpTheNeck,
   shapeSpan,
 } from '@/domain/instrument';
-import type { ScaleId } from '@/domain/music';
+import type { KeyMode, ModeId, ScaleId } from '@/domain/music';
 import {
-  SHAPE_IDS,
   diatonicChords,
   keyModeName,
   keySignature,
@@ -142,7 +141,7 @@ export function Gallery() {
 
       <Section
         title="Pentatonic and blues boxes"
-        note="The five shapes of a pentatonic scale, each at the octave nearest fret 7. Blues adds the ♭5 on the 4th's string."
+        note="The five boxes of a pentatonic scale, up the neck from fret 3. Blues adds the ♭5 on the 4th's string."
       >
         <PentatonicBoxes />
       </Section>
@@ -251,6 +250,7 @@ const BOX_SCALES: ScaleId[] = ['minor-pentatonic', 'major-pentatonic', 'blues'];
 function PentatonicBoxes() {
   const [scale, setScale] = useState<ScaleId>('minor-pentatonic');
   const tonic = pitchClass(scale === 'major-pentatonic' ? 'C' : 'A');
+  const keyMode: KeyMode = { tonic, scale, mode: scale as ModeId };
   return (
     <div>
       <div className="mb-4 flex gap-1">
@@ -271,9 +271,7 @@ function PentatonicBoxes() {
         ))}
       </div>
       <div className="grid gap-6" data-testid="pentatonic-boxes">
-        {SHAPE_IDS.map((mode) => {
-          const keyMode = { tonic, scale, mode };
-          const box = boxShape(STANDARD_GUITAR, keyMode, 7);
+        {shapesUpTheNeck(STANDARD_GUITAR, keyMode, { minFret: 3 }).map((box) => {
           const span = shapeSpan(box.positions)!;
           const overlay = overlayFromScalePositions(box.positions, {
             targetDegree: signatureDegree(keyMode),
@@ -283,9 +281,9 @@ function PentatonicBoxes() {
             ),
           });
           return (
-            <div key={mode}>
+            <div key={box.startFret}>
               <p className="kicker mb-2">
-                {keyModeName(keyMode)} · fret {box.startFret}
+                {keyModeName(keyMode)} · shape {box.startDegree} · fret {box.startFret}
               </p>
               <Fretboard
                 instrument={STANDARD_GUITAR}

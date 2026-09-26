@@ -4,7 +4,6 @@ import {
   axisDefinition,
   includesValue,
   isAllowed,
-  modeAxisLabel,
   modeChoices,
   policyFor,
   toggleSubset,
@@ -50,8 +49,8 @@ export function AxisPolicyEditor({
     scale: practice.blockedScales ?? [],
     mode: practice.blockedModes ?? [],
   };
-  // The key reads first, then the scale, then its mode: "G, minor pentatonic,
-  // shape 2" is how a player says it. The roller still resolves the scale and
+  // The key reads first, then the scale, then its mode: "G, major scale,
+  // Dorian" is how a player says it. The roller still resolves the scale and
   // mode first, for the spelling.
   const session = (['key', 'scale', 'mode'] as AxisId[]).filter((id) => axes.includes(id));
   const ordered = axes.includes('key')
@@ -67,7 +66,7 @@ export function AxisPolicyEditor({
     return undefined;
   };
   const tonic = axes.includes('key') ? settled('key') : undefined;
-  // No scale axis is Major; a scale that rolls is null — its mode could be anything.
+  // No scale axis is Major; a scale that rolls is null.
   const scaleKey = axes.includes('scale') ? settled('scale') : 'major';
   const scale =
     scaleKey && SCALE_IDS.includes(scaleKey as ScaleId) ? (scaleKey as ScaleId) : null;
@@ -85,12 +84,10 @@ export function AxisPolicyEditor({
       ? { tonic: tonic as PitchClass, scale, mode }
       : null;
 
-  // The mode row follows the scale: "Shape" for a pentatonic, gone for a scale
-  // with one mode. A mode pinned that the scale doesn't have rolls, so it
-  // shows as a roll.
+  // The mode row follows the scale: gone for a scale with one mode. A mode
+  // pinned that the scale doesn't have rolls, so it shows as a roll.
   const modePolicy = policyFor(policies, 'mode');
   const modeRow = {
-    label: modeAxisLabel(scale),
     choices: choices.map((m) => ({ key: m, label: modeTitle(m) })),
     policy:
       modePolicy.mode === 'fixed' && !choices.includes(modePolicy.value as never)
@@ -106,7 +103,7 @@ export function AxisPolicyEditor({
           key={id}
           id={id}
           first={index === 0}
-          {...(id === 'mode' ? { label: modeRow.label, choices: modeRow.choices } : {})}
+          {...(id === 'mode' ? { choices: modeRow.choices } : {})}
           policy={id === 'mode' ? modeRow.policy : policyFor(policies, id)}
           heldValue={held[id]}
           instrument={instrument}
@@ -146,7 +143,6 @@ function heldLabel(definition: AxisDefinition, key: string, instrument: Instrume
 function AxisRow({
   id,
   first,
-  label,
   choices,
   policy,
   heldValue,
@@ -157,8 +153,7 @@ function AxisRow({
 }: {
   id: AxisId;
   first: boolean;
-  /** Overrides the axis's own label and candidates — the mode row, which follows the scale. */
-  label?: string;
+  /** Overrides the axis's own candidates — the mode row, which follows the scale. */
   choices?: { key: string; label: string }[];
   policy: AxisPolicy;
   heldValue: string | undefined;
@@ -179,7 +174,7 @@ function AxisRow({
       ).filter((c) => isAllowed(id, allowed, c.key)),
     [choices, definition, instrument, id, allowed],
   );
-  const name = label ?? definition.label;
+  const name = definition.label;
   const keys = candidates.map((c) => c.key);
 
   return (

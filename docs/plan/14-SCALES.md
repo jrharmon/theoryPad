@@ -1,7 +1,8 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–3 done;
-task 3 awaiting review** (see the Outcomes at the end). It
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–3 done,
+then revised at task 3's review to drop pentatonic shapes as a setting (decision 16); the
+revision awaits review** (see the Outcomes at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -13,17 +14,17 @@ Phrygian dominant is a scale of its own — see decision 10._
 | Scale | Its "modes" |
 | --- | --- |
 | **Major** (today's only scale) | Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian |
-| **Minor pentatonic** | Shape 1 – Shape 5 |
-| **Major pentatonic** | Shape 1 – Shape 5 |
-| **Blues** (minor blues: minor pentatonic plus the ♭5) | Shape 1 – Shape 5 |
+| **Minor pentatonic** | none — the position picks the box (decision 16) |
+| **Major pentatonic** | none |
+| **Blues** (minor blues: minor pentatonic plus the ♭5) | none |
 | **Harmonic minor** | none — the Mode control is hidden |
 | **Phrygian dominant** (the 5th mode of harmonic minor, as a scale) | none |
 | **Melodic minor** (one form up and down, as jazz uses it) | none |
 
-**A shape works like a mode, except that it doesn't change the root.** A mode of the major
-scale is a different set of notes on the same tonic. A pentatonic shape is the same five notes
-in a different box on the neck. So "A minor pentatonic, Shape 2" has A as its root and plays the
-box that starts on C, the scale's second note.
+**A mode changes the notes; a shape never does.** A mode of the major scale is a different set
+of notes on the same tonic. A pentatonic box is the same notes somewhere else on the neck, so,
+as for the 3nps shapes of Major, the rolled position picks it — there is no Shape setting
+(decision 16). The box starting on the scale's second note is still what players call shape 2.
 
 ---
 
@@ -35,8 +36,9 @@ why here.
 1. **Scale is a setting like key and mode.** It is a session axis. A routine owns it the same way
    it owns key and mode, and a standalone exercise gets it in the practice strip and in What
    varies. The editor shows **Key, then Scale, then Mode**.
-2. **Major, minor and blues pentatonics are separate scales**, each with Shapes 1–5.
-3. **A pentatonic shape changes the fingering, not the root.** See above.
+2. **Major, minor and blues pentatonics are separate scales.** ~~Each with Shapes 1–5.~~
+   Replaced by decision 16.
+3. ~~A pentatonic shape changes the fingering, not the root.~~ Replaced by decision 16.
 4. ~~All seven modes of harmonic and melodic minor.~~ **Reopened and replaced by decision 10**
    before any code: most of the fourteen are obscure, several need double accidentals or a B♯ /
    E♯ root (C Ultralocrian, F Altered), and they would clutter every mode list.
@@ -57,9 +59,8 @@ why here.
 
 Asked and answered before task 1, 2026-09-25:
 
-10. **A scale has modes, shapes, or neither.** Major has its seven modes. The three pentatonic
-    scales have Shapes 1–5. Harmonic minor, **Phrygian dominant** and melodic minor have
-    neither: the Mode control is hidden, and in the model each has one mode whose id is the
+10. **Only Major has modes.** (As agreed: "modes, shapes, or neither" — the shapes went with
+    decision 16.) Every other scale, the pentatonics included, has none: the Mode control is hidden, and in the model each has one mode whose id is the
     scale's own (`harmonic-minor`, `phrygian-dominant`, `melodic-minor`). A future scale such
     as whole tone arrives the same way, with no baggage. So the scale menu reads *Major, Minor
     pentatonic, Major pentatonic, Blues, Harmonic minor, Phrygian dominant, Melodic minor*.
@@ -78,30 +79,34 @@ Asked and answered before task 1, 2026-09-25:
     match none this run; the track form stays Major-only. Generated backing covers them.
 15. **`shapesPerRep` is a maximum.** A scale with fewer shapes stops at its own count.
 
+Revised at task 3's review, 2026-09-25:
+
+16. **No pentatonic shapes as a setting.** The point of picking a mode is that it changes the
+    notes relative to the root. A pentatonic shape doesn't: Shape 3 and Shape 4 are the same
+    notes in different places, just as the seven 3nps shapes of a Major mode are, and those were
+    never a setting (decision 11). So minor pentatonic, major pentatonic and blues have no
+    modes, like harmonic minor: the Mode control is hidden, a key reads "A minor pentatonic",
+    and **the rolled position picks the box** — the one starting on the first of its notes at
+    or above the position on the lowest string, the rule the 3nps shapes follow. *Modes up the
+    neck* walks all five boxes. Settings has no Shapes row. What this gives up: a setting to
+    drill one numbered box in every key; if wanted later, it is an exercise option, not a mode.
+
 ## Defaults taken (not asked; say if wrong at the first review)
 
 - **Names.**
   - The scale menu: see decision 10.
-  - A brief reads "D Dorian", "A minor pentatonic, shape 2", "E blues, shape 1",
-    "E Phrygian dominant" or "A harmonic minor" (`keyModeName`).
-  - For a pentatonic scale the Mode control is labeled **Shape**; for a scale without modes it
-    is hidden.
+  - A brief reads "D Dorian", "A minor pentatonic", "E blues", "E Phrygian dominant" or
+    "A harmonic minor" (`keyModeName`).
+  - For a scale without modes — every scale but Major — the Mode control is hidden.
 - **"Off by default" uses the existing struck-out mechanism.** Settings → Keys and modes gains
   **Scales**. Harmonic minor, Phrygian dominant and melodic minor start struck out, so they
   never roll, while a Fixed choice still plays them. A new install and an existing one both get
   this default.
-- **Struck-out modes are one list across scales.** Mode ids are unique app-wide and stored in
-  the rep log, so they are never renamed. The only new ones are the five shapes (`shape-1` …
-  `shape-5`), shared by the three pentatonic scales, so striking out Shape 3 strikes it out for
-  all three. The strike-out list is the seven Major modes plus Shapes 1–5. If every shape is
-  struck out, the roller skips the pentatonic scales rather than roll an empty set.
+- **Struck-out modes** are the seven Major modes; mode ids are stored in the rep log, so never
+  renamed. Each other scale's single mode has the scale's own id.
 - **Existing data doesn't move.** A stored policy, rep, routine or export with no scale reads as
   Major. There is no migration beyond adding the default.
-- **Position and shape together.**
-  - A pentatonic shape sits at one fret, give or take an octave.
-  - An exercise that rolls a position places the shape at whichever octave copy lies nearest
-    that position. Position still means "low or high on the neck".
-  - The shape decides the box.
+- **Position picks the box** (decision 16), for pentatonics as for 3nps shapes.
 - **Modes up the neck** on a pentatonic plays all five shapes in order up the neck, starting from
   the shape that falls at `minFret`. It is the same idea as the seven 3nps shapes.
   - Its *arpeggio-then-scale* variant arpeggiates the scale's own tonic chord within each shape:
@@ -126,7 +131,9 @@ _As built in task 1; `src/domain/music/scales.ts` holds the tables._
   as Major at the edge where it is loaded (so far: backing tracks, in the video repository).
   - `ScaleId` is `'major' | 'minor-pentatonic' | 'major-pentatonic' | 'blues' | 'harmonic-minor'
     | 'phrygian-dominant' | 'melodic-minor'`, in menu order (`SCALE_IDS`).
-  - `ModeId` is `ModeName | ShapeId | 'harmonic-minor' | 'phrygian-dominant' | 'melodic-minor'`.
+  - `ModeId` is `ModeName | Exclude<ScaleId, 'major'>`: Major's seven, and each other scale's
+    one mode, whose id is its own. (Task 1 had `ShapeId`s for the pentatonics; decision 16
+    removed them.)
   - `ModeName` (the seven) survives as the Major scale's modes, so existing code that means "a
     mode of major" can say so. `modesOf(scale)`, `isModeOf(scale, mode)`, `scaleKind(scale)`.
 - **Intervals are our own tables**, one list per Major mode and per other scale; `tonal` only
@@ -177,7 +184,7 @@ _As built in task 1; `src/domain/music/scales.ts` holds the tables._
    - Unit tests: every scale × mode spells one letter per degree (pentatonics excepted); chord
      qualities of HM and MM; parent mapping.
 2. **Shapes** (`src/domain/instrument`).
-   - Pentatonic boxes: two notes per string, starting on step *n* for Shape *n*.
+   - Pentatonic boxes: two notes per string, starting on step *n* for the box called shape *n*.
    - Blues boxes: the minor pentatonic box with the ♭5 added wherever it falls, so some strings
      get three notes.
    - Placement nearest a fret.
@@ -187,7 +194,7 @@ _As built in task 1; `src/domain/music/scales.ts` holds the tables._
    - The `scale` session axis, rolled before mode. Mode candidates depend on the scale.
    - Struck-out scales, with HM and MM struck by default.
    - Persistence with Major as the absent default: exercises, routines, reps, `transfer.ts`.
-   - The policy editor's Key → Scale → Mode order, "Shape" for pentatonics, and the strip.
+   - The policy editor's Key → Scale → Mode order, and the strip.
 4. **Played exercises** on every scale: Modes up the neck, Interval sequences, One note per
    string, Position shifting, Improvise to a target, plus their briefs. Screenshot each on one
    pentatonic, Blues and Harmonic minor.
@@ -224,10 +231,9 @@ _As built in task 1; `src/domain/music/scales.ts` holds the tables._
 ## What only the player can judge, at the gate
 
 - Are the pentatonic and blues boxes the ones he plays?
-- Is the position–shape placement right on the neck?
+- Does the position pick the box you expect?
 - Are harmonic minor, Phrygian dominant and melodic minor usable as they are?
 - Is the 12-bar blues backing any good?
-- Is "Shape" the right word in the UI?
 
 ## Not in this run
 
@@ -355,4 +361,29 @@ both confirmed.
 Looked at: the editor (pinned pentatonic, rolling scale, harmonic minor), the practice screen
 on A minor pentatonic shape 2, and Settings, in light and dark. `pnpm check` green (793 unit
 tests), E2E 69/69.
+
+Reviewed: everything reads fine — but the player questioned shapes as a setting at all, which
+led to decision 16 and the revision below.
+
+### Revision — no pentatonic shapes (2026-09-25)
+
+Decision 16, applied to tasks 1–3:
+- **Music domain:** `SHAPE_IDS`, `ShapeId` and `shapeNumber` are gone. Minor pentatonic, major
+  pentatonic and blues each have one mode, whose id is the scale's own, like harmonic minor.
+  Scales carry a `fingering` (`3nps` or `box`); `hasModes` (Major only) and `playsInBoxes`
+  replace the scale kinds. `keyModeName` reads "A minor pentatonic".
+- **Instrument:** `boxShape(instrument, keyMode, fret)` takes the box starting on the first of
+  the scale's box notes at or above `fret` on the lowest string (A minor pentatonic at 6 is the
+  C box at 8, not the A box at 5). A box that can't be played there — near the nut, C♯ minor
+  pentatonic from the open E would need an F♯ below the open G — gives way to the next one up;
+  near the top, where none fits, the start moves down. `shapesUpTheNeck` is unchanged apart
+  from dropping `shape`; `startDegree` is the step a box starts on (2 for "shape 2").
+- **Variation and UI:** the mode row is always "Mode" and appears only when the scale is Major
+  or rolls; the "skip a scale whose shapes are all struck out" rule and the Settings Shapes
+  row are gone. Nothing stored used shape ids (the branch is unmerged), so nothing migrates.
+- The gallery shows each pentatonic's five boxes up the neck, labeled by the step each starts
+  on.
+
+`pnpm check` green (792 unit tests), E2E 69/69. Looked at: the editor on Blues (no Mode row),
+the strip ("A blues"), and the gallery boxes.
 

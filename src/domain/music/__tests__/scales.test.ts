@@ -56,13 +56,6 @@ describe('every scale, mode and tonic', () => {
       ).toBe(12);
     }
   });
-
-  it('keeps the notes when only the shape changes', () => {
-    for (const scale of ['minor-pentatonic', 'major-pentatonic', 'blues'] as const) {
-      const shapes = modesOf(scale).map((mode) => scaleNotes(km('A', scale, mode)).join(' '));
-      expect(new Set(shapes).size, scale).toBe(1);
-    }
-  });
 });
 
 describe('scale formulas', () => {
@@ -158,7 +151,7 @@ describe('chords of harmonic minor, Phrygian dominant and melodic minor', () => 
   });
 
   it('gives a pentatonic no chords of its own, and its parent’s through harmonyOf', () => {
-    const a = km('A', 'minor-pentatonic', 'shape-3');
+    const a = km('A', 'minor-pentatonic');
     expect(() => diatonicChords(a)).toThrow();
     expect(diatonicChords(harmonyOf(a)).map((c) => c.triadSymbol)).toEqual(
       diatonicChords(km('A', 'major', 'aeolian')).map((c) => c.triadSymbol),
@@ -201,8 +194,8 @@ describe('parent mode', () => {
 describe('keyModeName', () => {
   it.each<[KeyMode, string]>([
     [km('D', 'major', 'dorian'), 'D Dorian'],
-    [km('A', 'minor-pentatonic', 'shape-2'), 'A minor pentatonic, shape 2'],
-    [km('E', 'blues', 'shape-1'), 'E blues, shape 1'],
+    [km('A', 'minor-pentatonic'), 'A minor pentatonic'],
+    [km('E', 'blues'), 'E blues'],
     [km('E', 'phrygian-dominant'), 'E Phrygian dominant'],
     [km('A', 'harmonic-minor'), 'A harmonic minor'],
   ])('names %o as %s', (key, name) => {

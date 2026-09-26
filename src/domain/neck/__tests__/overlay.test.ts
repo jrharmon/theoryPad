@@ -34,7 +34,7 @@ describe('overlayFretRange', () => {
 
 describe('overlayFromScalePositions', () => {
   it('marks the target by its full degree — blues’ ♭5, not its 5', () => {
-    const blues = { tonic: pitchClass('A'), scale: 'blues' as const, mode: 'shape-1' as const };
+    const blues = { tonic: pitchClass('A'), scale: 'blues' as const, mode: 'blues' as const };
     const { positions } = boxShape(STANDARD_GUITAR, blues, 5);
     const overlay = overlayFromScalePositions(positions, { targetDegree: makeDegree(5, -1) });
     const targets = overlay.notes.filter((n) => n.role === 'target').map((n) => n.degree.label);

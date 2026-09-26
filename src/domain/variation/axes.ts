@@ -9,7 +9,6 @@ import type {
 import {
   MODE_NAMES,
   SCALE_IDS,
-  SHAPE_IDS,
   chroma,
   isModeOf,
   modeTitle,
@@ -17,7 +16,7 @@ import {
   pitchClass,
   preferredTonic,
   scaleDegrees,
-  scaleKind,
+  hasModes,
   scaleTitle,
   signatureDegree,
 } from '@/domain/music';
@@ -131,8 +130,8 @@ export function resolvedScale(context: AxisContext): ScaleId {
 }
 
 /**
- * The scale's modes — or its shapes, for a pentatonic. A scale with neither
- * has one, whose id is its own. So `scale` resolves first.
+ * The scale's modes: Major's seven, or the one of any other scale, whose id is
+ * its own. So `scale` resolves first.
  */
 const modeAxis: AxisDefinition<AxisValues['mode']> = {
   id: 'mode',
@@ -145,22 +144,13 @@ const modeAxis: AxisDefinition<AxisValues['mode']> = {
 };
 
 /**
- * What the mode axis is called: "Shape" for a pentatonic scale, "Mode" for
- * Major. Null is a scale that varies, which may be either.
- */
-export function modeAxisLabel(scale: ScaleId | null): string {
-  if (scale === null) return 'Mode or shape';
-  return scaleKind(scale) === 'shapes' ? 'Shape' : 'Mode';
-}
-
-/**
- * The modes a player chooses between: the scale's own, or — while the scale
- * varies — every Major mode and shape. None for a scale with a single mode:
- * there is nothing to choose.
+ * The modes a player chooses between: Major's, when the scale is Major or
+ * varies (the choice applies when it rolls Major). None for a scale with a
+ * single mode: there is nothing to choose.
  */
 export function modeChoices(scale: ScaleId | null): ModeId[] {
-  if (scale === null) return [...MODE_NAMES, ...SHAPE_IDS];
-  return scaleKind(scale) === 'single' ? [] : [...modesOf(scale)];
+  if (scale === null) return [...MODE_NAMES];
+  return hasModes(scale) ? [...modesOf(scale)] : [];
 }
 
 /** The scale and mode resolved so far, for spelling a tonic. */

@@ -154,7 +154,7 @@ describe('axis policies', () => {
         mode: { mode: 'fixed', value: 'dorian' },
       },
     });
-    expect(pentatonic.axes.mode?.key).toMatch(/^shape-[1-5]$/);
+    expect(pentatonic.axes.mode?.key).toBe('minor-pentatonic');
   });
 });
 
@@ -177,7 +177,7 @@ describe('the scale axis', () => {
       });
       const km = variationKeyMode(rolled)!;
       if (km.scale === 'blues') {
-        expect(km.mode).toMatch(/^shape-[1-5]$/);
+        expect(km.mode).toBe('blues');
         // Blues lands on its own degrees, never its 2, 6 or passing ♭5.
         expect(['1', '3', '4', '5', '7']).toContain(rolled.axes.targetScaleDegree?.key);
       } else {
@@ -188,17 +188,18 @@ describe('the scale axis', () => {
     }
   });
 
-  it('never rolls a struck-out scale, or one whose every mode is struck out', () => {
-    const shapes = ['shape-1', 'shape-2', 'shape-3', 'shape-4', 'shape-5'];
+  it('never rolls a struck-out scale, but plays one pinned', () => {
     for (let seed = 0; seed < 40; seed += 1) {
       const rolled = rollVariation({
         ...base,
         seed,
         axes: SESSION,
         policies: { scale: { mode: 'roll' } },
-        blocked: { scale: ['harmonic-minor', 'melodic-minor'], mode: shapes },
+        blocked: { scale: ['harmonic-minor', 'melodic-minor', 'blues'] },
       });
-      expect(['major', 'phrygian-dominant']).toContain(rolled.axes.scale?.key);
+      expect(['major', 'minor-pentatonic', 'major-pentatonic', 'phrygian-dominant']).toContain(
+        rolled.axes.scale?.key,
+      );
     }
     // Fixed still plays it.
     const fixed = rollVariation({

@@ -25,7 +25,7 @@ export function AxisStrip() {
   // screen and always shows it, so a second copy here is noise.
   if (shown.length === 0) return null;
 
-  // The key cell reads "Bb Ionian" or "A minor pentatonic, shape 2": the scale
+  // The key cell reads "Bb Ionian" or "A minor pentatonic": the scale
   // and mode are rolled too, but separate cells would split one idea.
   const { mode, scale } = variation.axes;
   const keyMode = snapshot.keyMode;

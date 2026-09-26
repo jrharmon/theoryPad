@@ -1,4 +1,4 @@
-import { axisDefinition, modeAxisLabel, modeChoices, policyFor } from '@/domain/variation';
+import { axisDefinition, modeChoices, policyFor } from '@/domain/variation';
 import type { AxisId, AxisPolicies, ResolvedKeys } from '@/domain/variation';
 import type { ScaleId } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
@@ -19,8 +19,7 @@ export function describePolicies(
 ): string[] {
   const out: string[] = [];
 
-  // The mode reads against a pinned scale: "Shape: Shape 2", and nothing for a
-  // scale with one mode. A scale that isn't pinned leaves it as is.
+  // The mode reads against a pinned scale: nothing for a scale with one mode.
   const scalePolicy = policyFor(policies, 'scale');
   const scale: ScaleId | null = !axes.includes('scale')
     ? 'major'
@@ -32,7 +31,7 @@ export function describePolicies(
   for (const id of axes) {
     const policy = policyFor(policies, id);
     const definition = axisDefinition(id);
-    const label = id === 'mode' ? modeAxisLabel(scale) : definition.label;
+    const label = definition.label;
     // Major is the default, and every exercise's: saying so on each row is noise.
     if (id === 'scale' && scale === 'major') continue;
     if (id === 'mode' && scale !== null && modeChoices(scale).length === 0) continue;

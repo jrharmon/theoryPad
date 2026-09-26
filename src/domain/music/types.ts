@@ -47,26 +47,13 @@ export const SCALE_IDS = [
 export type ScaleId = (typeof SCALE_IDS)[number];
 
 /**
- * A pentatonic box. Shared by the three pentatonic scales: Shape n is the box
- * that starts on the scale's nth note, with the root unchanged.
- */
-export const SHAPE_IDS = ['shape-1', 'shape-2', 'shape-3', 'shape-4', 'shape-5'] as const;
-
-export type ShapeId = (typeof SHAPE_IDS)[number];
-
-/** A scale with neither modes nor shapes has one mode, whose id is its own. */
-export type SingleModeScaleId = 'harmonic-minor' | 'phrygian-dominant' | 'melodic-minor';
-
-/**
  * Every scale's modes. Unique app-wide, and stored in the rep log, so never
- * rename one. `ModeName` is the Major scale's seven.
+ * rename one. `ModeName` is the Major scale's seven; every other scale has one
+ * mode, whose id is the scale's own.
  */
-export type ModeId = ModeName | ShapeId | SingleModeScaleId;
+export type ModeId = ModeName | Exclude<ScaleId, 'major'>;
 
-/**
- * A root, a scale, and one of that scale's modes. For the Major scale the mode
- * changes the notes; for a pentatonic it changes only the box.
- */
+/** A root, a scale, and one of that scale's modes — only Major has more than one. */
 export interface KeyMode {
   tonic: PitchClass;
   scale: ScaleId;

@@ -1,5 +1,4 @@
 import type { KeyMode, ModeId, PitchClass, ScaleId } from '@/domain/music';
-import { SCALE_IDS, modesOf } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { Rng, Weighted } from './rng';
 import { mulberry32 } from './rng';
@@ -152,7 +151,6 @@ export function rollVariation(options: RollOptions): RolledVariation {
 
   const resolved: ResolvedKeys = {};
   const out: Partial<Record<AxisId, ResolvedAxis>> = {};
-  const blocked = withEmptyScalesBlocked(options);
 
   // Session axes first: the key's spelling depends on the mode.
   for (const id of orderAxes(axes)) {
@@ -171,7 +169,7 @@ export function rollVariation(options: RollOptions): RolledVariation {
       rng,
       held[id],
       coverage[id] ?? {},
-      { allowed: options.allowed?.[id], blocked: blocked?.[id] },
+      { allowed: options.allowed?.[id], blocked: options.blocked?.[id] },
     );
 
     out[id] = axis;
@@ -179,25 +177,6 @@ export function rollVariation(options: RollOptions): RolledVariation {
   }
 
   return { seed, axes: out };
-}
-
-/**
- * The player's struck-out values, plus any scale whose every mode is struck out
- * — striking out all five shapes leaves the pentatonics nothing to roll, so
- * they are skipped rather than rolled with a struck-out shape. Only when the
- * mode rolls too: a pinned mode is played whatever Settings say.
- */
-function withEmptyScalesBlocked(options: RollOptions): AxisValueKeys | undefined {
-  const { blocked, axes, policies = {} } = options;
-  const blockedModes = blocked?.mode ?? [];
-  if (!blocked || blockedModes.length === 0 || !axes.includes('mode')) return blocked;
-  if (policyFor(policies, 'mode').mode !== 'roll') return blocked;
-  const empty = SCALE_IDS.filter((scale) =>
-    modesOf(scale).every((mode) => blockedModes.includes(mode)),
-  );
-  return empty.length === 0
-    ? blocked
-    : { ...blocked, scale: [...(blocked.scale ?? []), ...empty] };
 }
 
 /** The session key, scale and mode, from this roll or from the session it belongs to. */

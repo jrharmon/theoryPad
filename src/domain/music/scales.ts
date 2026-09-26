@@ -1,30 +1,31 @@
 import type { KeyMode, ModeId, ModeName, ScaleId } from './types';
-import { MODE_NAMES, SHAPE_IDS } from './types';
+import { MODE_NAMES } from './types';
 
 /**
  * The scales, their modes, and their intervals.
  *
- * A scale has one of three kinds of mode:
- *   - `modes`  — Major. Each mode is a different set of notes on the same root.
- *   - `shapes` — the pentatonics and blues. Each shape is the same notes in a
- *                different box on the neck; the root never moves.
- *   - `single` — a scale with one mode, whose id is the scale's own. The Mode
- *                control is hidden for these.
+ * Only Major has modes: each is a different set of notes on the same root.
+ * Every other scale has one mode, whose id is the scale's own, and the Mode
+ * control is hidden for it. Where on the neck a scale is played — which shape,
+ * which box — is never a mode: the notes and root don't change, so it is the
+ * position's business, for every scale alike.
  *
  * Notes are spelled by transposing the tonic by each interval, so a scale of
  * seven intervals uses each letter once. Blues has two 5ths (♭5 and 5), which
  * is why a note is named by its full degree, not its number.
  */
 
-export type ScaleKind = 'modes' | 'shapes' | 'single';
-
 interface ScaleDefinition {
   /** In a menu: "Minor pentatonic". */
   title: string;
   /** After a tonic: "A minor pentatonic", "E Phrygian dominant". */
   name: string;
-  kind: ScaleKind;
   modes: readonly ModeId[];
+  /**
+   * How it lies on the neck: three notes a string, or the pentatonic boxes of
+   * two (blues adds its ♭5 to the minor pentatonic box).
+   */
+  fingering: '3nps' | 'box';
   /** The Major-scale mode whose notes contain this scale's, on the same root. */
   parent: ModeName | null;
   /**
@@ -39,56 +40,56 @@ export const SCALES: Record<ScaleId, ScaleDefinition> = {
   major: {
     title: 'Major',
     name: 'major',
-    kind: 'modes',
     modes: MODE_NAMES,
+    fingering: '3nps',
     parent: null,
     spelledAs: null,
   },
   'minor-pentatonic': {
     title: 'Minor pentatonic',
     name: 'minor pentatonic',
-    kind: 'shapes',
-    modes: SHAPE_IDS,
+    modes: ['minor-pentatonic'],
+    fingering: 'box',
     parent: 'aeolian',
     spelledAs: 'aeolian',
   },
   'major-pentatonic': {
     title: 'Major pentatonic',
     name: 'major pentatonic',
-    kind: 'shapes',
-    modes: SHAPE_IDS,
+    modes: ['major-pentatonic'],
+    fingering: 'box',
     parent: 'ionian',
     spelledAs: 'ionian',
   },
   blues: {
     title: 'Blues',
     name: 'blues',
-    kind: 'shapes',
-    modes: SHAPE_IDS,
+    modes: ['blues'],
+    fingering: 'box',
     parent: 'aeolian',
     spelledAs: 'aeolian',
   },
   'harmonic-minor': {
     title: 'Harmonic minor',
     name: 'harmonic minor',
-    kind: 'single',
     modes: ['harmonic-minor'],
+    fingering: '3nps',
     parent: null,
     spelledAs: 'aeolian',
   },
   'phrygian-dominant': {
     title: 'Phrygian dominant',
     name: 'Phrygian dominant',
-    kind: 'single',
     modes: ['phrygian-dominant'],
+    fingering: '3nps',
     parent: null,
     spelledAs: 'phrygian',
   },
   'melodic-minor': {
     title: 'Melodic minor',
     name: 'melodic minor',
-    kind: 'single',
     modes: ['melodic-minor'],
+    fingering: '3nps',
     parent: null,
     spelledAs: 'aeolian',
   },
@@ -115,13 +116,19 @@ const SCALE_INTERVALS: Record<Exclude<ScaleId, 'major'>, readonly string[]> = {
   'melodic-minor': ['1P', '2M', '3m', '4P', '5P', '6M', '7M'],
 };
 
-/** The scale's modes (or shapes), in order. */
+/** The scale's modes, in order: Major's seven, or the one of any other scale. */
 export function modesOf(scale: ScaleId): readonly ModeId[] {
   return SCALES[scale].modes;
 }
 
-export function scaleKind(scale: ScaleId): ScaleKind {
-  return SCALES[scale].kind;
+/** Has the scale modes to choose between? Only Major. */
+export function hasModes(scale: ScaleId): boolean {
+  return SCALES[scale].modes.length > 1;
+}
+
+/** Is it played in the pentatonic boxes, two notes a string, rather than 3nps? */
+export function playsInBoxes(scale: ScaleId): boolean {
+  return SCALES[scale].fingering === 'box';
 }
 
 /** Is `mode` one of `scale`'s? Stored and rolled pairs are checked with this. */
@@ -129,7 +136,7 @@ export function isModeOf(scale: ScaleId, mode: string): mode is ModeId {
   return (SCALES[scale].modes as readonly string[]).includes(mode);
 }
 
-/** Intervals above the tonic, one per scale step. A shape doesn't change them. */
+/** Intervals above the tonic, one per scale step. */
 export function scaleIntervals(km: Pick<KeyMode, 'scale' | 'mode'>): readonly string[] {
   if (km.scale === 'major') return MODE_INTERVALS[km.mode as ModeName];
   return SCALE_INTERVALS[km.scale];
@@ -148,9 +155,9 @@ export function parentMode(km: KeyMode): KeyMode | null {
   return parent === null ? null : { tonic: km.tonic, scale: 'major', mode: parent };
 }
 
-/** Does the scale have chords of its own? Pentatonics borrow their parent's. */
+/** Does the scale have chords of its own? Pentatonics and blues borrow their parent's. */
 export function hasOwnChords(scale: ScaleId): boolean {
-  return SCALES[scale].kind !== 'shapes';
+  return scale === 'major' || SCALES[scale].parent === null;
 }
 
 /** The key whose chords go with this scale: its own, or its parent mode's. */
@@ -162,38 +169,25 @@ export function scaleTitle(scale: ScaleId): string {
   return SCALES[scale].title;
 }
 
-/** "dorian" → "Dorian", "shape-2" → "Shape 2", "harmonic-minor" → "Harmonic minor". */
+/** "dorian" → "Dorian", "harmonic-minor" → "Harmonic minor". */
 export function modeTitle(mode: ModeId): string {
-  if (mode.startsWith('shape-')) return `Shape ${mode.slice('shape-'.length)}`;
   if (mode in SCALES) return SCALES[mode as ScaleId].title;
   return mode.charAt(0).toUpperCase() + mode.slice(1);
 }
 
-/** "D Dorian", "A minor pentatonic, shape 2", "E Phrygian dominant". */
+/** "D Dorian", "A minor pentatonic", "E Phrygian dominant". */
 export function keyModeName(km: KeyMode): string {
-  const scale = SCALES[km.scale];
-  switch (scale.kind) {
-    case 'modes':
-      return `${km.tonic} ${modeTitle(km.mode)}`;
-    case 'shapes':
-      return `${km.tonic} ${scale.name}, ${modeTitle(km.mode).toLowerCase()}`;
-    case 'single':
-      return `${km.tonic} ${scale.name}`;
-  }
+  return km.scale === 'major'
+    ? `${km.tonic} ${modeTitle(km.mode)}`
+    : `${km.tonic} ${SCALES[km.scale].name}`;
 }
 
 /**
  * What the written character, and the signature degree, belong to: the mode
- * for Major, where each mode is different notes; the scale for everything else,
- * where a shape changes only the box.
+ * for Major, where each mode is different notes; the scale for everything else.
  */
 export type CharacterId = ModeName | Exclude<ScaleId, 'major'>;
 
 export function characterId(km: Pick<KeyMode, 'scale' | 'mode'>): CharacterId {
-  return km.scale === 'major' ? (km.mode as ModeName) : km.scale;
-}
-
-/** 'shape-3' → 3; null for anything that isn't a pentatonic shape. */
-export function shapeNumber(mode: ModeId): number | null {
-  return mode.startsWith('shape-') ? Number(mode.slice('shape-'.length)) : null;
+  return km.scale === 'major' ? km.mode : km.scale;
 }

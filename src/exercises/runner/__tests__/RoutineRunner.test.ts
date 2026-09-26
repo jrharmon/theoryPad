@@ -196,14 +196,14 @@ describe('RoutineRunner', () => {
       sessionAxisPolicies: {
         scale: { mode: 'fixed', value: 'minor-pentatonic' },
         key: { mode: 'fixed', value: 'A' },
-        mode: { mode: 'fixed', value: 'shape-2' },
+        mode: { mode: 'fixed', value: 'minor-pentatonic' },
       },
     });
-    const shared = { tonic: 'A', scale: 'minor-pentatonic', mode: 'shape-2' };
+    const shared = { tonic: 'A', scale: 'minor-pentatonic', mode: 'minor-pentatonic' };
     expect(routine.snapshot.keyMode).toEqual(shared);
     for (const entry of routine.snapshot.items) {
       expect(entry.variation!.axes.scale?.key).toBe('minor-pentatonic');
-      expect(entry.variation!.axes.mode?.key).toBe('shape-2');
+      expect(entry.variation!.axes.mode?.key).toBe('minor-pentatonic');
     }
   });
 
