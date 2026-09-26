@@ -232,9 +232,10 @@ files), all 71 E2E pass. The player took every recommendation:
   Play — `rewind` now resets `passesThisRun`, and the unit test pins it.
 - Two E2E `Skip` locators became `exact: true`: a list row named "… skipped" matched them.
 
-**For the player to judge at the gate:** is 240px the right width, and is the summary line
-worth its space; does jumping back (same roll) feel right; is the 1280px cut-off right on your
-screen.
+**Gate review:** the summary line is worth it, 240px is right, 1280px is fine. One change:
+too much empty space around the panel, collapsed especially. It now sits 8px from the page
+edge and pulls the page's 32px gutter in to 12px beside it (a negative right margin), so the
+collapsed rail costs 18px over no list at all, not 54.
 
 ## Scales run — merged (2026-09-26)
 

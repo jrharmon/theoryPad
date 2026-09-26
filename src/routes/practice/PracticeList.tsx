@@ -106,7 +106,9 @@ function RowText({
 
 /**
  * The panel, or — put away — a slim rail with its title, to bring it back.
- * It stays in view as the tab scrolls, like the right-hand column.
+ * It stays in view as the tab scrolls, like the right-hand column. It sits
+ * close to the page's edge, and its negative right margin pulls the page's
+ * own 32px gutter in to 12px beside it: room is what the tab needs most.
  */
 function ListFrame({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useListOpen();
@@ -119,7 +121,7 @@ function ListFrame({ title, children }: { title: string; children: ReactNode }) 
         aria-label={`Show ${title}`}
         title="Show"
         onClick={() => setOpen(true)}
-        className="sheet sticky top-4 mt-6 ml-6 flex shrink-0 flex-col items-center gap-2 self-start px-1.5 py-3 text-ink-muted hover:text-ink"
+        className="sheet sticky top-4 mt-6 ml-2 -mr-5 flex shrink-0 flex-col items-center gap-2 self-start px-1.5 py-3 text-ink-muted hover:text-ink"
         data-testid="practice-list-rail"
       >
         <ChevronRightIcon className="size-4" />
@@ -131,7 +133,7 @@ function ListFrame({ title, children }: { title: string; children: ReactNode }) 
   return (
     <nav
       aria-label={title}
-      className="sheet sticky top-4 mt-6 ml-6 flex max-h-[calc(100dvh_-_7.5rem)] w-[240px] shrink-0 flex-col self-start pt-4 pb-2"
+      className="sheet sticky top-4 mt-6 ml-2 -mr-5 flex max-h-[calc(100dvh_-_7.5rem)] w-[240px] shrink-0 flex-col self-start pt-4 pb-2"
       data-testid="practice-list"
     >
       <div className="flex items-center gap-3 px-5 pb-2">
