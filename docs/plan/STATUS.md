@@ -1,7 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **The practice list is built, on branch `exercise-list`, at its
-gate** (unmerged, unpushed): a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-26. **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -62,7 +61,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Generated backing — bass and piano over the key's chords | ✅ merged, pushed 2026-09-25 — spec, outcomes and reviews in `docs/plan/13-GENERATED-BACKING.md` |
 | Feedback round 7 — Done button, beat lines, landing note, no routine overview | ✅ merged, pushed 2026-09-25 — see below |
 | Scales — pentatonics, blues, harmonic and melodic minor | ✅ merged, pushed 2026-09-26 — spec, decisions 1–25 and every task's outcome in `docs/plan/14-SCALES.md` |
-| Practice list — the library or a routine's items, down the left | **at its gate** on `exercise-list` — see below |
+| Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -208,10 +207,11 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Practice list — at its gate (2026-09-26)
+## Practice list — merged (2026-09-26)
 
 Asked for directly (no spec doc): a panel down the left of a running exercise for jumping
-between them. Built on `exercise-list`, one commit; `pnpm check` green (951 unit tests in 56
+between them. Built on `exercise-list`, passed at the gate, fast-forwarded into `main` and
+pushed; the branch is deleted and `main` is the only branch. **M7b is next.** `pnpm check` green (951 unit tests in 56
 files), all 71 E2E pass. The player took every recommendation:
 
 - **A single exercise** lists the whole library, in library order (favorites first — the
