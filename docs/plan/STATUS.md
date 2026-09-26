@@ -1,9 +1,12 @@
 # Status — start here
 
 **Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
-(`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (shapes: pentatonic and blues boxes) and 3 (the scale axis and settings) are committed, then revised to drop pentatonic shapes as a setting (decision 16) — the revision awaits review; the
-spec's decisions 10–15, taken before task 1, and 16, at task 3's review, replaced the harmonic/melodic minor modes with
-three mode-less scales (harmonic minor, Phrygian dominant, melodic minor). Its "Outcomes"
+(`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes) and 3
+(the scale axis and settings) are committed, plus a revision at task 3's review; task 4 is
+next, after the player reviews the revision. Only Major has modes: decisions 10–15 (before
+task 1) made harmonic minor, Phrygian dominant and melodic minor mode-less scales, and decision
+16 (at task 3's review) dropped pentatonic shapes as a setting — the position picks the box.
+The spec's "Outcomes"
 section says where each task stands. Then M7b. **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
 the tab, roots ringed in blue, "Land on" kept only in *Improvise to a target*, a routine opens
