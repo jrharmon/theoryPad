@@ -28,7 +28,8 @@ export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
     'of a note, one note off in a chord.',
   ].join(' '),
 
-  axes: ['mode', 'key'],
+  // A pentatonic names its own notes and asks about its parent mode's chords.
+  axes: ['scale', 'mode', 'key'],
   params,
   defaults: {
     targetTempo: null,
@@ -47,7 +48,7 @@ export const diatonicDrill: TheoryDefinition<DiatonicDrillParams> = {
       kind: 'theory',
       questions,
       brief: makeBrief(
-        `${questions.length} questions on ${keyModeLabel(keyMode)}.`,
+        `${questions.length} ${questions.length === 1 ? 'question' : 'questions'} on ${keyModeLabel(keyMode)}.`,
         'Notes, chords and spelling, no guitar. Number keys answer.',
         orderedHighlights(variation, ['key']),
       ),

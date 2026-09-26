@@ -1,8 +1,8 @@
 # 14 — Scales: pentatonics, blues, harmonic and melodic minor
 
-_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–4 done,
+_Agreed 2026-09-25, from the player's feedback list after "Generated backing". **Tasks 1–5 done,
 with a revision at task 3's review that dropped pentatonic shapes as a setting (decision 16).
-Task 4 is awaiting review; task 5 is next** (see "Where task 5 starts" at the end). It
+Task 5 is awaiting review; task 6 is next** (see "Where task 6 starts" at the end). It
 goes **after feedback round 7 and before M7b**, on its own branch (`scales`), with a commit per
 task and a stop for review after each task, as in the last two runs._
 
@@ -108,6 +108,18 @@ Asked and answered before task 4, 2026-09-25:
     the hand, so interval sequences and the walking sweep count it. Skipping one over six notes
     would only ever reach A, D and E, so skip-one steps through the five pentatonic notes — the
     ♭5 treated as passing, as *Land on* already does.
+
+Asked and answered before task 5, 2026-09-26:
+
+20. **The Key signature drill on a pentatonic names its own notes and its parent's chords.**
+    *Name the notes of A minor pentatonic* asks its own notes (blues' ♭5 included) — the notes
+    just played. The chord questions (qualities, spelling, families) use the parent mode's
+    chords and say so: "…in A Aeolian, the parent of A minor pentatonic". This is how decision
+    6 is applied.
+21. **The Circle of fifths drill stays Major-only.** It roams every key on its own, and a
+    pentatonic's signature is its parent mode's, so a pentatonic signature question would be
+    the Aeolian or Ionian question again. The circle beside a pentatonic exercise already
+    lights the parent key (task 3).
 
 ## Defaults taken (not asked; say if wrong at the first review)
 
@@ -454,17 +466,53 @@ For the review:
   the slide (E 5-8-/10-11).
 - On a box scale, *Modes up the neck*'s arpeggio variant plays the same Am7 in every box.
 
-### Where task 5 starts
+Reviewed: no changes asked for; the player went straight on to task 5.
 
-Task 5 is **Theory, reference and explorer**. Known gaps, as the task 1 grep and task 3 left
-them:
-- **The diatonic drill** declares no `scale` yet, so in a non-Major routine it rolls its own
-  Major mode. It should take the scale: pentatonics through `harmonyOf` (decision 6), harmonic
-  minor, Phrygian dominant and melodic minor as themselves. In `theory/diatonic.ts`:
-  `rng.int(7)`, `[1..7]`, `% 7`, `ORDINAL`, and `SEVENTH_OPTIONS` lacking `minMaj7` and
-  `maj7#5`; TheoryBody's `n > 7`.
-- **The circle of fifths** stays Major-only in its questions (decision 12); `circleQuestions`
-  should still be checked for a pentatonic routine (through the parent signature).
-- **The reference panel** (`KeyModeView`) shows a pentatonic's parent chords unlabeled — label
-  them as the parent's — and its note row is `grid-cols-7` (`NoteRow`).
-- **The explorer** has no Scale picker, and its "last key" is Major-only.
+### Task 5 — Theory, reference and explorer (2026-09-26)
+
+Decisions 20 and 21 were asked and answered first.
+- **Key signature drill** declares `scale`, so a routine's scale reaches it. *Name the notes*
+  asks the scale's own notes — four rows for a pentatonic, five for blues — and its rule says
+  how the scale is made from one the player knows ("A minor pentatonic is A Aeolian without
+  its 2nd and 6th", "A harmonic minor is A natural minor with its 7th raised", "E Phrygian
+  dominant is E Phrygian with its 3rd raised"; `SCALE_ORIGIN` in `theory/diatonic.ts`). The
+  chord questions work on `harmonyOf`: a pentatonic's are its parent's and name it ("…in A
+  Aeolian, the parent of A minor pentatonic"); harmonic minor, Phrygian dominant and melodic
+  minor ask about their own chords, and their 7th-chord table offers mMaj7 and maj7#5 too
+  (seven options, keys 1–7; a Major key still offers five). Families stay by degree. The
+  brief says "1 question", not "1 questions".
+- **Circle of fifths drill**: unchanged (decision 21).
+- **Reference panel** (`KeyModeView`): one note column per note (five, six or seven); a
+  pentatonic's chords are headed "Chords · from A Aeolian" (the popover: "Chords of C
+  Ionian"); the kicker reads "Key & scale" for a scale without modes; the signature note is
+  matched by full degree, so blues marks its ♭5 and not its 5.
+- **Explorer**: a Scale picker between Key and Mode; the Mode picker only for Major. Leaving a
+  pentatonic for Major keeps its home — A minor pentatonic becomes A Aeolian (the parent), a
+  scale without one becomes Ionian. A box scale's shape buttons read "Shape 2 · fret 8"; the
+  title and the legend use the scale's name. The "last key" it opens on keeps its scale
+  (`lastKeyMode`). The key × mode grid stays Major-only, as agreed.
+
+Tests: the drill on a pentatonic (own notes, the rule, blues' five, the parent-named family
+question), harmonic minor's 7th qualities and options, a whole set on every scale with every
+answer among its options, and the last key in its scale. `pnpm check` green (945 unit tests),
+E2E 69/69.
+
+Looked at: the explorer on A minor pentatonic with Shape 2 picked, A blues in dark, the switch
+back to Major; the drill's name-the-notes and family questions on A minor pentatonic and the
+7th-chord table on A harmonic minor; the popover on C major pentatonic.
+
+For the review:
+- On a pentatonic, *Name the notes* offers only the scale's other notes (plus the occasional
+  spelling trap), so it is mostly "which note is which degree". Enough, or too easy?
+- The prompts naming the parent are long ("…in A Aeolian, the parent of A minor pentatonic").
+
+### Where task 6 starts
+
+Task 6 is **Generated backing per scale** (decision 8). Known gaps:
+- `progression.ts` parses only degrees `[1-7]` — check what a scale's progression lists need
+  and keep the lists editable like the drum tab.
+- Minor pentatonic uses Aeolian's progressions and major pentatonic Ionian's (already so via
+  `progressionsFor`). **Blues** gets a 12-bar with dominant 7ths — the chords are not the
+  parent Aeolian's (I7–IV7–V7 aren't diatonic to it), so it needs its own chord source.
+- Harmonic minor: i–iv–V7. Melodic minor: a vamp on i. **Phrygian dominant**'s are a draft
+  from task 1 (vamp on I; I–♭II) for the player to confirm.

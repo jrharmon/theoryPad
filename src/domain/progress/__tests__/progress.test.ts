@@ -361,6 +361,12 @@ describe('coverage', () => {
         rep({ day: '2026-09-07' }),
       ]),
     ).toEqual({ tonic: 'E', scale: 'major', mode: 'phrygian' });
+    expect(
+      lastKeyMode([
+        rep({ day: '2026-09-08', axes: { key: 'E', mode: 'phrygian' } }),
+        rep({ day: '2026-09-09', axes: { key: 'A', scale: 'blues', mode: 'blues' } }),
+      ]),
+    ).toEqual({ tonic: 'A', scale: 'blues', mode: 'blues' });
     expect(lastKeyMode([])).toBeNull();
   });
 

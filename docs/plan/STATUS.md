@@ -2,12 +2,13 @@
 
 **Last updated:** 2026-09-25 (latest). **In progress: the Scales run** on branch `scales`
 (`docs/plan/14-SCALES.md`). Tasks 1 (the music domain), 2 (pentatonic and blues boxes), 3
-(the scale axis and settings) and 4 (played exercises on every scale) are committed, plus a
-revision at task 3's review; **task 4 awaits the player's review**, then task 5. Only Major has
+(the scale axis and settings), 4 (played exercises on every scale) and 5 (theory, reference,
+explorer) are committed, plus a revision at task 3's review; **task 5 awaits the player's
+review**, then task 6. Only Major has
 modes: decisions 10–15 (before task 1) made harmonic minor, Phrygian dominant and melodic minor
 mode-less scales, decision 16 (at task 3's review) dropped pentatonic shapes as a setting — the
-position picks the box — and decisions 17–19 (before task 4) settled how box scales shift,
-sequence and skip.
+position picks the box — decisions 17–19 (before task 4) settled how box scales shift,
+sequence and skip, and 20–21 (before task 5) how the theory drills treat them.
 The spec's "Outcomes"
 section says where each task stands. Then M7b. **Feedback round 7 is merged and
 pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
@@ -212,8 +213,8 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 ## Scales run — in progress on `scales` (2026-09-25)
 
 Spec, decisions, model and every task's outcome: **`docs/plan/14-SCALES.md`** — read it whole
-before task 5. Branch `scales`, a commit per task, a stop for the player's review after each;
-unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (936 unit tests in
+before task 6. Branch `scales`, a commit per task, a stop for the player's review after each;
+unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (945 unit tests in
 56 files), E2E 69/69.
 
 | Task | State |
@@ -222,9 +223,9 @@ unmerged and unpushed. `main` is untouched. On the branch: `pnpm check` green (9
 | 2 — Pentatonic and blues boxes | ✅ committed, reviewed ("the boxes I play") |
 | 3 — Scale axis, settings, routines, editor, strip | ✅ committed, reviewed |
 | Revision — no pentatonic shapes (decision 16) | ✅ committed, reviewed ("looks right") |
-| 4 — Played exercises on every scale | ✅ committed — **awaiting review** |
-| 5 — Theory, reference, explorer | **next** |
-| 6 — Generated backing per scale | not started |
+| 4 — Played exercises on every scale | ✅ committed |
+| 5 — Theory, reference, explorer | ✅ committed — **awaiting review** |
+| 6 — Generated backing per scale | **next** |
 | 7 — The gate | — |
 
 **The model now, in one paragraph.** A key is `{ tonic, scale, mode }`. Seven scales: Major,
@@ -251,10 +252,14 @@ Interval sequences offers only 3rds, 4ths and the groups; blues' ♭5 is a step 
 note per string's skip-one. `withoutPassingNotes` (blues → minor pentatonic) is the one helper
 for "the ♭5 is passing".
 
+**Theory, reference and explorer** (task 5, decisions 20–21): the Key signature drill names a
+pentatonic's own notes and asks about its parent's chords, naming the parent; harmonic minor,
+Phrygian dominant and melodic minor use their own chords (the 7th table adds mMaj7 and maj7#5).
+The Circle of fifths drill stays Major-only. The reference panel labels borrowed chords
+("Chords · from A Aeolian"); the explorer has a Scale picker and opens on the last key in its
+scale.
+
 **Known gaps, by the task that closes them** (the spec's Outcomes list them in full):
-- Task 5: the diatonic drill declares no scale yet (in a non-Major routine it rolls its own Major
-  mode); the reference panel shows a pentatonic's parent chords unlabeled and has a seven-column
-  note row; the explorer has no Scale picker and its "last key" is Major-only.
 - Task 6: progressions parse only `[1-7]`; blues 12-bar with dominant 7ths; Phrygian
   dominant's progressions are a draft (vamp on I; I–♭II).
 

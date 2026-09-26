@@ -1,6 +1,5 @@
-import type { KeyMode, ModeName, PitchClass } from '@/domain/music';
-import { MODE_NAMES, chroma, pitchClass } from '@/domain/music';
-import { keyModeOf } from './rollup';
+import type { KeyMode, ModeName, PitchClass, ScaleId } from '@/domain/music';
+import { MODE_NAMES, SCALE_IDS, chroma, isModeOf, pitchClass } from '@/domain/music';
 import type { LoggedRep, PracticeDay } from './types';
 
 /** Finished passes per `"Bb dorian"` over some days. */
@@ -30,17 +29,21 @@ export function keyModeGrid(counts: Record<string, number>): Record<ModeName, nu
   return grid;
 }
 
-/** The key and mode of the most recent pass that had both. */
+/**
+ * The key of the most recent pass that had one, in its scale: a pass with no
+ * scale was Major. A mode its scale doesn't have is a pass to skip, not a key.
+ */
 export function lastKeyMode(reps: readonly LoggedRep[]): KeyMode | null {
-  const latest = [...reps]
-    .filter((r) => keyModeOf(r.axes) !== null)
-    .sort((a, b) => b.startedAt - a.startedAt)[0];
-  if (!latest) return null;
-  return {
-    tonic: latest.axes.key as PitchClass,
-    scale: 'major',
-    mode: latest.axes.mode as ModeName,
+  const keyOf = (axes: Record<string, string>): KeyMode | null => {
+    const scale = (axes.scale ?? 'major') as ScaleId;
+    if (!axes.key || !axes.mode || !SCALE_IDS.includes(scale)) return null;
+    if (!isModeOf(scale, axes.mode)) return null;
+    return { tonic: axes.key as PitchClass, scale, mode: axes.mode };
   };
+  const latest = [...reps]
+    .filter((r) => keyOf(r.axes) !== null)
+    .sort((a, b) => b.startedAt - a.startedAt)[0];
+  return latest ? keyOf(latest.axes) : null;
 }
 
 /**

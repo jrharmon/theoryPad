@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { KeyMode, ModeName } from '@/domain/music';
-import { chroma, keySignature, circlePosition, pitchClass, scaleNotes } from '@/domain/music';
+import {
+  SCALE_IDS,
+  chroma,
+  keySignature,
+  circlePosition,
+  pitchClass,
+  scaleNotes,
+} from '@/domain/music';
 import { mulberry32 } from '@/domain/variation';
 import {
   CIRCLE_POSITIONS,
@@ -151,6 +158,90 @@ describe('diatonic questions', () => {
     expect(set).toHaveLength(8);
     expect(set.filter((q) => q.kind === 'table-fill')).toHaveLength(2);
     expect(JSON.stringify(make(5))).toBe(JSON.stringify(set));
+  });
+
+  it('names a pentatonic’s own notes, and asks about its parent’s chords', () => {
+    const pentatonic: KeyMode = {
+      tonic: pitchClass('A'),
+      scale: 'minor-pentatonic',
+      mode: 'minor-pentatonic',
+    };
+    const notes = nameNotes(pentatonic, mulberry32(1), 'q');
+    expect(notes.prompt).toBe('Name the notes of A minor pentatonic.');
+    expect(notes.rows.map((r) => r.correctOptionId)).toEqual(pcs('C', 'D', 'E', 'G'));
+    for (const row of notes.rows) expect(row.options).toHaveLength(4);
+    expect(notes.feedback.rule).toBe(
+      'A minor pentatonic is A Aeolian without its 2nd and 6th: A C D E G.',
+    );
+    const blues = nameNotes(
+      { ...pentatonic, scale: 'blues', mode: 'blues' },
+      mulberry32(1),
+      'q',
+    );
+    expect(blues.rows.map((r) => r.correctOptionId)).toEqual(pcs('C', 'D', 'Eb', 'E', 'G'));
+
+    const family = chordFamily(pentatonic, mulberry32(3), false, 'q', 'subdominant');
+    expect(family.prompt).toBe(
+      'Which chords are the subdominant family in A Aeolian, the parent of A minor pentatonic?',
+    );
+    expect(family.options).toHaveLength(7);
+  });
+
+  it('asks harmonic minor about its own chords, offering its own qualities', () => {
+    const harmonic: KeyMode = {
+      tonic: pitchClass('A'),
+      scale: 'harmonic-minor',
+      mode: 'harmonic-minor',
+    };
+    const sevenths = nameChords(harmonic, 'sevenths', 'q');
+    expect(sevenths.prompt).toBe('Pick the quality of each 7th chord in A harmonic minor.');
+    expect(sevenths.rows.map((r) => r.correctOptionId)).toEqual([
+      'minMaj7',
+      'min7b5',
+      'maj7sharp5',
+      'min7',
+      'dom7',
+      'maj7',
+      'dim7',
+    ]);
+    expect(sevenths.rows[0]!.options.map((o) => o.label)).toEqual([
+      'maj7',
+      'm7',
+      '7',
+      'm7b5',
+      'dim7',
+      'mMaj7',
+      'maj7#5',
+    ]);
+    // A Major key never offers them.
+    expect(nameChords(C_MAJOR, 'sevenths', 'q').rows[0]!.options).toHaveLength(5);
+    expect(nameNotes(harmonic, mulberry32(1), 'q').feedback.rule).toBe(
+      'A harmonic minor is A natural minor with its 7th raised: A B C D E F G#.',
+    );
+  });
+
+  it.each(SCALE_IDS)('makes a whole set on %s, every answer among its options', (scale) => {
+    const mode = scale === 'major' ? 'dorian' : scale;
+    const set = diatonicQuestions({
+      keyMode: { tonic: pitchClass('D'), scale, mode },
+      rng: mulberry32(9),
+      types: ['name-notes', 'name-chords', 'spell-chord', 'chord-function'],
+      depth: 'both',
+      count: 12,
+    });
+    expect(set.length).toBeGreaterThan(8);
+    for (const q of set) {
+      const ids = (q.kind === 'table-fill' ? q.rows.flatMap((r) => r.options) : q.options).map(
+        (o) => o.id,
+      );
+      const right =
+        q.kind === 'table-fill'
+          ? q.rows.map((r) => r.correctOptionId)
+          : q.kind === 'multi-pick'
+            ? q.correctOptionIds
+            : [q.correctOptionId];
+      for (const id of right) expect(ids).toContain(id);
+    }
   });
 
   it('stops short rather than repeating a table when only tables are asked for', () => {

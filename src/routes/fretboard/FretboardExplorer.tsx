@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Chroma, KeyMode, ModeName } from '@/domain/music';
+import type { Chroma, KeyMode, ModeName, ScaleId } from '@/domain/music';
 import {
   MODE_NAMES,
+  SCALE_IDS,
   modeTitle,
   canonicalKeyMode,
   chroma,
+  hasModes,
+  keyModeName,
+  modesOf,
+  parentMode,
+  playsInBoxes,
   scaleDegrees,
+  scaleTitle,
   signatureDegree,
   tonicsForMode,
+  withoutPassingNotes,
 } from '@/domain/music';
 import { scaleOnNeck, shapeSpan, shapesUpTheNeck } from '@/domain/instrument';
 import { overlayFromScalePositions } from '@/domain/neck';
@@ -40,8 +48,8 @@ type Layer = 'off' | 'all' | 'recent';
 const title = modeTitle;
 
 /**
- * A key and mode across the whole neck, one 3nps shape at a time if you like,
- * with how often you have played each spot laid underneath.
+ * A key and scale across the whole neck, one shape (3nps, or a pentatonic box)
+ * at a time if you like, with how often you have played each spot laid underneath.
  */
 export function FretboardExplorer() {
   const { days, today, lastKeyMode, loaded, load } = useProgress();
@@ -67,8 +75,11 @@ export function FretboardExplorer() {
 
   const shapes = useMemo(() => shapesUpTheNeck(instrument, keyMode), [instrument, keyMode]);
   const shape = shapeIndex === null ? null : (shapes[shapeIndex] ?? null);
-  const degrees = scaleDegrees(keyMode);
+  const boxes = playsInBoxes(keyMode.scale);
+  // A box starts on a step of its five notes — blues' ♭5 is never one.
+  const degrees = scaleDegrees(withoutPassingNotes(keyMode));
   const signature = signatureDegree(keyMode);
+  const name = keyModeName(keyMode);
 
   const overlay = useMemo(() => {
     const positions = shape ? shape.positions : scaleOnNeck(instrument, keyMode);
@@ -108,12 +119,10 @@ export function FretboardExplorer() {
     <section>
       <div className="px-8 py-7">
         <Kicker accent>Explore</Kicker>
-        <h1 data-testid="explorer-title">
-          {keyMode.tonic} {title(keyMode.mode)}
-        </h1>
+        <h1 data-testid="explorer-title">{name}</h1>
         <PageIntro>
-          The whole neck in one key and mode — or one shape of it — with where you have actually
-          played laid underneath.
+          The whole neck in one key and scale — or one shape of it — with where you have
+          actually played laid underneath.
         </PageIntro>
       </div>
 
@@ -123,7 +132,7 @@ export function FretboardExplorer() {
             value={String(chroma(keyMode.tonic))}
             onValueChange={(c) => {
               const tonic = tonicsForMode(keyMode)[Number(c) as Chroma];
-              if (tonic) choose({ tonic, scale: 'major', mode: keyMode.mode });
+              if (tonic) choose({ tonic, scale: keyMode.scale, mode: keyMode.mode });
             }}
           >
             <SelectTrigger aria-label="Key" className="w-[88px]">
@@ -138,22 +147,47 @@ export function FretboardExplorer() {
             </SelectContent>
           </Select>
           <Select
-            value={keyMode.mode}
-            onValueChange={(mode) =>
-              choose({ tonic: keyMode.tonic, scale: 'major', mode: mode as ModeName })
-            }
+            value={keyMode.scale}
+            onValueChange={(next) => {
+              const scale = next as ScaleId;
+              // Back to Major, keep the notes' home: A minor pentatonic → A Aeolian.
+              const mode =
+                scale === 'major'
+                  ? (parentMode(keyMode)?.mode ?? 'ionian')
+                  : modesOf(scale)[0]!;
+              choose({ tonic: keyMode.tonic, scale, mode });
+            }}
           >
-            <SelectTrigger aria-label="Mode" className="w-[140px]">
+            <SelectTrigger aria-label="Scale" className="w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MODE_NAMES.map((mode) => (
-                <SelectItem key={mode} value={mode}>
-                  {title(mode)}
+              {SCALE_IDS.map((scale) => (
+                <SelectItem key={scale} value={scale}>
+                  {scaleTitle(scale)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {hasModes(keyMode.scale) && (
+            <Select
+              value={keyMode.mode}
+              onValueChange={(mode) =>
+                choose({ tonic: keyMode.tonic, scale: 'major', mode: mode as ModeName })
+              }
+            >
+              <SelectTrigger aria-label="Mode" className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODE_NAMES.map((mode) => (
+                  <SelectItem key={mode} value={mode}>
+                    {title(mode)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <SegmentedControl
           label="Labels"
@@ -188,7 +222,10 @@ export function FretboardExplorer() {
               aria-label={`Shape starting on ${degrees[s.startDegree - 1]!.label} at fret ${s.startFret}`}
               onClick={() => setShapeIndex(i)}
             >
-              <span className="tabular">{degrees[s.startDegree - 1]!.label}</span>
+              {/* A box goes by the step it starts on, "shape 2"; a 3nps shape by its degree. */}
+              <span className="tabular">
+                {boxes ? `Shape ${s.startDegree}` : degrees[s.startDegree - 1]!.label}
+              </span>
               <span className="tabular text-caption opacity-60">fret {s.startFret}</span>
             </ToggleButton>
           ))}
@@ -212,7 +249,7 @@ export function FretboardExplorer() {
           </span>
           <span className="flex items-center gap-2">
             <span className="size-3.5 rounded-full bg-dot-target" /> {signature.label} — the
-            note that makes {title(keyMode.mode)}
+            note that makes {name}
           </span>
           <span className="flex items-center gap-2">
             <span className="size-3.5 rounded-full bg-dot-chord" /> The rest of the key

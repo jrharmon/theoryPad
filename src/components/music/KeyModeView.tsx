@@ -3,6 +3,7 @@ import {
   chordOnDegree,
   diatonicChords,
   harmonyOf,
+  hasModes,
   keyModeName,
   modeCharacter,
   progressionsFor,
@@ -24,11 +25,17 @@ const FUNCTION_LABEL: Record<ChordFunction, string> = {
 function Notes({ keyMode, size }: { keyMode: KeyMode; size: 'full' | 'compact' }) {
   const notes = scaleNotes(keyMode);
   const degrees = scaleDegrees(keyMode);
-  const signature = signatureDegree(keyMode).number;
+  const signature = signatureDegree(keyMode).label;
   return (
-    <div className="grid grid-cols-7 border-y border-rule" data-testid="key-mode-notes">
+    // One column a note: seven for most scales, five or six for a pentatonic or blues.
+    <div
+      className="grid border-y border-rule"
+      style={{ gridTemplateColumns: `repeat(${notes.length}, minmax(0, 1fr))` }}
+      data-testid="key-mode-notes"
+    >
       {notes.map((note, i) => {
-        const isSignature = degrees[i]!.number === signature;
+        // By the full degree: blues' signature is its ♭5, not its 5 as well.
+        const isSignature = degrees[i]!.label === signature;
         return (
           <div
             key={note}
@@ -89,10 +96,11 @@ export function KeyModeView({
   className?: string;
 }) {
   const character = modeCharacter(keyMode);
-  // A pentatonic's chords are its parent mode's (task 5 of the Scales run labels them so).
+  // A pentatonic has no chords of its own; it plays over its parent mode's, and says so.
   const harmony = harmonyOf(keyMode);
   const chords = diatonicChords(harmony);
   const name = keyModeName(keyMode);
+  const borrowed = harmony === keyMode ? null : keyModeName(harmony);
 
   if (variant === 'compact') {
     return (
@@ -100,6 +108,7 @@ export function KeyModeView({
         <p className="text-title font-extrabold">{name}</p>
         <p className="mb-3 text-body-sm text-ink-muted">{character.summary}</p>
         <Notes keyMode={keyMode} size="compact" />
+        {borrowed && <Kicker className="mt-2">Chords of {borrowed}</Kicker>}
         <div className="grid grid-cols-7 border-b border-rule">
           {chords.map((chord, i) => (
             <div
@@ -125,13 +134,15 @@ export function KeyModeView({
 
   return (
     <div className={className} data-testid="key-mode-full">
-      <Kicker accent>Key &amp; mode</Kicker>
+      <Kicker accent>{hasModes(keyMode.scale) ? 'Key & mode' : 'Key & scale'}</Kicker>
       <p className="text-display font-extrabold leading-tight">{name}</p>
       <p className="mb-4 text-body-sm text-ink-muted">{character.summary}</p>
 
       <Notes keyMode={keyMode} size="full" />
 
-      <Kicker className="mt-6 block">Chords</Kicker>
+      <Kicker className="mt-6 block">
+        {borrowed ? `Chords · from ${borrowed}` : 'Chords'}
+      </Kicker>
       <div className="overflow-x-auto">
         <table className="mt-2 w-full border-collapse text-left text-body-sm">
           <thead>

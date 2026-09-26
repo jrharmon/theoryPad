@@ -1,7 +1,14 @@
-import type { ChordFunction, KeyMode, SeventhQuality, TriadQuality } from '@/domain/music';
+import type {
+  ChordFunction,
+  KeyMode,
+  ScaleId,
+  SeventhQuality,
+  TriadQuality,
+} from '@/domain/music';
 import {
   chordOnDegree,
   diatonicChords,
+  harmonyOf,
   keyModeName,
   keySignature,
   scaleDegrees,
@@ -46,12 +53,36 @@ const SEVENTH_LABEL: Record<SeventhQuality, string> = {
 /** What the table offers: every quality a mode produces, and one that none does. */
 const TRIAD_OPTIONS: TriadQuality[] = ['maj', 'min', 'dim', 'aug'];
 const SEVENTH_OPTIONS: SeventhQuality[] = ['maj7', 'min7', 'dom7', 'min7b5', 'dim7'];
+/** Harmonic and melodic minor add these; a Major key never offers them. */
+const MINOR_SEVENTH_OPTIONS: SeventhQuality[] = [...SEVENTH_OPTIONS, 'minMaj7', 'maj7sharp5'];
+
+/** How each scale other than Major is made, from a scale the player knows. */
+const SCALE_ORIGIN: Record<Exclude<ScaleId, 'major'>, (tonic: string) => string> = {
+  'minor-pentatonic': (t) => `${t} Aeolian without its 2nd and 6th`,
+  'major-pentatonic': (t) => `${t} major without its 4th and 7th`,
+  blues: (t) => `${t} minor pentatonic with a ♭5 added`,
+  'harmonic-minor': (t) => `${t} natural minor with its 7th raised`,
+  'phrygian-dominant': (t) => `${t} Phrygian with its 3rd raised`,
+  'melodic-minor': (t) => `${t} natural minor with its 6th and 7th raised`,
+};
 
 function parentMajorNote(km: KeyMode): string {
+  if (km.scale !== 'major') return SCALE_ORIGIN[km.scale](km.tonic);
   const sig = keySignature(km);
   return km.mode === 'ionian'
     ? `${km.tonic} major`
     : `${sig.relativeMajor} major, starting on its ${ORDINAL[scaleDegreesFromMajor(km)]} note`;
+}
+
+/**
+ * How a chord question names its key. A pentatonic has no chords of its own,
+ * so its questions are about its parent's, and say so (decision 20).
+ */
+function chordKeyName(km: KeyMode): string {
+  const harmony = harmonyOf(km);
+  return harmony === km
+    ? keyModeName(km)
+    : `${keyModeName(harmony)}, the parent of ${keyModeName(km)}`;
 }
 
 function scaleDegreesFromMajor(km: KeyMode): number {
@@ -59,7 +90,10 @@ function scaleDegreesFromMajor(km: KeyMode): number {
   return order.indexOf(km.mode);
 }
 
-/** "Name the notes of D Dorian." The tonic is in the question; the other six are asked for. */
+/**
+ * "Name the notes of D Dorian." The tonic is in the question; the others are
+ * asked for — the scale's own, so a pentatonic asks for four.
+ */
 export function nameNotes(km: KeyMode, rng: Rng, id: string): TableFillQuestion {
   const notes = scaleNotes(km);
   const degrees = scaleDegrees(km);
@@ -94,7 +128,7 @@ export function nameNotes(km: KeyMode, rng: Rng, id: string): TableFillQuestion 
     }),
     feedback: {
       rule: `${keyModeName(km)} is ${parentMajorNote(km)}: ${notes.join(' ')}.`,
-      visual: { kind: 'note-row', keyMode: km, highlight: [1, 2, 3, 4, 5, 6, 7] },
+      visual: { kind: 'note-row', keyMode: km, highlight: notes.map((_, i) => i + 1) },
     },
   };
 }
@@ -105,17 +139,20 @@ export function nameChords(
   depth: 'triads' | 'sevenths',
   id: string,
 ): TableFillQuestion {
-  const chords = diatonicChords(km);
+  const harmony = harmonyOf(km);
+  const name = chordKeyName(km);
+  const chords = diatonicChords(harmony);
+  const sevenths = harmony.scale === 'major' ? SEVENTH_OPTIONS : MINOR_SEVENTH_OPTIONS;
   const options =
     depth === 'triads'
       ? TRIAD_OPTIONS.map((q) => ({ id: q, label: TRIAD_LABEL[q] }))
-      : SEVENTH_OPTIONS.map((q) => ({ id: q, label: SEVENTH_LABEL[q] }));
+      : sevenths.map((q) => ({ id: q, label: SEVENTH_LABEL[q] }));
   const symbols = chords.map((c) => (depth === 'triads' ? c.triadSymbol : c.seventhSymbol));
   return {
     kind: 'table-fill',
     id,
     subject: keyModeName(km),
-    prompt: `Pick the quality of each ${depth === 'triads' ? 'triad' : '7th chord'} in ${keyModeName(km)}.`,
+    prompt: `Pick the quality of each ${depth === 'triads' ? 'triad' : '7th chord'} in ${name}.`,
     note: 'The root is given.',
     columns: [
       { id: 'degree', label: 'Degree' },
@@ -129,7 +166,7 @@ export function nameChords(
       options,
       correctOptionId: depth === 'triads' ? chord.triad : chord.seventh,
     })),
-    feedback: { rule: `In ${keyModeName(km)}: ${symbols.join(', ')}.` },
+    feedback: { rule: `In ${name}: ${symbols.join(', ')}.` },
   };
 }
 
@@ -150,12 +187,14 @@ export function spellChord(
   id: string,
   degree = rng.int(7) + 1,
 ): SinglePickQuestion {
-  const { symbol, notes } = chordFor(km, degree, sevenths);
+  // A chord question is always about seven chords: a pentatonic asks its parent's.
+  const harmony = harmonyOf(km);
+  const { symbol, notes } = chordFor(harmony, degree, sevenths);
   // Mostly the key's other chords; now and then one note wrong in this one.
   const trick = wantsTrick(rng);
   const others = [1, 2, 3, 4, 5, 6, 7]
     .filter((d) => d !== degree)
-    .map((d) => chordFor(km, d, sevenths));
+    .map((d) => chordFor(harmony, d, sevenths));
   const wrong = trick
     ? spellingDistractors(notes, rng)
     : plainDistractors(
@@ -186,11 +225,11 @@ export function spellChord(
     options,
     correctOptionId: options[index]!.id,
     feedback: {
-      rule: `${symbol} is ${notes.join(' ')}: the ${ORDINAL[degree - 1]} degree of ${keyModeName(km)} with every other note of the key stacked on it.`,
+      rule: `${symbol} is ${notes.join(' ')}: the ${ORDINAL[degree - 1]} degree of ${chordKeyName(km)}, with every other note of the key stacked on it.`,
       whatItIs,
       visual: {
         kind: 'note-row',
-        keyMode: km,
+        keyMode: harmony,
         highlight: [0, 2, 4, 6].slice(0, notes.length).map((k) => ((degree - 1 + k) % 7) + 1),
       },
     },
@@ -224,11 +263,13 @@ export function chordFamily(
 ): MultiPickQuestion {
   // The families come off the chords themselves, so this question and the
   // key/mode reference can never drift apart.
-  const chords = diatonicChords(km);
+  const harmony = harmonyOf(km);
+  const name = chordKeyName(km);
+  const chords = diatonicChords(harmony);
   const degrees = rng.shuffle(chords.map((c) => c.degree.number));
   const options = degrees.map((d) => ({
     id: `${id}-${d}`,
-    label: chordFor(km, d, sevenths).symbol,
+    label: chordFor(harmony, d, sevenths).symbol,
   }));
   const inFamily = (d: number) => chords[d - 1]!.function === family;
   const correct = degrees.filter(inFamily);
@@ -238,23 +279,23 @@ export function chordFamily(
   for (const d of degrees) {
     if (inFamily(d)) continue;
     whatItIs[`${id}-${d}`] =
-      `${chordFor(km, d, sevenths).symbol} is the ${ORDINAL[d - 1]} — ${chords[d - 1]!.function} family.`;
+      `${chordFor(harmony, d, sevenths).symbol} is the ${ORDINAL[d - 1]} — ${chords[d - 1]!.function} family.`;
   }
 
   return {
     kind: 'multi-pick',
     id,
     subject: keyModeName(km),
-    prompt: `Which chords are the ${family} family in ${keyModeName(km)}?`,
+    prompt: `Which chords are the ${family} family in ${name}?`,
     note: `${COUNT_WORD[members.length]!.replace(/^./, (c) => c.toUpperCase())} of them.`,
     options,
     correctOptionIds: correct.map((d) => `${id}-${d}`),
     feedback: {
-      rule: `The ${family} family in ${keyModeName(km)} is the ${listOf(
+      rule: `The ${family} family in ${name} is the ${listOf(
         members.map((d) => ORDINAL[d - 1]!),
-      )}: ${listOf(members.map((d) => chordFor(km, d, sevenths).symbol))}.`,
+      )}: ${listOf(members.map((d) => chordFor(harmony, d, sevenths).symbol))}.`,
       whatItIs,
-      visual: { kind: 'note-row', keyMode: km, highlight: members },
+      visual: { kind: 'note-row', keyMode: harmony, highlight: members },
     },
   };
 }
