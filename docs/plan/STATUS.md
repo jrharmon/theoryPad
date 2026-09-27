@@ -1,6 +1,6 @@
 # Status — start here
 
-**Last updated:** 2026-09-26. **A mixer in Settings is built on `mixer` and waiting at its gate** (unmerged, unpushed) — see "Mixer" below. **M7b is next** after it. Before that: **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
+**Last updated:** 2026-09-27. **A mixer in Settings is merged and pushed** — see "Mixer" below. `main` is the only branch. **M7b is next.** Before that: **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
 library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
 pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
 between key and mode, in every played exercise, the theory drill, the reference, the explorer
@@ -64,7 +64,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Practice list — the library or a routine's items, down the left | ✅ merged, pushed 2026-09-26 — see below |
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
-| Mixer — Master, notes, metronome, generated, video | **at the gate** on `mixer` — see below |
+| Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
 | M7b — Ear training and "hear it" | **next** — see "Remaining work" |
 | M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
 
@@ -211,9 +211,10 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Mixer — at the gate (2026-09-26)
+## Mixer — merged (2026-09-27)
 
-Asked for directly (no spec doc). Built on `mixer`, **not yet merged**. `pnpm check` green
+Asked for directly (no spec doc). Built on `mixer`, passed at the gate after one round of
+changes, fast-forwarded into `main` and pushed; the branch is deleted. `pnpm check` green
 (962 unit tests in 57 files), all 72 E2E pass.
 
 - **Settings → Sound → Mix** replaces the single Volume slider: five faders, **Master, Notes,
