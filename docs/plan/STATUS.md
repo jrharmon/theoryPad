@@ -40,7 +40,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
-| Notes off — global Off, per-exercise Play the notes | built on `notes-off`, at the gate — see below |
+| Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -186,10 +186,11 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Notes off — at the gate (2026-09-27)
+## Notes off — merged (2026-09-27)
 
-Asked for directly (no spec doc). Built on `notes-off`, not yet merged. `pnpm check` green
-(963 unit tests).
+Asked for directly (no spec doc). Built on `notes-off`, passed at the gate after one change,
+fast-forwarded into `main` and pushed; the branch is deleted. `pnpm check` green (963 unit
+tests), all 72 E2E pass.
 
 - **Settings → Sound → Instrument** gains an **On/Off** pill (the page's `OnOff`) before
   Synth | Piano | Guitar — `settings.audio.playNotes`. The instrument stays chosen and visible
