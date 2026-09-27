@@ -1,41 +1,16 @@
 # Status — start here
 
-**Last updated:** 2026-09-27. **A mixer in Settings is merged and pushed** — see "Mixer" below. `main` is the only branch. **M7b is next.** Before that: **A Start string axis for Modes up the neck is merged and pushed** — see "Start string" below. `main` is the only branch. **M7b is next.** Before that: **Triplet brackets and the neck window are merged and pushed** — see "Triplets and the neck window" below. `main` is the only branch. **M7b is next.** Before that: **The practice list is merged and pushed**: a collapsible list down the left of a running exercise — the
-library, or a routine's items to jump between — see "Practice list" below. Before that: **The Scales run is merged and pushed** (`docs/plan/14-SCALES.md`):
-pentatonics, blues, harmonic minor, Phrygian dominant and melodic minor, as a Scale setting
-between key and mode, in every played exercise, the theory drill, the reference, the explorer
-and the generated backing. Only Major has modes; the position picks a pentatonic's box.
-Decisions 1–25 and every task's outcome are in the spec; "Scales run" below summarizes it.
-`main` is the only branch, local and origin in sync. **M7b is next.** Before that: **Feedback round 7 is merged and
-pushed**: the settings dialog's Done stays on screen, faint beat lines and thicker bar lines in
-the tab, roots ringed in blue, "Land on" kept only in *Improvise to a target*, a routine opens
-paused on its first item instead of an overview, and the builder shows each item's summary —
-see "Feedback round 7" below. `main` is the only branch, local and origin in sync. Before that: **"Generated backing"
-is merged and pushed** (2026-09-25): "Generated" in the Backing menu plays sampled bass and
-piano chords under the notes, over a progression of scale degrees (vamp on 1, the mode's go-to
-progressions, or custom lists) picked from the roll, set per exercise and per routine item, with
-the chords shown over the tab and in the improv counter. **`docs/plan/13-GENERATED-BACKING.md`**
-has the spec and every task's outcome and review; "Generated backing" under "Remaining work"
-summarizes it. `main` is the only branch, local and origin in sync. Before that: **"Sounds — sampled instruments and drum metronomes" is merged
-and pushed**: the notes play on sampled guitar (default) or piano, and the metronome is a menu —
-Off, Click, or a drum beat (Simple, Upbeat, Swing, Heavy) — chosen per exercise. The beats
-beyond Simple are **drum tab in `src/domain/drums/beats.ts`**, written to be tweaked and added
-to. See "Sounds" under "Remaining work" and `docs/plan/12-SOUNDS.md`, whose per-task
-**Outcome** and **Gate** sections record every decision. `main` is the only branch. **M7b is
-next.** Before that, two things merged today: **a routine's theory reps are now its
-question count**, and **the exercise follows YouTube's own pause and play**, which closes the
-backing-track run — see those sections. Before that, as of 2026-09-21: **Feedback round 6 is merged and live** — circled root fret
-numbers in the tab, a routine's pass counter, and chord families replacing degree names in the
-theory drill; see "Feedback round 6" below. Nothing is in progress. Before that, **feedback round 5 was merged
-and live** — a transport clock, settings and the backing menu reloading on every visit, and
-uniform bar widths in the tab, plus two frozen readouts fixed on the way; see "Feedback round
-5" below. Before that, **feedback round 4 was merged and live** — five transport and generator fixes from
-living with the app, listed under "Feedback round 4". Before that, "Backing tracks — ads and the YouTube host" is **finished**:
-tasks 1 and 2 are merged and live, and task 3 turned out not to need custom controls at all — the
-exercise follows YouTube's own pause and play instead. **M7b is next.** The ad task corrected the advert signal that whole run was planned
-around, so read that section before touching backing playback again. Written as a hand-off: a
-fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it points
-to. Start with "Remaining work".
+**Last updated:** 2026-09-27. **The milestone plan is finished; the core app is built.**
+Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
+this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
+theme. Nothing is queued: the player picks what comes next, and when asked about future work,
+bring up what fits from that file. The latest run is the mixer (see "Mixer"); every run has
+its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
+(backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
+write-up before touching backing playback again** — it corrected the advert signal that run
+was planned around. `main` is the only branch, local and origin in sync. Written as a hand-off:
+a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it
+points to.
 
 **Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
 deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
@@ -65,8 +40,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
-| M7b — Ear training and "hear it" | **next** — see "Remaining work" |
-| M8 — Rest of the catalog · M9 — Polish · M10 — Optional sync | not started |
+| Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
 deleted — `main` is the only branch, local and origin in sync. 735 unit tests in 55 files,
@@ -301,7 +275,7 @@ recommendation:
 
 Asked for directly (no spec doc): a panel down the left of a running exercise for jumping
 between them. Built on `exercise-list`, passed at the gate, fast-forwarded into `main` and
-pushed; the branch is deleted and `main` is the only branch. **M7b is next.** `pnpm check` green (951 unit tests in 56
+pushed; the branch is deleted and `main` is the only branch. `pnpm check` green (951 unit tests in 56
 files), all 71 E2E pass. The player took every recommendation:
 
 - **A single exercise** lists the whole library, in library order (favorites first — the
@@ -660,13 +634,15 @@ be pressed again and start a second `play()`. That is dev-only — the practice 
 
 After M7a the player paused to live with the app; that pause produced feedback rounds 1–3, the
 architecture-review cleanup, and the ad investigation. **The pause is over and the next work is
-agreed:** "Backing tracks — ads and the YouTube host" under "Remaining work", three tasks in the
+agreed:** "Backing tracks — ads and the YouTube host" under "Earlier runs, in detail", three tasks in the
 order given, then M7b. The milestone gate still applies — build one task, verify it on the
 deploy, report, and wait.
 
-## Remaining work
+## Earlier runs, in detail
 
-Planned milestones in order; doc 08 has each task in full. Sizes: S, M, L.
+The longer write-ups of runs from 2026-09-17 to 2026-09-25. This section used to end with the
+planned milestones (M7b–M10) and the parked items; since 2026-09-27 those are in
+`docs/plan/FUTURE-WORK.md`, unordered.
 
 **Cleanup — architecture review** (done, 2026-09-20; agreed 2026-09-17)
 - All nine steps of `docs/review/ARCHITECTURE-REVIEW.md`'s work plan are reviewed and merged to
@@ -1005,48 +981,7 @@ are high and cut through on their own, and the kick is there for feel rather tha
   every pass. Chords always show: a lane over the tab, a strip in the improv counter, the current
   one highlighted. Routines play each item's own progression.
 
-**M7b — Ear training and "hear it"** (after generated backing)
-- 7.8 `ear-training` (L) — interval, scale degree, chord quality first. Already decided: the
-  drill is an axis (fixed / hold / roll); intervals rise by default, falling and harmonic as
-  settings; the answer grid shows the whole level (1: m3 M3 P4 P5 P8; 2 adds M2 m6 M6 m7; 3:
-  all twelve); a wrong answer offers "hear yours" and "hear the right one"; lean toward misses.
-- 7.9 `PreviewPlayer` (S) — "hear it" for a phrase, a chord, a scale.
-- Mode and progression drills follow, once the gate answers whether maj7 vs dom7 is audible on
-  the synth — the trigger for sampled instruments.
-
-**M8 — The rest of the catalog** (all thirteen exercises)
-- **The first exercise in 3/4 or 6/8 gets Simple checked by ear** at its gate — whether the
-  generated beat works there or wants a hand-written one in `beats.ts`. Nothing in the app is
-  in either signature yet, so it has never been heard (Sounds, 2026-09-23).
-- 8.1 ladder tempo plans, pick-stroke marks, articulation audio (M) · 8.2 speed picking (S) ·
-  8.3 legato (S) · 8.4 `remapToStringSet` + string skipping (M) · 8.5 triad shapes, R/3/5/7
-  labels, triads & arpeggios (M) · 8.6 clickable `FretboardInput` + note finding (M) · 8.7
-  CAGED/positional shapes as a `shapeSystem` option (M).
-- Ask first: the player plays 3nps, not CAGED — is 8.7 wanted at all?
-
-**M9 — Polish**
-- 9.1 PWA: offline, icons, install, backing saying plainly it needs a connection (M) · 9.2
-  post-session summary with "adopt as target" (M) · 9.3 "roll a routine from my gaps" (M) ·
-  9.4 tablet layout, type for reading at distance (M) · 9.5 empty states, first-run starter
-  routine, error boundaries (M) · 9.6 accessibility and keyboard audit (S) · 9.7 tuning
-  presets (DADGAD…), capo, left-handed (M).
-
-**M10 — Optional sync** — only if wanted after living with export/import (doc 07).
-
-**Parked — in no milestone yet**
-- Custom transport over the video (`controls: 0`) — **closed 2026-09-22**, and closed by the
-  player, not deferred: following YouTube's controls gave them everything they wanted. The
-  research is still recorded under task 3 if it is ever reopened. Scrubbing the video's own
-  progress bar still moves it out from under the exercise; nobody has asked.
-- Sync markers (a tempo map) on a track, to align the playhead — the player wants it eventually.
-- Moving the player's tracks into a static data file shipped with the app, merged by id (doc 06).
-- ~~Generated backing — deferred past M9.~~ **Promoted 2026-09-23** to "Generated backing"
-  above. See `docs/plan/13-GENERATED-BACKING.md`.
-- ~~Sampled instruments — decided by the M7b gate.~~ **Promoted 2026-09-22** to the
-  "Sounds" run above, with drum metronomes alongside it. See `docs/plan/12-SOUNDS.md`.
-- M7a leftovers, ask whether wanted: a criteria editor for routines; reference videos on a theory
-  exercise's practice screen; a free-time toggle in the transport; one video player kept alive
-  through a whole routine (only if Safari's "Press play on the video" prompt gets tiresome).
+**What was left** — M7b, M8, M9, M10 and the parked items — is in `docs/plan/FUTURE-WORK.md`.
 
 ## Open questions for the player
 

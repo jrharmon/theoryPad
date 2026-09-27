@@ -1,5 +1,10 @@
 # 08 — Milestones
 
+> **2026-09-27: the milestone sequence ended after M7a** and the runs that followed it (see
+> STATUS.md). M7b, M8, M9 and M10 below are kept as the original plans for their tasks, but
+> they are no longer milestones or in any order: every item now lives in
+> **`docs/plan/FUTURE-WORK.md`**, grouped by theme, which points back here by task number.
+
 Eleven milestones. Each ends in something you can **look at and judge**, and each is a review
 gate — we stop, you try it, we adjust the plan before the next one starts. That is the
 alignment mechanism you asked for, and it is also what keeps token spend down: course
@@ -446,7 +451,7 @@ turns the target yellow on each phrase's last bar. Not built: a criteria editor 
 (the model has the field), reference videos on a theory exercise's practice screen, and a
 free-time toggle in the transport (free time itself still works through the runner).
 
-### M7b — Ear training and "hear it"
+### M7b — Ear training and "hear it" _(now in FUTURE-WORK.md)_
 
 | #   | Task                                                                                            | Size |
 | --- | ----------------------------------------------------------------------------------------------- | ---- |
@@ -466,7 +471,7 @@ sampled instruments?
 
 ---
 
-## M8 — The rest of the catalog
+## M8 — The rest of the catalog _(now in FUTURE-WORK.md)_
 
 | #   | Task                                                                                  | Size |
 | --- | ------------------------------------------------------------------------------------- | ---- |
@@ -482,7 +487,7 @@ sampled instruments?
 
 ---
 
-## M9 — Polish & the things that make it stick
+## M9 — Polish & the things that make it stick _(now in FUTURE-WORK.md)_
 
 | #   | Task                                                                                                                                                                           | Size |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
@@ -498,7 +503,7 @@ sampled instruments?
 
 ---
 
-## M10 — Optional: sync
+## M10 — Optional: sync _(now in FUTURE-WORK.md)_
 
 Only if you want it after living with export/import. Scoped in doc 07. Firebase is the
 recommended target. Roughly: auth UI, a `SyncedRepository` wrapper, security rules, conflict

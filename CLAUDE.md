@@ -7,6 +7,8 @@ accounts: static bundle + IndexedDB.
 ## Before you start
 
 **Read `docs/plan/STATUS.md` first** — where the project is and what is next.
+`docs/plan/FUTURE-WORK.md` is everything still to do, unordered — bring it up when asked about
+future work.
 Full plans are in `docs/plan/`; your task spec names which others to read.
 **Do not read `design_handoff_fretwork/`** — it is superseded and contradicts current
 decisions (notably its `cleanTempo` model, which we dropped).
