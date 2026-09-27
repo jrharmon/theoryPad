@@ -97,7 +97,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title="Sound">
-        <InstrumentRow voice={audio.playNotes ? audio.voice : 'off'} mix={audio.mix} />
+        <InstrumentRow playNotes={audio.playNotes} voice={audio.voice} mix={audio.mix} />
         <Row
           label="Metronome"
           hint="For an exercise that hasn’t chosen its own. A beat written for 4/4 plays Simple in any other time."
@@ -250,11 +250,7 @@ export function SettingsPage() {
   );
 }
 
-/** Off is the notes, not the voice: the voice is kept for an exercise that plays them anyway. */
-type InstrumentChoice = VoiceId | 'off';
-
-const VOICES: { id: InstrumentChoice; label: string }[] = [
-  { id: 'off', label: 'Off' },
+const VOICES: { id: VoiceId; label: string }[] = [
   { id: 'synth', label: 'Synth' },
   { id: 'piano', label: 'Piano' },
   { id: 'guitar', label: 'Guitar' },
@@ -266,8 +262,19 @@ const HEAR_CHORDS: NoteName[][] = [
   ['C3', 'E3', 'G3', 'Bb3', 'E4'],
 ].map((chord) => chord.map(noteName));
 
-/** What the notes play on, or Off, and a chord through it. */
-function InstrumentRow({ voice, mix }: { voice: InstrumentChoice; mix: Mix }) {
+/**
+ * Whether the notes sound, what they play on, and a chord through it. Off is
+ * its own switch: the voice stays chosen, for an exercise that plays anyway.
+ */
+function InstrumentRow({
+  playNotes,
+  voice,
+  mix,
+}: {
+  playNotes: boolean;
+  voice: VoiceId;
+  mix: Mix;
+}) {
   const save = useSettings((s) => s.save);
   const status = useSounds((s) => s.status);
   const [hearing, setHearing] = useState(false);
@@ -278,18 +285,18 @@ function InstrumentRow({ voice, mix }: { voice: InstrumentChoice; mix: Mix }) {
     void import('@/audio');
   }, []);
 
-  const choose = (id: InstrumentChoice) => {
+  const choose = (id: VoiceId) => {
     const { audio } = useSettings.getState().settings;
-    if (id === 'off') {
-      void save({ audio: { ...audio, playNotes: false } });
-      return;
-    }
-    void save({ audio: { ...audio, playNotes: true, voice: id } });
+    void save({ audio: { ...audio, voice: id } });
     void useSounds.getState().choose(id);
   };
 
+  const switchNotes = (on: boolean) => {
+    const { audio } = useSettings.getState().settings;
+    void save({ audio: { ...audio, playNotes: on } });
+  };
+
   const hear = () => {
-    if (voice === 'off') return;
     setHearing(true);
     // Choosing the voice already chosen is a no-op; this starts the download
     // if nothing on this visit has yet.
@@ -306,18 +313,17 @@ function InstrumentRow({ voice, mix }: { voice: InstrumentChoice; mix: Mix }) {
       hint={
         status === 'failed'
           ? 'Those sounds didn’t load, so the synth plays instead.'
-          : voice === 'off'
-            ? 'The notes stay silent, unless an exercise’s settings turn them on.'
-            : 'What the notes play on. The synth plays while samples load.'
+          : playNotes
+            ? 'What the notes play on. The synth plays while samples load.'
+            : 'The notes stay silent, unless an exercise’s settings turn them on.'
       }
     >
       <div className="flex flex-wrap items-center gap-3">
+        <OnOff on={playNotes} label="Play the notes" onChange={switchNotes} />
         <SegmentedControl label="Instrument" value={voice} options={VOICES} onChange={choose} />
-        {voice !== 'off' && (
-          <Button variant="secondary" size="sm" onClick={hear} disabled={hearing}>
-            {hearing && status === 'loading' ? 'Loading…' : 'Hear it'}
-          </Button>
-        )}
+        <Button variant="secondary" size="sm" onClick={hear} disabled={hearing}>
+          {hearing && status === 'loading' ? 'Loading…' : 'Hear it'}
+        </Button>
       </div>
     </Row>
   );

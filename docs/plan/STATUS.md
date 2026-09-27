@@ -191,10 +191,11 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 Asked for directly (no spec doc). Built on `notes-off`, not yet merged. `pnpm check` green
 (963 unit tests).
 
-- **Settings → Sound → Instrument** gains **Off** (first, as in the metronome menu). Off is
-  `settings.audio.playNotes: false`, not a voice: `voice` is kept, so an exercise that turns
-  its notes on still plays the chosen instrument. "Hear it" hides while Off. Older settings rows
-  default to on.
+- **Settings → Sound → Instrument** gains an **On/Off** pill (the page's `OnOff`) before
+  Synth | Piano | Guitar — `settings.audio.playNotes`. The instrument stays chosen and visible
+  while Off, so an exercise that turns its notes on plays it, and "Hear it" still auditions it.
+  (First built as an Off choice among the instruments; at review he asked for a separate
+  switch, since that is what it is.) Older settings rows default to on.
 - **Play the notes** — a checkbox under Target tempo in an exercise's settings dialog (played
   exercises only), shown ticked or not from the exercise's own `playNotes`, else the setting.
   Saved to the exercise only once changed; like the metronome, a routine item copies it
