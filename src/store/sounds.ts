@@ -17,6 +17,8 @@ interface SoundsState {
   /** Loop the mix preview at this mix, with this metronome. Must be called from a click. */
   startPreview: (mix: Mix, metronome: MetronomeVoiceId) => Promise<void>;
   stopPreview: () => void;
+  /** Switch the preview's metronome while it loops. */
+  setPreviewMetronome: (metronome: MetronomeVoiceId) => void;
   /** Every channel's level, heard at once if anything is playing. */
   setMix: (mix: Mix) => void;
 }
@@ -59,6 +61,9 @@ export const useSounds = create<SoundsState>((set, get) => {
       if (!get().previewing) return;
       set({ previewing: false });
       void engine().then((e) => e.stopPreview());
+    },
+    setPreviewMetronome(metronome) {
+      if (get().previewing) void engine().then((e) => e.setPreviewMetronome(metronome));
     },
     setMix(mix) {
       void engine().then((e) => e.setMix(mix));

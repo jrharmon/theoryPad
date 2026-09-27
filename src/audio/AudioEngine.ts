@@ -208,7 +208,8 @@ export class AudioEngine {
         note.tick,
       ),
     );
-    this.setMetronomeVoice(metronome === 'off' ? 'click' : metronome, FOUR_FOUR);
+    this.previewing = { backing, handles };
+    this.setPreviewMetronome(metronome);
     this.metronome.setSilenced(false);
     this.metronome.configure({ timeSignature: FOUR_FOUR, countInTicks: 0 });
     this.clock.stop();
@@ -216,7 +217,13 @@ export class AudioEngine {
     this.clock.setLoop(0, totalTicks);
     this.metronome.start();
     this.clock.start();
-    this.previewing = { backing, handles };
+  }
+
+  /** The preview's metronome, switched mid-loop from the next step. */
+  setPreviewMetronome(metronome: MetronomeVoiceId): void {
+    if (this.previewing) {
+      this.setMetronomeVoice(metronome === 'off' ? 'click' : metronome, FOUR_FOUR);
+    }
   }
 
   stopPreview(): void {

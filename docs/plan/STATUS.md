@@ -241,8 +241,14 @@ Asked for directly (no spec doc). Built on `mixer`, **not yet merged**. `pnpm ch
 - **Verified** by metering each bus in the page during the preview (all three sound; Notes at
   −12 read exactly 12 dB down; Off reads silent) and screenshots in both themes; one E2E
   (`backing.spec.ts`) sets Master and Video to −6 and checks the fake player gets 25.
-- **For the gate, by ear:** whether −30 dB is low enough at the bottom, whether the preview
-  material is useful to set levels against, and a real track's level against the notes.
+- **Gate round 1 (2026-09-26):** −30 dB is quiet enough above Off, the preview is great, and a
+  real track sounds fine at 0 dB. Two changes asked for, both built:
+  - **Only Master shows at first**; a **Channels** button beside it opens out the other four
+    (not remembered — closed on every visit).
+  - **Click / Drums beside Preview** switches the preview's metronome mid-loop
+    (`AudioEngine.setPreviewMetronome`). Drums is the default metronome's beat, or Simple when
+    the default is the click or Off; it starts on whichever the default is. Checked by counting
+    click and kit calls in the page across switches.
 
 ## Start string — merged (2026-09-26)
 

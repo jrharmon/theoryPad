@@ -154,6 +154,7 @@ test('a backing track plays at its fader and Master together', async ({ page }) 
   await page.goto('/#/settings');
   // Off is the bottom step; -6 and -6 are a quarter of YouTube's full volume.
   await page.getByRole('slider', { name: 'Master' }).fill('-6');
+  await page.getByRole('button', { name: 'Channels' }).click();
   await page.getByRole('slider', { name: 'Video track' }).fill('-6');
   await expect(page.getByRole('slider', { name: 'Video track' })).toHaveAttribute(
     'aria-valuetext',

@@ -128,7 +128,7 @@ export function SettingsPage() {
         {/* The count-in belongs to each exercise now, and is set from its transport. */}
         <Row
           label="Mix"
-          hint="Master is everything, the video too. Generated is the drone, bass and piano. Preview loops all but the video while you move them."
+          hint="Master is everything, the video too; Channels opens the rest. Generated is the drone, bass and piano. Preview loops all but the video."
         >
           <Mixer mix={audio.mix} metronome={audio.metronome} />
         </Row>
