@@ -95,6 +95,8 @@ export interface Exercise extends Row {
   favorite?: boolean;
   /** The metronome chosen for it; absent is the setting's. */
   metronome?: MetronomeVoiceId;
+  /** Whether its notes sound as it plays; absent is the setting's. */
+  playNotes?: boolean;
   /** The backing last chosen for it; absent is the synth notes. */
   backing?: BackingChoice;
   backingCriteria?: BackingCriteria;
@@ -126,6 +128,8 @@ export interface RoutineItem {
   countInBars?: CountInBars;
   /** Copied from the exercise too; absent is the setting's. */
   metronome?: MetronomeVoiceId;
+  /** Copied from the exercise too; absent is the setting's. */
+  playNotes?: boolean;
   /** Copied from the exercise too; absent is the definition's. */
   generatedBacking?: GeneratedBackingSettings;
   axisPolicies: AxisPolicies;
@@ -240,6 +244,11 @@ export interface Settings {
     countInBars: CountInBars;
     /** Keep playing the same material pass after pass. */
     loop: boolean;
+    /**
+     * Whether the notes sound, for an exercise or routine item that has not
+     * chosen for itself. Off keeps `voice`, for an exercise that plays anyway.
+     */
+    playNotes: boolean;
     voice: VoiceId;
     /** Each channel's level, and Master's. Rows from before the mixer had only Master. */
     mix: Mix;

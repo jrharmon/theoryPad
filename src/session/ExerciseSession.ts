@@ -24,6 +24,7 @@ import {
 /** What the practice screen's settings dialog can change. */
 export interface SettingsChanges extends Reconfiguration {
   generatedBacking?: GeneratedBackingSettings;
+  playNotes?: boolean;
 }
 
 /** One exercise, played as often as asked. Its settings are saved to the exercise. */
@@ -31,6 +32,7 @@ export class ExerciseSession extends PracticeSession {
   readonly exerciseId: string;
   private readonly exercise: ExerciseRunner;
   private metronome: MetronomeVoiceId;
+  private playNotes: boolean;
   private generatedBacking: GeneratedBackingSettings;
 
   /**
@@ -63,6 +65,7 @@ export class ExerciseSession extends PracticeSession {
     this.exerciseId = exercise.id;
     const settings = deps.settings();
     this.metronome = exercise.metronome ?? settings.audio.metronome;
+    this.playNotes = exercise.playNotes ?? settings.audio.playNotes;
     this.generatedBacking = resolveGeneratedBacking(definition, exercise.generatedBacking);
     deps.audio.preloadMetronome(this.metronome);
 
@@ -165,7 +168,12 @@ export class ExerciseSession extends PracticeSession {
    * exercise: the dialog is a shortcut to the config page, not a separate,
    * temporary set of settings.
    */
-  async reconfigure({ generatedBacking, ...changes }: SettingsChanges): Promise<void> {
+  async reconfigure({
+    generatedBacking,
+    playNotes,
+    ...changes
+  }: SettingsChanges): Promise<void> {
+    if (playNotes !== undefined) this.playNotes = playNotes;
     // First, so a re-rolled axis picks its progression from the new settings too.
     if (generatedBacking) this.generatedBacking = generatedBacking;
     this.exercise.reconfigure(changes);
@@ -173,7 +181,7 @@ export class ExerciseSession extends PracticeSession {
     this.backing.refresh();
     await this.deps.saveExercise(
       this.exerciseId,
-      definedProps({ ...changes, generatedBacking }),
+      definedProps({ ...changes, generatedBacking, playNotes }),
     );
   }
 
@@ -197,6 +205,10 @@ export class ExerciseSession extends PracticeSession {
   protected rememberMetronome(id: MetronomeVoiceId): Promise<void> {
     this.metronome = id;
     return this.deps.saveExercise(this.exerciseId, { metronome: id });
+  }
+
+  protected currentPlayNotes(): boolean {
+    return this.playNotes;
   }
 
   protected endRunner(): void {

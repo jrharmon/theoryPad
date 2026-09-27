@@ -27,6 +27,8 @@ export interface ExerciseSettings {
   axisPolicies: AxisPolicies;
   /** A played exercise's; a theory one has no backing. */
   generatedBacking?: GeneratedBackingSettings;
+  /** A played exercise's too: whether its notes sound, as saved or from the setting. */
+  playNotes?: boolean;
 }
 
 /**
@@ -111,6 +113,7 @@ function Draft({
   const [params, setParams] = useState<unknown>(initial.params);
   const [policies, setPolicies] = useState<AxisPolicies>(initial.axisPolicies);
   const [generated, setGenerated] = useState(initial.generatedBacking);
+  const [playNotes, setPlayNotes] = useState(initial.playNotes);
 
   const apply = () => {
     const changed: Partial<ExerciseSettings> = {
@@ -122,6 +125,7 @@ function Draft({
       ...(generated && JSON.stringify(generated) !== JSON.stringify(initial.generatedBacking)
         ? { generatedBacking: generated }
         : {}),
+      ...(playNotes !== undefined && playNotes !== initial.playNotes ? { playNotes } : {}),
     };
     if (Object.keys(changed).length > 0) onApply(changed);
     onClose();
@@ -162,6 +166,20 @@ function Draft({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setTempo({ ...tempo, targetTempo: Number(e.target.value) })
                 }
+              />
+            </Field>
+          )}
+          {playNotes !== undefined && (
+            <Field
+              label="Play the notes"
+              htmlFor="dialog-play-notes"
+              hint="Off leaves just the metronome and backing. Follows Settings until set here."
+            >
+              <input
+                id="dialog-play-notes"
+                type="checkbox"
+                checked={playNotes}
+                onChange={(e) => setPlayNotes(e.target.checked)}
               />
             </Field>
           )}

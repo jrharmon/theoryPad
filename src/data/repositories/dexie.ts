@@ -299,6 +299,7 @@ export function defaultSettings(at: number): Settings {
       metronome: 'click',
       countInBars: 1,
       loop: false,
+      playNotes: true,
       voice: 'guitar',
       mix: DEFAULT_MIX,
     },

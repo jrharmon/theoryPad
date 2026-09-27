@@ -40,6 +40,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Triplet brackets, neck window | ✅ merged, pushed 2026-09-26 — see below |
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
+| Notes off — global Off, per-exercise Play the notes | built on `notes-off`, at the gate — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -184,6 +185,24 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Notes off — at the gate (2026-09-27)
+
+Asked for directly (no spec doc). Built on `notes-off`, not yet merged. `pnpm check` green
+(963 unit tests).
+
+- **Settings → Sound → Instrument** gains **Off** (first, as in the metronome menu). Off is
+  `settings.audio.playNotes: false`, not a voice: `voice` is kept, so an exercise that turns
+  its notes on still plays the chosen instrument. "Hear it" hides while Off. Older settings rows
+  default to on.
+- **Play the notes** — a checkbox under Target tempo in an exercise's settings dialog (played
+  exercises only), shown ticked or not from the exercise's own `playNotes`, else the setting.
+  Saved to the exercise only once changed; like the metronome, a routine item copies it
+  (`itemFromExercise`) and the builder's item dialog edits the copy.
+- **Sessions:** `currentPlayNotes()` beside `currentMetronome()`; the pass-start `sound` handler
+  loads no notes when it is false. The metronome, count-in and drone/generated backing play
+  on. A dialog change already stops the pass, so the new choice is heard from the next Play.
+- Not changed: the Mix preview still plays its line on the chosen voice when Off.
 
 ## Mixer — merged (2026-09-27)
 

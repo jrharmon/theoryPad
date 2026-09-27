@@ -2,6 +2,7 @@ import type { Exercise } from '@/data';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { resolveGeneratedBacking } from '@/exercises/params';
 import { usePractice } from '@/store/practice';
+import { useSettings } from '@/store/settings';
 import { SettingsDialog } from './SettingsDialog';
 
 /**
@@ -23,6 +24,7 @@ export function PracticeSettingsDialog({
 }) {
   // The chords a custom progression names are spelled in this roll's key.
   const keyMode = usePractice((s) => s.snapshot?.keyMode);
+  const playNotes = useSettings((s) => s.settings.audio.playNotes);
   return (
     <SettingsDialog
       open={open}
@@ -35,7 +37,10 @@ export function PracticeSettingsDialog({
         params: exercise.params,
         axisPolicies: exercise.axisPolicies,
         ...(definition.kind === 'played'
-          ? { generatedBacking: resolveGeneratedBacking(definition, exercise.generatedBacking) }
+          ? {
+              generatedBacking: resolveGeneratedBacking(definition, exercise.generatedBacking),
+              playNotes: exercise.playNotes ?? playNotes,
+            }
           : {}),
       }}
       held={exercise.heldAxisValues}

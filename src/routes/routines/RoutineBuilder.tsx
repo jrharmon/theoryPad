@@ -211,6 +211,7 @@ function ItemRow({
 }) {
   const routines = useRoutines();
   const instrument = useSettings((s) => s.settings.instrument);
+  const playNotes = useSettings((s) => s.settings.audio.playNotes);
   const [editing, setEditing] = useState(false);
   const definition = findExerciseDefinition(item.definitionId);
 
@@ -330,7 +331,10 @@ function ItemRow({
           params: item.params,
           axisPolicies: item.axisPolicies,
           ...(definition.kind === 'played'
-            ? { generatedBacking: resolveGeneratedBacking(definition, item.generatedBacking) }
+            ? {
+                generatedBacking: resolveGeneratedBacking(definition, item.generatedBacking),
+                playNotes: item.playNotes ?? playNotes,
+              }
             : {}),
         }}
         held={item.heldAxisValues}

@@ -24,6 +24,8 @@ export class RoutineSession extends PracticeSession {
   private readonly routine: RoutineRunner;
   /** Each item's own metronome, by item id; absent is the setting's. */
   private readonly metronomes = new Map<string, MetronomeVoiceId>();
+  /** Each item's own choice to sound its notes, by item id; absent is the setting's. */
+  private readonly playNotes = new Map<string, boolean>();
   /** Each item's own generated-backing settings, by item id. */
   private readonly generatedBacking = new Map<string, GeneratedBackingSettings>();
 
@@ -60,6 +62,7 @@ export class RoutineSession extends PracticeSession {
     const settings = deps.settings();
     for (const item of routine.items) {
       if (item.metronome) this.metronomes.set(item.id, item.metronome);
+      if (item.playNotes !== undefined) this.playNotes.set(item.id, item.playNotes);
     }
     for (const item of items) {
       const stored = routine.items.find((i) => i.id === item.id)?.generatedBacking;
@@ -199,6 +202,12 @@ export class RoutineSession extends PracticeSession {
     if (!item) return;
     this.metronomes.set(item.id, id);
     await this.deps.saveRoutineItem(this.routineId, item.id, { metronome: id });
+  }
+
+  protected currentPlayNotes(): boolean {
+    const { items, index } = this.routine.snapshot;
+    const item = items[index];
+    return (item && this.playNotes.get(item.id)) ?? this.deps.settings().audio.playNotes;
   }
 
   protected endRunner(): void {

@@ -225,6 +225,8 @@ export abstract class PracticeSession {
   protected abstract currentMetronome(): MetronomeVoiceId;
   /** Remember a metronome on the exercise or item: in memory at once, then saved. */
   protected abstract rememberMetronome(id: MetronomeVoiceId): Promise<void>;
+  /** Whether this exercise's — or this routine item's — notes sound, or the setting's. */
+  protected abstract currentPlayNotes(): boolean;
   protected abstract endRunner(): void;
   /** The generated-backing settings of this exercise — or, in a routine, this item. */
   protected abstract generatedSettings(): GeneratedBackingSettings;
@@ -445,9 +447,9 @@ export abstract class PracticeSession {
     const { audio } = this.deps;
     // A track plays instead of the notes; the drone and generated play under them. Under a
     // track the recording is the click and the count-in, so the metronome says
-    // nothing.
+    // nothing. Notes switched off leave the rest playing.
     const underTrack = this.backing.underTrack;
-    const notes = underTrack ? null : phrase;
+    const notes = underTrack || !this.currentPlayNotes() ? null : phrase;
     audio.metronome.setSilenced(underTrack);
     if (continuation) {
       // Straight on from the last pass or item: the clock and the click never

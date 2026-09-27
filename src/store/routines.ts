@@ -20,6 +20,7 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     tempo: { ...exercise.tempo },
     countInBars: exercise.countInBars ?? 1,
     ...(exercise.metronome ? { metronome: exercise.metronome } : {}),
+    ...(exercise.playNotes !== undefined ? { playNotes: exercise.playNotes } : {}),
     ...(exercise.generatedBacking
       ? { generatedBacking: structuredClone(exercise.generatedBacking) }
       : {}),

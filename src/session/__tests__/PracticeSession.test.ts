@@ -702,6 +702,32 @@ describe('ExerciseSession', () => {
     expect((await repos.routines.byId(stored.id))!.items[0]!.metronome).toBe('drums-soft');
     expect((await repos.exercises.byId(upbeat.id))!.metronome).toBe('drums-upbeat');
   });
+
+  it('plays no notes when they are off, the setting’s unless the exercise or item chose', async () => {
+    const { deps, repos, audio, settings } = world();
+    settings.audio.playNotes = false;
+    const exercise = await addExercise(repos, 'modes-through-key');
+    const session = await ExerciseSession.open(exercise, deps);
+    await session.play();
+    expect(audio.sound).toMatchObject({ notes: null, clicking: true });
+
+    // Turned on from its settings: saved to the exercise, and heard from the next Play.
+    await session.reconfigure({ playNotes: true });
+    expect((await repos.exercises.byId(exercise.id))!.playNotes).toBe(true);
+    await session.play();
+    expect(audio.sound.notes).toBe(session.runner.currentPhrase);
+    await session.end();
+
+    // A routine item keeps the choice it was copied with, over the setting.
+    const stored = await repos.routines.add({
+      name: 'R',
+      items: [itemFromExercise((await repos.exercises.byId(exercise.id))!)],
+      sessionAxisPolicies: {},
+    });
+    const routine = await RoutineSession.open(stored, deps);
+    await routine.play();
+    expect(audio.sound.notes).toBe(routine.runner!.currentPhrase);
+  });
 });
 
 describe('RoutineSession', () => {
