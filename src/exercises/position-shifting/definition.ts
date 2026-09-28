@@ -11,7 +11,6 @@ import {
   orderedHighlights,
   overlayFromPhrase,
   turnaroundParam,
-  turnInstruction,
   turnRepeats,
 } from '../shared';
 
@@ -97,7 +96,7 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
           `shifting on ${config.shiftOn === 'every-string' ? 'every string' : 'every other string'}.`,
         `Slide into each marked note to change shape.` +
           (direction === 'up-down' || direction === 'down-up'
-            ? ` The way back shifts on different strings. ${turnInstruction([repeatTurn])}`
+            ? ' The way back shifts on different strings.'
             : ''),
         orderedHighlights(variation, ['key', 'neckPosition', 'direction', 'rhythmPattern']),
       ),

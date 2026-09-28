@@ -41,7 +41,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Start string axis — Modes up the neck | ✅ merged, pushed 2026-09-26 — see below |
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
 | Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
-| Turnaround — repeat the turning note: Auto / Repeat note / No repeat | built on `turnaround`, awaiting the gate — see below |
+| Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
@@ -187,9 +187,11 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Turnaround — built, awaiting the gate (2026-09-28)
+## Turnaround — merged (2026-09-28)
 
-Asked for directly (no spec doc). Built on `turnaround`, not yet merged. `pnpm check` green
+Asked for directly (no spec doc). Built on `turnaround`, passed at the gate after one change
+(he dropped a brief sentence naming Auto's choice: the tab shows it), fast-forwarded into
+`main` and pushed; the branch is deleted. `pnpm check` green
 (966 unit tests), all 72 E2E pass.
 
 - **Turnaround** (Auto / Repeat note / No repeat): a param on **Modes up the neck** and
@@ -203,9 +205,6 @@ Asked for directly (no spec doc). Built on `turnaround`, not yet merged. `pnpm c
   falls in the bar, so every turn of a run does the same thing. Modes up the neck decides it
   per shape, because blues boxes are 14 or 15 notes. Pause on root turns as eighths; the
   arpeggio variant is unchanged.
-- **The brief says what was chosen**, because Auto's choice isn't shown in the settings: "Play
-  each turning note twice." / "Turn without repeating the note." / for mixed blues boxes,
-  "Repeat a turning note only where the tab does."
 - **Start string:** a shifted loop that doesn't repeat drops its closing note, so no turn
   doubles (`startOnString`'s `repeatTurn`).
 - Not changed: Interval sequences, whose turn is a figure answered (6-8, 8-6) rather than a

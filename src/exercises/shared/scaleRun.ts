@@ -87,16 +87,6 @@ export function turnRepeats(
   return endsOnBeat(rhythm, legLength) && !endsOnBeat(rhythm, legLength - 1);
 }
 
-/**
- * What the turns do, for a brief: Auto's choice is not in the settings, so the
- * brief says it. `repeats` holds each turning run's answer.
- */
-export function turnInstruction(repeats: readonly boolean[]): string {
-  if (repeats.every(Boolean)) return 'Play each turning note twice.';
-  if (!repeats.some(Boolean)) return 'Turn without repeating the note.';
-  return 'Repeat a turning note only where the tab does.';
-}
-
 /** Whether a direction turns, so its run is a loop that can start anywhere. */
 export function turns(direction: Direction): boolean {
   return direction === 'up-down' || direction === 'down-up';

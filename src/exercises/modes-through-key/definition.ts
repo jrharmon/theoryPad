@@ -19,7 +19,6 @@ import {
   shapeRuns,
   startOnString,
   turnaroundParam,
-  turnInstruction,
   turnRepeats,
   turns,
 } from '../shared';
@@ -139,11 +138,10 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     // Said only when it moves the start: the outer string is where a run starts anyway.
     const from = start.string === null ? '' : ` from ${start.name.toLowerCase()}`;
     const startAxis: AxisId[] = start.string === null ? [] : ['startString'];
-    const turn = turns(direction) ? ` ${turnInstruction(repeatsTurn)}` : '';
     const [headline, instruction, highlights] = {
       plain: [
         `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}${from}.`,
-        `Work up the neck, one ${boxes ? 'box' : 'shape'} at a time.${turn}`,
+        `Work up the neck, one ${boxes ? 'box' : 'shape'} at a time.`,
         ['key', 'direction', ...startAxis, 'rhythmPattern'],
       ],
       'arpeggio-then-scale': [
@@ -155,7 +153,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       ],
       'pause-on-root': [
         `${shapes} in ${keyModeLabel(keyMode)}${from}, holding every root.`,
-        `Work up the neck, giving each root a full beat.${turn}`,
+        'Work up the neck, giving each root a full beat.',
         ['key', 'direction', ...startAxis],
       ],
     }[variant] as [string, string, AxisId[]];
