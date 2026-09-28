@@ -16,7 +16,7 @@ import { intervalFigures, intervalRun } from '../intervalRun';
 import { arpeggioRun, chordDegrees, shapeChord } from '../arpeggioRun';
 import { oneNotePerString, stringSweep, sweepLength } from '../oneNotePerString';
 import { horizontalRun, rotateCounts, shiftCounts } from '../horizontalRun';
-import { scaleRun, shapeFrom, startOnString } from '../scaleRun';
+import { applyDirection, scaleRun, shapeFrom, startOnString } from '../scaleRun';
 
 const C_MAJOR = { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
@@ -395,6 +395,15 @@ describe('startOnString', () => {
     // The mirror: from the 4th string's top note, down, up, and down to the 3rd.
     expect(strings(startOnString(run('down-up'), FOURTH, true))).toBe('4 5 6 5 4 3 2 1 2 3');
     expect(startOnString(run('up-down'), null, true)).toEqual(run('up-down'));
+  });
+
+  it('plays each note of a shifted loop once when its turns do not repeat', () => {
+    const shape = run('ascending');
+    const upDown = startOnString(applyDirection(shape, 'up-down', false), FOURTH, true, false);
+    expect(strings(upDown)).toBe('4 3 2 1 2 3 4 5 6 5');
+    // Up and back with no note played twice at either turn.
+    expect(upDown).toHaveLength(2 * shape.length - 2);
+    upDown.forEach((p, i) => expect(p).not.toEqual(upDown[i - 1]));
   });
 
   it('shortens a run one way, which has nowhere to come back from', () => {

@@ -27,8 +27,8 @@ export function intervalFigures<T>(
  *
  * Descending builds its figures from the top of the shape — 8-6, 7-5, 6-4,
  * or alternating 8-6, 5-7, 6-4 — so a descent always opens on a descending
- * figure. Like `applyDirection`, a turn plays the figure it turns on twice:
- * the ascent ends 6-8 and the descent answers it 8-6.
+ * figure. The turn is the figure answered: the ascent ends 6-8 and the
+ * descent opens 8-6.
  */
 export function intervalRun<T>(options: {
   positions: readonly T[];

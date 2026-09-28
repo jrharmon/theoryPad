@@ -8,6 +8,9 @@ import {
   scaleShape,
   shapesUpTheNeck,
 } from '@/domain/instrument';
+import { z } from 'zod';
+import { QUARTER, rhythmTotalTicks } from '@/domain/phrase';
+import type { RhythmPattern } from '@/domain/phrase';
 import type { Direction } from '@/domain/variation';
 
 export interface ScaleRunOptions {
@@ -24,23 +27,74 @@ export interface ScaleRunOptions {
 /**
  * Turn a shape into a playable order.
  *
- * `up-down` and `down-up` play the turning note twice — up to the 7th and
- * straight back down from it. That is how the run is practised: the turn is a
- * change of picking direction on the same note, not a note to skip.
+ * `repeatTurn` plays the turning note of `up-down` and `down-up` twice — up to
+ * the 7th and straight back down from it, the turn a change of picking
+ * direction on the same note. Without it the way back starts on the next note
+ * down. `turnRepeats` decides which.
  */
-export function applyDirection<T>(items: T[], direction: Direction): T[] {
+export function applyDirection<T>(items: T[], direction: Direction, repeatTurn = true): T[] {
   const reversed = [...items].reverse();
+  // A single note is not a turn, so it is not doubled.
+  const back = (way: T[]) => (repeatTurn || items.length <= 1 ? way : way.slice(1));
   switch (direction) {
     case 'ascending':
       return [...items];
     case 'descending':
       return reversed;
-    // A single note is not a turn, so it is not doubled.
     case 'up-down':
-      return items.length <= 1 ? [...items] : [...items, ...reversed];
+      return items.length <= 1 ? [...items] : [...items, ...back(reversed)];
     case 'down-up':
-      return items.length <= 1 ? [...items] : [...reversed, ...items];
+      return items.length <= 1 ? [...items] : [...reversed, ...back(items)];
   }
+}
+
+/** Whether a run that turns plays its turning note twice. */
+export const TURNAROUNDS = ['auto', 'repeat-note', 'no-repeat'] as const;
+export type Turnaround = (typeof TURNAROUNDS)[number];
+
+/** The setting, for an exercise whose runs can turn. */
+export const turnaroundParam = z
+  .enum(TURNAROUNDS)
+  .default('auto')
+  .describe(
+    'Whether a run that turns plays the turning note twice. Auto repeats it when that starts the way back on the beat.',
+  );
+
+/** Whether `notes` notes of `rhythm` end on a beat, with the pattern back at its start. */
+function endsOnBeat(rhythm: RhythmPattern, notes: number): boolean {
+  return (
+    notes % rhythm.durations.length === 0 && rhythmTotalTicks(rhythm, notes) % QUARTER === 0
+  );
+}
+
+/**
+ * Whether a run turning after `legLength` notes plays the turning note twice.
+ *
+ * Auto repeats it only when that puts the way back on the beat and not
+ * repeating would not: 3nps triplets are 18 notes up, so the repeat starts the
+ * way down on a downbeat with a string to every beat. 18 sixteenths end
+ * mid-beat either way, so the repeat would only be a stutter. Quarters land
+ * on the beat either way, so it would be one too. Decided from the length
+ * alone, never from where the turn falls in the bar, so every turn of a run
+ * does the same thing.
+ */
+export function turnRepeats(
+  turnaround: Turnaround,
+  legLength: number,
+  rhythm: RhythmPattern,
+): boolean {
+  if (turnaround !== 'auto') return turnaround === 'repeat-note';
+  return endsOnBeat(rhythm, legLength) && !endsOnBeat(rhythm, legLength - 1);
+}
+
+/**
+ * What the turns do, for a brief: Auto's choice is not in the settings, so the
+ * brief says it. `repeats` holds each turning run's answer.
+ */
+export function turnInstruction(repeats: readonly boolean[]): string {
+  if (repeats.every(Boolean)) return 'Play each turning note twice.';
+  if (!repeats.some(Boolean)) return 'Turn without repeating the note.';
+  return 'Repeat a turning note only where the tab does.';
 }
 
 /** Whether a direction turns, so its run is a loop that can start anywhere. */
@@ -57,15 +111,21 @@ export function turns(direction: Direction): boolean {
  * from the 4th string plays strings 4 3 2 1 2 3 4 5 6 5. A run one way only
  * has nowhere to come back from, so it just starts later and plays fewer
  * strings.
+ *
+ * A loop that does not repeat its turns ends where it began, and shifted, that
+ * closing note would be a repeat at the turn it now lands in, so it is dropped.
  */
 export function startOnString<T extends { string: number }>(
   run: readonly T[],
   string: number | null,
   loops: boolean,
+  repeatTurn = true,
 ): T[] {
   const at = string === null ? -1 : run.findIndex((p) => p.string === string);
   if (at <= 0) return [...run];
-  return loops ? [...run.slice(at), ...run.slice(0, at)] : run.slice(at);
+  if (!loops) return run.slice(at);
+  const cycle = repeatTurn ? run : run.slice(0, -1);
+  return [...cycle.slice(at), ...cycle.slice(0, at)];
 }
 
 /** A scale through one shape, in the given direction. */

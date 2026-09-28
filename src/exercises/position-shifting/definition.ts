@@ -10,10 +10,14 @@ import {
   noteOptionsFor,
   orderedHighlights,
   overlayFromPhrase,
+  turnaroundParam,
+  turnInstruction,
+  turnRepeats,
 } from '../shared';
 
 const params = z.object({
   shiftOn: z.enum(['every-other-string', 'every-string']).default('every-other-string'),
+  turnaround: turnaroundParam,
 });
 
 export type PositionShiftingParams = z.infer<typeof params>;
@@ -59,12 +63,19 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
     });
     if (!run)
       throw new Error(`No run of ${keyModeLabel(keyMode)} fits from fret ${position.fret}`);
+    // The way up and the way down shift on different strings, so their lengths
+    // can differ: the turn is decided by the way into it.
+    const repeatTurn = turnRepeats(
+      config.turnaround,
+      (direction === 'down-up' ? run.down : run.up).length,
+      rhythm,
+    );
+    const back = <T>(way: T[]) => (repeatTurn ? way : way.slice(1));
     const notes = {
       ascending: run.up,
       descending: run.down,
-      // The turning note is played twice: up to the top and back down from it.
-      'up-down': [...run.up, ...run.down],
-      'down-up': [...run.down, ...run.up],
+      'up-down': [...run.up, ...back(run.down)],
+      'down-up': [...run.down, ...back(run.up)],
     }[direction];
 
     const phrase = phraseBuilder()
@@ -86,7 +97,7 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
           `shifting on ${config.shiftOn === 'every-string' ? 'every string' : 'every other string'}.`,
         `Slide into each marked note to change shape.` +
           (direction === 'up-down' || direction === 'down-up'
-            ? ' The way back shifts on different strings.'
+            ? ` The way back shifts on different strings. ${turnInstruction([repeatTurn])}`
             : ''),
         orderedHighlights(variation, ['key', 'neckPosition', 'direction', 'rhythmPattern']),
       ),

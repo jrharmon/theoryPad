@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { makeDegree, pitchClass } from '@/domain/music';
 import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, boxShape, midiAt } from '@/domain/instrument';
-import { QUARTER, phraseBuilder } from '@/domain/phrase';
+import { QUARTER, phraseBuilder, rhythmById } from '@/domain/phrase';
 import { rollVariation } from '@/domain/variation';
-import { applyDirection, scaleRun, shapeRuns } from '../scaleRun';
+import { applyDirection, scaleRun, shapeRuns, turnRepeats } from '../scaleRun';
 import { noteOptionsFor, roleFor } from '../roles';
 import { overlayFromPhrase, overlayFromPositions, overlayFullScale } from '../overlay';
 import { axisDisplay, keyModeLabel, ordinal, orderedHighlights, repsAndTempo } from '../brief';
@@ -27,6 +27,36 @@ describe('applyDirection', () => {
     expect(applyDirection([], 'up-down')).toEqual([]);
     // The caller's array is never reordered under it.
     expect(items).toEqual([1, 2, 3, 4]);
+  });
+
+  it('turns straight back without the repeat', () => {
+    expect(applyDirection(items, 'up-down', false)).toEqual([1, 2, 3, 4, 3, 2, 1]);
+    expect(applyDirection(items, 'down-up', false)).toEqual([4, 3, 2, 1, 2, 3, 4]);
+    expect(applyDirection(items, 'ascending', false)).toEqual([1, 2, 3, 4]);
+    expect(applyDirection([1], 'up-down', false)).toEqual([1]);
+  });
+});
+
+describe('turnRepeats', () => {
+  it('repeats on Auto only when that puts the way back on the beat', () => {
+    const auto = (legLength: number, rhythm: string) =>
+      turnRepeats('auto', legLength, rhythmById(rhythm));
+    // 3nps on six strings in triplets: a string to every beat, both ways.
+    expect(auto(18, 'eighth-triplets')).toBe(true);
+    // 18 sixteenths end mid-beat, repeat or not.
+    expect(auto(18, 'straight-sixteenths')).toBe(false);
+    // Four notes a string in sixteenths, or a pentatonic box: a beat a string.
+    expect(auto(24, 'straight-sixteenths')).toBe(true);
+    expect(auto(12, 'straight-sixteenths')).toBe(true);
+    // Quarters are on the beat either way, so the repeat buys nothing.
+    expect(auto(18, 'straight-quarters')).toBe(false);
+    // A pattern must come back to its start, not just to a beat.
+    expect(auto(18, 'gallop')).toBe(true);
+    expect(auto(18, 'dotted-shuffle')).toBe(true);
+    expect(auto(15, 'dotted-shuffle')).toBe(false);
+
+    expect(turnRepeats('repeat-note', 18, rhythmById('straight-sixteenths'))).toBe(true);
+    expect(turnRepeats('no-repeat', 18, rhythmById('eighth-triplets'))).toBe(false);
   });
 });
 

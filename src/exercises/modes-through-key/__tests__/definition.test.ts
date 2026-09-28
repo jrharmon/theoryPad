@@ -12,7 +12,12 @@ import type { GenerationContext } from '../../types';
 import { estimateItemSeconds } from '../../estimate';
 import { modesThroughKey, type ModesThroughKeyParams } from '../definition';
 
-const DEFAULTS: ModesThroughKeyParams = { variant: 'plain', shapesPerRep: 7, minFret: 1 };
+const DEFAULTS: ModesThroughKeyParams = {
+  variant: 'plain',
+  shapesPerRep: 7,
+  minFret: 1,
+  turnaround: 'auto',
+};
 
 function generate(
   seed = 12345,

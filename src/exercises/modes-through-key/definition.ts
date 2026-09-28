@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { playsInBoxes } from '@/domain/music';
 import { shapeCount } from '@/domain/instrument';
-import { EIGHTH, QUARTER, phraseBuilder, rhythmById } from '@/domain/phrase';
+import { EIGHTH, QUARTER, STRAIGHT_EIGHTHS, phraseBuilder, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { AxisId, Direction } from '@/domain/variation';
 import type { PlayedDefinition, GenerationContext, PlayedInstance } from '../types';
 import {
+  applyDirection,
   arpeggioRun,
   axisDisplay,
   axisValue,
@@ -17,6 +18,9 @@ import {
   shapeChord,
   shapeRuns,
   startOnString,
+  turnaroundParam,
+  turnInstruction,
+  turnRepeats,
   turns,
 } from '../shared';
 
@@ -26,6 +30,7 @@ const params = z.object({
   shapesPerRep: z.number().int().min(1).max(7).default(7),
   /** Lowest fret the first shape may start at. */
   minFret: z.number().int().min(0).max(12).default(1),
+  turnaround: turnaroundParam,
 });
 
 export type ModesThroughKeyParams = z.infer<typeof params>;
@@ -74,25 +79,37 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     const runs = shapeRuns({
       instrument,
       keyMode,
-      // The arpeggio variant has its own shape — chord up, scale down.
-      direction: variant === 'arpeggio-then-scale' ? 'ascending' : direction,
+      direction: 'ascending',
       minFret: config.minFret,
       count: Math.min(config.shapesPerRep, shapeCount(keyMode)),
     });
+    // Holding the roots is mostly eighths, so Auto turns it as eighths.
+    const turnRhythm = variant === 'pause-on-root' ? STRAIGHT_EIGHTHS : rhythm;
+    // Asked of each shape: a blues box can be a note longer than the next.
+    const repeatsTurn = runs.map((run) =>
+      turnRepeats(config.turnaround, run.positions.length, turnRhythm),
+    );
 
     const builder = phraseBuilder().rhythm(EIGHTH);
 
-    for (const run of runs) {
-      const positions = startOnString(
+    runs.forEach((run, r) => {
+      // The arpeggio variant has its own shape — chord up, scale down.
+      const positions =
         variant === 'arpeggio-then-scale'
-          ? [
-              ...arpeggioRun(run.positions, shapeChord(keyMode, run.startDegree).degrees),
-              ...[...run.positions].reverse(),
-            ]
-          : run.positions,
-        start.string,
-        loops,
-      );
+          ? startOnString(
+              [
+                ...arpeggioRun(run.positions, shapeChord(keyMode, run.startDegree).degrees),
+                ...[...run.positions].reverse(),
+              ],
+              start.string,
+              loops,
+            )
+          : startOnString(
+              applyDirection(run.positions, direction, repeatsTurn[r]),
+              start.string,
+              loops,
+              repeatsTurn[r],
+            );
       const options = (i: number) => noteOptionsFor(positions[i]!);
 
       // A box is known by the step it starts on — "shape 2" — and a 3nps shape
@@ -108,7 +125,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       }
       // Each shape starts on a bar line, so the player can hear where one ends.
       builder.fillBar();
-    }
+    });
 
     const phrase = builder.build();
     const noun = boxes ? 'boxes' : 'shapes';
@@ -122,10 +139,11 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     // Said only when it moves the start: the outer string is where a run starts anyway.
     const from = start.string === null ? '' : ` from ${start.name.toLowerCase()}`;
     const startAxis: AxisId[] = start.string === null ? [] : ['startString'];
+    const turn = turns(direction) ? ` ${turnInstruction(repeatsTurn)}` : '';
     const [headline, instruction, highlights] = {
       plain: [
         `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}${from}.`,
-        `Work up the neck, one ${boxes ? 'box' : 'shape'} at a time.`,
+        `Work up the neck, one ${boxes ? 'box' : 'shape'} at a time.${turn}`,
         ['key', 'direction', ...startAxis, 'rhythmPattern'],
       ],
       'arpeggio-then-scale': [
@@ -137,7 +155,7 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       ],
       'pause-on-root': [
         `${shapes} in ${keyModeLabel(keyMode)}${from}, holding every root.`,
-        'Work up the neck, giving each root a full beat.',
+        `Work up the neck, giving each root a full beat.${turn}`,
         ['key', 'direction', ...startAxis],
       ],
     }[variant] as [string, string, AxisId[]];

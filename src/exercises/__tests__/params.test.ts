@@ -64,6 +64,7 @@ describe('resolveParams', () => {
       variant: 'pause-on-root',
       shapesPerRep: 7,
       minFret: 1,
+      turnaround: 'auto',
     });
   });
 
