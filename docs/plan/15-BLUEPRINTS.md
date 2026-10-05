@@ -83,6 +83,45 @@ concept. Don't call it "fixed": **Fixed is already an axis policy** (pin one val
     the exercise it was tied to, by its name, marked deleted. A routine item whose exercise was
     deleted keeps working and says so in the builder.
 
+## Agreed at the start of the build (2026-10-05)
+
+These refine or replace the decisions above; where they differ, these win.
+
+15. **Routine items take the routine's key, scale and mode by default**, whatever the exercise
+    has. `itemFromExercise` still leaves them out. An item uses its own only where its effective
+    policy is **Fixed**: set Fixed in the item editor, or **locked Fixed** on the exercise. A
+    locked Roll (even from a subset) or Hold still takes the routine's. The item editor's Scale,
+    Mode and Key rows offer **Routine's | Fixed**, Routine's by default; a locked one is hidden.
+    (The Scale axis's own default is Fixed Major, so "Fixed" means stored on the item or locked,
+    never the axis default.)
+16. **Scale and mode override as a pair.** If an item overrides either, it takes both from
+    itself: a mode only means something inside its scale. Key stands alone.
+17. **Adding an exercise to a routine opens its item editor straight away.** Done with nothing
+    changed keeps the copied defaults.
+18. **Deleting a folder deletes everything in it**, subfolders and their exercises included, as
+    every file system does (replaces decision 8's "moves its contents up"). Soft, like every
+    delete; it asks first and says how much goes. To keep something, move it out first.
+19. **Moving many at once.** On the Exercises page, **Select** turns on checkboxes on exercise
+    and folder rows; **Move to…** opens a folder picker (full paths, "Top level" first) and
+    moves the selection. A folder can't move into itself or below itself. The single picker in
+    the exercise editor stays. A name clash on any move adds **" - 2"** (" - 3", …); a new
+    exercise from a blueprint still gets "Name 2".
+20. **Side panel scrolling.** A favorite is listed twice, and both rows are marked current. On
+    arrival the panel scrolls the copy that was clicked (it rides along in the link's state)
+    into view, only if it is out of view. Arriving from anywhere else scrolls to the first.
+21. **New exercise in Favorites** creates it at the top level, not favorited (favoriting is
+    always by hand). New folder is hidden there.
+
+Defaults taken without asking: the second line is values only ("Triplets · Dorian"), with the
+label kept for toggles and numbers, "Triplets or 16ths" for a locked subset, "Any key" for a
+locked roll. "from ⟨blueprint⟩" shows in the editor header, the practice header and settings
+dialog, library rows and routine-builder rows, not the side panel. Tags: the known tags plus any
+custom tag in use as on/off pills, and an Add tag field. Names save on blur or Enter; a clash or
+an empty name shows inline and is not saved. The v7 upgrade gives a second row of one blueprint
+"Name 2". Folder rows count every exercise beneath them. Search matches the exercise's and the
+blueprint's name. While an overriding item plays, the key/mode reference and circle show its
+own key and mode.
+
 ## Data model
 
 `src/data/entities.ts`:
