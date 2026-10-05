@@ -219,3 +219,22 @@ export function listGroups<F extends FolderLike, E extends PlacedLike>(
   walk(null, []);
   return groups;
 }
+
+/** Every folder by its full path ("Scales › Modes"), sorted, after the top level. */
+export function folderChoices(
+  folders: readonly FolderLike[],
+  exclude: ReadonlySet<string> = new Set(),
+): { id: string | null; label: string }[] {
+  return [
+    { id: null, label: 'Top level' },
+    ...folders
+      .filter((f) => !exclude.has(f.id))
+      .map((f) => ({
+        id: f.id,
+        label: folderPath(folders, f.id)
+          .map((p) => p.name)
+          .join(' › '),
+      }))
+      .sort((a, b) => compareNames(a.label, b.label)),
+  ];
+}

@@ -6,6 +6,7 @@ import {
   freeName,
   listGroups,
   nameProblem,
+  normalizeTag,
   planMove,
   type FolderLike,
   type PlacedLike,
@@ -35,6 +36,12 @@ describe('names', () => {
     expect(nameProblem('Lydian', ['Dorian'])).toBeNull();
     expect(freeName('Dorian', ['dorian', 'Dorian 2'])).toBe('Dorian 3');
     expect(freeName('Dorian', ['Dorian'], ' - ')).toBe('Dorian - 2');
+  });
+
+  it('store a typed tag lowercase-kebab', () => {
+    expect(normalizeTag('  String Skipping! ')).toBe('string-skipping');
+    expect(normalizeTag('My triplets')).toBe('my-triplets');
+    expect(normalizeTag(' -- ')).toBe('');
   });
 });
 

@@ -22,3 +22,12 @@ export function freeName(name: string, taken: readonly string[], separator = ' '
     if (!nameTaken(candidate, taken)) return candidate;
   }
 }
+
+/** A tag as stored: lowercase words joined by hyphens — "String skipping" is "string-skipping". */
+export function normalizeTag(tag: string): string {
+  return tag
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+}

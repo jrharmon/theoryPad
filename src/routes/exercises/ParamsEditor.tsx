@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { paramFields, resolveParams } from '@/exercises/params';
 import { Field } from '@/components/ui/field';
+import { LockToggle } from '@/components/library/LockToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,12 +22,15 @@ export function ParamsEditor({
   definition,
   stored,
   hidden,
+  locks,
   onChange,
 }: {
   definition: AnyExerciseDefinition;
   stored: unknown;
   /** Keys set elsewhere, left out of the form. */
   hidden?: readonly string[];
+  /** On the exercise page: a lock beside each field. */
+  locks?: { locked: readonly string[]; onToggle: (key: string, locked: boolean) => void };
   onChange: (params: Record<string, unknown>) => void;
 }) {
   const fields = useMemo(
@@ -53,6 +57,17 @@ export function ParamsEditor({
             label={field.label}
             htmlFor={id}
             {...(field.hint ? { hint: field.hint } : {})}
+            {...(locks
+              ? {
+                  lead: (
+                    <LockToggle
+                      locked={locks.locked.includes(field.key)}
+                      label={field.label}
+                      onChange={(locked) => locks.onToggle(field.key, locked)}
+                    />
+                  ),
+                }
+              : {})}
           >
             {field.kind === 'choice' && (
               <Select

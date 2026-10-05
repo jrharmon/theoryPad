@@ -1,6 +1,7 @@
 import type { Exercise } from '@/data';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { resolveGeneratedBacking } from '@/exercises/params';
+import { visibleAxes } from '@/exercises/locks';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { sameName } from '@/domain/library';
@@ -45,6 +46,9 @@ export function PracticeSettingsDialog({
           : {}),
       }}
       held={exercise.heldAxisValues}
+      // Locked settings are the exercise's for good: set on its page, not here.
+      axes={visibleAxes(definition.axes, exercise.locked)}
+      hiddenParams={exercise.locked.params}
       chordsIn={keyMode ? { keyMode } : { mode: null }}
       onApply={(changed) => void usePractice.getState().reconfigure(changed)}
     />

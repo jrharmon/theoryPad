@@ -27,7 +27,10 @@ interface ExercisesState {
    * their own view of the map and the second silently drops the first.
    */
   setAxisPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
+  /** Lock a params key or an axis, or unlock it. The value stays where it is. */
+  setLock: (id: string, kind: 'params' | 'axes', key: string, locked: boolean) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  removeMany: (ids: readonly string[]) => Promise<void>;
 }
 
 /**
@@ -149,12 +152,29 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     });
   },
 
-  async remove(id) {
-    await repos().exercises.softDelete(id);
-    const gone = get().exercises.find((e) => e.id === id);
+  async setLock(id, kind, key, locked) {
+    await queued(id, async () => {
+      const current = await repos().exercises.byId(id);
+      if (!current) return;
+      const others = (current.locked[kind] as string[]).filter((k) => k !== key);
+      const updated = await repos().exercises.update(id, {
+        locked: { ...current.locked, [kind]: locked ? [...others, key] : others },
+      });
+      set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
+    });
+  },
+
+  remove: (id) => get().removeMany([id]),
+
+  async removeMany(ids) {
+    for (const id of ids) await repos().exercises.softDelete(id);
+    const at = Date.now();
+    const gone = get()
+      .exercises.filter((e) => ids.includes(e.id))
+      .map((e) => ({ ...e, deletedAt: at }));
     set({
-      exercises: get().exercises.filter((e) => e.id !== id),
-      deleted: gone ? [...get().deleted, gone] : get().deleted,
+      exercises: get().exercises.filter((e) => !ids.includes(e.id)),
+      deleted: [...get().deleted, ...gone],
     });
   },
 }));

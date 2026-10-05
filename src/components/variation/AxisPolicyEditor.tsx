@@ -13,6 +13,7 @@ import type { PitchClass, ScaleId } from '@/domain/music';
 import { SCALE_IDS, isModeOf, keyModeName, modeTitle } from '@/domain/music';
 import { Button } from '@/components/ui/button';
 import { KeyModeTrigger } from '@/components/music/KeyModeTrigger';
+import { LockToggle } from '@/components/library/LockToggle';
 import { useSettings } from '@/store/settings';
 import {
   Select,
@@ -32,6 +33,7 @@ export function AxisPolicyEditor({
   held,
   instrument,
   allowed,
+  locks,
   onChange,
 }: {
   axes: AxisId[];
@@ -41,6 +43,8 @@ export function AxisPolicyEditor({
   instrument: Instrument;
   /** The exercise's own limits: nothing outside them is offered. */
   allowed?: AxisValueKeys | undefined;
+  /** On the exercise page: a lock on each row. A locked row stays editable there. */
+  locks?: { locked: readonly AxisId[]; onToggle: (axis: AxisId, locked: boolean) => void };
   onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
   const practice = useSettings((s) => s.settings.practice);
@@ -109,6 +113,14 @@ export function AxisPolicyEditor({
           instrument={instrument}
           allowed={allowed}
           blocked={blocked[id]}
+          {...(locks
+            ? {
+                lock: {
+                  locked: locks.locked.includes(id),
+                  onToggle: (locked: boolean) => locks.onToggle(id, locked),
+                },
+              }
+            : {})}
           onChange={(policy) => onChange(id, policy)}
         />
       ))}
@@ -149,6 +161,7 @@ function AxisRow({
   instrument,
   allowed,
   blocked,
+  lock,
   onChange,
 }: {
   id: AxisId;
@@ -161,6 +174,7 @@ function AxisRow({
   allowed: AxisValueKeys | undefined;
   /** Struck out app-wide in Settings: never rolled, still pinnable. */
   blocked: readonly string[] | undefined;
+  lock?: { locked: boolean; onToggle: (locked: boolean) => void };
   onChange: (policy: AxisPolicy) => void;
 }) {
   const definition = axisDefinition(id);
@@ -183,7 +197,17 @@ function AxisRow({
         first ? '' : 'border-t border-rule'
       }`}
     >
-      <span className="pt-1.5 text-body-sm font-semibold">{name}</span>
+      {lock ? (
+        <span className="-ml-1 flex items-center gap-1 pt-0.5">
+          <LockToggle locked={lock.locked} label={name} onChange={lock.onToggle} />
+          {/* Locked reads as settled: the value is set here, and nowhere else. */}
+          <span className={`text-body-sm ${lock.locked ? 'text-ink-muted' : 'font-semibold'}`}>
+            {name}
+          </span>
+        </span>
+      ) : (
+        <span className="pt-1.5 text-body-sm font-semibold">{name}</span>
+      )}
 
       <Select
         value={policy.mode}

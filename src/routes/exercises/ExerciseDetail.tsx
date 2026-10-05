@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
@@ -7,7 +7,6 @@ import { resolveGeneratedBacking } from '@/exercises/params';
 import { GeneratedBackingEditor } from '@/components/backing/GeneratedBackingEditor';
 import { settledMode } from '@/components/backing/chordContext';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field } from '@/components/ui/field';
@@ -15,13 +14,22 @@ import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { Separator } from '@/components/ui/separator';
 import { FromBlueprint } from '@/components/library/FromBlueprint';
+import { FolderPicker } from '@/components/library/FolderPicker';
+import { TagsEditor } from '@/components/library/TagsEditor';
+import { FavoriteToggle } from '@/components/ui/favorite-toggle';
+import { exerciseNamesIn, nameProblem } from '@/domain/library';
+import { KNOWN_TAGS } from '@/exercises/types';
+import { useFolders } from '@/store/folders';
 import { ParamsEditor } from './ParamsEditor';
 import { BackingCriteriaEditor, ExerciseVideos } from './ExerciseVideos';
-import { LoadingState, PageIntro } from '@/components/ui/page-header';
+import { LoadingState } from '@/components/ui/page-header';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
-  const { exercises, loaded, load, update, setAxisPolicy, remove } = useExercises();
+  const { exercises, loaded, load, update, setAxisPolicy, setLock, remove } = useExercises();
+  const folders = useFolders((s) => s.folders);
+  const loadFolders = useFolders((s) => s.load);
+  const move = useFolders((s) => s.move);
   const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
@@ -29,7 +37,15 @@ export function ExerciseDetail() {
   useEffect(() => {
     void load();
     void loadSettings();
-  }, [load, loadSettings]);
+    void loadFolders();
+  }, [load, loadSettings, loadFolders]);
+
+  // The tags on offer: the known ones and any the player has added anywhere.
+  const offeredTags = useMemo(() => {
+    const all = new Set<string>(KNOWN_TAGS);
+    for (const e of exercises) for (const t of e.tags) all.add(t);
+    return [...all].sort();
+  }, [exercises]);
 
   const exercise = exercises.find((e) => e.id === exerciseId);
   const definition = exercise ? findExerciseDefinition(exercise.definitionId) : undefined;
@@ -49,21 +65,45 @@ export function ExerciseDetail() {
 
   return (
     <section>
-      <div className="flex items-end justify-between px-8 py-7">
+      <div className="flex items-start justify-between gap-6 px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          <h1>{exercise.name}</h1>
+          <div className="flex items-center gap-3">
+            <FavoriteToggle
+              on={exercise.favorite ?? false}
+              label={exercise.name}
+              onChange={(on) => void update(exercise.id, { favorite: on })}
+            />
+            <NameField
+              // Fresh for each exercise, and after a rename made elsewhere (a move's " - 2").
+              key={`${exercise.id}:${exercise.name}`}
+              name={exercise.name}
+              taken={exerciseNamesIn(folders, exercises, exercise.folderId, exercise.id)}
+              onRename={(name) => void update(exercise.id, { name })}
+            />
+          </div>
           <FromBlueprint name={exercise.name} blueprint={definition.name} className="block" />
-          <PageIntro>{definition.description}</PageIntro>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {exercise.tags.map((t) => (
-              <Badge key={t} variant="secondary">
-                {t}
-              </Badge>
-            ))}
+          <p className="mt-1 max-w-[680px] text-body-sm text-ink-muted">
+            {definition.description}
+          </p>
+          <div className="mt-4 grid max-w-[900px] grid-cols-[64px_1fr] items-baseline gap-x-3 gap-y-2.5">
+            <span className="kicker">Folder</span>
+            <div className="w-64">
+              <FolderPicker
+                folders={folders}
+                value={exercise.folderId}
+                onChange={(to) => void move({ folderIds: [], exerciseIds: [exercise.id] }, to)}
+              />
+            </div>
+            <span className="kicker">Tags</span>
+            <TagsEditor
+              tags={exercise.tags}
+              offered={offeredTags}
+              onChange={(tags) => void update(exercise.id, { tags })}
+            />
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 pt-6">
           <Button
             variant="secondary"
             onClick={() => void remove(exercise.id).then(() => void navigate('/exercises'))}
@@ -169,6 +209,10 @@ export function ExerciseDetail() {
                 <ParamsEditor
                   definition={definition}
                   stored={exercise.params}
+                  locks={{
+                    locked: exercise.locked.params,
+                    onToggle: (key, locked) => void setLock(exercise.id, 'params', key, locked),
+                  }}
                   onChange={(params) => void update(exercise.id, { params })}
                 />
               </div>
@@ -177,10 +221,12 @@ export function ExerciseDetail() {
 
           <Kicker>What varies</Kicker>
           <p className="mb-3 max-w-[560px] text-body-sm text-ink-muted">
-            <strong>Roll</strong> picks a new value each time you open it or re-roll.{' '}
-            <strong>Fixed</strong> pins one. <strong>Hold</strong> keeps whatever came up last
-            and stays there until you press re-roll — for working one key for a while without
-            pinning it forever. When rolling, click values to leave them out.
+            A <strong>lock</strong> fixes a setting into this exercise: it is hidden wherever
+            the exercise is used, and set only here. <strong>Roll</strong> picks a new value
+            each time you open it or re-roll. <strong>Fixed</strong> pins one.{' '}
+            <strong>Hold</strong> keeps whatever came up last and stays there until you press
+            re-roll — for working one key for a while without pinning it forever. When rolling,
+            click values to leave them out.
           </p>
           <AxisPolicyEditor
             axes={definition.axes}
@@ -188,6 +234,10 @@ export function ExerciseDetail() {
             held={exercise.heldAxisValues}
             instrument={instrument}
             allowed={definition.allowedValues}
+            locks={{
+              locked: exercise.locked.axes,
+              onToggle: (axis, locked) => void setLock(exercise.id, 'axes', axis, locked),
+            }}
             onChange={(axis, policy) => void setAxisPolicy(exercise.id, axis, policy)}
           />
 
@@ -201,5 +251,50 @@ export function ExerciseDetail() {
 
       <Separator className="invisible" />
     </section>
+  );
+}
+
+/**
+ * The exercise's name, edited in place. Saved on blur or Enter; a blank name
+ * or one already used in its folder is shown, not saved. Escape goes back.
+ */
+function NameField({
+  name,
+  taken,
+  onRename,
+}: {
+  name: string;
+  taken: readonly string[];
+  onRename: (name: string) => void;
+}) {
+  const [draft, setDraft] = useState(name);
+  const problem = nameProblem(draft, taken);
+  const commit = () => {
+    if (problem === null && draft.trim() !== name) onRename(draft.trim());
+  };
+  return (
+    <div className="min-w-0 flex-1">
+      {/* A plain input: the shared field's text size wins over a heading's. */}
+      <input
+        aria-label="Exercise name"
+        aria-invalid={problem !== null}
+        aria-describedby={problem ? 'name-problem' : undefined}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+          if (e.key === 'Escape') setDraft(name);
+        }}
+        className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-(length:--h1-size) leading-tight tracking-(--display-tracking) [font-weight:var(--display-weight)] outline-none hover:border-rule focus:border-ink aria-invalid:border-destructive"
+      />
+      {problem && (
+        <p id="name-problem" className="mt-1 text-meta text-destructive">
+          {problem === 'empty'
+            ? 'A name is needed. Escape puts the old one back.'
+            : 'Another exercise in this folder has that name.'}
+        </p>
+      )}
+    </div>
   );
 }
