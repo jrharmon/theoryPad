@@ -2,7 +2,7 @@ import { createHashRouter, Navigate } from 'react-router';
 import { AppShell } from '@/app/AppShell';
 import { Placeholder } from '@/routes/Placeholder';
 import { Gallery } from '@/routes/dev/Gallery';
-import { ExerciseLibrary } from '@/routes/exercises/ExerciseLibrary';
+import { ExerciseLibraryRoute } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
 import { BlueprintPicker } from '@/routes/exercises/BlueprintPicker';
 import { PracticeExercise } from '@/routes/practice/PracticeExercise';
@@ -28,7 +28,9 @@ export const router = createHashRouter([
       { index: true, element: <Navigate to="/home" replace /> },
       { path: 'home', element: <Home /> },
       { path: 'routines/:routineId', element: <RoutineBuilder /> },
-      { path: 'exercises', element: <ExerciseLibrary /> },
+      { path: 'exercises', element: <ExerciseLibraryRoute /> },
+      { path: 'exercises/favorites', element: <ExerciseLibraryRoute favorites /> },
+      { path: 'exercises/folder/:folderId', element: <ExerciseLibraryRoute /> },
       { path: 'exercises/new', element: <BlueprintPicker /> },
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },

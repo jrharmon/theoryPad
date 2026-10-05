@@ -1,43 +1,118 @@
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link, useLocation } from 'react-router';
+import { listGroups } from '@/domain/library';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
 import { secondLine } from '@/exercises/locks';
 import { findExerciseDefinition } from '@/exercises/registry';
-import { exerciseLabel, libraryRows, useExerciseLookup, useExercises } from '@/store/exercises';
+import { exerciseLabel, useExerciseLookup, useExercises } from '@/store/exercises';
+import { useFolders } from '@/store/folders';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 
 /**
- * Down the left of a single exercise: the whole library, in library order, so
- * the next one is a click away. Opening another leaves this one, as the
- * back button would.
+ * Down the left of a single exercise: the whole library, so the next one is a
+ * click away — Favorites, the top level, then each folder with exercises in
+ * it, under its full path. A favorite is in two places, and both are marked
+ * current. Opening another leaves this one, as the back button would.
  */
 export function ExerciseList({ currentId }: { currentId: string }) {
   const exercises = useExercises((s) => s.exercises);
+  const folders = useFolders((s) => s.folders);
+  const loadFolders = useFolders((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
+  // Which copy was clicked, for a favorite listed twice: that one stays in view.
+  const clicked = (useLocation().state as { listGroup?: string } | null)?.listGroup;
+  const list = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    void loadFolders();
+  }, [loadFolders]);
+
+  const groups = useMemo(
+    () =>
+      listGroups(
+        folders,
+        exercises.filter((e) => findExerciseDefinition(e.definitionId)),
+      ),
+    [folders, exercises],
+  );
+
+  // Bring the current one into view, only if it is out of it: clicking
+  // between neighbours never moves the list under you.
+  useEffect(() => {
+    const container = list.current;
+    if (!container) return;
+    const row =
+      container.querySelector<HTMLElement>(`[data-row="${clicked}:${currentId}"]`) ??
+      container.querySelector<HTMLElement>(`[data-row$=":${currentId}"]`);
+    if (!row) return;
+    // In view means on screen too: at the top of the page the panel runs on
+    // below the window, and the transport floats over its foot.
+    const box = container.getBoundingClientRect();
+    const transport = document.querySelector('[data-testid="transport"]');
+    const bottom = Math.min(
+      box.bottom,
+      transport?.getBoundingClientRect().top ?? window.innerHeight,
+    );
+    const at = row.getBoundingClientRect();
+    if (at.top < box.top) container.scrollTop += at.top - box.top - 8;
+    else if (at.bottom > bottom) container.scrollTop += at.bottom - bottom + 8;
+  }, [currentId, clicked, groups]);
+
   return (
-    <ListFrame title="Exercises">
-      {libraryRows(exercises).map(({ exercise, definition }) => {
-        const current = exercise.id === currentId;
-        return (
-          <li key={exercise.id}>
-            <Link
-              to={`/practice/exercise/${exercise.id}`}
-              aria-current={current ? 'page' : undefined}
-              className={rowClass(current)}
-            >
-              <RowText
-                name={exercise.name}
-                summary={secondLine(exercise, definition, instrument)}
-                current={current}
-              />
-            </Link>
-          </li>
-        );
-      })}
+    <ListFrame title="Exercises" listRef={list}>
+      {groups.map((group, index) => (
+        <li key={group.key}>
+          {group.kind === 'top' ? (
+            // The top level has no name: a hairline sets it off from Favorites.
+            index > 0 && <div className="mx-3 my-2 border-t border-rule" />
+          ) : (
+            <GroupHeader path={group.kind === 'favorites' ? ['Favorites'] : group.path} />
+          )}
+          <ul className="space-y-0.5">
+            {group.exercises.map((exercise) => {
+              const definition = findExerciseDefinition(exercise.definitionId)!;
+              const current = exercise.id === currentId;
+              return (
+                <li key={exercise.id} data-row={`${group.key}:${exercise.id}`}>
+                  <Link
+                    to={`/practice/exercise/${exercise.id}`}
+                    state={{ listGroup: group.key }}
+                    aria-current={current ? 'page' : undefined}
+                    className={rowClass(current)}
+                  >
+                    <RowText
+                      name={exercise.name}
+                      summary={secondLine(exercise, definition, instrument)}
+                      current={current}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </li>
+      ))}
     </ListFrame>
+  );
+}
+
+/**
+ * A folder's full path, right-aligned on one line. Too long for the panel, it
+ * runs off the left edge, so the end — the folder itself — always shows. Only
+ * the display is clipped: the whole path is in the text, and on hover.
+ */
+function GroupHeader({ path }: { path: string[] }) {
+  const full = path.join(' › ');
+  return (
+    <div
+      className="kicker flex justify-end overflow-hidden px-3 pt-3 pb-1 whitespace-nowrap text-ink-faint"
+      title={full}
+    >
+      <span className="shrink-0">{full}</span>
+    </div>
   );
 }
 
@@ -116,9 +191,20 @@ function RowText({
  * The panel, or — put away — a slim rail with its title, to bring it back.
  * It stays in view as the tab scrolls, like the right-hand column. It sits
  * close to the page's edge, and its negative right margin pulls the page's
- * own 32px gutter in to 12px beside it: room is what the tab needs most.
+ * own 32px gutter in to 12px beside it: room is what the tab needs most. It
+ * is short enough to end above the transport with the page at its top, under
+ * the chrome, so its last row is never hidden behind the transport.
  */
-function ListFrame({ title, children }: { title: string; children: ReactNode }) {
+function ListFrame({
+  title,
+  listRef,
+  children,
+}: {
+  title: string;
+  /** The scrolling list, for bringing a row into view. */
+  listRef?: React.Ref<HTMLUListElement>;
+  children: ReactNode;
+}) {
   const [open, setOpen] = useListOpen();
 
   if (!open) {
@@ -141,7 +227,7 @@ function ListFrame({ title, children }: { title: string; children: ReactNode }) 
   return (
     <nav
       aria-label={title}
-      className="sheet sticky top-4 mt-6 ml-2 -mr-5 flex max-h-[calc(100dvh_-_7.5rem)] w-[240px] shrink-0 flex-col self-start pt-4 pb-2"
+      className="sheet sticky top-4 mt-6 ml-2 -mr-5 flex max-h-[calc(100dvh_-_13.5rem)] w-[240px] shrink-0 flex-col self-start pt-4 pb-2"
       data-testid="practice-list"
     >
       <div className="flex items-center gap-3 px-5 pb-2">
@@ -158,7 +244,9 @@ function ListFrame({ title, children }: { title: string; children: ReactNode }) 
           <ChevronLeftIcon />
         </Button>
       </div>
-      <ul className="space-y-0.5 overflow-y-auto px-2">{children}</ul>
+      <ul ref={listRef} className="space-y-0.5 overflow-y-auto px-2">
+        {children}
+      </ul>
     </nav>
   );
 }

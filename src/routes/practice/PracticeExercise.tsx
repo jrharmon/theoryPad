@@ -81,7 +81,10 @@ export function PracticeExercise() {
 
       {/* Frozen at the bottom, so a long exercise never means scrolling back
           down to reach the controls. */}
-      <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
+      <div
+        className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge"
+        data-testid="transport"
+      >
         <TransportBar onOpenSettings={openSettings} />
       </div>
 

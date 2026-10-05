@@ -2,11 +2,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { repos, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
-import {
-  EXERCISE_DEFINITIONS,
-  exerciseDefinition,
-  findExerciseDefinition,
-} from '@/exercises/registry';
+import { EXERCISE_DEFINITIONS, exerciseDefinition } from '@/exercises/registry';
 import type { AnyExerciseDefinition } from '@/exercises/types';
 import { serialWrites } from './util';
 
@@ -35,24 +31,6 @@ interface ExercisesState {
   setLock: (id: string, kind: 'params' | 'axes', key: string, locked: boolean) => Promise<void>;
   remove: (id: string) => Promise<void>;
   removeMany: (ids: readonly string[]) => Promise<void>;
-}
-
-/**
- * The library in the order it is listed: favorites pinned to the top, the
- * rest in the order they were added. One whose definition is gone from the
- * code is left out.
- */
-export function libraryRows(
-  exercises: Exercise[],
-): { exercise: Exercise; definition: AnyExerciseDefinition }[] {
-  return exercises
-    .flatMap((exercise) => {
-      const definition = findExerciseDefinition(exercise.definitionId);
-      return definition ? [{ exercise, definition }] : [];
-    })
-    .sort(
-      (a, b) => Number(b.exercise.favorite ?? false) - Number(a.exercise.favorite ?? false),
-    );
 }
 
 /**
