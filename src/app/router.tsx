@@ -4,6 +4,7 @@ import { Placeholder } from '@/routes/Placeholder';
 import { Gallery } from '@/routes/dev/Gallery';
 import { ExerciseLibrary } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
+import { BlueprintPicker } from '@/routes/exercises/BlueprintPicker';
 import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
@@ -28,6 +29,7 @@ export const router = createHashRouter([
       { path: 'home', element: <Home /> },
       { path: 'routines/:routineId', element: <RoutineBuilder /> },
       { path: 'exercises', element: <ExerciseLibrary /> },
+      { path: 'exercises/new', element: <BlueprintPicker /> },
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
       { path: 'practice/routine/:routineId', element: <PracticeRoutine /> },

@@ -17,7 +17,11 @@ interface ExercisesState {
   deleted: Exercise[];
   loaded: boolean;
   load: () => Promise<void>;
-  addFromDefinition: (definitionId: string) => Promise<Exercise>;
+  /** A new exercise from a blueprint, named and placed by the caller. */
+  addFromDefinition: (
+    definitionId: string,
+    place: { name: string; folderId: string | null },
+  ) => Promise<Exercise>;
   update: (id: string, changes: Partial<Exercise>) => Promise<void>;
   /**
    * Change one axis's policy.
@@ -125,9 +129,9 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     return inFlight;
   },
 
-  async addFromDefinition(definitionId) {
+  async addFromDefinition(definitionId, place) {
     const created = await repos().exercises.add(
-      newExerciseFrom(exerciseDefinition(definitionId)),
+      newExerciseFrom(exerciseDefinition(definitionId), place),
     );
     set({ exercises: [...get().exercises, created] });
     return created;

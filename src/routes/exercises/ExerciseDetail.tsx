@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { findExerciseDefinition } from '@/exercises/registry';
@@ -31,6 +31,9 @@ export function ExerciseDetail() {
   const loadFolders = useFolders((s) => s.load);
   const move = useFolders((s) => s.move);
   const navigate = useNavigate();
+  // Just made from a blueprint: the name is the first thing to set.
+  const fresh = (useLocation().state as { fresh?: boolean } | null)?.fresh === true;
+  const named = useRef(false);
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
 
@@ -79,6 +82,11 @@ export function ExerciseDetail() {
               key={`${exercise.id}:${exercise.name}`}
               name={exercise.name}
               taken={exerciseNamesIn(folders, exercises, exercise.folderId, exercise.id)}
+              selectOnOpen={() => {
+                if (!fresh || named.current) return false;
+                named.current = true;
+                return true;
+              }}
               onRename={(name) => void update(exercise.id, { name })}
             />
           </div>
@@ -261,14 +269,23 @@ export function ExerciseDetail() {
 function NameField({
   name,
   taken,
+  selectOnOpen,
   onRename,
 }: {
   name: string;
   taken: readonly string[];
+  /** True the first time it is asked, on an exercise just made: focus it, ready to type over. */
+  selectOnOpen: () => boolean;
   onRename: (name: string) => void;
 }) {
   const [draft, setDraft] = useState(name);
   const problem = nameProblem(draft, taken);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!selectOnOpen()) return;
+    input.current?.focus();
+    input.current?.select();
+  }, [selectOnOpen]);
   const commit = () => {
     if (problem === null && draft.trim() !== name) onRename(draft.trim());
   };
@@ -277,6 +294,7 @@ function NameField({
       {/* A plain input: the shared field's text size wins over a heading's. */}
       <input
         aria-label="Exercise name"
+        ref={input}
         aria-invalid={problem !== null}
         aria-describedby={problem ? 'name-problem' : undefined}
         value={draft}

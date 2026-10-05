@@ -39,7 +39,11 @@ export function ExerciseLibrary() {
         kicker="Exercises"
         title="Your library"
         intro="Everything you can practice. Open one to set its target tempo and how much it varies."
-      />
+      >
+        <Button asChild>
+          <Link to="/exercises/new">New exercise</Link>
+        </Button>
+      </PageHeader>
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 px-8 pb-1">
