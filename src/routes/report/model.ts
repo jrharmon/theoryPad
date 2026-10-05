@@ -34,6 +34,7 @@ export function buildReport(input: {
   to: DayKey;
   reps: readonly Rep[];
   days: readonly PracticeDay[];
+  /** Every exercise, deleted ones included. */
   exercises: readonly Exercise[];
 }): Report {
   const { from, to, reps, days, exercises } = input;
@@ -43,7 +44,12 @@ export function buildReport(input: {
     const exercise = byId.get(line.exerciseId);
     return {
       exerciseId: line.exerciseId,
-      name: definition?.name ?? line.definitionId,
+      // Deleted exercises too: the log keeps the name it was practiced under.
+      name: exercise
+        ? exercise.deletedAt === undefined
+          ? exercise.name
+          : `${exercise.name} (deleted)`
+        : (definition?.name ?? line.definitionId),
       theory: definition?.kind === 'theory',
       played: line.played,
       seconds: line.seconds,

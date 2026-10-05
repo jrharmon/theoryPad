@@ -141,3 +141,15 @@ export function describeLocks(
 function asRecord(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {};
 }
+
+/**
+ * The second line of an exercise's row, in the library and the side panel:
+ * what it locks, or the blueprint's summary when it locks nothing.
+ */
+export function secondLine(
+  exercise: Configured & { locked: Locks },
+  definition: AnyExerciseDefinition,
+  instrument: Instrument,
+): string {
+  return describeLocks(exercise, definition, instrument).join(' · ') || definition.summary;
+}

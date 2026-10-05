@@ -9,6 +9,7 @@ import { findExerciseDefinition } from '@/exercises/registry';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Kicker } from '@/components/ui/kicker';
+import { exerciseLabel, useExerciseLookup, useExercises } from '@/store/exercises';
 import { usePractice } from '@/store/practice';
 import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
@@ -29,6 +30,8 @@ export function PracticeRoutine() {
   const { routineId } = useParams();
   const { routines, loaded, load } = useRoutines();
   const loadSettings = useSettings((s) => s.load);
+  // Items are named after their exercises.
+  const loadExercises = useExercises((s) => s.load);
   const routineSnapshot = usePractice((s) => s.routineSnapshot);
   const prepared = useRef<string | null>(null);
   const navigate = useNavigate();
@@ -36,7 +39,8 @@ export function PracticeRoutine() {
   useEffect(() => {
     void load();
     void loadSettings();
-  }, [load, loadSettings]);
+    void loadExercises();
+  }, [load, loadSettings, loadExercises]);
 
   const routine = routines.find((r) => r.id === routineId);
 
@@ -94,6 +98,11 @@ export function PracticeRoutine() {
 }
 
 function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSnapshot }) {
+  const lookup = useExerciseLookup();
+  const named = (id: string) => {
+    const exercise = lookup(id);
+    return exercise ? exerciseLabel(exercise) : '';
+  };
   const seconds =
     snapshot.startedAt && snapshot.endedAt ? (snapshot.endedAt - snapshot.startedAt) / 1000 : 0;
   return (
@@ -119,7 +128,7 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
               className="flex gap-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
             >
               <span className="w-6 tabular-nums text-ink-faint">{index + 1}</span>
-              <span className="flex-1">{definition?.name}</span>
+              <span className="flex-1">{named(item.exerciseId)}</span>
               <span className="tabular-nums text-ink-muted">
                 {item.completed === 0 && item.skipped
                   ? 'skipped'

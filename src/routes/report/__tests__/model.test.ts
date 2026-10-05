@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { Exercise, Rep } from '@/data';
 import type { ReportRow } from '../model';
-import { formatRange, formatTempos, sortRows, summaryLine } from '../model';
+import { buildReport, formatRange, formatTempos, sortRows, summaryLine } from '../model';
 
 const row = (overrides: Partial<ReportRow>): ReportRow => ({
   exerciseId: overrides.name ?? 'x',
@@ -48,5 +49,47 @@ describe('report model', () => {
     expect(summaryLine({ sessions: 5, seconds: 161 * 60, variations: 28, exercises: 1 })).toBe(
       '5 sessions · 2h 41m · 28 variations · 1 exercise',
     );
+  });
+});
+
+describe('buildReport', () => {
+  it('names each row after its exercise, a deleted one marked', () => {
+    const exercise = (id: string, name: string, deletedAt?: number) =>
+      ({
+        id,
+        name,
+        definitionId: 'modes-through-key',
+        tempo: { targetTempo: 70, maxTempo: null },
+        ...(deletedAt ? { deletedAt } : {}),
+      }) as Exercise;
+    const rep = (exerciseId: string) =>
+      ({
+        id: `rep-${exerciseId}`,
+        sessionId: 's',
+        exerciseId,
+        definitionId: 'modes-through-key',
+        index: 0,
+        startedAt: 1_000,
+        endedAt: 61_000,
+        tempo: 70,
+        freeTime: false,
+        axes: {},
+        seed: 1,
+        status: 'completed',
+        createdAt: 1,
+        updatedAt: 1,
+      }) as Rep;
+
+    const report = buildReport({
+      from: '2026-01-01',
+      to: '2026-01-02',
+      reps: [rep('a'), rep('b')],
+      days: [],
+      exercises: [exercise('a', 'Triplet modes'), exercise('b', 'Sixteenths', 5)],
+    });
+    expect(report.rows.map((r) => r.name).sort()).toEqual([
+      'Sixteenths (deleted)',
+      'Triplet modes',
+    ]);
   });
 });

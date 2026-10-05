@@ -19,7 +19,8 @@ import {
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
-import { useExercises } from '@/store/exercises';
+import { exerciseLabel, useExerciseLookup, useExercises } from '@/store/exercises';
+import { FromBlueprint } from '@/components/library/FromBlueprint';
 import { useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { SettingsDialog } from '../practice/SettingsDialog';
@@ -214,6 +215,7 @@ function ItemRow({
   const playNotes = useSettings((s) => s.settings.audio.playNotes);
   const [editing, setEditing] = useState(false);
   const definition = findExerciseDefinition(item.definitionId);
+  const exercise = useExerciseLookup()(item.exerciseId);
 
   if (!definition) {
     return (
@@ -248,8 +250,17 @@ function ItemRow({
         {index + 1}
       </span>
       <div className="min-w-0">
-        <p className="face-title text-body">{definition.name}</p>
-        <p className="text-meta text-ink-muted">{definition.summary}</p>
+        <p className="flex flex-wrap items-baseline gap-x-2">
+          <span className="face-title text-body">{exercise?.name ?? definition.name}</span>
+          <FromBlueprint name={exercise?.name ?? definition.name} blueprint={definition.name} />
+        </p>
+        {exercise?.deletedAt !== undefined ? (
+          <p className="text-meta text-ink-muted">
+            Its exercise was deleted. It still plays, as it is set up here.
+          </p>
+        ) : (
+          <p className="text-meta text-ink-muted">{definition.summary}</p>
+        )}
         {described.length > 0 && (
           <p className="truncate text-meta text-ink-muted">{described.join(' · ')}</p>
         )}
@@ -323,7 +334,7 @@ function ItemRow({
       <SettingsDialog
         open={editing}
         onOpenChange={setEditing}
-        title={definition.name}
+        title={exercise ? exerciseLabel(exercise) : definition.name}
         description="This copy only — the exercise in your library is left as it is."
         definition={definition}
         initial={{
@@ -391,7 +402,7 @@ function AddExerciseDialog({
               >
                 <span className="w-4 text-star">{exercise.favorite ? '★' : ''}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="face-title block text-body">{definition.name}</span>
+                  <span className="face-title block text-body">{exercise.name}</span>
                   <span className="block text-meta text-ink-muted">{definition.summary}</span>
                 </span>
               </button>

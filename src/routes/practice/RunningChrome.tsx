@@ -1,4 +1,5 @@
-import { findExerciseDefinition } from '@/exercises/registry';
+import { sameName } from '@/domain/library';
+import { exerciseLabel, useExerciseLookup } from '@/store/exercises';
 import { usePractice } from '@/store/practice';
 import { useRunnerTicks } from './usePracticeBody';
 
@@ -6,11 +7,12 @@ import { useRunnerTicks } from './usePracticeBody';
  * The persistent bar across a running exercise: what it is, how many passes
  * you have played, and how far through this one you are.
  */
-export function RunningChrome({ name }: { name: string }) {
+export function RunningChrome({ name, blueprint }: { name: string; blueprint?: string }) {
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
   const routine = usePractice((s) => s.routineSnapshot);
   const practice = usePractice();
+  const lookup = useExerciseLookup();
   const state = snapshot?.state;
   // The runner does not emit as the clock moves, so the bar has to read it.
   const { phraseTick } = useRunnerTicks(
@@ -20,8 +22,12 @@ export function RunningChrome({ name }: { name: string }) {
 
   if (routine) {
     const { index, items } = routine;
-    const current = findExerciseDefinition(items[index]?.definitionId ?? '')?.name;
-    const next = findExerciseDefinition(items[index + 1]?.definitionId ?? '')?.name;
+    const named = (i: number) => {
+      const exercise = items[i] && lookup(items[i].exerciseId);
+      return exercise && exerciseLabel(exercise);
+    };
+    const current = named(index);
+    const next = named(index + 1);
     return (
       <div
         className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink"
@@ -56,7 +62,12 @@ export function RunningChrome({ name }: { name: string }) {
 
   return (
     <div className="flex items-center gap-4 border-b border-rule bg-chrome px-6 py-3 text-chrome-ink">
-      <span className="text-body-sm font-semibold">{name}</span>
+      <span className="text-body-sm font-semibold">
+        {name}
+        {blueprint && !sameName(name, blueprint) && (
+          <span className="ml-2 text-meta font-normal opacity-70">from {blueprint}</span>
+        )}
+      </span>
       <span className="num text-body-sm opacity-75" data-testid="passes">
         {theory
           ? passesPlayed === 1

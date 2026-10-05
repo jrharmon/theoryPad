@@ -73,7 +73,8 @@ function themePalette(): Palette {
 export function ReportPage() {
   const { today, reps, days, sessions, from, to, load, touch } = useReport();
   const { routines, load: loadRoutines } = useRoutines();
-  const { exercises, load: loadExercises } = useExercises();
+  const { exercises: live, deleted, load: loadExercises } = useExercises();
+  const exercises = useMemo(() => [...live, ...deleted], [live, deleted]);
   const [choice, setChoice] = useState<Choice>('last-7');
   const [custom, setCustom] = useState<{ from: DayKey; to: DayKey }>(() =>
     presetRange('last-7', today),

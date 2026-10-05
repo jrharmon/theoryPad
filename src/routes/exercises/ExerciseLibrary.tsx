@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
-import { describePolicies } from '@/exercises/describe';
+import { secondLine } from '@/exercises/locks';
+import { FromBlueprint } from '@/components/library/FromBlueprint';
 import { libraryRows, useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
 import { LoadingState, PageHeader } from '@/components/ui/page-header';
@@ -26,13 +27,11 @@ export function ExerciseLibrary() {
   // genuinely all three, and would be missing from two searches otherwise.
   const tags = useMemo(() => {
     const all = new Set<string>();
-    for (const { definition } of rows) for (const t of definition.tags) all.add(t);
+    for (const { exercise } of rows) for (const t of exercise.tags) all.add(t);
     return [...all].sort();
   }, [rows]);
 
-  const visible = tag
-    ? rows.filter(({ definition }) => (definition.tags as string[]).includes(tag))
-    : rows;
+  const visible = tag ? rows.filter(({ exercise }) => exercise.tags.includes(tag)) : rows;
 
   return (
     <section>
@@ -72,33 +71,25 @@ export function ExerciseLibrary() {
             >
               <FavoriteToggle
                 on={exercise.favorite ?? false}
-                label={definition.name}
+                label={exercise.name}
                 onChange={(on) => void update(exercise.id, { favorite: on })}
               />
               <div className="min-w-0 flex-1">
-                <Link
-                  to={`/exercises/${exercise.id}`}
-                  className="face-title text-title hover:text-accent-text"
-                >
-                  {definition.name}
-                </Link>
-                <p className="text-body-sm text-ink-muted">{definition.summary}</p>
-
-                {/* Two instances of one definition share a name and summary,
-                    so what differs has to be on the row. */}
-                {(() => {
-                  const policies = describePolicies(
-                    exercise.axisPolicies,
-                    definition.axes,
-                    instrument,
-                  );
-                  return policies.length > 0 ? (
-                    <p className="mt-1 text-meta text-ink-faint">{policies.join(' · ')}</p>
-                  ) : null;
-                })()}
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <Link
+                    to={`/exercises/${exercise.id}`}
+                    className="face-title text-title hover:text-accent-text"
+                  >
+                    {exercise.name}
+                  </Link>
+                  <FromBlueprint name={exercise.name} blueprint={definition.name} />
+                </div>
+                <p className="text-body-sm text-ink-muted">
+                  {secondLine(exercise, definition, instrument)}
+                </p>
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {definition.tags.map((t) => (
+                  {exercise.tags.map((t) => (
                     <Badge key={t} variant="secondary">
                       {t}
                     </Badge>

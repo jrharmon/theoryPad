@@ -79,17 +79,6 @@ test('hold says what it is holding', async ({ page }) => {
   await expect(page.getByTestId('held-direction')).toContainText('Holding');
 });
 
-test('reset puts an exercise back to its definition\u2019s defaults', async ({ page }) => {
-  // A configured exercise keeps what it was given, so a changed default does
-  // not move one you have already tuned. This is how you take it deliberately.
-  await page.getByRole('link', { name: EXERCISE }).click();
-  await page.getByLabel('Target tempo').fill('120');
-  await expect(page.getByLabel('Target tempo')).toHaveValue('120');
-
-  await page.getByRole('button', { name: 'Reset to defaults' }).click();
-  await expect(page.getByLabel('Target tempo')).toHaveValue('70');
-});
-
 test('the library lists exercises and filters by tag', async ({ page }) => {
   await expect(row(page).getByRole('link', { name: 'Practice', exact: true })).toBeVisible();
 

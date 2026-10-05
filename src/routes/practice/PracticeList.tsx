@@ -3,8 +3,9 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
+import { secondLine } from '@/exercises/locks';
 import { findExerciseDefinition } from '@/exercises/registry';
-import { libraryRows, useExercises } from '@/store/exercises';
+import { exerciseLabel, libraryRows, useExerciseLookup, useExercises } from '@/store/exercises';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 
@@ -15,6 +16,7 @@ import { useSettings } from '@/store/settings';
  */
 export function ExerciseList({ currentId }: { currentId: string }) {
   const exercises = useExercises((s) => s.exercises);
+  const instrument = useSettings((s) => s.settings.instrument);
   return (
     <ListFrame title="Exercises">
       {libraryRows(exercises).map(({ exercise, definition }) => {
@@ -26,7 +28,11 @@ export function ExerciseList({ currentId }: { currentId: string }) {
               aria-current={current ? 'page' : undefined}
               className={rowClass(current)}
             >
-              <RowText name={definition.name} summary={definition.summary} current={current} />
+              <RowText
+                name={exercise.name}
+                summary={secondLine(exercise, definition, instrument)}
+                current={current}
+              />
             </Link>
           </li>
         );
@@ -42,11 +48,13 @@ export function ExerciseList({ currentId }: { currentId: string }) {
 export function RoutineList() {
   const routine = usePractice((s) => s.routineSnapshot);
   const goTo = usePractice((s) => s.goTo);
+  const lookup = useExerciseLookup();
   if (!routine) return null;
   return (
     <ListFrame title="This routine">
       {routine.items.map((item, index) => {
         const definition = findExerciseDefinition(item.definitionId);
+        const exercise = lookup(item.exerciseId);
         const current = index === routine.index;
         return (
           <li key={item.id}>
@@ -60,7 +68,7 @@ export function RoutineList() {
                 {index + 1}
               </span>
               <RowText
-                name={definition?.name ?? ''}
+                name={exercise ? exerciseLabel(exercise) : (definition?.name ?? '')}
                 summary={definition?.summary ?? ''}
                 current={current}
               />

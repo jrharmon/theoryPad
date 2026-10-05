@@ -1,7 +1,7 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { repos, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
-import { resolveGeneratedBacking } from '@/exercises/params';
 import {
   EXERCISE_DEFINITIONS,
   exerciseDefinition,
@@ -11,7 +11,10 @@ import type { AnyExerciseDefinition } from '@/exercises/types';
 import { serialWrites } from './util';
 
 interface ExercisesState {
+  /** The live ones. */
   exercises: Exercise[];
+  /** Deleted ones, still named by the reps and routine items tied to them. */
+  deleted: Exercise[];
   loaded: boolean;
   load: () => Promise<void>;
   addFromDefinition: (definitionId: string) => Promise<Exercise>;
@@ -24,14 +27,6 @@ interface ExercisesState {
    * their own view of the map and the second silently drops the first.
    */
   setAxisPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
-  /**
-   * Put an exercise back to its definition's defaults.
-   *
-   * A configured exercise keeps what it was given, so changing a definition's
-   * default tempo does not — and should not — move one you have already tuned.
-   * This is how you pick the new value up deliberately.
-   */
-  resetToDefaults: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -98,6 +93,7 @@ const queued = serialWrites();
 
 export const useExercises = create<ExercisesState>((set, get) => ({
   exercises: [],
+  deleted: [],
   loaded: false,
 
   async load() {
@@ -113,7 +109,12 @@ export const useExercises = create<ExercisesState>((set, get) => ({
         }
       }
 
-      set({ exercises: await repos().exercises.all(), loaded: true });
+      const everything = await repos().exercises.withDeleted();
+      set({
+        exercises: everything.filter((e) => e.deletedAt === undefined),
+        deleted: everything.filter((e) => e.deletedAt !== undefined),
+        loaded: true,
+      });
     })().finally(() => {
       inFlight = null;
     });
@@ -148,27 +149,30 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     });
   },
 
-  async resetToDefaults(id) {
-    await queued(id, async () => {
-      const current = await repos().exercises.byId(id);
-      if (!current) return;
-
-      const definition = exerciseDefinition(current.definitionId);
-      const defaults = newExerciseFrom(definition);
-      const updated = await repos().exercises.update(id, {
-        params: defaults.params,
-        axisPolicies: defaults.axisPolicies,
-        heldAxisValues: {},
-        tempo: defaults.tempo,
-        defaultReps: defaults.defaultReps,
-        generatedBacking: resolveGeneratedBacking(definition, undefined),
-      });
-      set({ exercises: get().exercises.map((e) => (e.id === id ? updated : e)) });
-    });
-  },
-
   async remove(id) {
     await repos().exercises.softDelete(id);
-    set({ exercises: get().exercises.filter((e) => e.id !== id) });
+    const gone = get().exercises.find((e) => e.id === id);
+    set({
+      exercises: get().exercises.filter((e) => e.id !== id),
+      deleted: gone ? [...get().deleted, gone] : get().deleted,
+    });
   },
 }));
+
+/**
+ * Any exercise by id, deleted ones included: a rep or a routine item names the
+ * exercise it was tied to whatever became of it.
+ */
+export function useExerciseLookup(): (id: string) => Exercise | undefined {
+  const exercises = useExercises((s) => s.exercises);
+  const deleted = useExercises((s) => s.deleted);
+  return useMemo(() => {
+    const byId = new Map([...deleted, ...exercises].map((e) => [e.id, e]));
+    return (id: string) => byId.get(id);
+  }, [exercises, deleted]);
+}
+
+/** An exercise's name as shown: marked when it has been deleted. */
+export function exerciseLabel(exercise: Exercise): string {
+  return exercise.deletedAt === undefined ? exercise.name : `${exercise.name} (deleted)`;
+}

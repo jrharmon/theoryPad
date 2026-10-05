@@ -3,6 +3,7 @@ import type { AnyExerciseDefinition } from '@/exercises/types';
 import { resolveGeneratedBacking } from '@/exercises/params';
 import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
+import { sameName } from '@/domain/library';
 import { SettingsDialog } from './SettingsDialog';
 
 /**
@@ -29,8 +30,8 @@ export function PracticeSettingsDialog({
     <SettingsDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={definition.name}
-      description="Applied when you close this. Changing what varies rolls just that axis again."
+      title={exercise.name}
+      description={`${sameName(exercise.name, definition.name) ? '' : `From ${definition.name}. `}Applied when you close this. Changing what varies rolls just that axis again.`}
       definition={definition}
       initial={{
         tempo: exercise.tempo,

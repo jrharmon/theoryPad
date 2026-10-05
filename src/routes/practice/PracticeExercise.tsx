@@ -70,7 +70,7 @@ export function PracticeExercise() {
 
   return (
     <section className="pb-28">
-      <RunningChrome name={definition.name} />
+      <RunningChrome name={exercise.name} blueprint={definition.name} />
 
       <div className="flex">
         <ExerciseList currentId={exercise.id} />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useExercises } from '@/store/exercises';
 import { useSettings } from '@/store/settings';
@@ -14,19 +14,17 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { Separator } from '@/components/ui/separator';
+import { FromBlueprint } from '@/components/library/FromBlueprint';
 import { ParamsEditor } from './ParamsEditor';
 import { BackingCriteriaEditor, ExerciseVideos } from './ExerciseVideos';
 import { LoadingState, PageIntro } from '@/components/ui/page-header';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
-  const { exercises, loaded, load, update, setAxisPolicy, resetToDefaults, remove } =
-    useExercises();
+  const { exercises, loaded, load, update, setAxisPolicy, remove } = useExercises();
   const navigate = useNavigate();
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
-  // Bumped by a reset, which the generated-backing editor must start again from.
-  const [resets, setResets] = useState(0);
 
   useEffect(() => {
     void load();
@@ -54,10 +52,11 @@ export function ExerciseDetail() {
       <div className="flex items-end justify-between px-8 py-7">
         <div className="min-w-0 flex-1">
           <Kicker accent>Exercise</Kicker>
-          <h1>{definition.name}</h1>
+          <h1>{exercise.name}</h1>
+          <FromBlueprint name={exercise.name} blueprint={definition.name} className="block" />
           <PageIntro>{definition.description}</PageIntro>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {definition.tags.map((t) => (
+            {exercise.tags.map((t) => (
               <Badge key={t} variant="secondary">
                 {t}
               </Badge>
@@ -65,14 +64,6 @@ export function ExerciseDetail() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              void resetToDefaults(exercise.id).then(() => setResets((n) => n + 1))
-            }
-          >
-            Reset to defaults
-          </Button>
           <Button
             variant="secondary"
             onClick={() => void remove(exercise.id).then(() => void navigate('/exercises'))}
@@ -156,7 +147,7 @@ export function ExerciseDetail() {
               </p>
               <div className="mt-3">
                 <GeneratedBackingEditor
-                  key={`${exercise.id}-${resets}`}
+                  key={exercise.id}
                   initial={resolveGeneratedBacking(definition, exercise.generatedBacking)}
                   chordsIn={{
                     mode: settledMode(exercise.axisPolicies, exercise.heldAxisValues),

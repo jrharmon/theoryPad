@@ -59,6 +59,8 @@ export type RoutinePhase = 'running' | 'done';
 
 export interface RoutineItemSnapshot {
   id: string;
+  /** The exercise the item came from, which its passes are logged against. */
+  exerciseId: string;
   definitionId: string;
   reps: number;
   instance: ExerciseInstance | null;
@@ -120,6 +122,7 @@ export class RoutineRunner {
         const snap = runner.snapshot;
         return {
           id: item.id,
+          exerciseId: item.exerciseId,
           definitionId: item.definition.id,
           reps: item.reps,
           instance: runner.currentInstance,
