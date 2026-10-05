@@ -19,7 +19,11 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { useSettings } from '@/store/settings';
+import { withSessionChoice } from '@/exercises/locks';
 import { ParamsEditor } from '../exercises/ParamsEditor';
+
+type SessionAxis = 'key' | 'scale' | 'mode';
+const SESSION: AxisId[] = ['key', 'scale', 'mode'];
 
 export interface ExerciseSettings {
   tempo: TempoConfig;
@@ -46,6 +50,7 @@ export function SettingsDialog({
   held,
   axes = definition.axes,
   hiddenParams,
+  inRoutine,
   chordsIn,
   onApply,
 }: {
@@ -56,10 +61,15 @@ export function SettingsDialog({
   definition: AnyExerciseDefinition;
   initial: ExerciseSettings;
   held: Record<string, string>;
-  /** Which axes to offer. A routine item leaves key and mode to the routine. */
+  /** Which axes to offer: not the locked ones, which are the exercise's for good. */
   axes?: AxisId[];
-  /** Params set somewhere else — a routine's theory item takes its question count from its reps. */
+  /**
+   * Params set somewhere else — locked into the exercise, or a routine's theory
+   * item's question count, which is its reps.
+   */
   hiddenParams?: string[];
+  /** A routine's item: key, scale and mode are the routine's unless fixed here. */
+  inRoutine?: boolean;
   /** What the generated backing's custom chords are shown in. */
   chordsIn: ChordContext;
   onApply: (changed: Partial<ExerciseSettings>) => void;
@@ -76,6 +86,7 @@ export function SettingsDialog({
           held={held}
           axes={axes}
           {...(hiddenParams ? { hiddenParams } : {})}
+          inRoutine={inRoutine ?? false}
           chordsIn={chordsIn}
           onApply={onApply}
           onClose={() => onOpenChange(false)}
@@ -93,6 +104,7 @@ function Draft({
   held,
   axes,
   hiddenParams,
+  inRoutine,
   chordsIn,
   onApply,
   onClose,
@@ -104,6 +116,7 @@ function Draft({
   held: Record<string, string>;
   axes: AxisId[];
   hiddenParams?: string[];
+  inRoutine: boolean;
   chordsIn: ChordContext;
   onApply: (changed: Partial<ExerciseSettings>) => void;
   onClose: () => void;
@@ -203,7 +216,23 @@ function Draft({
                     held={held}
                     instrument={instrument}
                     allowed={definition.allowedValues}
-                    onChange={(axis, policy) => setPolicies({ ...policies, [axis]: policy })}
+                    {...(inRoutine
+                      ? {
+                          routine: {
+                            onRoutine: (axis: AxisId) =>
+                              setPolicies(
+                                withSessionChoice(policies, axis as SessionAxis, null),
+                              ),
+                          },
+                        }
+                      : {})}
+                    onChange={(axis, policy) =>
+                      setPolicies(
+                        inRoutine && SESSION.includes(axis)
+                          ? withSessionChoice(policies, axis as SessionAxis, policy)
+                          : { ...policies, [axis]: policy },
+                      )
+                    }
                   />
                 </div>
               </div>

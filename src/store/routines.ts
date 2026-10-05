@@ -24,7 +24,8 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
     ...(exercise.generatedBacking
       ? { generatedBacking: structuredClone(exercise.generatedBacking) }
       : {}),
-    // Key and mode belong to the routine, so the item does not carry them.
+    // Key, scale and mode are the routine's unless the item fixes its own,
+    // which it does in its editor — not by copying the exercise's.
     axisPolicies: Object.fromEntries(
       Object.entries(exercise.axisPolicies).filter(
         ([axis]) => axis !== 'key' && axis !== 'mode',
@@ -62,7 +63,8 @@ interface RoutinesState {
   rename: (id: string, name: string) => Promise<void>;
   setFavorite: (id: string, favorite: boolean) => Promise<void>;
   setSessionPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
-  addItem: (id: string, exercise: Exercise) => Promise<void>;
+  /** The new item, so its editor can open straight away. */
+  addItem: (id: string, exercise: Exercise) => Promise<RoutineItem>;
   updateItem: (id: string, itemId: string, changes: Partial<RoutineItem>) => Promise<void>;
   moveItem: (id: string, itemId: string, delta: -1 | 1) => Promise<void>;
   removeItem: (id: string, itemId: string) => Promise<void>;
@@ -108,8 +110,11 @@ export const useRoutines = create<RoutinesState>((set, get) => {
       mutate(id, (r) => ({
         sessionAxisPolicies: { ...r.sessionAxisPolicies, [axis]: policy },
       })),
-    addItem: (id, exercise) =>
-      mutate(id, (r) => ({ items: [...r.items, itemFromExercise(exercise)] })),
+    async addItem(id, exercise) {
+      const item = itemFromExercise(exercise);
+      await mutate(id, (r) => ({ items: [...r.items, item] }));
+      return item;
+    },
     updateItem: (id, itemId, changes) =>
       mutate(id, (r) => ({
         items: r.items.map((item) => (item.id === itemId ? { ...item, ...changes } : item)),

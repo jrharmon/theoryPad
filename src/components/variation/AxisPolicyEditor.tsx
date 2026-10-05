@@ -34,6 +34,7 @@ export function AxisPolicyEditor({
   instrument,
   allowed,
   locks,
+  routine,
   onChange,
 }: {
   axes: AxisId[];
@@ -45,6 +46,11 @@ export function AxisPolicyEditor({
   allowed?: AxisValueKeys | undefined;
   /** On the exercise page: a lock on each row. A locked row stays editable there. */
   locks?: { locked: readonly AxisId[]; onToggle: (axis: AxisId, locked: boolean) => void };
+  /**
+   * In a routine's item editor: key, scale and mode offer the routine's or
+   * Fixed — rolled or held, the routine's wins anyway. Absent is the routine's.
+   */
+  routine?: { onRoutine: (axis: AxisId) => void };
   onChange: (axis: AxisId, policy: AxisPolicy) => void;
 }) {
   const practice = useSettings((s) => s.settings.practice);
@@ -90,6 +96,11 @@ export function AxisPolicyEditor({
 
   // The mode row follows the scale: gone for a scale with one mode. A mode
   // pinned that the scale doesn't have rolls, so it shows as a roll.
+  // The routine's, in an item editor: anything but a stored Fixed.
+  const followsRoutine = (id: AxisId) =>
+    routine !== undefined &&
+    (id === 'key' || id === 'scale' || id === 'mode') &&
+    policies[id]?.mode !== 'fixed';
   const modePolicy = policyFor(policies, 'mode');
   const modeRow = {
     choices: choices.map((m) => ({ key: m, label: modeTitle(m) })),
@@ -109,6 +120,14 @@ export function AxisPolicyEditor({
           first={index === 0}
           {...(id === 'mode' ? { choices: modeRow.choices } : {})}
           policy={id === 'mode' ? modeRow.policy : policyFor(policies, id)}
+          {...(routine && (id === 'key' || id === 'scale' || id === 'mode')
+            ? {
+                routine: {
+                  follows: followsRoutine(id),
+                  onRoutine: () => routine.onRoutine(id),
+                },
+              }
+            : {})}
           heldValue={held[id]}
           instrument={instrument}
           allowed={allowed}
@@ -162,6 +181,7 @@ function AxisRow({
   allowed,
   blocked,
   lock,
+  routine,
   onChange,
 }: {
   id: AxisId;
@@ -175,6 +195,8 @@ function AxisRow({
   /** Struck out app-wide in Settings: never rolled, still pinnable. */
   blocked: readonly string[] | undefined;
   lock?: { locked: boolean; onToggle: (locked: boolean) => void };
+  /** Offer the routine's or Fixed, not Roll and Hold. */
+  routine?: { follows: boolean; onRoutine: () => void };
   onChange: (policy: AxisPolicy) => void;
 }) {
   const definition = axisDefinition(id);
@@ -209,25 +231,49 @@ function AxisRow({
         <span className="pt-1.5 text-body-sm font-semibold">{name}</span>
       )}
 
-      <Select
-        value={policy.mode}
-        onValueChange={(mode) => {
-          if (mode === 'fixed') onChange({ mode: 'fixed', value: keys[0] ?? '' });
-          else if (mode === 'hold') onChange({ mode: 'hold' });
-          else onChange({ mode: 'roll' });
-        }}
-      >
-        <SelectTrigger size="sm" aria-label={`${name} policy`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="roll">Roll</SelectItem>
-          <SelectItem value="fixed">Fixed</SelectItem>
-          <SelectItem value="hold">Hold</SelectItem>
-        </SelectContent>
-      </Select>
+      {routine ? (
+        <Select
+          value={routine.follows ? 'routine' : 'fixed'}
+          onValueChange={(mode) => {
+            if (mode === 'routine') routine.onRoutine();
+            else onChange({ mode: 'fixed', value: keys[0] ?? '' });
+          }}
+        >
+          <SelectTrigger size="sm" aria-label={`${name} policy`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="routine">Routine’s</SelectItem>
+            <SelectItem value="fixed">Fixed</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <Select
+          value={policy.mode}
+          onValueChange={(mode) => {
+            if (mode === 'fixed') onChange({ mode: 'fixed', value: keys[0] ?? '' });
+            else if (mode === 'hold') onChange({ mode: 'hold' });
+            else onChange({ mode: 'roll' });
+          }}
+        >
+          <SelectTrigger size="sm" aria-label={`${name} policy`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="roll">Roll</SelectItem>
+            <SelectItem value="fixed">Fixed</SelectItem>
+            <SelectItem value="hold">Hold</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
 
-      {policy.mode === 'fixed' && candidates.length > 0 && (
+      {routine?.follows && (
+        <span className="pt-1.5 text-meta text-ink-faint">
+          Whatever the routine rolls, shared by every item
+        </span>
+      )}
+
+      {!routine?.follows && policy.mode === 'fixed' && candidates.length > 0 && (
         <Select
           value={policy.value}
           onValueChange={(value) => onChange({ mode: 'fixed', value })}
@@ -245,7 +291,7 @@ function AxisRow({
         </Select>
       )}
 
-      {policy.mode === 'roll' && (
+      {!routine?.follows && policy.mode === 'roll' && (
         <div className="flex flex-wrap gap-1" role="group" aria-label={`${name} rolls from`}>
           {candidates.map((c) => {
             const on = !policy.from || policy.from.length === 0 || policy.from.includes(c.key);
@@ -269,7 +315,7 @@ function AxisRow({
         </div>
       )}
 
-      {policy.mode === 'hold' && (
+      {!routine?.follows && policy.mode === 'hold' && (
         <span className="pt-1.5 text-meta text-ink-faint" data-testid={`held-${id}`}>
           {heldValue === undefined
             ? 'Nothing held yet — rolls once, then stays'

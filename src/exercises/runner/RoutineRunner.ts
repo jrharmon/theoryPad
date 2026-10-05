@@ -11,6 +11,7 @@ import {
   variationKeyMode,
 } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
+import { overridesSession } from '../locks';
 import { routineItemRun } from '../params';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
 import { ExerciseRunner, type RepStartInfo } from './ExerciseRunner';
@@ -88,7 +89,7 @@ export interface RoutineSnapshot {
  *
  * Every item is rolled up front, and nothing changes after that unless the
  * player re-rolls the item in front of them. Key and mode are rolled once and
- * shared.
+ * shared — except by an item that fixes its own key, or its own scale and mode.
  *
  * One clock runs the whole thing. When an item has had its passes the next
  * counts in on the same running clock at its own tempo — the count-in is the
@@ -165,14 +166,20 @@ export class RoutineRunner {
       ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
     });
     this.keyMode = variationKeyMode(session) ?? this.keyMode;
-    const shared: AxisPolicies = {
+    const shared = {
       scale: { mode: 'fixed', value: this.keyMode.scale },
       mode: { mode: 'fixed', value: this.keyMode.mode },
       key: { mode: 'fixed', value: this.keyMode.tonic },
-    };
+    } as const;
 
     this.runners = this.config.items.map((item) => {
       const { params, passes } = routineItemRun(item.definition, item);
+      // The routine's key, scale and mode, except where the item fixes its
+      // own (scale and mode as a pair): that one it rolls from its own policy.
+      const axisPolicies: AxisPolicies = { ...item.axisPolicies };
+      for (const axis of ['scale', 'mode', 'key'] as const) {
+        if (!overridesSession(axis, item.axisPolicies)) axisPolicies[axis] = shared[axis];
+      }
       const runner = new ExerciseRunner({
         clock: this.config.clock,
         definition: item.definition,
@@ -189,8 +196,7 @@ export class RoutineRunner {
         countInBars: item.countInBars ?? this.config.countInBars ?? 0,
         heldAxisValues: item.heldAxisValues,
         ...(item.subjectWeights ? { subjectWeights: item.subjectWeights } : {}),
-        // Key, scale and mode belong to the routine, whatever the item's own policy.
-        axisPolicies: { ...item.axisPolicies, ...shared },
+        axisPolicies,
         now: this.config.now,
         ...(this.config.onRepStart ? { onRepStart: this.config.onRepStart } : {}),
         onRepEnd: (rep) => {
@@ -305,7 +311,7 @@ export class RoutineRunner {
     this.emit();
   }
 
-  /** Re-roll the current item's own axes. Key and mode stay the routine's. */
+  /** Re-roll the current item's own axes. Key and mode stay the routine's, or the item's own. */
   rerollCurrent(): void {
     this.current?.reroll();
   }

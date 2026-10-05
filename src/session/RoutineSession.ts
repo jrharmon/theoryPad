@@ -4,6 +4,7 @@ import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
 import { RoutineRunner, type ExerciseRunner, type RoutineRunItem } from '@/exercises/runner';
+import { effectiveItem } from '@/exercises/locks';
 import { resolveGeneratedBacking } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
 import type { SessionDeps } from './ports';
@@ -34,8 +35,11 @@ export class RoutineSession extends PracticeSession {
     const session = await openSessionRow(deps, routine.id);
     // An item whose exercise no longer exists in code is left out rather than
     // failing the whole routine.
+    // Locked settings are read through from the exercise, deleted or not.
+    const exercises = new Map((await deps.repos.exercises.withDeleted()).map((e) => [e.id, e]));
     const items: RoutineRunItem[] = [];
-    for (const item of routine.items) {
+    for (const stored of routine.items) {
+      const item = effectiveItem(stored, exercises.get(stored.exerciseId));
       const definition = findExerciseDefinition(item.definitionId);
       if (!definition) continue;
       items.push(
@@ -108,10 +112,17 @@ export class RoutineSession extends PracticeSession {
       // Nothing to fit the backing to until the routine is under way.
       if (snapshot.phase !== 'running' || !current || snapshot.startedAt === null) return;
 
-      // One track through the routine, at each item's own tempo.
+      // One track through the routine, at each item's own tempo. The backing
+      // follows each item's key, its own where it has one: the drone retunes,
+      // and a track that doesn't fit is dropped for that item, which plays its
+      // notes and metronome. The next item that fits gets the track again,
+      // fresh from bar 1 and counted in — as after a theory set. That start
+      // holds the clock, so it waits until this emit is over.
       if (current !== lastItem) {
         lastItem = current;
         this.backing.fitTo(current);
+        this.backing.refresh();
+        queueMicrotask(() => this.afterAdvance());
       }
       const state = snapshot.current?.state;
       if (
@@ -139,8 +150,9 @@ export class RoutineSession extends PracticeSession {
     return this.routine.current;
   }
 
+  /** The current item's: the routine's, or its own where it overrides it. */
   protected get keyMode(): KeyMode {
-    return this.routine.snapshot.keyMode;
+    return this.routine.current?.snapshot.keyMode ?? this.routine.snapshot.keyMode;
   }
 
   async play(): Promise<void> {

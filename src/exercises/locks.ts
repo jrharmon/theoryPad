@@ -1,5 +1,7 @@
 import type { Instrument } from '@/domain/instrument';
-import type { AxisId, AxisPolicies } from '@/domain/variation';
+import type { ScaleId } from '@/domain/music';
+import { modeChoices } from '@/domain/variation';
+import type { AxisId, AxisPolicies, AxisPolicy } from '@/domain/variation';
 import { describedAxes } from './describe';
 import { paramFields, resolveParams } from './params';
 import type { AnyExerciseDefinition } from './types';
@@ -62,6 +64,38 @@ export function effectiveItem<T extends Configured>(
     axisPolicies,
     heldAxisValues,
   };
+}
+
+/**
+ * What an item editor saves: its changes, with every locked setting put back
+ * to the item's own. A locked setting is the exercise's, read through; the
+ * item keeps its own underneath, for when the lock comes off.
+ */
+export function withoutLocked<C extends Partial<Pick<Configured, 'params' | 'axisPolicies'>>>(
+  changed: C,
+  item: Configured,
+  locks: Locks,
+): C {
+  const out = { ...changed };
+  if (changed.params !== undefined && locks.params.length > 0) {
+    const own = asRecord(item.params);
+    const params = { ...asRecord(changed.params) };
+    for (const key of locks.params) {
+      if (key in own) params[key] = own[key];
+      else delete params[key];
+    }
+    out.params = params;
+  }
+  if (changed.axisPolicies && locks.axes.length > 0) {
+    const policies = { ...changed.axisPolicies };
+    for (const axis of locks.axes) {
+      const mine = item.axisPolicies[axis];
+      if (mine) policies[axis] = mine;
+      else delete policies[axis];
+    }
+    out.axisPolicies = policies;
+  }
+  return out;
 }
 
 /** The params keys a settings form shows: every field the definition has, less the locked. */
@@ -152,4 +186,33 @@ export function secondLine(
   instrument: Instrument,
 ): string {
   return describeLocks(exercise, definition, instrument).join(' · ') || definition.summary;
+}
+
+/**
+ * A routine item editor's choice for key, scale or mode: the routine's (null)
+ * or Fixed. Scale and mode go together, as they override together — fixing
+ * one fixes the other too (Major, its first mode), and giving one back to the
+ * routine gives back both.
+ */
+export function withSessionChoice(
+  policies: AxisPolicies,
+  axis: 'key' | 'scale' | 'mode',
+  policy: AxisPolicy | null,
+): AxisPolicies {
+  const next = { ...policies };
+  const pair = axis === 'key' ? (['key'] as const) : (['scale', 'mode'] as const);
+  if (policy === null) {
+    for (const id of pair) delete next[id];
+    return next;
+  }
+  next[axis] = policy;
+  if (axis === 'mode' && next.scale?.mode !== 'fixed') {
+    next.scale = { mode: 'fixed', value: 'major' };
+  }
+  if (axis === 'scale' && next.mode?.mode !== 'fixed' && policy.mode === 'fixed') {
+    const first = modeChoices(policy.value as ScaleId)[0];
+    if (first) next.mode = { mode: 'fixed', value: first };
+    else delete next.mode;
+  }
+  return next;
 }

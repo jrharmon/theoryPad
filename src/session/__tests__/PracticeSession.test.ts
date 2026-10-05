@@ -850,6 +850,93 @@ describe('RoutineSession', () => {
     ).toEqual(new Set([chroma(G_IONIAN.tonic)]));
   });
 
+  it('plays an item locked to Lydian in Lydian between items in the routine’s mode', async () => {
+    const { deps, repos, audio } = world();
+    const plain = await addExercise(repos, 'modes-through-key');
+    // Locked Fixed: the item reads it through from the exercise, and keeps it.
+    const lydian = await addExercise(repos, 'modes-through-key', {
+      name: 'Lydian runs',
+      axisPolicies: { mode: { mode: 'fixed', value: 'lydian' } },
+      locked: { params: [], axes: ['mode'] },
+    });
+    const stored = await repos.routines.add({
+      name: 'Modes',
+      items: [plain, lydian, plain].map((e) => ({ ...itemFromExercise(e), reps: 1 })),
+      sessionAxisPolicies: IN_G,
+      backing: { kind: 'drone' },
+    });
+    const session = await RoutineSession.open(stored, deps);
+    await session.play();
+    await settle();
+
+    const heard: string[] = [];
+    for (let i = 0; i < 3; i += 1) {
+      heard.push(
+        `${session.runner!.snapshot.keyMode.mode}/${audio.drones.at(-1)!.keyMode.mode}`,
+      );
+      playOut(session, audio.clock);
+      await settle();
+    }
+    // The drone follows each item's mode, the routine's key throughout.
+    expect(heard).toEqual(['ionian/ionian', 'lydian/lydian', 'ionian/ionian']);
+
+    const reps = [
+      ...(await repos.reps.byExercise(plain.id)),
+      ...(await repos.reps.byExercise(lydian.id)),
+    ];
+    expect(
+      reps
+        .map((r) => [r.exerciseId === lydian.id ? 'lydian' : 'plain', r.axes.mode, r.axes.key])
+        .sort(),
+    ).toEqual([
+      ['lydian', 'lydian', 'G'],
+      ['plain', 'ionian', 'G'],
+      ['plain', 'ionian', 'G'],
+    ]);
+  });
+
+  it('drops a track for an item in its own mode, and brings it back fresh after', async () => {
+    const inG = track();
+    const { deps, repos, audio } = world([inG]);
+    const plain = await addExercise(repos, 'modes-through-key');
+    const lydian = await addExercise(repos, 'modes-through-key', {
+      name: 'Lydian runs',
+      axisPolicies: { mode: { mode: 'fixed', value: 'lydian' } },
+      locked: { params: [], axes: ['mode'] },
+    });
+    const stored = await repos.routines.add({
+      name: 'Modes over a track',
+      items: [plain, lydian, plain].map((e) => ({
+        ...itemFromExercise(e),
+        reps: 1,
+        countInBars: 1 as const,
+      })),
+      sessionAxisPolicies: IN_G,
+      backing: { kind: 'video', id: inG.id },
+    });
+    const session = await RoutineSession.open(stored, deps);
+    await session.play();
+    await settle();
+    expect(audio.tracks[0]!.status).toBe('playing');
+
+    // The Lydian item: no track, so its notes and the metronome play.
+    playOut(session, audio.clock);
+    await settle();
+    expect(session.runner!.snapshot.keyMode.mode).toBe('lydian');
+    expect(audio.tracks[0]!.status).toBe('disposed');
+    expect(session.state.backing.resolved.kind).toBe('none');
+    expect(audio.sound.notes).toBe(session.runner!.currentPhrase);
+    expect(audio.sound.silenced).toBe(false);
+
+    // Back in the routine's mode: a fresh track, started a count-in ahead.
+    playOut(session, audio.clock);
+    await settle();
+    expect(session.runner!.snapshot.keyMode.mode).toBe('ionian');
+    expect(audio.tracks).toHaveLength(2);
+    expect(audio.tracks[1]).toMatchObject({ status: 'playing' });
+    expect(session.state.snapshot?.state).toBe('count-in');
+  });
+
   it('counts each item in by its own, and never by the exercise it came from', async () => {
     const { deps, repos, audio } = world();
     // One exercise, in the routine twice, counted in differently each time.

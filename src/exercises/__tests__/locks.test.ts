@@ -6,6 +6,8 @@ import {
   overridesSession,
   visibleAxes,
   visibleParams,
+  withSessionChoice,
+  withoutLocked,
 } from '../locks';
 import { exerciseDefinition } from '../registry';
 
@@ -54,6 +56,51 @@ describe('effectiveItem', () => {
     });
     // An item whose exercise is gone altogether plays as it is.
     expect(effectiveItem(item, undefined)).toBe(item);
+  });
+
+  it('is undone on save: the item keeps its own value under a lock', () => {
+    const item = {
+      params: { variant: 'plain' },
+      axisPolicies: { rhythmPattern: { mode: 'fixed' as const, value: 'gallop' } },
+      heldAxisValues: {},
+    };
+    const locks = { params: ['variant', 'minFret'], axes: ['rhythmPattern' as const] };
+    const changed = {
+      params: { variant: 'pause-on-root', minFret: 3, shapesPerRep: 4 },
+      axisPolicies: {
+        rhythmPattern: { mode: 'roll' as const },
+        direction: { mode: 'hold' as const },
+      },
+      tempo: { targetTempo: 90, maxTempo: null },
+    };
+    expect(withoutLocked(changed, item, locks)).toEqual({
+      params: { variant: 'plain', shapesPerRep: 4 },
+      axisPolicies: {
+        rhythmPattern: item.axisPolicies.rhythmPattern,
+        direction: { mode: 'hold' },
+      },
+      tempo: { targetTempo: 90, maxTempo: null },
+    });
+  });
+});
+
+describe('withSessionChoice', () => {
+  it('fixes scale and mode together, and gives both back together', () => {
+    const lydian = withSessionChoice({}, 'mode', { mode: 'fixed', value: 'lydian' });
+    expect(lydian).toEqual({
+      mode: { mode: 'fixed', value: 'lydian' },
+      scale: { mode: 'fixed', value: 'major' },
+    });
+    expect(withSessionChoice(lydian, 'scale', null)).toEqual({});
+    expect(withSessionChoice({}, 'scale', { mode: 'fixed', value: 'major' })).toEqual({
+      scale: { mode: 'fixed', value: 'major' },
+      mode: { mode: 'fixed', value: 'ionian' },
+    });
+    // The key goes alone.
+    expect(withSessionChoice(lydian, 'key', { mode: 'fixed', value: 'A' })).toEqual({
+      ...lydian,
+      key: { mode: 'fixed', value: 'A' },
+    });
   });
 });
 
