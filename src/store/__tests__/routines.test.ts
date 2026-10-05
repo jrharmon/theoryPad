@@ -5,6 +5,10 @@ import { itemFromExercise, moveItem, sortRoutines } from '../routines';
 const exercise: Exercise = {
   id: 'ex-1',
   definitionId: 'modes-through-key',
+  name: 'Modes up the neck',
+  tags: ['modes'],
+  folderId: null,
+  locked: { params: [], axes: [] },
   params: { variant: 'plain' },
   axisPolicies: {
     key: { mode: 'fixed', value: 'G' },

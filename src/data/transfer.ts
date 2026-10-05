@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { TheoryPadDB } from './db';
-import type { Exercise, Rep, Routine, Row, Session, Settings, Video } from './entities';
+import type { Exercise, Folder, Rep, Routine, Row, Session, Settings, Video } from './entities';
+import { blueprintCatalog, upgradeExercises, type BlueprintCatalog } from './upgrade';
 import { withDefaults } from './repositories/dexie';
 import { rebuildStats } from './stats';
 import { rollupDays } from '@/domain/progress';
@@ -14,7 +15,8 @@ import { rollupDays } from '@/domain/progress';
  * disagree with them.
  */
 
-export const EXPORT_FORMAT_VERSION = 1;
+/** 2 since blueprints: folders, and an exercise's name, tags, folder and locks. 1 still imports. */
+export const EXPORT_FORMAT_VERSION = 2;
 
 export interface TheoryPadExport {
   formatVersion: typeof EXPORT_FORMAT_VERSION;
@@ -28,6 +30,8 @@ export interface TheoryPadExport {
     settings: Settings | null;
     /** Absent from files made before M7 — which then leave the stored videos alone. */
     videos?: Video[];
+    /** Absent from v1 files, which had no folders. */
+    folders?: Folder[];
   };
 }
 
@@ -44,6 +48,7 @@ export async function exportData(
       database.reps,
       database.settings,
       database.videos,
+      database.folders,
     ],
     async () => ({
       formatVersion: EXPORT_FORMAT_VERSION,
@@ -56,6 +61,7 @@ export async function exportData(
         reps: await database.reps.toArray(),
         settings: (await database.settings.get('settings')) ?? null,
         videos: await database.videos.toArray(),
+        folders: await database.folders.toArray(),
       },
     }),
   );
@@ -78,7 +84,7 @@ const row = z
   .passthrough();
 
 const schema = z.object({
-  formatVersion: z.literal(EXPORT_FORMAT_VERSION),
+  formatVersion: z.union([z.literal(1), z.literal(EXPORT_FORMAT_VERSION)]),
   exportedAt: z.number(),
   app: z.object({ name: z.literal('theorypad') }).passthrough(),
   data: z.object({
@@ -107,11 +113,19 @@ const schema = z.object({
         }),
       )
       .optional(),
+    folders: z.array(row.extend({ name: z.string() })).optional(),
   }),
 });
 
-/** Validate a parsed file. Throws with a readable message if it is not an export. */
-export function parseExport(json: unknown): TheoryPadExport {
+/**
+ * Validate a parsed file, and bring a v1 file's exercises up to date the same
+ * way the database upgrade does. Throws with a readable message if it is not
+ * an export.
+ */
+export function parseExport(
+  json: unknown,
+  catalog: BlueprintCatalog = blueprintCatalog(),
+): TheoryPadExport {
   const result = schema.safeParse(json);
   if (!result.success) {
     const issue = result.error.issues[0];
@@ -120,7 +134,19 @@ export function parseExport(json: unknown): TheoryPadExport {
       `This is not a TheoryPad export (${where}: ${issue?.message ?? 'invalid'}).`,
     );
   }
-  return result.data as unknown as TheoryPadExport;
+  const file = result.data as unknown as TheoryPadExport;
+  if ((file.formatVersion as number) === EXPORT_FORMAT_VERSION) return file;
+  return {
+    ...file,
+    formatVersion: EXPORT_FORMAT_VERSION,
+    data: {
+      ...file.data,
+      exercises: upgradeExercises(
+        file.data.exercises as unknown as Record<string, unknown>[],
+        catalog,
+      ),
+    },
+  };
 }
 
 // ----------------------------------------------------------------- import
@@ -141,11 +167,15 @@ export interface ImportSummary {
   sessions: TableSummary;
   reps: TableSummary;
   videos: TableSummary;
+  folders: TableSummary;
   settings: 'kept' | 'replaced';
 }
 
-type Tables = Pick<TheoryPadDB, 'exercises' | 'routines' | 'sessions' | 'reps' | 'videos'>;
-const TABLES = ['exercises', 'routines', 'sessions', 'reps', 'videos'] as const;
+type Tables = Pick<
+  TheoryPadDB,
+  'exercises' | 'routines' | 'sessions' | 'reps' | 'videos' | 'folders'
+>;
+const TABLES = ['exercises', 'routines', 'sessions', 'reps', 'videos', 'folders'] as const;
 
 const NO_CHANGE: TableSummary = { added: 0, updated: 0, removed: 0 };
 
@@ -222,6 +252,7 @@ export async function applyImport(
       database.sessions,
       database.reps,
       database.videos,
+      database.folders,
       database.settings,
       database.exerciseStats,
       database.practiceDays,

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { repos, findRedundantExercises, type Exercise, type NewExercise } from '@/data';
+import { repos, type Exercise, type NewExercise } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
 import { resolveGeneratedBacking } from '@/exercises/params';
 import {
@@ -53,8 +53,14 @@ export function libraryRows(
     );
 }
 
-/** A configured exercise, seeded from its definition's defaults. */
-export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise {
+/**
+ * A new exercise from a blueprint: its defaults, its name and tags, nothing
+ * locked, at the top level unless told otherwise.
+ */
+export function newExerciseFrom(
+  definition: AnyExerciseDefinition,
+  { name = definition.name, folderId = null }: { name?: string; folderId?: string | null } = {},
+): NewExercise {
   // Straight from the schema: its `.default()` values are the exercise's
   // starting params, written once. The registry erases each definition's
   // params type, so this is genuinely unknown here; the definition validates
@@ -65,6 +71,10 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
 
   return {
     definitionId: definition.id,
+    name,
+    tags: [...definition.tags],
+    folderId,
+    locked: { params: [], axes: [] },
     params,
     axisPolicies: definition.defaults.axisPolicies ?? {},
     heldAxisValues: {},
@@ -79,7 +89,7 @@ export function newExerciseFrom(definition: AnyExerciseDefinition): NewExercise 
  *
  * Several screens call load() on mount, and StrictMode invokes each effect
  * twice — so without this, two loads race, both find an empty library, and both
- * seed it. That is what put two identical exercises in the list.
+ * seed it.
  */
 let inFlight: Promise<void> | null = null;
 
@@ -93,23 +103,14 @@ export const useExercises = create<ExercisesState>((set, get) => ({
   async load() {
     if (get().loaded) return;
     inFlight ??= (async () => {
-      let existing = await repos().exercises.all();
-
-      // Clear up after the seeding race that shipped: identical, unplayed
-      // copies of one definition cannot be told apart because there is nothing
-      // to tell apart. Anything with practice behind it is left alone.
-      const { remove } = findRedundantExercises(existing, await repos().stats.all());
-      if (remove.length > 0) {
-        for (const exercise of remove) await repos().exercises.softDelete(exercise.id);
-        existing = await repos().exercises.all();
-      }
-
-      // Seed by definition rather than by count, so this is idempotent even if
-      // it does somehow run twice.
-      const have = new Set(existing.map((e) => e.definitionId));
-      for (const definition of EXERCISE_DEFINITIONS) {
-        if (have.has(definition.id)) continue;
-        await repos().exercises.add(newExerciseFrom(definition));
+      // A starter per blueprint, on the first load only: a table with no rows
+      // at all, not even deleted ones, is a new database. After that nothing is
+      // added — a deleted starter stays deleted, and a blueprint added to the
+      // code later is the player's to make an exercise from.
+      if ((await repos().exercises.withDeleted()).length === 0) {
+        for (const definition of EXERCISE_DEFINITIONS) {
+          await repos().exercises.add(newExerciseFrom(definition));
+        }
       }
 
       set({ exercises: await repos().exercises.all(), loaded: true });

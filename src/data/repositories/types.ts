@@ -2,6 +2,7 @@ import type { DayKey, PracticeDay } from '@/domain/progress';
 import type {
   Exercise,
   ExerciseStats,
+  Folder,
   Rep,
   Routine,
   Session,
@@ -15,11 +16,17 @@ export type NewRoutine = Omit<Routine, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewSession = Omit<Session, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewRep = Omit<Rep, 'id' | 'createdAt' | 'updatedAt'>;
 export type NewVideo = Omit<Video, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewFolder = Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>;
 
 export interface ExerciseRepository {
   add(exercise: NewExercise): Promise<Exercise>;
   byId(id: Uuid): Promise<Exercise | undefined>;
   all(): Promise<Exercise[]>;
+  /**
+   * Deleted ones too: a rep or a routine item still names the exercise it was
+   * tied to, and an empty table — not even a deleted row — is a new database.
+   */
+  withDeleted(): Promise<Exercise[]>;
   byDefinition(definitionId: string): Promise<Exercise[]>;
   update(id: Uuid, changes: Partial<NewExercise>): Promise<Exercise>;
   softDelete(id: Uuid): Promise<void>;
@@ -74,6 +81,15 @@ export interface VideoRepository {
   softDelete(id: Uuid): Promise<void>;
 }
 
+/** Folders of exercises. `all` is every live one; the tree is built in memory. */
+export interface FolderRepository {
+  add(folder: NewFolder): Promise<Folder>;
+  byId(id: Uuid): Promise<Folder | undefined>;
+  all(): Promise<Folder[]>;
+  update(id: Uuid, changes: Partial<NewFolder>): Promise<Folder>;
+  softDelete(id: Uuid): Promise<void>;
+}
+
 export interface SettingsRepository {
   get(): Promise<Settings>;
   save(settings: Omit<Settings, 'key' | 'updatedAt'>): Promise<Settings>;
@@ -88,4 +104,5 @@ export interface Repositories {
   days: PracticeDayRepository;
   settings: SettingsRepository;
   videos: VideoRepository;
+  folders: FolderRepository;
 }

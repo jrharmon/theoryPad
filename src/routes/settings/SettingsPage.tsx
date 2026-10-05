@@ -556,6 +556,7 @@ function describe(summary: ImportSummary): string {
     ['sessions', 'session', 'sessions'],
     ['reps', 'logged pass', 'logged passes'],
     ['videos', 'video', 'videos'],
+    ['folders', 'folder', 'folders'],
   ] as const;
   for (const verb of ['added', 'updated', 'removed'] as const) {
     const items = tables

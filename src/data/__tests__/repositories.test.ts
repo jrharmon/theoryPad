@@ -12,6 +12,10 @@ import { FIRST_RUN_VIDEOS } from '../seed/videos';
 
 const exerciseFixture: NewExercise = {
   definitionId: 'modes-through-key',
+  name: 'Modes up the neck',
+  tags: ['modes'],
+  folderId: null,
+  locked: { params: [], axes: [] },
   params: { variant: 'plain', shapesPerRep: 7, minFret: 1 },
   axisPolicies: {},
   heldAxisValues: {},
@@ -341,41 +345,76 @@ function suite(
   });
 }
 
-describe('the v2 migration', () => {
-  it('strips the name and tags that now live on the definition', async () => {
-    // A copy drifts: when the definition was renamed, every row kept the old
-    // name. The stored copies are removed rather than left to go stale.
-    const name = `theorypad-migration-${Date.now()}`;
+/** A database as it stood at `version`, with these exercise rows in it. */
+async function legacyDatabase(version: number, rows: Record<string, unknown>[]) {
+  const name = `theorypad-legacy-${version}-${Math.random()}`;
+  const before = new Dexie(name);
+  before.version(version).stores({
+    exercises: 'id, definitionId, updatedAt, deletedAt',
+    sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
+    reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
+    exerciseStats: 'exerciseId, definitionId, updatedAt',
+    settings: 'key',
+    ...(version >= 3 ? { routines: 'id, updatedAt, deletedAt' } : {}),
+    ...(version >= 4 ? { practiceDays: 'date' } : {}),
+    ...(version >= 5 ? { videos: 'id, updatedAt' } : {}),
+  });
+  await before.open();
+  await before.table('exercises').bulkAdd(rows);
+  before.close();
+  return name;
+}
 
-    const before = new Dexie(name);
-    before.version(1).stores({
-      exercises: 'id, definitionId, updatedAt, deletedAt',
-      sessions: 'id, routineId, startedAt, updatedAt, deletedAt',
-      reps: 'id, sessionId, exerciseId, definitionId, startedAt, [exerciseId+startedAt], [definitionId+startedAt]',
-      exerciseStats: 'exerciseId, definitionId, updatedAt',
-      settings: 'key',
-    });
-    await before.open();
-    await before.table('exercises').add({
-      ...exerciseFixture,
-      id: 'legacy-row',
-      createdAt: 1,
-      updatedAt: 1,
-      name: 'Seven modes through a key',
-      userTags: ['mine'],
-    });
-    before.close();
+const catalog = (id: string) =>
+  id === 'modes-through-key'
+    ? { name: 'Modes up the neck', tags: ['scales', 'modes'] }
+    : undefined;
 
-    const after = new TheoryPadDB(name);
+/** A row as stored before blueprints: no name, tags, folder or locks. */
+function legacyRow(id: string, createdAt: number, extra: Record<string, unknown> = {}) {
+  const { name: _n, tags: _t, folderId: _f, locked: _l, ...rest } = exerciseFixture;
+  return { ...rest, id, createdAt, updatedAt: createdAt, ...extra };
+}
+
+describe('the v2 and v7 migrations', () => {
+  it('replace a stale stored name with the blueprint’s', async () => {
+    // v2 stripped the names copied from definitions, which had drifted; v7
+    // names each exercise afresh from its blueprint.
+    const name = await legacyDatabase(1, [
+      legacyRow('legacy-row', 1, { name: 'Seven modes through a key', userTags: ['mine'] }),
+    ]);
+    const after = new TheoryPadDB(name, catalog);
     const row = await after.exercises.get('legacy-row');
 
-    expect(row).toBeDefined();
-    expect(row).not.toHaveProperty('name');
+    expect(row).toMatchObject({ name: 'Modes up the neck', tags: ['scales', 'modes'] });
     expect(row).not.toHaveProperty('userTags');
     // Everything that is genuinely the user's survives.
     expect(row!.tempo.targetTempo).toBe(76);
     expect(row!.definitionId).toBe('modes-through-key');
+    await after.delete();
+  });
 
+  it('give every exercise a name, tags, the top level and no locks, unique by age', async () => {
+    const name = await legacyDatabase(6, [
+      legacyRow('newer', 20),
+      legacyRow('older', 10),
+      legacyRow('deleted', 5, { deletedAt: 6 }),
+      { ...legacyRow('orphan', 30), definitionId: 'gone-from-the-code' },
+    ]);
+    const after = new TheoryPadDB(name, catalog);
+    const rows = new Map((await after.exercises.toArray()).map((r) => [r.id, r]));
+
+    expect(rows.get('older')).toMatchObject({
+      name: 'Modes up the neck',
+      tags: ['scales', 'modes'],
+      folderId: null,
+      locked: { params: [], axes: [] },
+    });
+    expect(rows.get('newer')!.name).toBe('Modes up the neck 2');
+    // A deleted row is named, but takes no name from a live one.
+    expect(rows.get('deleted')!.name).toBe('Modes up the neck');
+    expect(rows.get('orphan')).toMatchObject({ name: 'gone-from-the-code', tags: [] });
+    expect(await after.folders.toArray()).toEqual([]);
     await after.delete();
   });
 });

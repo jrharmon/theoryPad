@@ -4,7 +4,7 @@ import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { Mix } from '@/domain/mix';
 import type { CountInBars } from '@/domain/phrase';
-import type { AxisPolicies } from '@/domain/variation';
+import type { AxisId, AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import type { FretTally } from '@/domain/progress';
 
@@ -72,16 +72,25 @@ export interface BackingCriteria {
 }
 
 /**
- * A configured instance of a definition. This is what appears in routines.
+ * An exercise: a configured instance of a definition — a *blueprint*, in the
+ * UI. This is what the library lists, what routines are built from, and what
+ * reps are logged against.
  *
- * It holds only what is *yours* — how the exercise is set up. What the exercise
- * *is* (name, tags, summary, which axes it varies) lives in code, on the
- * definition this points at, and is read through rather than copied. A copy
- * drifts: when the definition was renamed, every row kept the old name until it
- * was reset.
+ * The blueprint is what the exercise *is* (summary, which axes it varies, how
+ * it generates); the row is how it is set up, and it has its own name and tags
+ * because several exercises can come from one blueprint. Some settings can be
+ * locked: fixed for good, hidden wherever the exercise is used.
  */
 export interface Exercise extends Row {
+  /** The blueprint. Never renamed: it is persisted in the rep log forever. */
   definitionId: string;
+  /** Unique within its folder, trimmed and ignoring case. */
+  name: string;
+  /** Start as the blueprint's; the player's own after that. */
+  tags: string[];
+  /** Null is the top level. */
+  folderId: Uuid | null;
+  locked: ExerciseLocks;
   params: unknown;
   axisPolicies: AxisPolicies;
   /** Remembered values for axes set to `hold`. */
@@ -103,6 +112,20 @@ export interface Exercise extends Row {
   /** What the generated backing plays for it; absent is the definition's. */
   generatedBacking?: GeneratedBackingSettings;
   notes?: string;
+}
+
+/** What an exercise fixes for good. The values live in its own params and axis policies. */
+export interface ExerciseLocks {
+  /** Params keys. */
+  params: string[];
+  axes: AxisId[];
+}
+
+/** A folder of exercises. Nested to any depth; names are unique among siblings. */
+export interface Folder extends Row {
+  name: string;
+  /** Null is the top level. */
+  parentId: Uuid | null;
 }
 
 /**

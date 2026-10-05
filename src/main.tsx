@@ -8,6 +8,11 @@ import '@fontsource-variable/figtree';
 import '@/styles/index.css';
 
 import { router } from '@/app/router';
+import { setBlueprintCatalog } from '@/data';
+import { findExerciseDefinition } from '@/exercises/registry';
+
+// The data layer names upgraded exercises after their blueprints.
+setBlueprintCatalog(findExerciseDefinition);
 
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('#root not found');

@@ -19,8 +19,13 @@ afterEach(async () => {
 async function populated(now = () => 1_000) {
   const db = fresh();
   const repos = createRepositories(db, now);
+  const folder = await repos.folders.add({ name: 'Scales', parentId: null });
   const exercise = await repos.exercises.add({
     definitionId: 'modes-through-key',
+    name: 'Triplet modes',
+    tags: ['modes', 'mine'],
+    folderId: folder.id,
+    locked: { params: ['variant'], axes: ['rhythmPattern'] },
     params: { variant: 'plain' },
     axisPolicies: {},
     heldAxisValues: {},
@@ -74,8 +79,9 @@ describe('export and import', () => {
   it('exports every row, soft-deleted ones included', async () => {
     const { db } = await populated();
     const file = await exportData(db);
-    expect(file.formatVersion).toBe(1);
+    expect(file.formatVersion).toBe(2);
     expect(file.data.exercises).toHaveLength(2);
+    expect(file.data.folders).toHaveLength(1);
     expect(file.data.exercises.some((e) => e.deletedAt !== undefined)).toBe(true);
     expect(file.data.routines).toHaveLength(1);
     expect(file.data.reps).toHaveLength(3);
@@ -148,7 +154,40 @@ describe('export and import', () => {
 
   it('refuses a file that is not an export, saying why', () => {
     expect(() => parseExport({ hello: 'world' })).toThrow(/not a TheoryPad export/);
-    expect(() => parseExport({ formatVersion: 2 })).toThrow(/formatVersion/);
+    expect(() => parseExport({ formatVersion: 3 })).toThrow(/formatVersion/);
+  });
+
+  it('imports a v1 file, upgrading its exercises as the database upgrade does', async () => {
+    const { db, exercise } = await populated();
+    const v1 = JSON.parse(JSON.stringify(await exportData(db))) as {
+      formatVersion: number;
+      data: { exercises: Record<string, unknown>[]; folders?: unknown };
+    };
+    v1.formatVersion = 1;
+    delete v1.data.folders;
+    for (const row of v1.data.exercises) {
+      for (const key of ['name', 'tags', 'folderId', 'locked']) delete row[key];
+    }
+
+    const file = parseExport(v1, (id) =>
+      id === 'modes-through-key' ? { name: 'Modes up the neck', tags: ['modes'] } : undefined,
+    );
+    expect(file.formatVersion).toBe(2);
+    const target = fresh();
+    await applyImport(target, file, 'replace');
+
+    const back = await exportData(target);
+    expect(back.data.exercises.find((e) => e.id === exercise.id)).toMatchObject({
+      name: 'Modes up the neck',
+      tags: ['modes'],
+      folderId: null,
+      locked: { params: [], axes: [] },
+      tempo: { targetTempo: 70, maxTempo: 90 },
+    });
+    // And it goes out again as v2, exactly as it came in.
+    const again = fresh();
+    await applyImport(again, parseExport(JSON.parse(JSON.stringify(back))), 'replace');
+    expect((await exportData(again, back.exportedAt)).data).toEqual(back.data);
   });
 
   it('imports settings from before Appearance as following the system', async () => {

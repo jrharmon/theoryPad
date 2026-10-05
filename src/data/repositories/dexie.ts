@@ -4,6 +4,7 @@ import { applyRepToDay, dayKey, emptyDay, rollupDays } from '@/domain/progress';
 import { db, type TheoryPadDB } from '../db';
 import type {
   Exercise,
+  Folder,
   Rep,
   Routine,
   Session,
@@ -16,6 +17,7 @@ import { newId } from '../ids';
 import { applyRep, emptyStats, rebuildStats } from '../stats';
 import type {
   NewExercise,
+  NewFolder,
   NewRep,
   NewRoutine,
   NewSession,
@@ -70,6 +72,10 @@ export function createRepositories(
 
       async all() {
         return live(await database.exercises.toArray());
+      },
+
+      async withDeleted() {
+        return database.exercises.toArray();
       },
 
       async byDefinition(definitionId) {
@@ -286,6 +292,38 @@ export function createRepositories(
         const existing = await database.videos.get(id);
         if (!existing) return;
         await database.videos.put({ ...existing, deletedAt: stamp(), updatedAt: stamp() });
+      },
+    },
+
+    folders: {
+      async add(folder: NewFolder): Promise<Folder> {
+        const at = stamp();
+        const row: Folder = { ...folder, id: newId(), createdAt: at, updatedAt: at };
+        await database.folders.add(row);
+        return row;
+      },
+
+      async byId(id) {
+        const row = await database.folders.get(id);
+        return row?.deletedAt === undefined ? row : undefined;
+      },
+
+      async all() {
+        return live(await database.folders.toArray());
+      },
+
+      async update(id, changes) {
+        const existing = await database.folders.get(id);
+        if (!existing) throw new Error(`No folder ${id}`);
+        const row: Folder = { ...existing, ...changes, updatedAt: stamp() };
+        await database.folders.put(row);
+        return row;
+      },
+
+      async softDelete(id) {
+        const existing = await database.folders.get(id);
+        if (!existing) return;
+        await database.folders.put({ ...existing, deletedAt: stamp(), updatedAt: stamp() });
       },
     },
   };

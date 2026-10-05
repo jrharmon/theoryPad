@@ -4,6 +4,7 @@ import { rollupDays } from '@/domain/progress';
 import type {
   Exercise,
   ExerciseStats,
+  Folder,
   Rep,
   Routine,
   Session,
@@ -11,6 +12,7 @@ import type {
   Video,
 } from './entities';
 import { FIRST_RUN_VIDEOS } from './seed/videos';
+import { upgradeExercises, type BlueprintCatalog } from './upgrade';
 
 /**
  * The only place `dexie` is imported. Everything else goes through a
@@ -26,8 +28,13 @@ export class TheoryPadDB extends Dexie {
   settings!: Table<Settings, string>;
   practiceDays!: Table<PracticeDay, string>;
   videos!: Table<Video, string>;
+  folders!: Table<Folder, string>;
 
-  constructor(name = 'theorypad') {
+  /**
+   * @param catalog The blueprints, for the v7 upgrade's names and tags; the
+   *   one the app set at start-up if absent.
+   */
+  constructor(name = 'theorypad', catalog?: BlueprintCatalog) {
     super(name);
     this.version(1).stores({
       exercises: 'id, definitionId, updatedAt, deletedAt',
@@ -85,6 +92,15 @@ export class TheoryPadDB extends Dexie {
             row.audio = { ...row.audio, voice: 'guitar' };
           }),
       );
+    // Blueprints: an exercise gets its own name, tags, folder and locks, so
+    // several can come from one blueprint. Folders are few; read whole.
+    this.version(7)
+      .stores({ folders: 'id, updatedAt' })
+      .upgrade(async (transaction) => {
+        const exercises = transaction.table<Exercise>('exercises');
+        const rows = (await exercises.toArray()) as unknown as Record<string, unknown>[];
+        await exercises.bulkPut(upgradeExercises(rows, ...(catalog ? [catalog] : [])));
+      });
     this.on('populate', (transaction) => {
       void transaction.table<Video>('videos').bulkAdd([...FIRST_RUN_VIDEOS]);
     });
