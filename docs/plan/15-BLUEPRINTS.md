@@ -297,7 +297,7 @@ matter, no screenshot tests.
 Drag-and-drop ordering or moving; a Duplicate action; more starter exercises (add them over
 time as needed); collapsible side-panel groups; templates of routines.
 
-## Outcome (2026-10-06, at the gate)
+## Outcome (2026-10-06)
 
 All eight tasks built on `blueprints`, a commit each; `pnpm check` green (979 unit tests in 59
 files), all 72 E2E pass. Every screen was looked at in both themes as it was built.
@@ -333,3 +333,6 @@ STATUS.md's Blueprints section has the detail. Round 1: a skip's count-in starte
 beat and went unheard (fixed, old bug); locks on a highlighter chip; the picker's intro as wide
 as its list; a video track that wouldn't start for the player did not reproduce (open). Round
 2: a **Strings** axis on Modes up the neck, and **Stop cancels a track that hasn't sounded**.
+Round 3: the track that wouldn't start was the hidden info column — YouTube won't play an unseen
+video. A chosen track now keeps the column open and disables Hide Info, with a tooltip. Passed,
+merged and pushed.

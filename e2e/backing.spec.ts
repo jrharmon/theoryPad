@@ -150,6 +150,26 @@ test('a backing track takes the tempo over, and the metronome waits it out', asy
   await expect(page.getByTestId('backing-menu')).toContainText('A minor backing track');
 });
 
+test('a backing track opens a hidden Info column, and keeps it open while chosen', async ({
+  page,
+}) => {
+  // YouTube won't play a video that can't be seen.
+  await inAMinor(page, 'Modes up the neck');
+  await page.getByTestId('info-column-toggle').click();
+  await expect(page.getByTestId('info-column-toggle')).toHaveText('Show Info');
+
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /A minor backing track/ }).click();
+  await expect(page.getByTestId('backing-panel')).toBeVisible();
+  await expect(page.getByTestId('info-column-toggle')).toBeDisabled();
+
+  // Without the track, the column is as Hide Info left it.
+  await page.getByTestId('backing-menu').click();
+  await page.getByRole('option', { name: /^None/ }).click();
+  await expect(page.getByTestId('backing-panel')).toHaveCount(0);
+  await expect(page.getByTestId('info-column-toggle')).toHaveText('Show Info');
+});
+
 test('a backing track plays at its fader and Master together', async ({ page }) => {
   await page.goto('/#/settings');
   // Off is the bottom step; -6 and -6 are a quarter of YouTube's full volume.

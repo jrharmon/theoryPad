@@ -2,26 +2,39 @@ import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Kicker } from '@/components/ui/kicker';
 import { useSettings } from '@/store/settings';
+import { useInfoColumnShown, useTrackHoldsColumn } from './usePracticeBody';
 
 /**
  * Hide the whole right-hand column — the neck, the circle, whatever is
  * playing — and give the tab the width. Kept app-wide, like the panels' own
- * minimize buttons.
+ * minimize buttons. Not while a backing track is chosen: its video must be
+ * seen to play.
  */
 export function InfoColumnToggle() {
   const ui = useSettings((s) => s.settings.ui);
   const save = useSettings((s) => s.save);
-  const shown = ui.showInfoColumn !== false;
+  const shown = useInfoColumnShown();
+  const held = useTrackHoldsColumn();
   return (
-    <Button
-      variant="secondary"
-      size="xs"
-      aria-pressed={shown}
-      onClick={() => void save({ ui: { ...ui, showInfoColumn: !shown } })}
-      data-testid="info-column-toggle"
+    // The title sits on a wrapper: a disabled button takes no pointer events.
+    <span
+      title={
+        held
+          ? 'A backing track’s video has to be visible to play, so Info stays open while one is chosen.'
+          : undefined
+      }
     >
-      {shown ? 'Hide Info' : 'Show Info'}
-    </Button>
+      <Button
+        variant="secondary"
+        size="xs"
+        aria-pressed={shown}
+        disabled={held}
+        onClick={() => void save({ ui: { ...ui, showInfoColumn: !shown } })}
+        data-testid="info-column-toggle"
+      >
+        {shown ? 'Hide Info' : 'Show Info'}
+      </Button>
+    </span>
   );
 }
 

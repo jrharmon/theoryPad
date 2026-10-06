@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { referenceVideos } from '@/data';
 import { usePractice } from '@/store/practice';
+import { useSettings } from '@/store/settings';
 import { useVideos } from '@/store/videos';
 
 /** Where the clock is, as the screen reads it each frame. */
@@ -84,4 +85,23 @@ export function useVideoColumn(): boolean {
     exerciseId ? referenceVideos(s.videos, exerciseId).length : 0,
   );
   return hasTrack || lessons > 0;
+}
+
+/**
+ * A backing track is chosen, so its video is in the right-hand column.
+ * YouTube won't play a video that can't be seen, so the column can't be hidden
+ * while one is.
+ */
+export function useTrackHoldsColumn(): boolean {
+  return usePractice((s) => s.backing.resolved.kind === 'video');
+}
+
+/**
+ * Whether the right-hand column shows: as Hide Info left it, or open while a
+ * backing track needs it. The setting itself is untouched, so the column goes
+ * away again with the track.
+ */
+export function useInfoColumnShown(): boolean {
+  const setting = useSettings((s) => s.settings.ui.showInfoColumn !== false);
+  return useTrackHoldsColumn() || setting;
 }

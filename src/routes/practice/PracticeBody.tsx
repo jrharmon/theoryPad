@@ -11,7 +11,7 @@ import { CircleSheet } from './CircleSheet';
 import { InfoColumnToggle, SidePanel } from './SidePanel';
 import { NeckWindow } from './NeckWindow';
 import { ImprovBody } from './ImprovBody';
-import { usePhraseTick, useVideoColumn } from './usePracticeBody';
+import { useInfoColumnShown, usePhraseTick, useVideoColumn } from './usePracticeBody';
 import { TheoryBody } from './TheoryBody';
 import { clampZoom, nudgeTabZoom } from './tabZoom';
 import { LoadingState } from '@/components/ui/page-header';
@@ -91,13 +91,14 @@ function PlayedBody({
   const hasNeck = instance.neck.notes.length > 0;
   const showNeck = hasNeck && ui.showNeck;
   const videoColumn = useVideoColumn();
+  const infoShown = useInfoColumnShown();
   const keyMode = usePractice((s) => s.snapshot?.keyMode);
   const hasCircle = keyMode !== undefined;
   const showCircle = ui.showCircle !== false && hasCircle;
   // The column is there for the panels themselves; minimized, they shrink to
   // their titles rather than vanishing, so they can be brought back from here.
   // Hide Info puts the whole column away and gives the tab the width.
-  const showSide = (hasNeck || videoColumn || hasCircle) && ui.showInfoColumn !== false;
+  const showSide = (hasNeck || videoColumn || hasCircle) && infoShown;
   const wide = videoColumn || showNeck || showCircle;
   // One size for every exercise. The tab works out how many bars fit.
   const zoom = clampZoom(ui.tabZoom);

@@ -16,7 +16,7 @@ import { useSettings } from '@/store/settings';
 import { BackingPanel, ReferencePanel } from './BackingPanel';
 import { CircleSheet } from './CircleSheet';
 import { InfoColumnToggle } from './SidePanel';
-import { usePhraseTick, useVideoColumn } from './usePracticeBody';
+import { useInfoColumnShown, usePhraseTick, useVideoColumn } from './usePracticeBody';
 
 /** Where each phrase begins, from the labels on its first bar. */
 function phraseShape(instance: PlayedInstance) {
@@ -67,7 +67,7 @@ export function ImprovBody({
   const plan = usePractice((s) => s.generated);
   const videoColumn = useVideoColumn();
   const showCircle = useSettings((s) => s.settings.ui.showCircle !== false);
-  const side = useSettings((s) => s.settings.ui.showInfoColumn !== false);
+  const side = useInfoColumnShown();
   if (!snapshot) return null;
 
   const { count, length } = phraseShape(instance);

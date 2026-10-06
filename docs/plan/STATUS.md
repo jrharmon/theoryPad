@@ -1,8 +1,7 @@
 # Status — start here
 
-**Last updated:** 2026-10-06. **The Blueprints run is built and waiting at its gate** on branch
-`blueprints` (not merged, not pushed; see "Blueprints" below and doc 15). **The milestone plan
-is finished; the core app is built.**
+**Last updated:** 2026-10-06. **The Blueprints run is merged and pushed** (see "Blueprints"
+below and doc 15). **The milestone plan is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
@@ -10,7 +9,7 @@ bring up what fits from that file. The latest run is Blueprints (see "Blueprints
 its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
 (backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
 write-up before touching backing playback again** — it corrected the advert signal that run
-was planned around. `main` is in sync with origin; `blueprints` sits on top of it, awaiting review. Written as a hand-off:
+was planned around. `main` is the only branch, local and origin in sync. Written as a hand-off:
 a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it
 points to.
 
@@ -44,11 +43,12 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
 | Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
-| Blueprints — named exercises from blueprints, locks, folders | 🟡 built on `blueprints`, at the gate 2026-10-06 — spec, decisions 1–22 and outcome in `docs/plan/15-BLUEPRINTS.md` |
+| Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
-M5 was deliberately built before M4. Everything but Blueprints is on `main`, and every merged
-branch has been deleted. On `blueprints`: 985 unit tests in 59 files, 72 E2E, `pnpm check` green.
+M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
+deleted — `main` is the only branch, local and origin in sync. 985 unit tests in 59 files,
+73 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -195,12 +195,12 @@ branch has been deleted. On `blueprints`: 985 unit tests in 59 files, 72 E2E, `p
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Blueprints — at the gate (2026-10-06)
+## Blueprints — merged (2026-10-06)
 
 Spec, decisions 1–22 and every task's outcome: `docs/plan/15-BLUEPRINTS.md`. Built on
-`blueprints` (one commit for the spec, one for the agreed decisions, one per task), **not merged
-or pushed** — the player reviews first. `pnpm check` green (985 unit tests in 59 files), all
-72 E2E pass, after two gate rounds.
+`blueprints` (one commit for the spec, one for the agreed decisions, one per task, then the gate
+rounds), passed after three gate rounds, fast-forwarded into `main` and pushed; the branch is
+deleted. `pnpm check` green (985 unit tests in 59 files), all 73 E2E pass.
 
 - **What changed for the player.** "The exercise" is now a **blueprint** (code keeps
   `definition`); the library holds **exercises** made from them, each with its own name, tags,
@@ -227,10 +227,7 @@ or pushed** — the player reviews first. `pnpm check` green (985 unit tests in 
   the next beat (`ExerciseRunner.startPass`).
 - **Locks** sit on a highlighter chip (`bg-highlight`); a yellow stroke vanished on white.
 - **The blueprint picker's intro** runs as wide as its list (`PageHeader introClassName`).
-- **A video track "not playing"** didn't reproduce: in the in-app browser the first-run track
-  (starting 216 s in) took ~5 s to seek and buffer, and both an unclicked count-in under a track
-  and Pause doing nothing while it starts are long-standing design. Asked the player for the
-  browser and whether it eventually starts — **still open**, see below.
+- **A video track "not playing"** didn't reproduce here; the player found the cause (round 3).
 
 **Gate round 2** — both built as recommended:
 - **Strings** axis on Modes up the neck (`stringCount`: All, 2 … strings − 1; Fixed All by
@@ -243,7 +240,13 @@ or pushed** — the player reviews first. `pnpm check` green (985 unit tests in 
   token): the starting transport now has Stop beside the Starting button, both cancel, and a
   start that resolves late begins nothing. Checked against real YouTube.
 
-**For the player to judge at the gate:**
+**Gate round 3** — the track that wouldn't play: **the player had Hide Info on**, and YouTube
+won't play a video that can't be seen. While a backing track is chosen the info column now shows
+whatever the setting says, and Hide Info is disabled with a tooltip saying why
+(`useInfoColumnShown` / `useTrackHoldsColumn` in `usePracticeBody.ts`). The setting itself is
+untouched, so the column goes away again with the track. One E2E in `backing.spec.ts`.
+
+**Asked at the gate** (he passed it after round 3):
 - Making a variation mid-practice (New exercise → Modes up the neck → type a name → lock
   rhythm): quick enough? The name comes up selected, to type over.
 - Locked rows on the exercise page (solid lock, muted label), and the calmer practice dialog.
@@ -252,8 +255,6 @@ or pushed** — the player reviews first. `pnpm check` green (985 unit tests in 
   SUBDIVISIONS"), and does the current exercise land in view?
 - A routine mixing the routine's mode with an item locked to another: sound and look,
   including the drone, generated backing, and a track sitting out that item.
-- The video track that wouldn't start for him: which browser, does it start after 10–15 s,
-  any message under the video, and the same on the live site? Stop now gets out of it.
 - Strings: 3 strings from string 6, Arpeggio then scale, Up then down.
 
 ## Turnaround — merged (2026-09-28)
