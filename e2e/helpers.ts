@@ -118,3 +118,20 @@ export async function savedSettings(
     })
     .toBe(true);
 }
+
+/**
+ * Add an exercise to the routine open in the builder. Its item editor opens
+ * straight away; Done keeps the copy as it came.
+ */
+export async function addToRoutine(page: Page, exercise: string | RegExp): Promise<void> {
+  await page.getByRole('button', { name: 'Add exercise' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', {
+      name: typeof exercise === 'string' ? new RegExp(exercise) : exercise,
+    })
+    .first()
+    .click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+}

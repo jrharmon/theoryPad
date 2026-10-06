@@ -105,6 +105,13 @@ Sizes, where known: S, M, L.
 - **Named variation presets** ("Stay put" holds everything but rhythm, "Anything goes" rolls
   everything). A thin layer over the per-axis policies (doc 02).
 - **A full circle-of-fifths wheel**, beside the strip the theory feedback uses (doc 05).
+- **A routine item's own backing** (S–M, raised at the Blueprints run, 2026-10-06): an item
+  that plays its own key or mode could choose its own drone, generated backing or track,
+  instead of playing bare while the routine's track sits out. Today a routine has one backing,
+  and an item in another key drops a track for its length (doc 15, decision 22).
+- **Library niceties left out of Blueprints** (doc 15): drag-and-drop ordering and moving,
+  collapsible side-panel groups, more starter exercises (added as needed), templates of
+  routines.
 
 ## The app itself
 
@@ -141,3 +148,6 @@ Kept so they aren't proposed again. Reopen only if the player raises them.
   research is recorded under task 3 in STATUS.md's backing section.
 - **A pentatonic CAGED system**: the pentatonic boxes are their own thing (doc 14).
 - **Drums inside the generated backing**: that's the metronome's job (doc 13, decision 1).
+- **Duplicate exercise, and Reset to defaults**: the player found both more confusing than
+  useful when planning Blueprints (doc 15, decision 3). Reset was removed; New exercise from
+  the blueprint is the clean start.

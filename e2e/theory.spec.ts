@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { answerSet, open, storedReps } from './helpers';
+import { addToRoutine, answerSet, open, storedReps } from './helpers';
 
 test('a circle-of-fifths set is answered from the keyboard and scored', async ({ page }) => {
   await open(page, 'Circle of fifths');
@@ -67,14 +67,7 @@ test('a routine moves on from a theory set to the next exercise', async ({ page 
   await page.getByRole('link', { name: 'Modes up the neck', exact: true }).waitFor();
   await page.getByRole('link', { name: 'Home' }).click();
   await page.getByRole('button', { name: 'New routine' }).click();
-  for (const name of ['Circle of fifths', 'Modes up the neck']) {
-    await page.getByRole('button', { name: 'Add exercise' }).click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: new RegExp(name) })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-  }
+  for (const name of ['Circle of fifths', 'Modes up the neck']) await addToRoutine(page, name);
   await page.getByRole('link', { name: 'Start' }).click();
   await page.getByTestId('play').click();
 

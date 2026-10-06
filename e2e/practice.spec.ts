@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readStore, savedSettings, storedReps, writeRow } from './helpers';
+import { readStore, savedSettings, storedReps } from './helpers';
 
 /** The exercise these tests drive, by its display name. The library seeds others too. */
 const EXERCISE = 'Modes up the neck';
@@ -20,16 +20,13 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('link', { name: EXERCISE })).toBeVisible();
 });
 
-test('clears up identical unplayed copies of one exercise', async ({ page }) => {
-  // An earlier seeding race left some databases holding two identical rows.
-  // Two instances of a definition are a fine thing to want, but two with the
-  // same configuration and no history cannot be told apart, because there is
-  // nothing to tell apart.
-  const [first] = await readStore<{ id: string }>(page, 'exercises');
-  await writeRow(page, 'exercises', { ...first, id: 'duplicate-row', createdAt: Date.now() });
-
+test('seeds starters on the first load only: a deleted one stays deleted', async ({ page }) => {
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Interval sequences' })).toBeVisible();
+  await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(0);
 });
 
 test('seeds the library exactly once, however many screens ask for it', async ({ page }) => {
@@ -40,16 +37,17 @@ test('seeds the library exactly once, however many screens ask for it', async ({
   await expect(page.getByRole('link', { name: EXERCISE })).toHaveCount(1);
 });
 
-test('the library row shows how an exercise is configured', async ({ page }) => {
-  // Names come from definitions, so configuration is what tells two instances
-  // of one definition apart.
+test('the library row says what an exercise locks', async ({ page }) => {
+  // Nothing locked: the blueprint's summary. A locked key: the key.
+  await expect(row(page).getByText('climbing the neck')).toBeVisible();
   await page.getByRole('link', { name: EXERCISE }).click();
   await page.getByRole('combobox', { name: 'Key policy' }).click();
   await page.getByRole('option', { name: 'Fixed' }).click();
   await expect(page.getByRole('combobox', { name: 'Key value' })).toBeVisible();
+  await page.getByRole('button', { name: 'Lock Key' }).click();
 
   await page.getByRole('link', { name: 'Exercises' }).click();
-  await expect(row(page).getByText('Key: C')).toBeVisible();
+  await expect(row(page).getByText('C', { exact: true })).toBeVisible();
 });
 
 test('deleting removes an exercise from the library', async ({ page }) => {
@@ -239,7 +237,8 @@ test('settings can be changed without leaving the exercise', async ({ page }) =>
   await expect(page.getByTestId('axis-key')).toContainText(/G [A-Z]/);
   // Saved to the exercise, not just this run.
   await page.keyboard.press('Escape');
-  await expect(row(page).getByText('Key: G')).toBeVisible();
+  await page.getByRole('link', { name: EXERCISE }).click();
+  await expect(page.getByRole('combobox', { name: 'Key value' })).toHaveText('G');
 });
 
 test('moving the tempo while practising never changes the target', async ({ page }) => {

@@ -112,6 +112,12 @@ These refine or replace the decisions above; where they differ, these win.
 21. **New exercise in Favorites** creates it at the top level, not favorited (favoriting is
     always by hand). New folder is hidden there.
 
+22. **A routine's video track over an item in its own key or mode** (asked mid-run, option A):
+    the track is dropped for that item, which plays its notes and metronome, and the next item
+    that fits gets the track fresh from bar 1, counted in, as after a theory set. Resuming
+    mid-recording would mean re-aligning the clock to the video and was not built. The player
+    noted this leaves room for an item's own backing later (FUTURE-WORK).
+
 Defaults taken without asking: the second line is values only ("Triplets · Dorian"), with the
 label kept for toggles and numbers, "Triplets or 16ths" for a locked subset, "Any key" for a
 locked roll. "from ⟨blueprint⟩" shows in the editor header, the practice header and settings
@@ -290,3 +296,33 @@ matter, no screenshot tests.
 
 Drag-and-drop ordering or moving; a Duplicate action; more starter exercises (add them over
 time as needed); collapsible side-panel groups; templates of routines.
+
+## Outcome (2026-10-06, at the gate)
+
+All eight tasks built on `blueprints`, a commit each; `pnpm check` green (979 unit tests in 59
+files), all 72 E2E pass. Every screen was looked at in both themes as it was built.
+
+- **1 Data.** Dexie v7 (`folders`; every exercise upgraded by `upgradeExercises` in
+  `src/data/upgrade.ts`, shared with the v1 import). The data layer is told the blueprints at
+  start-up (`setBlueprintCatalog` in `main.tsx`) rather than importing them. Export v2.
+  Starters only into a table with no rows at all; `findRedundantExercises` and `dedupe.ts` gone.
+- **2 Helpers.** `src/exercises/locks.ts` and `src/domain/library/` (names, folders, the grouped
+  list). `overridesSession(axis, policies)` takes no locks: it runs on the effective item, where
+  locks are already applied. Added for later tasks: `withoutLocked` (an item editor's save keeps
+  the item's own value under a lock) and `withSessionChoice` (scale and mode as a pair).
+- **3 Names.** As specified; "(deleted)" after a deleted exercise's name in the report, the
+  routine screens and the builder.
+- **4 Editor.** Locked rows: a solid lock (heavier stroke) and a muted label; open locks are
+  faint. The first look had locked and open icons too alike at 12px.
+- **5 New exercise.** The editor opens with the name selected, to type over (not in the spec;
+  it makes "mid-practice" quicker). Back from the editor skips the picker.
+- **6 Folders.** Folder rows' menu: Rename, Delete (with a confirm that counts what goes).
+  Practice from a library row tells the side panel which copy to show (its folder's, or
+  Favorites' from the Favorites view). **Found by looking:** the side panel ran below the
+  window at the top of the page, so its last rows sat behind the transport and could never
+  be scrolled into view; it is now ~100px shorter and ends above the transport.
+- **7 Routines.** As specified, plus decisions 15–17 and 22. Two scenario tests over FakeClock:
+  a Lydian-locked item between two in the routine's mode (drone follows; reps against the
+  exercise), and a track dropped for it and restarted after.
+- **8 Close.** `e2e/blueprints.spec.ts`; the Reset and duplicate-cleanup E2E removed; routine
+  E2E add items through `addToRoutine` (the editor now opens on add).

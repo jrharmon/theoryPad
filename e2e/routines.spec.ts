@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { storedReps } from './helpers';
+import { addToRoutine, storedReps } from './helpers';
 
 /** Reps as they were written to IndexedDB. */
 
@@ -13,14 +13,7 @@ async function newRoutine(page: Page, name: string, exercises: string[]) {
   const field = page.getByLabel('Routine name');
   await field.fill(name);
   await field.press('Enter');
-  for (const exercise of exercises) {
-    await page.getByRole('button', { name: 'Add exercise' }).click();
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: new RegExp(exercise) })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-  }
+  for (const exercise of exercises) await addToRoutine(page, exercise);
   await expect(page.getByTestId('routine-item')).toHaveCount(exercises.length);
 }
 

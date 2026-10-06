@@ -1,14 +1,16 @@
 # Status — start here
 
-**Last updated:** 2026-09-27. **The milestone plan is finished; the core app is built.**
+**Last updated:** 2026-10-06. **The Blueprints run is built and waiting at its gate** on branch
+`blueprints` (not merged, not pushed; see "Blueprints" below and doc 15). **The milestone plan
+is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
-bring up what fits from that file. The latest run is the mixer (see "Mixer"); every run has
+bring up what fits from that file. The latest run is Blueprints (see "Blueprints"); every run has
 its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
 (backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
 write-up before touching backing playback again** — it corrected the advert signal that run
-was planned around. `main` is the only branch, local and origin in sync. Written as a hand-off:
+was planned around. `main` is in sync with origin; `blueprints` sits on top of it, awaiting review. Written as a hand-off:
 a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it
 points to.
 
@@ -42,11 +44,11 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Mixer — Master, notes, metronome, generated, video | ✅ merged, pushed 2026-09-27 — see below |
 | Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
+| Blueprints — named exercises from blueprints, locks, folders | 🟡 built on `blueprints`, at the gate 2026-10-06 — spec, decisions 1–22 and outcome in `docs/plan/15-BLUEPRINTS.md` |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
-M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 735 unit tests in 55 files,
-69 E2E, `pnpm check` green.
+M5 was deliberately built before M4. Everything but Blueprints is on `main`, and every merged
+branch has been deleted. On `blueprints`: 979 unit tests in 59 files, 72 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -76,13 +78,14 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
 | Where | What |
 | --- | --- |
 | `src/domain/` | Pure logic. `music` (tonal wrapper), `instrument` (shapes, fretboard), `phrase` (ticks, builder), `variation` (axes, policies, roller), `theory` (questions, distractors), `neck`, `tempo`, `time` (Clock, FakeClock). |
-| `src/exercises/` | Definitions, one directory each, registered in `registry.ts`; `shared/` generators; `params.ts` (a Zod schema → a settings form); `runner/` — `ExerciseRunner` and `RoutineRunner`. |
+| `src/exercises/` | Definitions — **blueprints** in the UI — one directory each, registered in `registry.ts`; `shared/` generators; `params.ts` (a Zod schema → a settings form); `locks.ts` (what an exercise locks: `effectiveItem`, `visibleParams`/`visibleAxes`, `overridesSession`, `describeLocks`/`secondLine`, `withoutLocked`, `withSessionChoice`); `runner/` — `ExerciseRunner` and `RoutineRunner`. |
+| `src/domain/library/` | The library, pure: names unique trimmed and case-blind (`freeName` makes "Name 2" / "Name - 2"), `normalizeTag`, the folder tree (natural sort, paths, counts, `deletionOf`, `planMove`, `folderChoices`), and `listGroups` — Favorites, top level, folders depth-first — for the side panel and the routine picker. |
 | `src/domain/progress/` | Everything progress, pure: local day keys, the per-day rollup, heatmap, streak, time by day, exercise log, report summary, fret tally and neck heat, key × mode grid, answer weights. |
-| `src/data/` | Dexie (schema v6: exercises, routines, sessions, reps, exerciseStats, practiceDays, settings), repositories (Dexie, tested over `fake-indexeddb`; reached through `repos()`), stats, `transfer.ts` (export/import). |
+| `src/data/` | Dexie (schema v7: exercises, folders, routines, sessions, reps, exerciseStats, practiceDays, settings, videos), repositories (Dexie, tested over `fake-indexeddb`; reached through `repos()`; `exercises.withDeleted()` for names in the log), stats, `transfer.ts` (export v2, imports v1), `upgrade.ts` (pre-blueprint exercise rows → named, tagged, top level, unlocked; shared by v7 and the v1 import; told the blueprints by `setBlueprintCatalog` in `main.tsx`). |
 | `src/session/` | Framework-free `PracticeSession` (`ExerciseSession`, `RoutineSession`): runner, sound routing, saves; `BackingController` (choice → source, track/runner tempo hand-off). Injected `AudioPort` + repositories; scenario-tested over `FakeClock` and `fake-indexeddb`. Imports audio as types only (lint-enforced). |
-| `src/store/` | Zustand: `practice` (a thin adapter holding one `PracticeSession` and mirroring its state), `exercises`, `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state), `sounds` (the engine's voice: choose, status, hear it). |
-| `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (library, config), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
-| `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor), `ui` (shadcn incl. popover and sheet, + our own). |
+| `src/store/` | Zustand: `practice` (a thin adapter holding one `PracticeSession` and mirroring its state), `exercises` (live and deleted; `useExerciseLookup`, `exerciseLabel`; first-load-only seeding), `folders` (create, rename, delete with contents, move), `routines`, `settings`, `progress` (days, today, last key/mode), `report`, `keyModeView` (the practice screen's reference open state), `sounds` (the engine's voice: choose, status, hear it). |
+| `src/routes/` | Screens: `home` (practice strip + routines), `routines` (builder), `exercises` (the folder browser `ExerciseLibrary`, the blueprint picker, the exercise editor `ExerciseDetail`, `LibraryDialogs`), `practice` (exercise, routine, theory, settings dialog), `report` (page, model, export), `fretboard` (explorer, key × mode grid), `settings`, `dev/gallery`. |
+| `src/components/` | `music` (Fretboard with a heat layer, TabStaff, KeyModeView, KeyModeTrigger), `charts` (HeatmapGrid, DayBarChart), `theory`, `variation` (AxisPolicyEditor — with lock toggles on the exercise page, Routine's/Fixed for key, scale and mode in an item editor), `library` (LockToggle, TagsEditor, FolderPicker, FromBlueprint), `ui` (shadcn incl. popover and sheet, + our own). |
 | `src/styles/` | `theme.css`: every token, light values in `@theme`, dark ones under `:root[data-theme="dark"]`, and the shadcn mapping. `index.css`: base type, the `kicker` / `face-title` / `num` / `bg-graph` / `sheet` / `highlight` utilities, and the unlayered `data-slot` overrides. |
 | `src/domain/drums/` | Pure drum patterns for the metronome: Simple (generated, any signature), and the 4/4 beats written as drum tab in `beats.ts` — Upbeat, Swing, Heavy — parsed by `tab.ts`; `patternsFor(timeSignature)`. `src/audio/DrumKit.ts` plays them from the sample kit. |
 | `src/domain/mix/` | The mixer's channels and levels, a track's YouTube volume (`videoVolume`), the Settings preview loop's material. `src/audio/Mixer.ts` is the buses. |
@@ -102,7 +105,9 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   every pass is logged as it ends, and leaving mid-pass logs it as abandoned. No End, no Skip.
 - **Routines:** each item is its **own copy** of an exercise's settings. Passes play back to
   back; the next item counts itself in on the same clock, at its own tempo and with its own
-  count-in, and that is the only gap. Key and mode are the routine's. Passes are logged against the source exercise.
+  count-in, and that is the only gap. Key, scale and mode are the routine's, unless an item
+  fixes its own (Fixed in its editor, or locked Fixed on the exercise; scale and mode as a pair).
+  Locked settings are read through from the exercise. Passes are logged against the source exercise.
   Nothing ever writes `maxTempo`.
 - **Theory:** a set of questions is a pass, with no clock. Each pass is a fresh set on the same
   key. A right answer moves on after a beat; a wrong one waits with the correction. Tables are
@@ -148,12 +153,15 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   progressions, and the mode prose. Also linked from What varies and the routine builder once a
   key and mode are both fixed or held.
 - **Routine builder**: name, key/mode policies, items (passes, Edit, reorder, remove), and an
-  estimated length.
+  estimated length. Adding an exercise (picker grouped by folder) opens its item editor; an
+  item playing its own key or mode says so ("Own mode: Lydian").
 - **Running a routine**: opens paused on item 1 (no overview since round 7), then hands-off
   play; Re-roll (the current item); Skip (or S); "Stay on this"; a summary. Items are edited
   in the routine builder.
-- **Exercises** (library with favorites and tag filter; config page with generated settings and
-  What varies):
+- **Exercises**: a folder browser (breadcrumb, folders then exercises, Favorites as a folder,
+  search and tag filter flatten it, Select → Move to…), **New exercise** from a blueprint, and
+  the exercise editor (name, tags, folder, favorite, locks on every setting). The starters, one
+  per blueprint:
   - *Modes up the neck* — plain, arpeggio-then-scale, pause-on-root
   - *Interval sequences*
   - *One note per string* — note names on the tab, no neck
@@ -186,6 +194,40 @@ deleted — `main` is the only branch, local and origin in sync. 735 unit tests 
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Blueprints — at the gate (2026-10-06)
+
+Spec, decisions 1–22 and every task's outcome: `docs/plan/15-BLUEPRINTS.md`. Built on
+`blueprints` (one commit for the spec, one for the agreed decisions, one per task), **not merged
+or pushed** — the player reviews first. `pnpm check` green (979 unit tests in 59 files), all
+72 E2E pass.
+
+- **What changed for the player.** "The exercise" is now a **blueprint** (code keeps
+  `definition`); the library holds **exercises** made from them, each with its own name, tags,
+  folder, tempo and log. A setting can be **locked** on the exercise page: hidden from the
+  practice dialog and a routine's item editor. Reset to defaults is gone.
+- **Folders** nest; deleting one deletes its contents (soft, with a confirm). Moves rename a
+  clash with " - 2"; a new exercise from a blueprint whose name is taken gets "Name 2".
+- **Seeding** happens only into an exercises table with no rows at all, deleted included. A
+  deleted starter stays deleted; a blueprint added later gets no exercise in an existing
+  database.
+- **Routines**: items take the routine's key/scale/mode unless they fix their own. A routine's
+  video track sits out an item in another key (notes and metronome play) and comes back fresh
+  from bar 1 on the next item that fits — like after a theory set (decision 22).
+- **Side panel**: Favorites, the top level (under a hairline), then each folder under its full
+  path, right-aligned and clipped on the left. A favorite shows twice, both marked current; the
+  copy that was clicked (link state `listGroup`) is scrolled into view only if it's out of view.
+  The panel is now ~100px shorter, so it ends above the transport with the page at the top.
+
+**For the player to judge at the gate:**
+- Making a variation mid-practice (New exercise → Modes up the neck → type a name → lock
+  rhythm): quick enough? The name comes up selected, to type over.
+- Locked rows on the exercise page (solid lock, muted label), and the calmer practice dialog.
+- The tags editor shows every known tag as a pill — useful, or a wall?
+- The side panel three folders deep: does the left-clipped path read well ("…CK › RHYTHMS AND
+  SUBDIVISIONS"), and does the current exercise land in view?
+- A routine mixing the routine's mode with an item locked to another: sound and look,
+  including the drone, generated backing, and a track sitting out that item.
 
 ## Turnaround — merged (2026-09-28)
 
@@ -1051,6 +1093,8 @@ These need a guitar:
 
 ## Decisions, newest first
 
+**Blueprints (2026-10-04/06)** — doc 15, decisions 1–22, has them all.
+
 **Sounds run (2026-09-22/23)** — doc 12's Outcome sections have the detail
 - Guitar samples every semitone; piano and bass every minor third. Steel acoustic guitar and
   acoustic bass over the electric ones. mp3 for everything.
@@ -1158,7 +1202,7 @@ These need a guitar:
 - No interstitial before an exercise.
 - The transport is frozen to the bottom of the screen.
 - The metronome is a 2 kHz click.
-- Names and tags are edited in code, not the UI.
+- Names and tags are edited in code, not the UI. (Superseded by Blueprints: an exercise's own.)
 
 ## Checking UI
 
