@@ -294,19 +294,30 @@ export class BackingController {
     onAdvert: () => this.set({ advert: true }),
   };
 
+  /** Bumped by each start and by a cancel, so a start that settles late knows it was let go. */
+  private startToken = 0;
+
   /**
    * Start the backing ahead of the clock, settling once it sounds. A track
    * that will not start is dropped, and says so, and the notes play instead.
+   * False if the start was cancelled — the caller begins nothing.
    */
-  async start(countInTicks: number): Promise<void> {
+  async start(countInTicks: number): Promise<boolean> {
     const { source, starting } = this.current;
-    if (!source || starting) return;
+    if (!source || starting) return true;
+    const token = ++this.startToken;
     this.set({ starting: true });
     try {
       // The play goes out before this awaits — inside the click, if there was one.
       await source.start(countInTicks, this.whileStarting);
+      if (token !== this.startToken) {
+        // Let go while it started: it may have got going anyway.
+        source.stop();
+        return false;
+      }
       this.set({ starting: false, started: true, needsClick: false });
     } catch (e) {
+      if (token !== this.startToken) return false;
       source.dispose();
       this.set({
         source: null,
@@ -319,6 +330,20 @@ export class BackingController {
         advert: false,
       });
     }
+    return true;
+  }
+
+  /**
+   * Give up on a track that has not sounded yet — Stop while it buffers, or
+   * while a browser holds it back. It is paused where it is, and whoever was
+   * waiting on it is told not to begin. True if there was a start to cancel.
+   */
+  cancelStart(): boolean {
+    if (!this.current.starting) return false;
+    this.startToken += 1;
+    this.current.source?.stop();
+    this.set({ starting: false, started: false, needsClick: false, advert: false });
+    return true;
   }
 
   /**
@@ -335,8 +360,8 @@ export class BackingController {
       return;
     }
     runner.pause();
-    await this.start(snapshot.countInRemaining + this.audio.clock.ticks);
-    runner.resume();
+    // Cancelled, the session has already stopped the item: leave it there.
+    if (await this.start(snapshot.countInRemaining + this.audio.clock.ticks)) runner.resume();
   }
 
   /** Silent and back to its start, ready for the next Play. */

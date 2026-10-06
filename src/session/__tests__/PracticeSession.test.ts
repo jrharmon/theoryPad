@@ -65,10 +65,20 @@ class FakeTrack implements TrackSource {
   load() {
     return Promise.resolve();
   }
+  /** Set to make starts hang until released: a video that will not sound. */
+  held: (() => void) | null = null;
+  hold = false;
   start(countInTicks: number) {
     if (this.failWith) return Promise.reject(this.failWith);
-    this.status = 'playing';
     this.startedFrom = countInTicks;
+    if (this.hold)
+      return new Promise<void>((resolve) => {
+        this.held = () => {
+          this.status = 'playing';
+          resolve();
+        };
+      });
+    this.status = 'playing';
     return Promise.resolve();
   }
   pause() {
@@ -620,6 +630,37 @@ describe('ExerciseSession', () => {
       deps,
     );
     expect(reopened.state.generated!.settings).toEqual(custom);
+  });
+
+  it('lets Stop go of a track that has not sounded, beginning nothing', async () => {
+    const inG = track();
+    const { deps, repos, audio } = world([inG]);
+    const exercise = await addExercise(repos, 'modes-through-key', {
+      axisPolicies: IN_G,
+      backing: { kind: 'video', id: inG.id },
+    });
+    const session = await ExerciseSession.open(exercise, deps);
+    const video = audio.tracks[0]!;
+    video.hold = true;
+
+    const playing = session.play();
+    await settle();
+    expect(session.state.backing.starting).toBe(true);
+
+    session.stop();
+    expect(session.state.backing.starting).toBe(false);
+    expect(video.status).toBe('stopped');
+    // It sounds after all, too late: nothing begins, and it is stopped again.
+    video.held!();
+    await playing;
+    expect(session.state.snapshot?.state).toBe('brief');
+    expect(video.status).toBe('stopped');
+
+    // And Play still works.
+    video.hold = false;
+    await session.play();
+    expect(session.state.snapshot?.state).toBe('count-in');
+    expect(video.status).toBe('playing');
   });
 
   it('drops a track that will not start, says why, and plays the notes instead', async () => {

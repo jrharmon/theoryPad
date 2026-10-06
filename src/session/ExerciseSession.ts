@@ -132,7 +132,7 @@ export class ExerciseSession extends PracticeSession {
     // AudioContext, and a backing track, which some browsers only let start
     // from the click itself.
     const starting = this.deps.audio.init();
-    let backingStart: Promise<void> | null = null;
+    let backingStart: Promise<boolean> | null = null;
     if (!this.backing.state.starting) {
       const phrase = this.exercise.currentPhrase;
       const { freeTime, countInBars } = this.exercise.snapshot;
@@ -144,12 +144,13 @@ export class ExerciseSession extends PracticeSession {
     if (!backingStart) return;
     // The clock follows the backing: YouTube takes a few hundred milliseconds
     // to get going, and nothing should count from the click.
-    await backingStart;
-    this.exercise.begin();
+    // Stopped before the track sounded: nothing begins.
+    if (await backingStart) this.exercise.begin();
   }
 
   stop(): void {
-    if (this.backing.state.starting) return;
+    // A track still starting is let go; nothing has begun to stop.
+    if (this.backing.cancelStart()) return;
     // Back to brief: the subscriber stops the click, the notes and the track.
     this.exercise.stop();
   }

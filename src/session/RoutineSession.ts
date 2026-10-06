@@ -166,7 +166,8 @@ export class RoutineSession extends PracticeSession {
   }
 
   stop(): void {
-    if (this.backing.state.starting) return;
+    // A track still starting is let go, and the item waits at the top.
+    this.backing.cancelStart();
     // Back to brief: the subscriber stops the click, the notes and the track.
     this.routine.stop();
   }
