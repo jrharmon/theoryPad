@@ -13,6 +13,7 @@ export const AXIS_IDS = [
   'rhythmPattern',
   'direction',
   'startString',
+  'stringCount',
   'shapeSystem',
   'intervalPattern',
   'intervalPairing',

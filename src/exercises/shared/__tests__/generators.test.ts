@@ -16,7 +16,14 @@ import { intervalFigures, intervalRun } from '../intervalRun';
 import { arpeggioRun, chordDegrees, shapeChord } from '../arpeggioRun';
 import { oneNotePerString, stringSweep, sweepLength } from '../oneNotePerString';
 import { horizontalRun, rotateCounts, shiftCounts } from '../horizontalRun';
-import { applyDirection, scaleRun, shapeFrom, startOnString } from '../scaleRun';
+import {
+  applyDirection,
+  onStrings,
+  scaleRun,
+  shapeFrom,
+  startOnString,
+  stringWindow,
+} from '../scaleRun';
 
 const C_MAJOR = { tonic: pitchClass('C'), scale: 'major' as const, mode: 'ionian' as const };
 const D_DORIAN = { tonic: pitchClass('D'), scale: 'major' as const, mode: 'dorian' as const };
@@ -409,5 +416,41 @@ describe('startOnString', () => {
   it('shortens a run one way, which has nowhere to come back from', () => {
     expect(strings(startOnString(run('ascending'), FOURTH, false))).toBe('4 3 2 1');
     expect(strings(startOnString(run('descending'), FOURTH, false))).toBe('4 5 6');
+  });
+});
+
+describe('stringWindow', () => {
+  const strings = (run: { string: number }[]) =>
+    run
+      .map((p) => stringLabel(STANDARD_GUITAR, p.string))
+      .filter((label, i, all) => label !== all[i - 1])
+      .join(' ');
+  const shape = scaleRun({
+    instrument: STANDARD_GUITAR,
+    keyMode: C_MAJOR,
+    direction: 'ascending',
+    minFret: 7,
+  });
+  const window = (start: number | null, count: number | null, firstUp: boolean) =>
+    stringWindow({ strings: 6, start, count, firstUp });
+
+  it('takes the count from the start string in the way the run first goes', () => {
+    // From the 6th string, 3 strings: up then down is 6 5 4 5 6.
+    const low = onStrings(shape, window(0, 3, true));
+    expect(strings(applyDirection(low, 'up-down'))).toBe('6 5 4 5 6');
+    // The outer string coming down is the top one.
+    expect(
+      strings(applyDirection(onStrings(shape, window(null, 3, false)), 'descending')),
+    ).toBe('1 2 3');
+    // From the 4th string going up, and coming down.
+    expect(window(2, 3, true)).toEqual({ first: 2, last: 4 });
+    expect(window(2, 3, false)).toEqual({ first: 2, last: 0 });
+  });
+
+  it('plays fewer strings at the edge of the neck, never moving the start, and every string for all', () => {
+    expect(window(4, 3, true)).toEqual({ first: 4, last: 5 });
+    expect(window(null, null, true)).toBeNull();
+    expect(window(0, 6, true)).toBeNull();
+    expect(onStrings(shape, null)).toEqual(shape);
   });
 });

@@ -118,6 +118,40 @@ export function startOnString<T extends { string: number }>(
   return [...cycle.slice(at), ...cycle.slice(0, at)];
 }
 
+/**
+ * The strings a run covers when it is limited to `count` of them: from the
+ * start string (null: the outer string it sets off from — the lowest going
+ * up, the highest coming down), on in the direction it first travels. Model
+ * indices, `first` where it starts. Clipped at the edge of the neck, so a run
+ * may get fewer strings than asked, but it always starts where it was told.
+ * Null for every string.
+ */
+export function stringWindow(options: {
+  strings: number;
+  start: number | null;
+  count: number | null;
+  firstUp: boolean;
+}): { first: number; last: number } | null {
+  const { strings, start, count, firstUp } = options;
+  if (count === null || count >= strings) return null;
+  const first = start ?? (firstUp ? 0 : strings - 1);
+  const last = firstUp
+    ? Math.min(strings - 1, first + count - 1)
+    : Math.max(0, first - count + 1);
+  return { first, last };
+}
+
+/** The notes of a shape on the strings of a window, in their order. */
+export function onStrings<T extends { string: number }>(
+  positions: readonly T[],
+  window: { first: number; last: number } | null,
+): T[] {
+  if (!window) return [...positions];
+  const low = Math.min(window.first, window.last);
+  const high = Math.max(window.first, window.last);
+  return positions.filter((p) => p.string >= low && p.string <= high);
+}
+
 /** A scale through one shape, in the given direction. */
 export function scaleRun(options: ScaleRunOptions): ScaleNotePosition[] {
   const { instrument, keyMode, direction, minFret, startDegree, notesPerString, strings } =

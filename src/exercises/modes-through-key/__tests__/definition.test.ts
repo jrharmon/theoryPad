@@ -6,8 +6,10 @@ import {
   isValidPosition,
   midiAt,
   pitchClassAt,
+  stringLabel,
 } from '@/domain/instrument';
 import { mulberry32, rollVariation, variationKeyMode } from '@/domain/variation';
+import type { AxisPolicies } from '@/domain/variation';
 import type { GenerationContext } from '../../types';
 import { estimateItemSeconds } from '../../estimate';
 import { modesThroughKey, type ModesThroughKeyParams } from '../definition';
@@ -22,13 +24,18 @@ const DEFAULTS: ModesThroughKeyParams = {
 function generate(
   seed = 12345,
   overrides: Partial<GenerationContext<ModesThroughKeyParams>> = {},
+  policies: AxisPolicies = {},
 ) {
   const instrument = overrides.instrument ?? STANDARD_GUITAR;
   const variation = rollVariation({
     axes: modesThroughKey.axes,
     seed,
     instrument,
-    policies: { mode: { mode: 'fixed', value: 'dorian' }, key: { mode: 'fixed', value: 'D' } },
+    policies: {
+      mode: { mode: 'fixed', value: 'dorian' },
+      key: { mode: 'fixed', value: 'D' },
+      ...policies,
+    },
   });
 
   const context: GenerationContext<ModesThroughKeyParams> = {
@@ -161,6 +168,43 @@ describe('modes-through-key', () => {
     );
     expect(seconds).toBeGreaterThan(30);
     expect(seconds).toBeLessThan(400);
+  });
+
+  describe('fewer strings', () => {
+    /** Each shape's strings, as the tab numbers them, each once per visit. */
+    const shapes = (params: Partial<ModesThroughKeyParams>, direction: string) => {
+      const { phrase, brief } = generate(
+        1,
+        { params: { ...DEFAULTS, ...params } },
+        {
+          stringCount: { mode: 'fixed', value: '3' },
+          startString: { mode: 'fixed', value: '0' },
+          direction: { mode: 'fixed', value: direction },
+        },
+      );
+      const starts = phrase.bars.filter((b) => b.label).map((b) => b.startTick);
+      const runs = starts.map((start, i) =>
+        phrase.notes
+          .filter((n) => n.startTick >= start && n.startTick < (starts[i + 1] ?? Infinity))
+          .map((n) => stringLabel(STANDARD_GUITAR, n.string))
+          .filter((label, j, all) => label !== all[j - 1])
+          .join(' '),
+      );
+      return { runs, brief };
+    };
+
+    it('plays each shape on strings 6 to 4 from string 6, ascending', () => {
+      const { runs, brief } = shapes({}, 'ascending');
+      expect(runs).toHaveLength(7);
+      expect(new Set(runs)).toEqual(new Set(['6 5 4']));
+      expect(brief.headline).toMatch(/on strings 6–4\.$/);
+      expect(brief.highlightAxes).toContain('stringCount');
+    });
+
+    it('goes chord up and scale back down within them, arpeggio then scale', () => {
+      const { runs } = shapes({ variant: 'arpeggio-then-scale' }, 'up-down');
+      expect(new Set(runs)).toEqual(new Set(['6 5 4 5 6']));
+    });
   });
 
   describe('arpeggio-then-scale', () => {

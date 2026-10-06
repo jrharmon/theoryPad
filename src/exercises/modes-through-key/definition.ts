@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { playsInBoxes } from '@/domain/music';
-import { shapeCount } from '@/domain/instrument';
+import { shapeCount, stringCount, stringLabel } from '@/domain/instrument';
 import { EIGHTH, QUARTER, STRAIGHT_EIGHTHS, phraseBuilder, rhythmById } from '@/domain/phrase';
 import type { RhythmPattern } from '@/domain/phrase';
 import type { AxisId, Direction } from '@/domain/variation';
@@ -13,11 +13,13 @@ import {
   keyModeLabel,
   makeBrief,
   noteOptionsFor,
+  onStrings,
   orderedHighlights,
   overlayFromPositions,
   shapeChord,
   shapeRuns,
   startOnString,
+  stringWindow,
   turnaroundParam,
   turnRepeats,
   turns,
@@ -34,7 +36,15 @@ const params = z.object({
 
 export type ModesThroughKeyParams = z.infer<typeof params>;
 
-const AXES = ['scale', 'mode', 'key', 'direction', 'startString', 'rhythmPattern'] as const;
+const AXES = [
+  'scale',
+  'mode',
+  'key',
+  'direction',
+  'startString',
+  'stringCount',
+  'rhythmPattern',
+] as const;
 
 /** "All five boxes", "All seven shapes". */
 const COUNT_WORDS: Record<number, string> = { 5: 'five', 6: 'six', 7: 'seven' };
@@ -75,6 +85,19 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     const rhythm = (variation.axes.rhythmPattern?.value ??
       rhythmById('straight-eighths')) as RhythmPattern;
 
+    // Fewer strings: each shape cut to those strings, from the start string on
+    // in the way the run first goes. Chord up starts by going up.
+    const span = axisValue(variation, 'stringCount', { count: null, name: 'All strings' });
+    const window = stringWindow({
+      strings: stringCount(instrument),
+      start: start.string,
+      count: span.count,
+      firstUp:
+        variant === 'arpeggio-then-scale' ||
+        direction === 'ascending' ||
+        direction === 'up-down',
+    });
+
     const runs = shapeRuns({
       instrument,
       keyMode,
@@ -84,9 +107,10 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
     });
     // Holding the roots is mostly eighths, so Auto turns it as eighths.
     const turnRhythm = variant === 'pause-on-root' ? STRAIGHT_EIGHTHS : rhythm;
+    const shapeNotes = runs.map((run) => onStrings(run.positions, window));
     // Asked of each shape: a blues box can be a note longer than the next.
-    const repeatsTurn = runs.map((run) =>
-      turnRepeats(config.turnaround, run.positions.length, turnRhythm),
+    const repeatsTurn = shapeNotes.map((notes) =>
+      turnRepeats(config.turnaround, notes.length, turnRhythm),
     );
 
     const builder = phraseBuilder().rhythm(EIGHTH);
@@ -97,15 +121,17 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
         variant === 'arpeggio-then-scale'
           ? startOnString(
               [
-                ...arpeggioRun(run.positions, shapeChord(keyMode, run.startDegree).degrees),
-                ...[...run.positions].reverse(),
+                ...arpeggioRun(shapeNotes[r]!, shapeChord(keyMode, run.startDegree).degrees),
+                ...[...shapeNotes[r]!].reverse(),
               ],
-              start.string,
+              // A window already starts on the start string.
+              window ? null : start.string,
               loops,
             )
           : startOnString(
-              applyDirection(run.positions, direction, repeatsTurn[r]),
-              start.string,
+              applyDirection(shapeNotes[r]!, direction, repeatsTurn[r]),
+              // A window already starts on the start string.
+              window ? null : start.string,
               loops,
               repeatsTurn[r],
             );
@@ -135,9 +161,20 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
           ? `One ${boxes ? 'box' : 'shape'}`
           : `${runs.length} ${noun}`;
     const chord = shapeChord(keyMode, 1).symbol;
-    // Said only when it moves the start: the outer string is where a run starts anyway.
-    const from = start.string === null ? '' : ` from ${start.name.toLowerCase()}`;
-    const startAxis: AxisId[] = start.string === null ? [] : ['startString'];
+    // Said only when it moves the start: the outer string is where a run starts
+    // anyway. Fewer strings say which: "on strings 6–4".
+    const label = (string: number) => stringLabel(instrument, string);
+    const from = window
+      ? window.first === window.last
+        ? ` on string ${label(window.first)}`
+        : ` on strings ${label(window.first)}–${label(window.last)}`
+      : start.string === null
+        ? ''
+        : ` from ${start.name.toLowerCase()}`;
+    const startAxis: AxisId[] = [
+      ...(start.string === null ? [] : (['startString'] as const)),
+      ...(window ? (['stringCount'] as const) : []),
+    ];
     const [headline, instruction, highlights] = {
       plain: [
         `${shapes} in ${keyModeLabel(keyMode)}, ${axisDisplay(variation, 'direction', 'ascending').toLowerCase()}${from}.`,

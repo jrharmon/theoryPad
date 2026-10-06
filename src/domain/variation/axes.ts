@@ -42,6 +42,16 @@ export interface StartString {
 }
 
 /**
+ * How many strings a run covers, from its start string on in the direction it
+ * first travels. Null is all of them. A count that runs off the edge of the
+ * neck plays fewer strings: the start string always comes first.
+ */
+export interface StringCount {
+  count: number | null;
+  name: string;
+}
+
+/**
  * A figure repeated up the scale: 3rds are 1-3, 2-4, 3-5…; groups of three
  * are 1-2-3, 2-3-4…. `figure` holds each note's offset in scale steps from
  * the figure's first note, which is all a generator needs to know.
@@ -116,6 +126,7 @@ export interface AxisValues {
   rhythmPattern: RhythmPattern;
   direction: Direction;
   startString: StartString;
+  stringCount: StringCount;
   shapeSystem: ShapeSystem;
   intervalPattern: IntervalPattern;
   intervalPairing: IntervalPairing;
@@ -308,6 +319,35 @@ const startStringAxis: AxisDefinition<AxisValues['startString']> = {
   defaultPolicy: { mode: 'fixed', value: 'outer' },
 };
 
+const ALL_STRINGS: StringCount = { count: null, name: 'All strings' };
+
+/** All, then 2 up to one fewer than the instrument has. */
+function stringCounts(instrument: Instrument): StringCount[] {
+  const n = stringCount(instrument);
+  return [
+    ALL_STRINGS,
+    ...Array.from({ length: Math.max(0, n - 2) }, (_, i) => i + 2).map((count) => ({
+      count,
+      name: `${count} strings`,
+    })),
+  ];
+}
+
+const stringCountAxis: AxisDefinition<AxisValues['stringCount']> = {
+  id: 'stringCount',
+  scope: 'exercise',
+  label: 'Strings',
+  candidates: (context) => stringCounts(context.instrument),
+  key: (value) => (value.count === null ? 'all' : String(value.count)),
+  format: (value) => value.name,
+  parse: (key, context) =>
+    stringCounts(context.instrument).find(
+      (v) => (v.count === null ? 'all' : String(v.count)) === key,
+    ) ?? null,
+  // Every string, as before the axis existed, until the player picks fewer.
+  defaultPolicy: { mode: 'fixed', value: 'all' },
+};
+
 /**
  * Only three-note-per-string ships in v1. CAGED shapes are conventional
  * fingerings rather than derivable and arrive as tables in milestone 8, so the
@@ -367,6 +407,7 @@ const DEFINITIONS = [
   rhythmPatternAxis,
   directionAxis,
   startStringAxis,
+  stringCountAxis,
   shapeSystemAxis,
   intervalPatternAxis,
   intervalPairingAxis,
