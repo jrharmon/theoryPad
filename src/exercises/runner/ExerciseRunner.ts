@@ -1,7 +1,7 @@
 import type { KeyMode } from '@/domain/music';
 import type { Instrument } from '@/domain/instrument';
 import type { CountInBars, Phrase } from '@/domain/phrase';
-import { countInTicks } from '@/domain/phrase';
+import { countInTicks, ticksPerBeat } from '@/domain/phrase';
 import { fretTally } from '@/domain/progress';
 import type { Clock } from '@/domain/time';
 import type {
@@ -603,7 +603,11 @@ export class ExerciseRunner {
 
     if (this.currentTempo !== null) clock.setBpm(this.currentTempo);
     const phrase = this.currentPhrase;
-    const from = clock.ticks;
+    // On a running clock — a routine's next item — the count-in starts on the
+    // next beat. A skip lands anywhere, and the metronome clicks on the clock's
+    // own grid: begun mid-beat, every click would fall between its steps.
+    const beat = phrase ? ticksPerBeat(phrase.timeSignature) : 1;
+    const from = onRunningClock ? Math.ceil(clock.ticks / beat) * beat : clock.ticks;
     this.countInEndTick = from + (phrase ? countInTicks(phrase.timeSignature, countInBars) : 0);
     this.passStartTick = this.countInEndTick;
     this.runStartTick = this.countInEndTick;

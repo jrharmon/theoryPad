@@ -9,10 +9,13 @@ export function PageHeader({
   intro,
   children,
   className,
+  introClassName,
 }: {
   kicker: string;
   title: ReactNode;
   intro?: ReactNode;
+  /** The intro's measure, where it should match the content under it. */
+  introClassName?: string;
   /** Anything that sits beside the title, such as a New button. */
   children?: ReactNode;
   className?: string;
@@ -22,7 +25,7 @@ export function PageHeader({
       <div>
         <Kicker accent>{kicker}</Kicker>
         <h1>{title}</h1>
-        {intro && <PageIntro>{intro}</PageIntro>}
+        {intro && <PageIntro className={introClassName}>{intro}</PageIntro>}
       </div>
       {children}
     </div>
@@ -30,8 +33,14 @@ export function PageHeader({
 }
 
 /** The sentence under a title. Its own export for the headers that build their own title. */
-export function PageIntro({ children }: { children: ReactNode }) {
-  return <p className="max-w-[640px] text-body text-ink-muted">{children}</p>;
+export function PageIntro({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string | undefined;
+}) {
+  return <p className={cn('max-w-[640px] text-body text-ink-muted', className)}>{children}</p>;
 }
 
 /** What a screen shows while it reads the database, or rolls what to play. */

@@ -51,6 +51,8 @@ export function BlueprintPicker() {
       <PageHeader
         kicker="New exercise"
         title="Pick a blueprint"
+        // As wide as the list under it.
+        introClassName="max-w-[900px]"
         intro={`What it is made from. It starts with the blueprint’s settings, nothing locked${where ? `, in ${where}` : ''}; name it and lock what you like on the next page.`}
       >
         <Button variant="secondary" asChild>

@@ -25,7 +25,12 @@ export function LockToggle({
       title={
         locked ? 'Locked: hidden wherever this exercise is used' : 'Lock this into the exercise'
       }
-      className={locked ? 'text-ink' : 'text-ink-disabled hover:text-ink-muted'}
+      // Locked is marked with the highlighter, as a settled thing; open is faint.
+      className={
+        locked
+          ? 'bg-highlight text-ink hover:bg-highlight'
+          : 'text-ink-disabled hover:text-ink-muted'
+      }
       onClick={() => onChange(!locked)}
     >
       {locked ? <LockIcon className="size-3.5" strokeWidth={2.5} /> : <LockOpenIcon />}

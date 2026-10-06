@@ -151,6 +151,18 @@ describe('RoutineRunner', () => {
     expect(routine.current!.snapshot.state).toBe('count-in');
   });
 
+  it('counts the next item in from the next beat, however far into one the skip lands', () => {
+    // Off the beat, every click of the count-in would fall between the
+    // metronome's grid steps and go unheard.
+    const { routine, clock } = makeRoutine([item('a'), item('b', { countInBars: 1 })]);
+    routine.play();
+    clock.advanceTicks(QUARTER + 100);
+    routine.skip();
+    const { countInRemaining } = routine.current!.snapshot;
+    expect(countInRemaining).toBe(QUARTER - 100 + BAR);
+    expect((clock.ticks + countInRemaining) % QUARTER).toBe(0);
+  });
+
   it('skipping while nothing plays leaves the next item waiting', () => {
     const { routine } = makeRoutine([item('a'), item('b')]);
     routine.play();
