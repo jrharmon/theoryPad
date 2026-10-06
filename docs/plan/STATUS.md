@@ -48,7 +48,7 @@ deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything but Blueprints is on `main`, and every merged
-branch has been deleted. On `blueprints`: 979 unit tests in 59 files, 72 E2E, `pnpm check` green.
+branch has been deleted. On `blueprints`: 985 unit tests in 59 files, 72 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -199,8 +199,8 @@ branch has been deleted. On `blueprints`: 979 unit tests in 59 files, 72 E2E, `p
 
 Spec, decisions 1–22 and every task's outcome: `docs/plan/15-BLUEPRINTS.md`. Built on
 `blueprints` (one commit for the spec, one for the agreed decisions, one per task), **not merged
-or pushed** — the player reviews first. `pnpm check` green (979 unit tests in 59 files), all
-72 E2E pass.
+or pushed** — the player reviews first. `pnpm check` green (985 unit tests in 59 files), all
+72 E2E pass, after two gate rounds.
 
 - **What changed for the player.** "The exercise" is now a **blueprint** (code keeps
   `definition`); the library holds **exercises** made from them, each with its own name, tags,
@@ -219,6 +219,30 @@ or pushed** — the player reviews first. `pnpm check` green (979 unit tests in 
   copy that was clicked (link state `listGroup`) is scrolled into view only if it's out of view.
   The panel is now ~100px shorter, so it ends above the transport with the page at the top.
 
+**Gate round 1 (2026-10-06)** — the side panel with deep folders looked good. Built:
+- **A skip's count-in was silent** (old, not this branch): a skip lands mid-beat, the next item
+  counted in from that exact tick, and the metronome only clicks on the clock's own grid, so
+  every click — the count-in's and the item's after — fell between its steps. Counting the click
+  sink's calls in the page showed nothing for 4.5 s. On a running clock a count-in now starts on
+  the next beat (`ExerciseRunner.startPass`).
+- **Locks** sit on a highlighter chip (`bg-highlight`); a yellow stroke vanished on white.
+- **The blueprint picker's intro** runs as wide as its list (`PageHeader introClassName`).
+- **A video track "not playing"** didn't reproduce: in the in-app browser the first-run track
+  (starting 216 s in) took ~5 s to seek and buffer, and both an unclicked count-in under a track
+  and Pause doing nothing while it starts are long-standing design. Asked the player for the
+  browser and whether it eventually starts — **still open**, see below.
+
+**Gate round 2** — both built as recommended:
+- **Strings** axis on Modes up the neck (`stringCount`: All, 2 … strings − 1; Fixed All by
+  default). Each shape is cut to that many strings from the start string on, the way the run
+  first goes (up for Ascending, Up then down and Arpeggio then scale); Outer string is the end
+  the run sets off from; at the edge of the neck it plays fewer rather than move the start.
+  The brief says "on strings 6–4"; the neck still shows the whole shape. `stringWindow`,
+  `onStrings` in `shared/scaleRun.ts`.
+- **Stop lets go of a track that hasn't sounded** (`BackingController.cancelStart`, a start
+  token): the starting transport now has Stop beside the Starting button, both cancel, and a
+  start that resolves late begins nothing. Checked against real YouTube.
+
 **For the player to judge at the gate:**
 - Making a variation mid-practice (New exercise → Modes up the neck → type a name → lock
   rhythm): quick enough? The name comes up selected, to type over.
@@ -228,6 +252,9 @@ or pushed** — the player reviews first. `pnpm check` green (979 unit tests in 
   SUBDIVISIONS"), and does the current exercise land in view?
 - A routine mixing the routine's mode with an item locked to another: sound and look,
   including the drone, generated backing, and a track sitting out that item.
+- The video track that wouldn't start for him: which browser, does it start after 10–15 s,
+  any message under the video, and the same on the live site? Stop now gets out of it.
+- Strings: 3 strings from string 6, Arpeggio then scale, Up then down.
 
 ## Turnaround — merged (2026-09-28)
 

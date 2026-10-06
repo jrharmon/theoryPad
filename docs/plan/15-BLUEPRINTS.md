@@ -326,3 +326,10 @@ files), all 72 E2E pass. Every screen was looked at in both themes as it was bui
   exercise), and a track dropped for it and restarted after.
 - **8 Close.** `e2e/blueprints.spec.ts`; the Reset and duplicate-cleanup E2E removed; routine
   E2E add items through `addToRoutine` (the editor now opens on add).
+
+## Gate rounds (2026-10-06)
+
+STATUS.md's Blueprints section has the detail. Round 1: a skip's count-in started off the
+beat and went unheard (fixed, old bug); locks on a highlighter chip; the picker's intro as wide
+as its list; a video track that wouldn't start for the player did not reproduce (open). Round
+2: a **Strings** axis on Modes up the neck, and **Stop cancels a track that hasn't sounded**.
