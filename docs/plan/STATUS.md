@@ -1,11 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-10-06. **Feedback round 8 is built on `feedback-round-8`, waiting at
-its gate** (see "Feedback round 8" below); the Blueprints run before it is merged and pushed. **The milestone plan is finished; the core app is built.**
+**Last updated:** 2026-10-07. **Feedback round 8 is merged and pushed** (see "Feedback round
+8" below). **The milestone plan is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
-bring up what fits from that file. The latest run is Blueprints (see "Blueprints"); every run has
+bring up what fits from that file. The latest run is Feedback round 8 (see "Feedback round 8"); every run has
 its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
 (backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
 write-up before touching backing playback again** — it corrected the advert signal that run
@@ -46,11 +46,11 @@ under the old address must be exported and imported) — the repo is public, and
 | Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
-| Feedback round 8 — routine Back, bar numbers, Starting shape | 🚧 built on `feedback-round-8`, at the gate — see below |
+| Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` and `feedback-round-8` (at its gate) are the only branches. 988 unit tests
+deleted — `main` is the only branch, local and origin in sync. 988 unit tests
 in 59 files, 73 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
@@ -199,7 +199,7 @@ in 59 files, 73 E2E, `pnpm check` green.
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Feedback round 8 — at the gate (2026-10-06)
+## Feedback round 8 — merged (2026-10-07)
 
 Three small requests, built on `feedback-round-8`, a commit each. He took every recommendation.
 `pnpm check` green (988 unit tests in 59 files), all 73 E2E pass.
@@ -222,8 +222,8 @@ Three small requests, built on `feedback-round-8`, a commit each. He took every 
   the lowest shape. Shapes that run off the top are dropped, as before (`shapeRuns({ startShape })`).
   The brief doesn't mention it, because the tab's first label already shows the shape.
 
-**At the gate, only he can judge:** whether Back counting straight in feels right mid-routine,
-and whether the bar numbers read clearly against the labels from behind the guitar.
+**Gate (2026-10-07):** passed with no changes; fast-forwarded into `main` and pushed, branch
+deleted.
 
 ## Blueprints — merged (2026-10-06)
 
