@@ -172,6 +172,54 @@ describe('RoutineRunner', () => {
     expect(routine.current!.snapshot.state).toBe('brief');
   });
 
+  it('goes back an item as Skip goes forward, counting it in if something was playing', () => {
+    const onRepEnd = vi.fn();
+    const { routine, clock } = makeRoutine(
+      [item('a', { countInBars: 1 }), item('b'), item('c')],
+      {
+        onRepEnd,
+      },
+    );
+    const states: string[] = [];
+    routine.subscribe((s) => states.push(`${s.index}:${s.current?.state}`));
+    routine.back(); // nothing before the first
+    expect(routine.snapshot.index).toBe(0);
+
+    routine.play();
+    playPass(routine, clock); // a is done; b is going
+    clock.advanceTicks(QUARTER);
+    states.length = 0;
+    routine.back();
+
+    expect(onRepEnd.mock.calls.at(-1)![0]).toMatchObject({
+      status: 'skipped',
+      routineItemId: 'b',
+    });
+    expect(routine.snapshot.index).toBe(0);
+    expect(routine.current!.snapshot.state).toBe('count-in');
+    expect(clock.state).toBe('started');
+    // Never seen waiting on the way: that would read as stopped.
+    expect(states).not.toContain('0:brief');
+
+    // Stopped, back waits for Play.
+    playPass(routine, clock);
+    routine.stop();
+    routine.back();
+    expect(routine.snapshot.index).toBe(0);
+    expect(routine.current!.snapshot.state).toBe('brief');
+  });
+
+  it('plays an item skipped and jumped back over when the routine reaches it again', () => {
+    const { routine, clock } = makeRoutine([item('a'), item('b'), item('c')]);
+    routine.skip();
+    routine.skip();
+    routine.goTo(0);
+    routine.play();
+    playPass(routine, clock);
+    expect(routine.snapshot.index).toBe(1);
+    expect(routine.current!.snapshot.state).toBe('playing');
+  });
+
   it('jumps to any item, forward or back, and waits on it for Play', () => {
     const onRepEnd = vi.fn();
     const { routine, clock } = makeRoutine([item('a'), item('b'), item('c')], { onRepEnd });

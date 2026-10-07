@@ -51,6 +51,7 @@ export function useRunnerHotkeys({
       if (practice.instance?.kind === 'theory' && state === 'playing') {
         if (event.key === 'Escape') onLeave();
         else if (event.key === 's' || event.key === 'S') practice.skip();
+        else if (event.key === 'b' || event.key === 'B') practice.back();
         return;
       }
 
@@ -89,6 +90,11 @@ export function useRunnerHotkeys({
         case 'S':
           // Only a routine has a next exercise to skip to.
           practice.skip();
+          break;
+        case 'b':
+        case 'B':
+          // And back to the one before.
+          practice.back();
           break;
         case 'm':
         case 'M':

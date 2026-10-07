@@ -69,14 +69,21 @@ test('a routine opens paused on its first item, then runs and logs against its e
   await expect(page.getByTestId('pause')).toBeVisible();
   await expect(page.getByTestId('routine-chrome')).toContainText('Next: Modes up the neck');
 
-  // S skips, without a hand off the guitar.
+  // S skips, without a hand off the guitar, and B goes back, still playing.
   await page.keyboard.press('s');
   await expect(page.getByTestId('routine-chrome')).toContainText('02 / 02');
+  await expect(page.getByRole('button', { name: 'Back', exact: true })).toBeVisible();
+  await page.keyboard.press('b');
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  await expect(page.getByTestId('pause')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Back', exact: true })).toHaveCount(0);
+  await page.keyboard.press('s');
   await page.getByRole('button', { name: 'Skip', exact: true }).click();
 
   await expect(page.getByText('Finished')).toBeVisible();
+  // Each item left twice, mid-count-in.
   const reps = await storedReps(page);
-  expect(reps).toHaveLength(2);
+  expect(reps).toHaveLength(4);
   expect(reps.every((r) => r.status === 'skipped' && r.routineItemId)).toBe(true);
   // Against the library exercises they were copied from.
   const exerciseIds = new Set(reps.map((r) => r.exerciseId));

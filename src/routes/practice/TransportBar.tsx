@@ -20,14 +20,15 @@ import { useRunnerTicks } from './usePracticeBody';
  *
  * There is no End: leaving the screen is how you finish, and every pass is
  * logged as it ends, so there is nothing to remember to press. Stop and
- * Restart go back to the top of the same material; skip appears only in a
- * routine, where there is a next exercise to skip to.
+ * Restart go back to the top of the same material; Back and Skip appear only
+ * in a routine, where there is an exercise before or after to move to.
  */
 export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }) {
   const snapshot = usePractice((s) => s.snapshot);
   const instance = usePractice((s) => s.instance);
   const practice = usePractice();
   const inRoutine = usePractice((s) => s.routineId !== null);
+  const itemIndex = usePractice((s) => s.routineSnapshot?.index ?? 0);
   const startingTrack = usePractice((s) => s.backing.starting);
   const needsClick = usePractice((s) => s.backing.needsClick);
   const state = snapshot?.state;
@@ -228,7 +229,12 @@ export function TransportBar({ onOpenSettings }: { onOpenSettings?: () => void }
         <Button variant="secondary" size="sm" onClick={() => practice.reroll()}>
           Re-roll
         </Button>
-        {/* Only a routine has somewhere to skip to. */}
+        {/* Only a routine has somewhere to skip to, or back to. */}
+        {inRoutine && itemIndex > 0 && (
+          <Button variant="secondary" size="sm" onClick={() => practice.back()}>
+            Back
+          </Button>
+        )}
         {inRoutine && (
           <Button variant="secondary" size="sm" onClick={() => practice.skip()}>
             Skip

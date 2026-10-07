@@ -45,6 +45,8 @@ interface PracticeState extends SessionState {
   reroll: () => void;
   /** Routine only: move to the next item now. */
   skip: () => void;
+  /** Routine only: back to the item before. */
+  back: () => void;
   /** Routine only: jump to an item, forward or back, and wait on it for Play. */
   goTo: (index: number) => void;
   /** Theory: the set is answered. */
@@ -179,6 +181,7 @@ export const usePractice = create<PracticeState>((set, get) => {
     completeRep: () => get().session?.completeRep(),
     reroll: () => get().session?.reroll(),
     skip: () => routine()?.skip(),
+    back: () => routine()?.back(),
     goTo: (index) => routine()?.goTo(index),
     submitSet: (answers) => get().session?.submitSet(answers),
     setFreeTime: (freeTime) => exercise()?.setFreeTime(freeTime),

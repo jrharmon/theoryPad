@@ -182,6 +182,12 @@ export class RoutineSession extends PracticeSession {
     this.afterAdvance();
   }
 
+  /** Back to the item before — counted straight in, if this one was going. */
+  back(): void {
+    this.routine.back();
+    this.afterAdvance();
+  }
+
   /** Jump to another item and wait on it for Play. */
   goTo(index: number): void {
     if (this.backing.state.starting) return;

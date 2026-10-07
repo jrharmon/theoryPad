@@ -308,12 +308,13 @@ export class ExerciseRunner {
    * Back to the top and waiting for Play, from anywhere — a routine jumping to
    * this item or away from it. A pass in progress is logged as skipped. The
    * variation stays, so an item gone back to plays again as it was rolled.
+   * `keepClock` leaves the clock running for an item about to count in on it.
    */
-  rewind(): void {
+  rewind({ keepClock = false }: { keepClock?: boolean } = {}): void {
     if (this.state === 'idle') return;
     if (this.isInPass) this.finishPass('skipped', { stop: true });
     this.clearScheduled();
-    this.config.clock.stop();
+    if (!keepClock) this.config.clock.stop();
     // Waiting on its first pass again, and the counter should say so.
     this.passesThisRun = 0;
     this.setState('brief');

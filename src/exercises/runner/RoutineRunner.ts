@@ -106,6 +106,8 @@ export class RoutineRunner {
   private startedAt: number | null = null;
   private endedAt: number | null = null;
   private results = new Map<string, { completed: number; skipped: boolean }>();
+  /** Set while moving between items, so the move is seen once, finished. */
+  private quiet = false;
 
   constructor(config: RoutineRunnerConfig) {
     this.config = config;
@@ -149,6 +151,7 @@ export class RoutineRunner {
   }
 
   private emit(): void {
+    if (this.quiet) return;
     const snapshot = this.snapshot;
     for (const listener of this.listeners) listener(snapshot);
   }
@@ -269,6 +272,29 @@ export class RoutineRunner {
     this.emit();
   }
 
+  /**
+   * Back to the item before, as `skip` goes forward: if this one was going,
+   * the one before counts straight in on the running clock; stopped or
+   * paused, it waits for Play. A pass in progress is logged as skipped.
+   */
+  back(): void {
+    if (this.phase !== 'running' || this.index === 0) return;
+    const leaving = this.current;
+    const state = leaving?.snapshot.state;
+    if (!leaving || (state !== 'playing' && state !== 'count-in')) {
+      this.goTo(this.index - 1);
+      return;
+    }
+    this.index -= 1;
+    // Quiet until the count-in: an item seen waiting at the top reads as
+    // stopped, and would silence the backing that plays on through.
+    this.quiet = true;
+    leaving.rewind({ keepClock: true });
+    this.current?.rewind({ keepClock: true });
+    this.quiet = false;
+    this.current?.beginNext(this.countInFor(this.index));
+  }
+
   pause(): void {
     this.current?.pause();
   }
@@ -346,13 +372,22 @@ export class RoutineRunner {
       this.emit();
       return;
     }
+    // Skipped earlier and jumped back over, it is still done: back to the top.
+    if (this.current?.snapshot.state === 'done') {
+      this.quiet = true;
+      this.current.rewind({ keepClock: start });
+      this.quiet = false;
+    }
     if (start) {
       // The next item counts itself in exactly as it would standalone: the
       // count-in is the only pause between items, and how long it wants is
       // that exercise's business.
-      const next = this.config.items[this.index];
-      this.current?.beginNext(next?.countInBars ?? this.config.countInBars ?? 0);
+      this.current?.beginNext(this.countInFor(this.index));
     }
     this.emit();
+  }
+
+  private countInFor(index: number): number {
+    return this.config.items[index]?.countInBars ?? this.config.countInBars ?? 0;
   }
 }
