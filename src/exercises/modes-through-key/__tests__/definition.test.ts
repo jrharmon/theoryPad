@@ -17,6 +17,7 @@ import { modesThroughKey, type ModesThroughKeyParams } from '../definition';
 const DEFAULTS: ModesThroughKeyParams = {
   variant: 'plain',
   shapesPerRep: 7,
+  startingShape: 'lowest',
   minFret: 1,
   turnaround: 'auto',
 };
@@ -110,9 +111,20 @@ describe('modes-through-key', () => {
     expect(instance.neck.emphasisFrets).toHaveLength(7);
   });
 
-  it('honours shapesPerRep', () => {
+  it('honours shapesPerRep, from the starting shape', () => {
     const instance = generate(1, { params: { ...DEFAULTS, shapesPerRep: 3 } });
     expect(instance.phrase.bars.map((b) => b.label).filter(Boolean)).toHaveLength(3);
+
+    for (const seed of [1, 2, 3, 4]) {
+      const { phrase } = generate(seed, {
+        params: { ...DEFAULTS, shapesPerRep: 3, startingShape: '1' },
+      });
+      const labels = phrase.bars.flatMap((b) => (b.label ? [b.label] : []));
+      expect(
+        labels.map((label) => label.slice(-1)),
+        `seed ${seed}`,
+      ).toEqual(['1', '2', '3']);
+    }
   });
 
   it('starts each shape on a bar line', () => {

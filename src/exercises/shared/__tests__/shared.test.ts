@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeDegree, pitchClass } from '@/domain/music';
+import { makeDegree, pitchClass, type KeyMode } from '@/domain/music';
 import { STANDARD_GUITAR, SEVEN_STRING_GUITAR, boxShape, midiAt } from '@/domain/instrument';
 import { QUARTER, phraseBuilder, rhythmById } from '@/domain/phrase';
 import { rollVariation } from '@/domain/variation';
@@ -145,6 +145,53 @@ describe('shapeRuns', () => {
       count: 3,
     });
     expect(runs).toHaveLength(3);
+  });
+
+  it('starts the climb at a chosen shape, the same shapes in every key', () => {
+    const startsOf = (keyMode: KeyMode, startShape?: number, minFret = 1) =>
+      shapeRuns({
+        instrument: STANDARD_GUITAR,
+        keyMode,
+        direction: 'ascending',
+        minFret,
+        count: 3,
+        ...(startShape !== undefined ? { startShape } : {}),
+      }).map((run) => [run.startDegree, run.startFret]);
+    const major = (tonic: string): KeyMode => ({
+      tonic: pitchClass(tonic),
+      scale: 'major',
+      mode: 'ionian',
+    });
+
+    expect(startsOf(major('G'), 1)).toEqual([
+      [1, 3],
+      [2, 5],
+      [3, 7],
+    ]);
+    // E's first root above the nut is at 12, not 0.
+    expect(startsOf(major('E'), 1)).toEqual([
+      [1, 12],
+      [2, 14],
+      [3, 16],
+    ]);
+    expect(startsOf(major('E'), 1, 0)).toEqual([
+      [1, 0],
+      [2, 2],
+      [3, 4],
+    ]);
+    // A box is started by its number.
+    const aMinorPentatonic: KeyMode = {
+      tonic: pitchClass('A'),
+      scale: 'minor-pentatonic',
+      mode: 'minor-pentatonic',
+    };
+    expect(startsOf(aMinorPentatonic, 2)).toEqual([
+      [2, 8],
+      [3, 10],
+      [4, 12],
+    ]);
+    // A pentatonic has no sixth box: the climb starts from the lowest, as without one.
+    expect(startsOf(aMinorPentatonic, 6)).toEqual(startsOf(aMinorPentatonic));
   });
 
   it('works on a seven-string', () => {

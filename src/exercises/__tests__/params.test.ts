@@ -63,6 +63,7 @@ describe('resolveParams', () => {
     expect(resolveParams(definition, { variant: 'pause-on-root' })).toEqual({
       variant: 'pause-on-root',
       shapesPerRep: 7,
+      startingShape: 'lowest',
       minFret: 1,
       turnaround: 'auto',
     });

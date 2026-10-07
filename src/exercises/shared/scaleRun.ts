@@ -6,6 +6,7 @@ import {
   lowestFret,
   pitchClassAt,
   scaleShape,
+  shapeCount,
   shapesUpTheNeck,
 } from '@/domain/instrument';
 import { z } from 'zod';
@@ -174,7 +175,14 @@ export interface ShapeRun {
   positions: ScaleNotePosition[];
 }
 
-/** Every shape of the key ascending the neck, each ordered by `direction`. */
+/**
+ * Every shape of the key ascending the neck, each ordered by `direction`.
+ *
+ * `startShape` starts the climb at the lowest shape starting on that degree —
+ * a box's number, a 3nps shape's degree — so "shapes 1 to 3" are the same
+ * three in every key. Where that shape isn't on the neck above `minFret`, the
+ * climb starts from the lowest shape, as without it.
+ */
 export function shapeRuns(options: {
   instrument: Instrument;
   keyMode: KeyMode;
@@ -182,14 +190,32 @@ export function shapeRuns(options: {
   minFret?: number;
   count?: number;
   notesPerString?: number;
+  startShape?: number;
 }): ShapeRun[] {
-  const { instrument, keyMode, direction, minFret = 1, count, notesPerString } = options;
+  const {
+    instrument,
+    keyMode,
+    direction,
+    minFret = 1,
+    count,
+    notesPerString,
+    startShape,
+  } = options;
 
-  return shapesUpTheNeck(instrument, keyMode, {
+  const total = count ?? shapeCount(keyMode);
+  const climb = shapesUpTheNeck(instrument, keyMode, {
     minFret,
-    ...(count !== undefined ? { count } : {}),
+    // With a start to find, every shape on the neck, cut to `count` after.
+    count: startShape === undefined ? total : Infinity,
     ...(notesPerString !== undefined ? { notesPerString } : {}),
-  }).map((shape) => ({
+  });
+  const first = Math.max(
+    0,
+    climb.findIndex((shape) => shape.startDegree === startShape),
+  );
+  const shapes = climb.slice(first, first + total);
+
+  return shapes.map((shape) => ({
     startDegree: shape.startDegree,
     startFret: shape.startFret,
     positions: applyDirection(shape.positions, direction),

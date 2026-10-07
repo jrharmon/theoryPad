@@ -29,6 +29,11 @@ const params = z.object({
   variant: z.enum(['plain', 'arpeggio-then-scale', 'pause-on-root']).default('plain'),
   /** How many shapes one rep covers, at most the scale's own: seven, or five boxes. */
   shapesPerRep: z.number().int().min(1).max(7).default(7),
+  /** The shape the climb starts at, rather than the lowest one on the neck. */
+  startingShape: z
+    .enum(['lowest', '1', '2', '3', '4', '5', '6', '7'])
+    .default('lowest')
+    .describe('A box by its number, a 3nps shape by its degree: the same shapes in every key.'),
   /** Lowest fret the first shape may start at. */
   minFret: z.number().int().min(0).max(12).default(1),
   turnaround: turnaroundParam,
@@ -104,6 +109,9 @@ export const modesThroughKey: PlayedDefinition<ModesThroughKeyParams> = {
       direction: 'ascending',
       minFret: config.minFret,
       count: Math.min(config.shapesPerRep, shapeCount(keyMode)),
+      ...(config.startingShape === 'lowest'
+        ? {}
+        : { startShape: Number(config.startingShape) }),
     });
     // Holding the roots is mostly eighths, so Auto turns it as eighths.
     const turnRhythm = variant === 'pause-on-root' ? STRAIGHT_EIGHTHS : rhythm;
