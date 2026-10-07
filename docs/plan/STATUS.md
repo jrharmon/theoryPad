@@ -1,7 +1,7 @@
 # Status — start here
 
-**Last updated:** 2026-10-06. **The Blueprints run is merged and pushed** (see "Blueprints"
-below and doc 15). **The milestone plan is finished; the core app is built.**
+**Last updated:** 2026-10-06. **Feedback round 8 is built on `feedback-round-8`, waiting at
+its gate** (see "Feedback round 8" below); the Blueprints run before it is merged and pushed. **The milestone plan is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
@@ -46,11 +46,12 @@ under the old address must be exported and imported) — the repo is public, and
 | Notes off — global On/Off, per-exercise Play the notes | ✅ merged, pushed 2026-09-27 — see below |
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
+| Feedback round 8 — routine Back, bar numbers, Starting shape | 🚧 built on `feedback-round-8`, at the gate — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 985 unit tests in 59 files,
-73 E2E, `pnpm check` green.
+deleted — `main` and `feedback-round-8` (at its gate) are the only branches. 988 unit tests
+in 59 files, 73 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -192,10 +193,37 @@ deleted — `main` is the only branch, local and origin in sync. 985 unit tests 
   - M: metronome off, and back to the last one that was on
   - L: loop
   - S: skip (routines)
+  - B: back to the item before (routines)
   - K: the key/mode reference
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Feedback round 8 — at the gate (2026-10-06)
+
+Three small requests, built on `feedback-round-8`, a commit each. He took every recommendation.
+`pnpm check` green (988 unit tests in 59 files), all 73 E2E pass.
+
+- **Back in a routine.** A Back button beside Skip (hidden on item 1), and the B key. It mirrors
+  Skip: if the item was going, the one before counts straight in on the running clock;
+  stopped or paused, it waits for Play. A pass in progress is logged as skipped
+  (`RoutineRunner.back`; `ExerciseRunner.rewind({ keepClock })`). The routine emits nothing
+  while it moves, so the item is never seen waiting at the top, which would silence the backing.
+- **Old bug fixed on the way:** an item skipped and then jumped back over from the side list
+  stayed `done`, so the routine stuck on it when it got there again. `moveOn` now rewinds a done
+  item before starting it.
+- **Bar numbers.** Every bar shows its number alone, bold in `num`; a bar's own label (such as
+  "Fret 5 · degree 2") follows in the muted kicker. "Bar 4" is gone, so the number no longer
+  reads as part of the descriptive text.
+- **Starting shape** (Modes up the neck): a setting with Lowest (the default, as before) or
+  1–7. Shape N starts the climb at the lowest shape on degree N (a 3nps shape) or box N (a
+  pentatonic) at or above Lowest fret, so "3 shapes from shape 1" is the same three in every
+  key. Where that shape isn't on the neck (a pentatonic has no box 6), the climb starts from
+  the lowest shape. Shapes that run off the top are dropped, as before (`shapeRuns({ startShape })`).
+  The brief doesn't mention it, because the tab's first label already shows the shape.
+
+**At the gate, only he can judge:** whether Back counting straight in feels right mid-routine,
+and whether the bar numbers read clearly against the labels from behind the guitar.
 
 ## Blueprints — merged (2026-10-06)
 
