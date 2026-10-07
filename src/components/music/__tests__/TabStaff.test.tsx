@@ -123,16 +123,16 @@ describe('TabStaff', () => {
     expect(screen.getAllByTestId('beat-line')).toHaveLength(1);
   });
 
-  it('labels bars, using a bar’s own label, unless labels are turned off', () => {
+  it('numbers bars, with a bar’s own label after its number, unless labels are turned off', () => {
     const phrase = phraseBuilder()
       .rhythm(QUARTER)
       .sequence([p(0, 1), p(0, 2), p(0, 3), p(0, 4)])
-      .labelBar('Bar 2 · land on B')
+      .labelBar('Land on B')
       .sequence([p(0, 5), p(0, 6), p(0, 7), p(0, 8)])
       .build();
     const { rerender } = render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} />);
-    expect(screen.getByTestId('bar-label-0')).toHaveTextContent('Bar 1');
-    expect(screen.getByTestId('bar-label-1')).toHaveTextContent('Bar 2 · land on B');
+    expect(screen.getByTestId('bar-label-0')).toHaveTextContent(/^1$/);
+    expect(screen.getByTestId('bar-label-1')).toHaveTextContent(/^2Land on B$/);
 
     rerender(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} showBarLabels={false} />);
     expect(screen.queryByTestId(/^bar-labels/)).not.toBeInTheDocument();

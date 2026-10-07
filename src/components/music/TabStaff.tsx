@@ -405,13 +405,16 @@ function TabSystem({
         >
           <span />
           {bars.map((bar) => (
+            // The number alone, in its own type, so it never reads as part of
+            // the bar's own words — "Fret 5 · shape 2".
             <span
               key={bar.index}
               data-testid={`bar-label-${bar.index}`}
-              className="kicker truncate"
+              className="truncate"
               style={{ gridColumn: `span ${columnsPerBar}` }}
             >
-              {bar.label ?? `Bar ${bar.index + 1}`}
+              <span className="num text-meta font-extrabold">{bar.index + 1}</span>
+              {bar.label !== undefined && <span className="kicker ml-2">{bar.label}</span>}
             </span>
           ))}
         </div>

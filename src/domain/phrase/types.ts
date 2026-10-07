@@ -74,7 +74,7 @@ export interface Bar {
   index: number;
   startTick: number;
   timeSignature: TimeSignature;
-  /** Shown beneath the bar, e.g. "Bar 4 · land on B". */
+  /** Shown beneath the bar after its number, e.g. "Phrase 2 · land on B". */
   label?: string;
 }
 

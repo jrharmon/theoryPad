@@ -49,7 +49,6 @@ export function scaleRunPhrase() {
   const ascending = positions.slice(0, 16);
 
   return phraseBuilder()
-    .labelBar('Bar 1')
     .withRhythm(
       ascending.map((p) => ({ string: p.string, fret: p.fret })),
       STRAIGHT_EIGHTHS,
@@ -61,7 +60,7 @@ export function scaleRunPhrase() {
         };
       },
     )
-    .labelBarAt(1, 'Bar 2 · land on B')
+    .labelBarAt(1, 'Land on B')
     .build();
 }
 
