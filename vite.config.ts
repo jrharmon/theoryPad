@@ -3,7 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-// GitHub Pages serves from /<repo>/; local dev and preview stay at /.
+// Served from / everywhere (the deploy is musictheorypad.com); VITE_BASE overrides
+// it for a build that must live under a sub-path.
 const base = process.env.VITE_BASE ?? '/';
 
 export default defineConfig({

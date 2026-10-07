@@ -27,8 +27,8 @@ const SOUND_DB: Record<DrumSound, number> = {
 };
 
 /**
- * Where the kit is served. Through Vite's base URL, never a leading slash: the
- * deploy lives under /theoryPad/.
+ * Where the kit is served. Through Vite's base URL, never a leading slash, so
+ * a build under a sub-path (VITE_BASE) still finds it.
  */
 export function kitDir(base: string = import.meta.env.BASE_URL): string {
   return `${base}samples/v1/kit/`;

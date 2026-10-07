@@ -77,8 +77,7 @@ export const BASS_PRESET: VoicePreset = {
 
 /**
  * Where a preset's files are served. Through Vite's base URL, never a leading
- * slash: the deploy lives under /theoryPad/, so a rooted URL works on
- * localhost and 404s in production.
+ * slash, so a build under a sub-path (VITE_BASE) still finds them.
  */
 export function sampleDir(
   preset: VoicePreset,

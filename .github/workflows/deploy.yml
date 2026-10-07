@@ -34,11 +34,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Pages serves from /<repo>/, so the bundle needs a matching base path.
+      # Served at the root of the custom domain (musictheorypad.com), so the
+      # default base of / is right.
       - name: Build
         run: pnpm build
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

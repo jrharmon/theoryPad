@@ -13,8 +13,10 @@ was planned around. `main` is the only branch, local and origin in sync. Written
 a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it
 points to.
 
-**Live:** https://jrharmon.github.io/theoryPad/ — the repo is public, and every push to `main`
-deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
+**Live:** https://www.musictheorypad.com/ (custom domain since 2026-10-06; the old
+https://jrharmon.github.io/theoryPad/ redirects there, but IndexedDB is per origin, so data saved
+under the old address must be exported and imported) — the repo is public, and every push to
+`main` deploys to GitHub Pages. CI (check, build, E2E) runs on every push too.
 
 ## Where the project is
 
