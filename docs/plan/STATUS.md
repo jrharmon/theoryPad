@@ -1,7 +1,7 @@
 # Status — start here
 
-**Last updated:** 2026-10-07. **Feedback round 8 is merged and pushed** (see "Feedback round
-8" below). **The milestone plan is finished; the core app is built.**
+**Last updated:** 2026-10-10. **Routine sections are built on `routine-sections`, waiting at
+the gate** (see "Routine sections" below); Feedback round 8 before it is merged and pushed. **The milestone plan is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
@@ -47,11 +47,12 @@ under the old address must be exported and imported) — the repo is public, and
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
 | Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
+| Routine sections — on/off switches, section dividers | built on `routine-sections`, at the gate — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync. 988 unit tests
-in 59 files, 73 E2E, `pnpm check` green.
+deleted — `main` is the only branch, local and origin in sync, apart from `routine-sections`
+at its gate. 993 unit tests in 60 files, 74 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -198,6 +199,41 @@ in 59 files, 73 E2E, `pnpm check` green.
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Routine sections — at the gate (2026-10-10)
+
+The player asked for two things: switching a routine's exercises on and off without removing them, and
+flat sections (Warmup, Theory, Speed building…) that only organize. Built on
+`routine-sections`, a commit per task. He took every recommendation except two: sections got
+their own switch, and deleting a section always asks. `pnpm check` green (993 unit tests in 60
+files), all 74 E2E pass.
+
+- **Model.** `Routine.items` holds the items *and* the section dividers, in order
+  (`RoutineEntry<RoutineItem>`; a divider is `{ kind: 'section', id, name, enabled? }`). His
+  model: a section is a divider bar. Everything after it, up to the next divider or the end, is
+  in it, and items may sit above the first divider, in no section. `enabled` on an item or a
+  section is stored only when off (absent is on), so old rows and old exports are valid as they
+  are: no schema bump, no upgrade. The rules (what plays, moves, insert, delete) are pure, in
+  `src/domain/routine/`.
+- **A run** plays only items that are on, under a section that is on (`playedItems`). What is
+  off is left out entirely: not in the side list, and passed over by Skip and Back, the summary
+  and the time estimate. Sections never change how a run moves; their names head the side list
+  and the finished summary (`RoutineRunItem.section`, carried into the snapshot).
+- **Builder.** A checkbox on each row and each section header. A row that won't play is faded
+  and unnumbered, and numbers run through the routine counting only what plays. **Add section**
+  goes at the end; **+ Section here** appears on a row's top edge on hover and inserts a divider
+  there. A new section's name is selected to type over. A section header has its own Add exercise (to the end of
+  that section), ↑/↓ (the section with its items, past the neighboring section, never above
+  the unsectioned items), and Delete. Delete asks every time a section has items: "Delete
+  heading only" is the default (Enter), and the items stay put, so they join the section above;
+  "Delete N exercises too" takes them with it. An empty section deletes without asking.
+  An item's ↑/↓ cross dividers one place at a time. Subtitles on the builder and on Home read
+  "4 of 7 exercises on · about 12 min" when some are off, and Start is disabled when nothing
+  plays.
+
+**Open for the gate:** whether hover-only "+ Section here" is easy enough to find (it shows on
+keyboard focus too), and whether a faded row under a switched-off section reads clearly enough
+when its own box is still ticked.
 
 ## Feedback round 8 — merged (2026-10-07)
 
@@ -1229,7 +1265,7 @@ These need a guitar:
 **M4 review**
 - **Traps occasionally, not on every question.** About one question in three offers a near
   miss (`TRICK_RATE` in `domain/theory/distractors.ts`). The rest offer plain alternatives:
-  the key's other notes, its other chords, same-side counts, neighbouring keys.
+  the key's other notes, its other chords, same-side counts, neighboring keys.
 
 **Start of M4**
 - Right answers move on; wrong ones wait until you move on.
