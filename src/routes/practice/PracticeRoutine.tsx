@@ -122,11 +122,18 @@ function Summary({ routine, snapshot }: { routine: Routine; snapshot: RoutineSna
                 ? describeReps(definition, item.reps)
                 : null
               : describeReps(definition, item.completed);
+          const section =
+            item.section && item.section.id !== snapshot.items[index - 1]?.section?.id
+              ? item.section
+              : null;
           return (
             <li
               key={item.id}
-              className="flex gap-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
+              className="flex flex-wrap gap-x-3 border-b border-rule py-2.5 text-body-sm last:border-b-0"
             >
+              {section && (
+                <span className="kicker w-full pt-1 pb-1.5 text-ink-faint">{section.name}</span>
+              )}
               <span className="w-6 tabular-nums text-ink-faint">{index + 1}</span>
               <span className="flex-1">{named(item.exerciseId)}</span>
               <span className="tabular-nums text-ink-muted">

@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { Exercise, Routine, RoutineItem } from '@/data';
 import type { AxisId } from '@/domain/variation';
 import { describePolicies, describeReps } from '@/exercises/describe';
 import { repsAreQuestions, resolveGeneratedBacking } from '@/exercises/params';
-import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
 import { settledMode } from '@/components/backing/chordContext';
@@ -13,6 +12,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -21,7 +21,8 @@ import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
 import { exerciseLabel, useExerciseLookup, useExercises } from '@/store/exercises';
 import { FromBlueprint } from '@/components/library/FromBlueprint';
-import { useRoutines } from '@/store/routines';
+import { describeExtent, routineExtent, useRoutines } from '@/store/routines';
+import { isOn, isSection, plays, type RoutineSection } from '@/domain/routine';
 import { useSettings } from '@/store/settings';
 import { SettingsDialog } from '../practice/SettingsDialog';
 import { effectiveItem, overridesSession, visibleAxes, withoutLocked } from '@/exercises/locks';
@@ -39,9 +40,13 @@ export function RoutineBuilder() {
   const loadSettings = useSettings((s) => s.load);
   const instrument = useSettings((s) => s.settings.instrument);
   const navigate = useNavigate();
-  const [adding, setAdding] = useState(false);
+  // The add dialog, open for a section (or the end of the routine, null).
+  const [adding, setAdding] = useState<{ sectionId: string | null } | null>(null);
   // One item's editor at a time — opened by its Edit, or on being added.
   const [editing, setEditing] = useState<string | null>(null);
+  // A section just added, its name selected to type over.
+  const [fresh, setFresh] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<RoutineSection | null>(null);
   const loadFolders = useFolders((s) => s.load);
 
   useEffect(() => {
@@ -54,17 +59,14 @@ export function RoutineBuilder() {
   }, []);
 
   const routine = routines.routines.find((r) => r.id === routineId);
-  const total = useMemo(
-    () =>
-      routine?.items.reduce((sum, item) => {
-        const definition = findExerciseDefinition(item.definitionId);
-        return definition ? sum + estimateItemSeconds(definition, item, instrument) : sum;
-      }, 0) ?? 0,
+  const extent = useMemo(
+    () => (routine ? routineExtent(routine, instrument) : null),
     [routine, instrument],
   );
+  const groups = useMemo(() => (routine ? groupsOf(routine.items) : []), [routine]);
 
   if (!routines.loaded) return <LoadingState />;
-  if (!routine) {
+  if (!routine || !extent) {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such routine">
@@ -88,14 +90,16 @@ export function RoutineBuilder() {
               onChange={(on) => void routines.setFavorite(routine.id, on)}
             />
             <NameField
-              routine={routine}
+              value={routine.name}
+              label="Routine name"
               onRename={(name) => void routines.rename(routine.id, name)}
+              className="font-display text-(length:--h1-size) leading-tight tracking-(--display-tracking) [font-weight:var(--display-weight)]"
             />
           </div>
           <p className="mt-1 text-body-sm text-ink-muted tabular-nums">
-            {routine.items.length === 0
+            {extent.total === 0
               ? 'Add the exercises it plays, in order.'
-              : `${routine.items.length} exercise${routine.items.length === 1 ? '' : 's'} · about ${formatDuration(total)}`}
+              : describeExtent(extent)}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -105,7 +109,7 @@ export function RoutineBuilder() {
           >
             Delete
           </Button>
-          {routine.items.length > 0 ? (
+          {extent.played > 0 ? (
             <Button asChild>
               <Link to={`/practice/routine/${routine.id}`}>Start</Link>
             </Button>
@@ -136,72 +140,295 @@ export function RoutineBuilder() {
       <div className="max-w-[1100px] px-8 pt-2 pb-6">
         <div className="flex items-center justify-between">
           <Kicker>Exercises</Kicker>
-          <Button size="sm" onClick={() => setAdding(true)}>
-            Add exercise
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                void routines.addSection(routine.id, null).then((s) => setFresh(s.id))
+              }
+            >
+              Add section
+            </Button>
+            <Button size="sm" onClick={() => setAdding({ sectionId: null })}>
+              Add exercise
+            </Button>
+          </div>
         </div>
         <p className="mb-3 mt-1 max-w-[640px] text-body-sm text-ink-muted">
           Each is its own copy: changing it here leaves the library alone, and the same exercise
           can go in more than once. Its passes still count toward that exercise’s history.
+          Switch one off to leave it out of the run; a section’s switch does it for everything
+          under it.
         </p>
 
         {routine.items.length === 0 ? (
           <EmptyState title="Nothing in it yet">Add an exercise to start.</EmptyState>
         ) : (
-          <ol className="sheet px-2">
-            {routine.items.map((item, index) => (
-              <ItemRow
-                key={item.id}
-                routine={routine}
-                item={item}
-                index={index}
-                last={index === routine.items.length - 1}
-                editing={editing === item.id}
-                onEditing={(open) => setEditing(open ? item.id : null)}
-              />
-            ))}
-          </ol>
+          groups.map((group, g) => (
+            <div key={group.section?.id ?? 'top'}>
+              {group.section && (
+                <SectionHeader
+                  routine={routine}
+                  section={group.section}
+                  items={group.items.map(({ item }) => item)}
+                  first={g === (groups[0]!.section ? 0 : 1)}
+                  last={g === groups.length - 1}
+                  fresh={fresh === group.section.id}
+                  onAdd={() => setAdding({ sectionId: group.section!.id })}
+                  onDelete={() =>
+                    group.items.length === 0
+                      ? void routines.removeSection(routine.id, group.section!.id, false)
+                      : setDeleting(group.section)
+                  }
+                />
+              )}
+              {group.items.length > 0 ? (
+                <ol className="sheet px-2">
+                  {group.items.map(({ item, number }, i) => (
+                    <ItemRow
+                      key={item.id}
+                      routine={routine}
+                      item={item}
+                      number={number}
+                      dimmed={!plays(item, group.section)}
+                      first={routine.items[0]?.id === item.id}
+                      last={routine.items.at(-1)?.id === item.id}
+                      lastInGroup={i === group.items.length - 1}
+                      // Above a section's first item would only make an empty one.
+                      onInsertSection={
+                        group.section && i === 0
+                          ? null
+                          : () =>
+                              void routines
+                                .addSection(routine.id, item.id)
+                                .then((s) => setFresh(s.id))
+                      }
+                      editing={editing === item.id}
+                      onEditing={(open) => setEditing(open ? item.id : null)}
+                    />
+                  ))}
+                </ol>
+              ) : (
+                <p className="px-5 pb-2 text-meta text-ink-faint">
+                  Nothing in it yet — add an exercise, or move one down into it.
+                </p>
+              )}
+            </div>
+          ))
         )}
       </div>
 
       <AddExerciseDialog
-        open={adding}
-        onOpenChange={setAdding}
+        open={adding !== null}
+        onOpenChange={(open) => !open && setAdding(null)}
         onPick={(exercise) => {
-          setAdding(false);
+          const sectionId = adding?.sectionId ?? null;
+          setAdding(null);
           // Set up straight away: Done with nothing changed keeps the copy as it came.
-          void routines.addItem(routine.id, exercise).then((item) => setEditing(item.id));
+          void routines
+            .addItem(routine.id, exercise, sectionId)
+            .then((item) => setEditing(item.id));
+        }}
+      />
+      <DeleteSectionDialog
+        section={deleting}
+        count={
+          deleting ? (groups.find((g) => g.section?.id === deleting.id)?.items.length ?? 0) : 0
+        }
+        onOpenChange={(open) => !open && setDeleting(null)}
+        onDelete={(withItems) => {
+          void routines.removeSection(routine.id, deleting!.id, withItems);
+          setDeleting(null);
         }}
       />
     </section>
   );
 }
 
-/** Saved on blur or Enter, not on every keystroke. */
-function NameField({
+interface Group {
+  /** Null for the items above the first section. */
+  section: RoutineSection | null;
+  /** Numbered through the routine, counting only what plays. */
+  items: { item: RoutineItem; number: number | null }[];
+}
+
+/** The list cut at each divider, as it is drawn: a header, then a sheet of its items. */
+function groupsOf(entries: Routine['items']): Group[] {
+  const groups: Group[] = [{ section: null, items: [] }];
+  let number = 0;
+  for (const entry of entries) {
+    if (isSection(entry)) {
+      groups.push({ section: entry, items: [] });
+      continue;
+    }
+    const group = groups.at(-1)!;
+    group.items.push({ item: entry, number: plays(entry, group.section) ? ++number : null });
+  }
+  return groups.filter((g) => g.section !== null || g.items.length > 0);
+}
+
+/** A divider: its name, its switch, and its own Add, moves and Delete. */
+function SectionHeader({
   routine,
-  onRename,
+  section,
+  items,
+  first,
+  last,
+  fresh,
+  onAdd,
+  onDelete,
 }: {
   routine: Routine;
-  onRename: (name: string) => void;
+  section: RoutineSection;
+  items: RoutineItem[];
+  first: boolean;
+  last: boolean;
+  fresh: boolean;
+  onAdd: () => void;
+  onDelete: () => void;
 }) {
-  const [draft, setDraft] = useState(routine.name);
+  const routines = useRoutines();
+  const on = items.filter(isOn).length;
+  const plural = (n: number) => `${n} exercise${n === 1 ? '' : 's'}`;
+  const count =
+    items.length === 0
+      ? 'Empty'
+      : !isOn(section)
+        ? `${plural(items.length)}, off`
+        : on === items.length
+          ? plural(items.length)
+          : `${on} of ${plural(items.length)} on`;
+  return (
+    <div className="mt-5 flex items-center gap-3 px-5 pb-2" data-testid="routine-section">
+      <input
+        type="checkbox"
+        aria-label={`Play ${section.name}`}
+        checked={isOn(section)}
+        onChange={(e) =>
+          void routines.updateSection(routine.id, section.id, { enabled: e.target.checked })
+        }
+        className="size-4 shrink-0"
+      />
+      <NameField
+        value={section.name}
+        label="Section name"
+        autoSelect={fresh}
+        onRename={(name) => void routines.updateSection(routine.id, section.id, { name })}
+        className={`face-title text-lead ${isOn(section) ? '' : 'text-ink-muted'}`}
+      />
+      <span className="shrink-0 text-meta text-ink-muted tabular-nums">{count}</span>
+      <div className="flex shrink-0 items-center gap-1">
+        <Button variant="secondary" size="xs" className="mr-1" onClick={onAdd}>
+          Add exercise
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon-xs"
+          aria-label="Move section up"
+          disabled={first}
+          onClick={() => void routines.moveSection(routine.id, section.id, -1)}
+        >
+          ↑
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon-xs"
+          aria-label="Move section down"
+          disabled={last}
+          onClick={() => void routines.moveSection(routine.id, section.id, 1)}
+        >
+          ↓
+        </Button>
+        <Button variant="secondary" size="xs" onClick={onDelete}>
+          Delete
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Deleting a section always asks: just the heading — the default, its items
+ * staying where they are — or its items too.
+ */
+function DeleteSectionDialog({
+  section,
+  count,
+  onOpenChange,
+  onDelete,
+}: {
+  section: RoutineSection | null;
+  count: number;
+  onOpenChange: (open: boolean) => void;
+  onDelete: (withItems: boolean) => void;
+}) {
+  const exercises = `${count} exercise${count === 1 ? '' : 's'}`;
+  return (
+    <Dialog open={section !== null} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
+          <DialogTitle>Delete {section?.name}?</DialogTitle>
+          <DialogDescription>
+            Delete just the heading, and its {exercises} stay where they are — or delete{' '}
+            {count === 1 ? 'it' : 'them'} too.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={() => onDelete(true)}>
+            Delete {exercises} too
+          </Button>
+          <Button autoFocus onClick={() => onDelete(false)}>
+            Delete heading only
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Saved on blur or Enter, not on every keystroke. */
+function NameField({
+  value,
+  label,
+  onRename,
+  autoSelect = false,
+  className,
+}: {
+  value: string;
+  label: string;
+  onRename: (name: string) => void;
+  /** Focused with its text selected, to type straight over. */
+  autoSelect?: boolean;
+  className: string;
+}) {
+  const [draft, setDraft] = useState(value);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!autoSelect) return;
+    input.current?.focus();
+    input.current?.select();
+  }, [autoSelect]);
   const commit = () => {
     const name = draft.trim();
-    if (name && name !== routine.name) onRename(name);
-    else setDraft(routine.name);
+    if (name && name !== value) onRename(name);
+    else setDraft(value);
   };
   return (
     // A plain input: the shared field's text size wins over a heading's.
     <input
-      aria-label="Routine name"
+      aria-label={label}
       value={draft}
+      ref={input}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur();
       }}
-      className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-(length:--h1-size) leading-tight tracking-(--display-tracking) [font-weight:var(--display-weight)] outline-none hover:border-rule focus:border-ink"
+      className={`w-full min-w-0 border-b border-transparent bg-transparent outline-none hover:border-rule focus:border-ink ${className}`}
     />
   );
 }
@@ -212,15 +439,27 @@ const MAX_QUESTIONS = 40;
 function ItemRow({
   routine,
   item,
-  index,
+  number,
+  dimmed,
+  first,
   last,
+  lastInGroup,
+  onInsertSection,
   editing,
   onEditing,
 }: {
   routine: Routine;
   item: RoutineItem;
-  index: number;
+  /** Through the routine, counting only what plays; null when it sits out. */
+  number: number | null;
+  /** Off, or under a section that is. */
+  dimmed: boolean;
+  /** First and last in the whole list, where moving stops. */
+  first: boolean;
   last: boolean;
+  lastInGroup: boolean;
+  /** A new section divider just above this item — offered on hover. */
+  onInsertSection: (() => void) | null;
   editing: boolean;
   onEditing: (open: boolean) => void;
 }) {
@@ -272,13 +511,30 @@ function ItemRow({
 
   return (
     <li
-      className={`grid grid-cols-[28px_1fr_auto] items-center gap-3 px-3 py-3 ${last ? '' : 'border-b border-rule'}`}
+      className={`group/row relative grid grid-cols-[16px_20px_1fr_auto] items-center gap-3 px-3 py-3 ${lastInGroup ? '' : 'border-b border-rule'}`}
       data-testid="routine-item"
     >
-      <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">
-        {index + 1}
-      </span>
-      <div className="min-w-0">
+      {onInsertSection && (
+        <button
+          type="button"
+          aria-label={`Add a section above ${exercise?.name ?? definition.name}`}
+          onClick={onInsertSection}
+          className="absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 rounded-toggle bg-paper px-2 text-meta leading-5 text-accent-text opacity-0 ring-1 ring-rule transition-opacity group-hover/row:opacity-100 focus-visible:opacity-100"
+        >
+          + Section here
+        </button>
+      )}
+      <input
+        type="checkbox"
+        aria-label={`Play ${exercise?.name ?? definition.name}`}
+        checked={isOn(item)}
+        onChange={(e) =>
+          void routines.updateItem(routine.id, item.id, { enabled: e.target.checked })
+        }
+        className="size-4"
+      />
+      <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">{number}</span>
+      <div className={`min-w-0 ${dimmed ? 'opacity-50' : ''}`}>
         <p className="flex flex-wrap items-baseline gap-x-2">
           <span className="face-title text-body">{exercise?.name ?? definition.name}</span>
           <FromBlueprint name={exercise?.name ?? definition.name} blueprint={definition.name} />
@@ -337,7 +593,7 @@ function ItemRow({
           variant="secondary"
           size="icon-xs"
           aria-label="Move up"
-          disabled={index === 0}
+          disabled={first}
           onClick={() => void routines.moveItem(routine.id, item.id, -1)}
         >
           ↑

@@ -131,8 +131,21 @@ export function RoutineList() {
         const definition = findExerciseDefinition(item.definitionId);
         const exercise = lookup(item.exerciseId);
         const current = index === routine.index;
+        // A section's name over its first item that plays — a label, nothing more.
+        const section =
+          item.section && item.section.id !== routine.items[index - 1]?.section?.id
+            ? item.section
+            : null;
         return (
           <li key={item.id}>
+            {section && (
+              <div
+                className="kicker truncate px-3 pt-3 pb-1 text-ink-faint"
+                title={section.name}
+              >
+                {section.name}
+              </div>
+            )}
             <button
               type="button"
               aria-current={current ? 'step' : undefined}

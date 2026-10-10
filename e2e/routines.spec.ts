@@ -136,3 +136,41 @@ test('the list on the left jumps to any item, forward or back', async ({ page })
   await expect(page.getByTestId('routine-chrome')).toContainText('01 / 03');
   await expect(page.getByTestId('play')).toBeVisible();
 });
+
+test('sections label a routine, and switches leave items out of the run', async ({ page }) => {
+  await newRoutine(page, 'Sections', [
+    'Modes up the neck',
+    'Interval sequences',
+    'Key signature drill',
+  ]);
+  // A divider anywhere, its name selected to type over.
+  await page.getByTestId('routine-item').nth(1).hover();
+  await page.getByRole('button', { name: 'Add a section above Interval sequences' }).click();
+  await expect(page.getByLabel('Section name')).toBeFocused();
+  await page.keyboard.type('Speed');
+  await page.keyboard.press('Enter');
+  const speed = page.getByTestId('routine-section');
+  await expect(speed.getByLabel('Section name')).toHaveValue('Speed');
+  await expect(speed).toContainText('2 exercises');
+
+  await page.getByLabel('Play Key signature drill').click();
+  await expect(speed).toContainText('1 of 2 exercises on');
+  await expect(page.getByText('2 of 3 exercises on')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Start' }).click();
+  await expect(page.getByTestId('routine-chrome')).toContainText('01 / 02');
+  const list = page.getByRole('navigation', { name: 'This routine' });
+  await expect(list).toContainText('Speed');
+  await expect(list.getByRole('button', { name: /Key signature drill/ })).toHaveCount(0);
+
+  // The section's switch takes everything under it out.
+  await page.goBack();
+  await page.getByLabel('Play Speed').click();
+  await expect(page.getByText('1 of 3 exercises on')).toBeVisible();
+
+  // Deleting asks, and the heading alone is the default.
+  await speed.getByRole('button', { name: 'Delete' }).click();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('routine-section')).toHaveCount(0);
+  await expect(page.getByTestId('routine-item')).toHaveCount(3);
+});
