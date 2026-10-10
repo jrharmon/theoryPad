@@ -3,6 +3,7 @@ import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/doma
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
+import { itemsWithSections, playedItems, plays } from '@/domain/routine';
 import { RoutineRunner, type ExerciseRunner, type RoutineRunItem } from '@/exercises/runner';
 import { effectiveItem } from '@/exercises/locks';
 import { resolveGeneratedBacking } from '@/exercises/params';
@@ -37,19 +38,23 @@ export class RoutineSession extends PracticeSession {
     // failing the whole routine.
     // Locked settings are read through from the exercise, deleted or not.
     const exercises = new Map((await deps.repos.exercises.withDeleted()).map((e) => [e.id, e]));
+    // Items switched off, or under a section switched off, sit this run out.
     const items: RoutineRunItem[] = [];
-    for (const stored of routine.items) {
+    for (const { item: stored, section } of itemsWithSections(routine.items)) {
+      if (!plays(stored, section)) continue;
       const item = effectiveItem(stored, exercises.get(stored.exerciseId));
       const definition = findExerciseDefinition(item.definitionId);
       if (!definition) continue;
+      const placed = section ? { section: { id: section.id, name: section.name } } : {};
       items.push(
         definition.kind === 'theory'
           ? {
               ...item,
+              ...placed,
               definition,
               subjectWeights: await loadSubjectWeights(deps, item.exerciseId),
             }
-          : { ...item, definition },
+          : { ...item, ...placed, definition },
       );
     }
     return new RoutineSession(routine, items, session.id, deps);
@@ -64,16 +69,17 @@ export class RoutineSession extends PracticeSession {
     super(deps, sessionId);
     this.routineId = routine.id;
     const settings = deps.settings();
-    for (const item of routine.items) {
+    const played = playedItems(routine.items);
+    for (const item of played) {
       if (item.metronome) this.metronomes.set(item.id, item.metronome);
       if (item.playNotes !== undefined) this.playNotes.set(item.id, item.playNotes);
     }
     for (const item of items) {
-      const stored = routine.items.find((i) => i.id === item.id)?.generatedBacking;
+      const stored = played.find((i) => i.id === item.id)?.generatedBacking;
       this.generatedBacking.set(item.id, resolveGeneratedBacking(item.definition, stored));
     }
     // Every item's, before Play: the routine runs straight through.
-    const chosen = routine.items.map((item) => item.metronome ?? settings.audio.metronome);
+    const chosen = played.map((item) => item.metronome ?? settings.audio.metronome);
     for (const id of new Set(chosen)) {
       deps.audio.preloadMetronome(id);
     }

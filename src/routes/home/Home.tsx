@@ -1,14 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
-import type { Routine } from '@/data';
-import type { Instrument } from '@/domain/instrument';
-import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
-import { findExerciseDefinition } from '@/exercises/registry';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
-import { sortRoutines, useRoutines } from '@/store/routines';
+import { describeExtent, routineExtent, sortRoutines, useRoutines } from '@/store/routines';
 import { useSettings } from '@/store/settings';
 import { useProgress } from '@/store/progress';
 import { HeatmapGrid } from '@/components/charts/HeatmapGrid';
@@ -20,14 +16,6 @@ import {
   weekStart,
 } from '@/domain/progress';
 import { LoadingState, PageIntro } from '@/components/ui/page-header';
-
-/** About how long a routine takes, from its items' own settings. */
-function routineSeconds(routine: Routine, instrument: Instrument): number {
-  return routine.items.reduce((total, item) => {
-    const definition = findExerciseDefinition(item.definitionId);
-    return definition ? total + estimateItemSeconds(definition, item, instrument) : total;
-  }, 0);
-}
 
 /** The last four weeks at a glance: the heatmap, the streak, this week's time. */
 function PracticeStrip() {
@@ -73,8 +61,8 @@ export function Home() {
   }, [load, loadSettings]);
 
   const sorted = useMemo(() => sortRoutines(routines), [routines]);
-  const durations = useMemo(
-    () => new Map(routines.map((r) => [r.id, routineSeconds(r, instrument)])),
+  const extents = useMemo(
+    () => new Map(routines.map((r) => [r.id, routineExtent(r, instrument)])),
     [routines, instrument],
   );
 
@@ -111,7 +99,7 @@ export function Home() {
 
         <ul className="sheet px-5 empty:hidden">
           {sorted.map((routine) => {
-            const count = routine.items.length;
+            const extent = extents.get(routine.id)!;
             return (
               <li
                 key={routine.id}
@@ -131,15 +119,13 @@ export function Home() {
                     {routine.name}
                   </Link>
                   <p className="text-body-sm text-ink-muted tabular-nums">
-                    {count === 0
-                      ? 'No exercises yet'
-                      : `${count} exercise${count === 1 ? '' : 's'} · about ${formatDuration(durations.get(routine.id) ?? 0)}`}
+                    {extent.total === 0 ? 'No exercises yet' : describeExtent(extent)}
                   </p>
                 </div>
                 <Button variant="secondary" asChild>
                   <Link to={`/routines/${routine.id}`}>Edit</Link>
                 </Button>
-                {count > 0 ? (
+                {extent.played > 0 ? (
                   <Button asChild>
                     <Link to={`/practice/routine/${routine.id}`}>Start</Link>
                   </Button>

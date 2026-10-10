@@ -32,6 +32,13 @@ export interface RoutineRunItem {
   heldAxisValues: Record<string, string>;
   /** Theory: lean toward subjects missed or seen least. */
   subjectWeights?: Readonly<Record<string, number>>;
+  /** The section it sits under in the routine — a label only. */
+  section?: RunSection;
+}
+
+export interface RunSection {
+  id: string;
+  name: string;
 }
 
 export interface RoutineRunnerConfig {
@@ -70,6 +77,7 @@ export interface RoutineItemSnapshot {
   completed: number;
   /** Skipped before it had all its passes. */
   skipped: boolean;
+  section?: RunSection;
 }
 
 export interface RoutineSnapshot {
@@ -132,6 +140,7 @@ export class RoutineRunner {
           variation: snap.variation,
           completed: this.results.get(item.id)?.completed ?? 0,
           skipped: this.results.get(item.id)?.skipped ?? false,
+          ...(item.section ? { section: item.section } : {}),
         };
       }),
       current: this.phase === 'running' ? (this.current?.snapshot ?? null) : null,

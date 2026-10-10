@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Exercise, Routine, RoutineItem } from '@/data';
-import { itemFromExercise, moveItem, sortRoutines } from '../routines';
+import type { Exercise, Routine } from '@/data';
+import { itemFromExercise, sortRoutines } from '../routines';
 
 const exercise: Exercise = {
   id: 'ex-1',
@@ -45,17 +45,6 @@ describe('itemFromExercise', () => {
 
   it('gives each copy its own id, so one exercise can be added twice', () => {
     expect(itemFromExercise(exercise).id).not.toBe(itemFromExercise(exercise).id);
-  });
-});
-
-describe('moveItem', () => {
-  const items = ['a', 'b', 'c'].map((id) => ({ id }) as RoutineItem);
-
-  it('moves up and down, and stops at the ends', () => {
-    expect(moveItem(items, 'b', -1).map((i) => i.id)).toEqual(['b', 'a', 'c']);
-    expect(moveItem(items, 'b', 1).map((i) => i.id)).toEqual(['a', 'c', 'b']);
-    expect(moveItem(items, 'a', -1)).toBe(items);
-    expect(moveItem(items, 'c', 1)).toBe(items);
   });
 });
 

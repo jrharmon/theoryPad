@@ -22,6 +22,7 @@ import {
 import type { MetronomeVoiceId } from '@/domain/drums';
 import { chordOnDegree, chroma, type KeyMode } from '@/domain/music';
 import { countInTicks, ticksPerBar, type Phrase } from '@/domain/phrase';
+import { itemsOf } from '@/domain/routine';
 import { FakeClock } from '@/domain/time';
 import { exerciseDefinition } from '@/exercises/registry';
 import { newExerciseFrom } from '@/store/exercises';
@@ -705,7 +706,7 @@ describe('ExerciseSession', () => {
     await routine.setCountIn(0);
     await routine.chooseBacking({ kind: 'drone' });
     const saved = (await repos.routines.byId(stored.id))!;
-    expect(saved.items[0]!.countInBars).toBe(0);
+    expect(itemsOf(saved.items)[0]!.countInBars).toBe(0);
     expect(saved.backing).toEqual({ kind: 'drone' });
     expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(2);
   });
@@ -740,7 +741,9 @@ describe('ExerciseSession', () => {
     });
     const routine = await RoutineSession.open(stored, deps);
     await routine.setMetronomeVoice('drums-soft');
-    expect((await repos.routines.byId(stored.id))!.items[0]!.metronome).toBe('drums-soft');
+    expect(itemsOf((await repos.routines.byId(stored.id))!.items)[0]!.metronome).toBe(
+      'drums-soft',
+    );
     expect((await repos.exercises.byId(upbeat.id))!.metronome).toBe('drums-upbeat');
   });
 
@@ -835,7 +838,7 @@ describe('RoutineSession', () => {
     ).toEqual(items.map((i) => i.id).sort());
     const saved = (await repos.routines.byId(stored.id))!;
     expect(saved.lastPlayedAt).toBeDefined();
-    expect(saved.items[0]!.heldAxisValues).toEqual(
+    expect(itemsOf(saved.items)[0]!.heldAxisValues).toEqual(
       reps[0]!.find((r) => r.routineItemId === items[0]!.id)!.axes,
     );
   });
@@ -936,6 +939,31 @@ describe('RoutineSession', () => {
     ]);
   });
 
+  it('leaves out what is switched off, and labels the rest with their section', async () => {
+    const { deps, repos } = world();
+    const exercise = await addExercise(repos, 'modes-through-key');
+    const [a, b, c, d] = [0, 1, 2, 3].map(() => ({ ...itemFromExercise(exercise), reps: 1 }));
+    const stored = await repos.routines.add({
+      name: 'Sections',
+      items: [
+        a!,
+        { kind: 'section', id: 'warmup', name: 'Warmup' },
+        { ...b!, enabled: false },
+        c!,
+        { kind: 'section', id: 'speed', name: 'Speed', enabled: false },
+        d!,
+      ],
+      sessionAxisPolicies: IN_G,
+    });
+    const session = await RoutineSession.open(stored, deps);
+    expect(
+      session.state.routineSnapshot!.items.map((item) => [item.id, item.section?.name]),
+    ).toEqual([
+      [a!.id, undefined],
+      [c!.id, 'Warmup'],
+    ]);
+  });
+
   it('drops a track for an item in its own mode, and brings it back fresh after', async () => {
     const inG = track();
     const { deps, repos, audio } = world([inG]);
@@ -1013,7 +1041,7 @@ describe('RoutineSession', () => {
     // library keeps its own, as does the routine's other copy.
     await session.setCountIn(1);
     const saved = (await repos.routines.byId(stored.id))!;
-    expect(saved.items.map((item) => item.countInBars)).toEqual([2, 1]);
+    expect(itemsOf(saved.items).map((item) => item.countInBars)).toEqual([2, 1]);
     expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(1);
   });
 

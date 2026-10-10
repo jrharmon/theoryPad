@@ -545,12 +545,26 @@ export interface RoutineItem {
   tempo: TempoConfig;
   axisPolicies: Partial<Record<AxisId, AxisPolicy>>;
   heldAxisValues: Record<string, string>;
+  /** Off leaves it out of a run, keeping its place and settings. Absent is on. */
+  enabled?: boolean;
+}
+
+/**
+ * A divider in a routine's list: everything after it, up to the next or the end, is in it.
+ * It labels, and its switch takes everything under it out of a run. Items may sit above the
+ * first one, in no section. `src/domain/routine/` has the rules.
+ */
+export interface RoutineSection {
+  kind: 'section';
+  id: string;
+  name: string;
+  enabled?: boolean;
 }
 
 export interface Routine {
   id: Uuid;
   name: string;
-  items: RoutineItem[];
+  items: (RoutineItem | RoutineSection)[];
   interExerciseGapSec: number; // 8
   /** Policies for the session-scoped axes (key, mode), shared by every exercise in the run. */
   sessionAxisPolicies: Partial<Record<AxisId, AxisPolicy>>;

@@ -1,8 +1,21 @@
 import { create } from 'zustand';
 import { repos, newId, type Exercise, type Routine, type RoutineItem } from '@/data';
 import type { AxisId, AxisPolicy } from '@/domain/variation';
+import type { Instrument } from '@/domain/instrument';
+import { estimateItemSeconds, formatDuration } from '@/exercises/estimate';
 import { initialItemReps } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
+import {
+  addItem,
+  insertSection,
+  isSection,
+  itemsOf,
+  moveItem,
+  playedItems,
+  moveSection,
+  removeSection,
+  type RoutineSection,
+} from '@/domain/routine';
 import { serialWrites } from './util';
 
 /**
@@ -35,14 +48,33 @@ export function itemFromExercise(exercise: Exercise): RoutineItem {
   };
 }
 
-/** Move an item up (-1) or down (+1), stopping at the ends. */
-export function moveItem(items: RoutineItem[], itemId: string, delta: -1 | 1): RoutineItem[] {
-  const from = items.findIndex((i) => i.id === itemId);
-  const to = from + delta;
-  if (from === -1 || to < 0 || to >= items.length) return items;
-  const next = [...items];
-  [next[from], next[to]] = [next[to]!, next[from]!];
-  return next;
+/** How many items a routine has, how many it plays, and about how long that takes. */
+export function routineExtent(
+  routine: Routine,
+  instrument: Instrument,
+): { total: number; played: number; seconds: number } {
+  const played = playedItems(routine.items);
+  return {
+    total: itemsOf(routine.items).length,
+    played: played.length,
+    seconds: played.reduce((sum, item) => {
+      const definition = findExerciseDefinition(item.definitionId);
+      return definition ? sum + estimateItemSeconds(definition, item, instrument) : sum;
+    }, 0),
+  };
+}
+
+/** "7 exercises · about 12 min", or "4 of 7 exercises on · …" with some switched off. */
+export function describeExtent({
+  total,
+  played,
+  seconds,
+}: ReturnType<typeof routineExtent>): string {
+  const count =
+    played === total
+      ? `${total} exercise${total === 1 ? '' : 's'}`
+      : `${played} of ${total} exercise${total === 1 ? '' : 's'} on`;
+  return played === 0 ? count : `${count} · about ${formatDuration(seconds)}`;
 }
 
 /** Favorites first, then most recently played, then newest. */
@@ -63,11 +95,24 @@ interface RoutinesState {
   rename: (id: string, name: string) => Promise<void>;
   setFavorite: (id: string, favorite: boolean) => Promise<void>;
   setSessionPolicy: (id: string, axis: AxisId, policy: AxisPolicy) => Promise<void>;
-  /** The new item, so its editor can open straight away. */
-  addItem: (id: string, exercise: Exercise) => Promise<RoutineItem>;
+  /**
+   * The new item, at the end of a section or, with none named, of the routine —
+   * returned so its editor can open straight away.
+   */
+  addItem: (id: string, exercise: Exercise, sectionId?: string | null) => Promise<RoutineItem>;
   updateItem: (id: string, itemId: string, changes: Partial<RoutineItem>) => Promise<void>;
   moveItem: (id: string, itemId: string, delta: -1 | 1) => Promise<void>;
   removeItem: (id: string, itemId: string) => Promise<void>;
+  /** A new divider before an entry, or at the end; returned so its name can be typed over. */
+  addSection: (id: string, beforeId: string | null) => Promise<RoutineSection>;
+  updateSection: (
+    id: string,
+    sectionId: string,
+    changes: Partial<Pick<RoutineSection, 'name' | 'enabled'>>,
+  ) => Promise<void>;
+  moveSection: (id: string, sectionId: string, delta: -1 | 1) => Promise<void>;
+  /** The divider alone, its items staying put — or with its items. */
+  removeSection: (id: string, sectionId: string, withItems: boolean) => Promise<void>;
   /** Any other change to the routine row, against the stored copy. */
   update: (id: string, changes: Partial<Routine>) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -110,19 +155,36 @@ export const useRoutines = create<RoutinesState>((set, get) => {
       mutate(id, (r) => ({
         sessionAxisPolicies: { ...r.sessionAxisPolicies, [axis]: policy },
       })),
-    async addItem(id, exercise) {
+    async addItem(id, exercise, sectionId = null) {
       const item = itemFromExercise(exercise);
-      await mutate(id, (r) => ({ items: [...r.items, item] }));
+      await mutate(id, (r) => ({ items: addItem(r.items, item, sectionId) }));
       return item;
     },
     updateItem: (id, itemId, changes) =>
       mutate(id, (r) => ({
-        items: r.items.map((item) => (item.id === itemId ? { ...item, ...changes } : item)),
+        items: r.items.map((entry) =>
+          !isSection(entry) && entry.id === itemId ? { ...entry, ...changes } : entry,
+        ),
       })),
     moveItem: (id, itemId, delta) =>
       mutate(id, (r) => ({ items: moveItem(r.items, itemId, delta) })),
     removeItem: (id, itemId) =>
       mutate(id, (r) => ({ items: r.items.filter((item) => item.id !== itemId) })),
+    async addSection(id, beforeId) {
+      const section: RoutineSection = { kind: 'section', id: newId(), name: 'New section' };
+      await mutate(id, (r) => ({ items: insertSection(r.items, section, beforeId) }));
+      return section;
+    },
+    updateSection: (id, sectionId, changes) =>
+      mutate(id, (r) => ({
+        items: r.items.map((entry) =>
+          isSection(entry) && entry.id === sectionId ? { ...entry, ...changes } : entry,
+        ),
+      })),
+    moveSection: (id, sectionId, delta) =>
+      mutate(id, (r) => ({ items: moveSection(r.items, sectionId, delta) })),
+    removeSection: (id, sectionId, withItems) =>
+      mutate(id, (r) => ({ items: removeSection(r.items, sectionId, withItems) })),
     update: (id, changes) => mutate(id, () => changes),
 
     async remove(id) {

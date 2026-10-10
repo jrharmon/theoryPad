@@ -7,6 +7,7 @@ import type { CountInBars } from '@/domain/phrase';
 import type { AxisId, AxisPolicies } from '@/domain/variation';
 import type { TempoConfig } from '@/domain/tempo';
 import type { FretTally } from '@/domain/progress';
+import type { RoutineEntry } from '@/domain/routine';
 
 export type Uuid = string;
 
@@ -157,11 +158,14 @@ export interface RoutineItem {
   generatedBacking?: GeneratedBackingSettings;
   axisPolicies: AxisPolicies;
   heldAxisValues: Record<string, string>;
+  /** Off leaves it out of a run, keeping its place and settings. Absent is on. */
+  enabled?: boolean;
 }
 
 export interface Routine extends Row {
   name: string;
-  items: RoutineItem[];
+  /** The items in order, with the section dividers between them. */
+  items: RoutineEntry<RoutineItem>[];
   /** Key and mode, rolled once per run and shared by every item. */
   sessionAxisPolicies: AxisPolicies;
   /** Pinned to the top of the list. */
