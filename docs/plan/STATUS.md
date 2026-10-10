@@ -1,11 +1,11 @@
 # Status — start here
 
-**Last updated:** 2026-10-10. **Routine sections are built on `routine-sections`, waiting at
-the gate** (see "Routine sections" below); Feedback round 8 before it is merged and pushed. **The milestone plan is finished; the core app is built.**
+**Last updated:** 2026-10-10. **Routine sections are merged and pushed** (see "Routine
+sections" below). **The milestone plan is finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
 theme. Nothing is queued: the player picks what comes next, and when asked about future work,
-bring up what fits from that file. The latest run is Feedback round 8 (see "Feedback round 8"); every run has
+bring up what fits from that file. The latest run is Routine sections (see "Routine sections"); every run has
 its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
 (backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
 write-up before touching backing playback again** — it corrected the advert signal that run
@@ -47,12 +47,11 @@ under the old address must be exported and imported) — the repo is public, and
 | Turnaround — repeat the turning note: Auto / Repeat note / No repeat | ✅ merged, pushed 2026-09-28 — see below |
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
 | Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
-| Routine sections — on/off switches, section dividers | built on `routine-sections`, at the gate — see below |
+| Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything is on `main`, and every merged branch has been
-deleted — `main` is the only branch, local and origin in sync, apart from `routine-sections`
-at its gate. 993 unit tests in 60 files, 74 E2E, `pnpm check` green.
+deleted — `main` is the only branch, local and origin in sync. 993 unit tests in 60 files, 74 E2E, `pnpm check` green.
 
 ## How the player works — read before starting anything
 
@@ -200,7 +199,7 @@ at its gate. 993 unit tests in 60 files, 74 E2E, `pnpm check` green.
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Routine sections — at the gate (2026-10-10)
+## Routine sections — merged (2026-10-10)
 
 The player asked for two things: switching a routine's exercises on and off without removing them, and
 flat sections (Warmup, Theory, Speed building…) that only organize. Built on
@@ -234,8 +233,8 @@ files), all 74 E2E pass.
   plays.
 
 **Gate round 1 (2026-10-10):** item boxes under an off section dimmed and disabled (above).
-Still open: whether hover-only "+ Section here" is easy enough to find (it shows on keyboard
-focus too).
+**Gate round 2 (2026-10-10):** passed — the hover-only "+ Section here" is easy to find and
+keeps the list uncluttered. Fast-forwarded into `main` and pushed, branch deleted.
 
 ## Feedback round 8 — merged (2026-10-07)
 
