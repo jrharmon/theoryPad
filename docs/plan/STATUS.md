@@ -227,13 +227,15 @@ files), all 74 E2E pass.
   the unsectioned items), and Delete. Delete asks every time a section has items: "Delete
   heading only" is the default (Enter), and the items stay put, so they join the section above;
   "Delete N exercises too" takes them with it. An empty section deletes without asking.
-  An item's ↑/↓ cross dividers one place at a time. Subtitles on the builder and on Home read
+  Under a switched-off section, each item's box is dimmed and disabled, keeping its ticked or
+  unticked state (asked at the first gate round, so an item that is on but under an off section
+  plainly won't play). An item's ↑/↓ cross dividers one place at a time. Subtitles on the builder and on Home read
   "4 of 7 exercises on · about 12 min" when some are off, and Start is disabled when nothing
   plays.
 
-**Open for the gate:** whether hover-only "+ Section here" is easy enough to find (it shows on
-keyboard focus too), and whether a faded row under a switched-off section reads clearly enough
-when its own box is still ticked.
+**Gate round 1 (2026-10-10):** item boxes under an off section dimmed and disabled (above).
+Still open: whether hover-only "+ Section here" is easy enough to find (it shows on keyboard
+focus too).
 
 ## Feedback round 8 — merged (2026-10-07)
 

@@ -192,6 +192,7 @@ export function RoutineBuilder() {
                       item={item}
                       number={number}
                       dimmed={!plays(item, group.section)}
+                      sectionOff={group.section !== null && !isOn(group.section)}
                       first={routine.items[0]?.id === item.id}
                       last={routine.items.at(-1)?.id === item.id}
                       lastInGroup={i === group.items.length - 1}
@@ -441,6 +442,7 @@ function ItemRow({
   item,
   number,
   dimmed,
+  sectionOff,
   first,
   last,
   lastInGroup,
@@ -454,6 +456,8 @@ function ItemRow({
   number: number | null;
   /** Off, or under a section that is. */
   dimmed: boolean;
+  /** Under a section switched off: its own switch keeps its state but can't change. */
+  sectionOff: boolean;
   /** First and last in the whole list, where moving stops. */
   first: boolean;
   last: boolean;
@@ -528,10 +532,11 @@ function ItemRow({
         type="checkbox"
         aria-label={`Play ${exercise?.name ?? definition.name}`}
         checked={isOn(item)}
+        disabled={sectionOff}
         onChange={(e) =>
           void routines.updateItem(routine.id, item.id, { enabled: e.target.checked })
         }
-        className="size-4"
+        className={`size-4 ${sectionOff ? 'opacity-50' : ''}`}
       />
       <span className="text-body-sm font-extrabold tabular-nums text-ink-faint">{number}</span>
       <div className={`min-w-0 ${dimmed ? 'opacity-50' : ''}`}>

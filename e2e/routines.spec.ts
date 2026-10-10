@@ -167,6 +167,9 @@ test('sections label a routine, and switches leave items out of the run', async 
   await page.goBack();
   await page.getByLabel('Play Speed').click();
   await expect(page.getByText('1 of 3 exercises on')).toBeVisible();
+  // Its items' own switches keep their state, but can't change while it is off.
+  await expect(page.getByLabel('Play Interval sequences')).toBeChecked();
+  await expect(page.getByLabel('Play Interval sequences')).toBeDisabled();
 
   // Deleting asks, and the heading alone is the default.
   await speed.getByRole('button', { name: 'Delete' }).click();
