@@ -1,13 +1,16 @@
 import type { Instrument } from '@/domain/instrument';
-import { noteAt } from '@/domain/instrument';
 import type { Phrase, TabNote, Technique } from '@/domain/phrase';
-import { ticksToSeconds } from '@/domain/phrase';
+import { soundingNotes, soundingPitch, ticksToSeconds } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
 import type { InstrumentVoice } from './voices';
 
 /** Techniques that change how a note sounds, rather than only how it looks. */
 function soundingVelocity(note: TabNote): number {
-  return (note.techniques ?? []).reduce(velocityFor, note.velocity ?? 0.8);
+  const techniques = note.techniques ?? [];
+  // An accent is the full velocity, as `TabNote.velocity` documents, before
+  // anything that softens the note.
+  const base = techniques.includes('accent') ? 1 : (note.velocity ?? 0.8);
+  return techniques.reduce(velocityFor, base);
 }
 
 function velocityFor(base: number, technique: Technique): number {
@@ -26,10 +29,16 @@ function velocityFor(base: number, technique: Technique): number {
       return base * 0.45;
     case 'palm-mute':
       return base * 0.8;
+    // A muted string has no pitch to sing; the fretted sample, cut very short
+    // and quiet, stands in for the "chk".
+    case 'dead':
+      return base * 0.5;
     default:
       return base;
   }
 }
+
+const DEAD_SECONDS = 0.06;
 
 function soundingDuration(note: TabNote, seconds: number): number {
   return (note.techniques ?? []).reduce(durationFor, seconds);
@@ -43,6 +52,8 @@ function durationFor(seconds: number, technique: Technique): number {
       return Math.min(seconds, seconds * 0.6);
     case 'let-ring':
       return seconds * 2;
+    case 'dead':
+      return Math.min(seconds, DEAD_SECONDS);
     default:
       return seconds;
   }
@@ -72,13 +83,15 @@ export class PhrasePlayer {
 
     for (let pass = 0; pass < repeats; pass += 1) {
       const offset = atTick + pass * phrase.totalTicks;
-      for (const note of phrase.notes) {
-        const start = offset + note.startTick;
+      // Ties, graces and harmonics are worked out once, in the domain.
+      for (const { note, startTick, durationTicks } of soundingNotes(phrase)) {
+        // A grace before the very first beat can't go before the clock starts.
+        const start = Math.max(0, offset + startTick);
         this.handles.push(
           this.clock.schedule((audioTime) => {
-            const seconds = ticksToSeconds(note.durationTicks, this.clock.bpm);
+            const seconds = ticksToSeconds(durationTicks, this.clock.bpm);
             this.voice().play(
-              noteAt(instrument, note),
+              soundingPitch(instrument, note),
               soundingDuration(note, seconds),
               audioTime,
               soundingVelocity(note),

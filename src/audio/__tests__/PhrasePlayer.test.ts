@@ -126,6 +126,27 @@ describe('PhrasePlayer', () => {
     expect(played[1]!.duration).toBe(2);
   });
 
+  it('plays accents loud, dead notes short and quiet, and ties as one note', () => {
+    const clock = new FakeClock(60);
+    const { voice, played } = recordingVoice();
+    const phrase = phraseBuilder()
+      .rhythm(QUARTER)
+      .note(p(0, 3), { techniques: ['accent'] })
+      .note(p(0, 5), { techniques: ['dead'] })
+      .note(p(0, 7))
+      .note(p(0, 7), { tied: true })
+      .build();
+
+    new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
+    clock.start();
+    clock.advanceTicks(QUARTER * 4);
+
+    expect(played.map((n) => n.velocity)).toEqual([1, 0.4, 0.8]);
+    expect(played[1]!.duration).toBeLessThan(0.1);
+    // The tied quarter is not picked again: the note before rings through it.
+    expect(played[2]!.duration).toBe(2);
+  });
+
   it('honours a note’s own velocity', () => {
     const clock = new FakeClock(60);
     const { voice, played } = recordingVoice();
