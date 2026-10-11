@@ -81,6 +81,18 @@ describe('importPhrase', () => {
     expect(labels[6]).toBe('Coda');
   });
 
+  it('plays a repeat once through a D.S., and takes a repeat in the coda', () => {
+    const s = score([
+      { targets: ['Segno'], repeatStart: true },
+      { repeatEnd: 2 },
+      { jumps: ['DaCoda'] },
+      { jumps: ['DaSegnoAlCoda'] },
+      { targets: ['Coda'], repeatStart: true },
+      { repeatEnd: 2 },
+    ]);
+    expect(frets(s)).toEqual([1, 2, 1, 2, 3, 4, 1, 2, 3, 5, 6, 5, 6]);
+  });
+
   it('leaves out a jump whose sign is outside the bars, and says so', () => {
     const s = score([{ targets: ['Segno'] }, {}, { jumps: ['DaSegno'] }]);
     const value = played(s, 1, 2);

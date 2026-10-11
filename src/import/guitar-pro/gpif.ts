@@ -280,6 +280,8 @@ function readNote(el: Element): GpNote {
   if (child(el, 'Trill')) unsupported.push('trill');
   if (child(el, 'LeftFingering') || child(el, 'RightFingering')) unsupported.push('fingering');
   if (child(el, 'Ornament')) unsupported.push('ornament');
+  // Notes entered as notation only carry a pitch, not a place on the neck.
+  if (!property(el, 'String')) unsupported.push('no string or fret');
 
   let harmonic: GpNote['harmonic'];
   if (property(el, 'Harmonic')) {

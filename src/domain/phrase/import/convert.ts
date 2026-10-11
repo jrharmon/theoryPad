@@ -102,8 +102,9 @@ function jumpPlan(jump: string): { to: 'start' | 'Segno' | 'SegnoSegno'; then?: 
 /**
  * The bars in the order they are played. Repeats go back to the last repeat
  * start in the range (or its first bar); alternate endings play on their
- * passes; a D.C. or D.S. is taken once, after which repeats are not taken
- * again and "To Coda" or "Fine" applies. A jump to a sign outside the range is
+ * passes; a D.C. or D.S. is taken once, after which "To Coda" or "Fine"
+ * applies. A repeat is played out once: coming back over it after a jump, it
+ * isn't taken again, but one first reached after the jump (in the coda) is. A jump to a sign outside the range is
  * left out, and said.
  */
 function playOrder(
@@ -115,6 +116,7 @@ function playOrder(
   const order: PlayedBar[] = [];
   const passes = new Map<number, number>();
   const jumpsTaken = new Set<number>();
+  const repeatsDone = new Set<number>();
   const find = (target: string, after = firstBar) => {
     for (let i = Math.max(firstBar, after); i <= lastBar; i += 1) {
       if (bars[i]!.targets.includes(target)) return i;
@@ -146,7 +148,7 @@ function playOrder(
 
     if (afterJump === 'Fine' && bar.targets.includes('Fine')) break;
 
-    if (bar.repeatEnd > 1 && afterJump === undefined) {
+    if (bar.repeatEnd > 1 && !repeatsDone.has(i)) {
       const played = passes.get(i) ?? 1;
       if (played < bar.repeatEnd) {
         passes.set(i, played + 1);
@@ -156,6 +158,7 @@ function playOrder(
         cameBack = true;
         continue;
       }
+      repeatsDone.add(i);
       pass = 1;
     }
 
