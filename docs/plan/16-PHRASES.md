@@ -35,9 +35,9 @@ there and from FUTURE-WORK's matching line when the run starts.
 5. **No separate phrase concept for the player.** The phrase lives inside the exercise's
    settings. Once created, it is an exercise like every other.
 6. **Repeats are written out** at import.
-7. **No tempo or time-signature change inside the imported range.** Such an import is refused,
-   with the reason and the bar where it happens. A change *outside* the chosen bars doesn't
-   matter.
+7. **No time-signature change inside the imported range.** Such an import is refused, with
+   the reason and the bar where it happens. A change *outside* the chosen bars doesn't matter.
+   *(Tempo changes were refused too until decision 21: they are now ignored.)*
 8. **Rhythm by spacing**, as the tab does now. Stems and beams come only if it proves hard to
    read.
 9. **The key comes from the file.**
@@ -215,7 +215,8 @@ were on the first plan's list only because of whole songs.
 | Several tracks | Pick one. Only tracks with notes in the chosen bars are listed. |
 | More of the file than you want | A start and end bar. Section markers show beside the bar numbers to help choose. |
 | Repeats, alternate endings, D.S./D.C./Coda | Written out (§5). |
-| A tempo or time-signature change inside the range | Refused, saying where (decision 7). |
+| A time-signature change inside the range | Refused, saying where (decision 7). |
+| A tempo change inside the range | Ignored: the tempo at the first bar holds; listed as dropped (decision 21). |
 | Grace notes | No column in the tab; in sound, a short note ahead of or on the beat. |
 | Capo | Fret numbers as written; the brief says "Capo 2". |
 | A second voice | Merged; a phrase is a flat list of notes. |
@@ -415,7 +416,7 @@ which means "Settings' tuning", so the format version doesn't change.
    - **Bars**: the whole file, or start and end bars, with section markers beside the numbers.
    - **A live tab preview.**
    - **What was dropped** ("trill on 2 notes not shown").
-   - **Why it can't be imported**, if a tempo or time signature changes in the range.
+   - **Why it can't be imported**, if the time signature changes in the range.
    - **Name**: from the section marker if the range starts on one, otherwise the file's title.
 3. **Create.** This sets the phrase, the exercise's tuning and capo, the key and mode, and a
    target tempo equal to the written tempo. From then on it's an ordinary exercise: tags,
@@ -502,8 +503,8 @@ never committed. Unless stated: standard tuning, 4/4, about 100 bpm, one track, 
 5. **`05-grace-picking`**: grace notes before and on the beat (one sliding, one hammered), and
    sixteenths with alternate pick strokes marked.
 6. **`06-structure`**: 8 bars, with section markers on bars 1 and 5, a ×2 repeat, a ×3 repeat,
-   1st and 2nd endings, and a tempo change at bar 5. Importing bars 1–4 should work and 1–8
-   should be refused. If you're willing, a second file with D.S. al Coda.
+   1st and 2nd endings, and a tempo change at bar 5. Importing bars 1–4 should work, and so
+   should 1–8, with the tempo change listed as ignored (decision 21). If you're willing, a second file with D.S. al Coda.
 7. **`07-tracks`**: three guitar tracks (drop D, 7-string, and one with capo 2), one of them
    left empty, plus a drum track. Only the guitar tracks with notes should be offered.
 8. **`08-compound`**: four bars of 6/8 in a non-C key with a minor key signature, to check the
@@ -521,6 +522,12 @@ as recommended:
 19. **Capo per exercise**, offered beside the tuning for every exercise, not only written ones.
 20. **The fretboard explorer's heat counts only reps in the tuning it shows.** It stays "places
     on the neck I've played". Reps from before `Rep.tuning` count as the Settings tuning.
+
+Added during run A (2026-10-11):
+
+21. **A tempo change in the range is ignored, not refused.** The written tempo is the one in
+    force at the range's first bar; any later change is left out and listed with what was
+    dropped ("tempo change to 140 at bar 5 ignored"). Time-signature changes are still refused.
 
 ---
 
