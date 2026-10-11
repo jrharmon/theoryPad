@@ -217,26 +217,74 @@ describe('TabStaff', () => {
     expect(screen.getByTestId('tab-note-0-1')).toHaveAttribute('data-role', 'target');
   });
 
-  it('writes articulation marks where tab writes them', () => {
+  it('writes technique marks where tab writes them', () => {
     const phrase = phraseBuilder()
       .rhythm(EIGHTH)
       .note(p(0, 3))
       .note(p(0, 5), { techniques: ['hammer-on'] })
       .note(p(0, 7), { techniques: ['pull-off'] })
       .note(p(0, 9), { techniques: ['slide-up'] })
-      .note(p(0, 9), { techniques: ['vibrato'] })
+      .note(p(0, 9), { techniques: ['slide-in-below', 'vibrato', 'slide-out-down'] })
+      .note(p(0, 7), {
+        bend: {
+          points: [
+            { at: 0, tones: 0 },
+            { at: 0.5, tones: 1 },
+            { at: 1, tones: 0 },
+          ],
+        },
+      })
       .build();
     render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
-    expect(screen.getByTestId('articulation-0-1')).toHaveTextContent('h');
-    expect(screen.getByTestId('articulation-0-2')).toHaveTextContent('p');
-    expect(screen.getByTestId('articulation-0-3')).toHaveTextContent('/');
-    expect(screen.getByTestId('articulation-0-4')).toHaveTextContent('~');
-    expect(screen.queryByTestId('articulation-0-0')).not.toBeInTheDocument();
 
     // A move into a note is written before it — 5h7, not 5 7h — and a mark
-    // describing the note itself comes after it.
+    // describing the note itself comes after it, several on one note in order.
+    expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent(/^3$/);
     expect(screen.getByTestId('tab-note-0-1')).toHaveTextContent('h5');
-    expect(screen.getByTestId('tab-note-0-4')).toHaveTextContent('9~');
+    expect(screen.getByTestId('tab-note-0-2')).toHaveTextContent('p7');
+    expect(screen.getByTestId('tab-note-0-3')).toHaveTextContent('/9');
+    expect(screen.getByTestId('tab-note-0-4')).toHaveTextContent('/9\\~');
+    // A bend and release is written in line; how far it goes, above.
+    expect(screen.getByTestId('tab-note-0-5')).toHaveTextContent('7br');
+    expect(screen.getByTestId('beat-mark')).toHaveTextContent('full');
+  });
+
+  it('writes dead, ghost, harmonic, tied and grace notes, and spans palm mute over its run', () => {
+    const pm = { techniques: ['palm-mute' as const] };
+    const phrase = phraseBuilder()
+      .rhythm(EIGHTH)
+      .note(p(0, 0), pm)
+      .note(p(0, 0), pm)
+      .note(p(0, 3), { techniques: ['palm-mute', 'accent'] })
+      .note(p(1, 5), { techniques: ['dead'] })
+      .note(p(1, 5), pm)
+      .note(p(1, 7), { techniques: ['ghost'] })
+      .note(p(5, 12), { harmonic: { kind: 'natural' } })
+      .note(p(5, 12), { tied: true })
+      .build();
+    // A grace note belongs to the beat at its tick, and takes no column there.
+    phrase.notes.push({
+      string: 1,
+      fret: 5,
+      startTick: 6 * EIGHTH,
+      durationTicks: 60,
+      grace: 'before-beat',
+    });
+    render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
+
+    expect(screen.getByTestId('tab-note-1-3')).toHaveTextContent(/^x$/);
+    expect(screen.getByTestId('tab-note-1-5')).toHaveTextContent('(7)');
+    expect(screen.getByTestId('tab-note-5-6')).toHaveTextContent('<12>');
+    expect(screen.getByTestId('tab-note-5-7')).toHaveTextContent('(12)');
+    expect(screen.getByTestId('tab-note-5-7')).toHaveAttribute('data-tied');
+    expect(screen.getByTestId('grace-1-6')).toHaveTextContent('5');
+    expect(screen.getByTestId('beat-mark')).toHaveTextContent('>');
+
+    // Palm mute is written once over each run, and a note without it ends one.
+    const spans = screen.getAllByTestId('mark-span');
+    expect(spans.map((s) => s.textContent)).toEqual(['P.M.', 'P.M.']);
+    expect(spans[0]!.style.gridColumn).toBe('2 / span 3');
+    expect(spans[1]!.style.gridColumn).toBe('6 / span 1');
   });
 
   it('shows pick strokes only when asked', () => {

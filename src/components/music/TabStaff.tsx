@@ -2,14 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type {
-  Bar,
-  Phrase,
-  TabNote,
-  Technique,
-  TimeSignature,
-  TripletGroup,
-} from '@/domain/phrase';
+import type { Bar, Phrase, TabNote, TimeSignature, TripletGroup } from '@/domain/phrase';
 import {
   PPQ,
   requiredSubdivision,
@@ -18,6 +11,8 @@ import {
   tripletGroups,
 } from '@/domain/phrase';
 import { barsPerLine, zoomScale } from './tabLayout';
+import type { BeatMark, MarkSpan } from './tabMarks';
+import { beatMarks, noteMarks, techniqueSpans } from './tabMarks';
 
 export interface TabStaffProps {
   phrase: Phrase;
@@ -63,29 +58,20 @@ const ROW_HEIGHT = { compact: 19, large: 30 } as const;
 const FRET_SIZE = { compact: 12, large: 19 } as const;
 const LABEL_COL = { compact: 28, large: 34 } as const;
 
-/**
- * Written articulation marks.
- *
- * `leading` marks connect this note to the one before it, so they are written
- * in front of the fret number — tab writes 5h7, not 5 7h. `trailing` marks
- * describe the note itself and follow it.
- */
-const ARTICULATION_MARK: Partial<Record<Technique, { glyph: string; leading: boolean }>> = {
-  'hammer-on': { glyph: 'h', leading: true },
-  'pull-off': { glyph: 'p', leading: true },
-  'slide-up': { glyph: '/', leading: true },
-  'slide-down': { glyph: '\\', leading: true },
-  vibrato: { glyph: '~', leading: false },
-  'palm-mute': { glyph: 'PM', leading: false },
-  ghost: { glyph: '( )', leading: false },
-  staccato: { glyph: '.', leading: false },
-};
-
+/** What one string shows in one column. */
 interface Placed {
-  note: TabNote;
   /** Absolute column index across the whole phrase. */
   column: number;
+  note?: TabNote;
+  /** Grace notes take no column: they are written small, in front of their beat's note. */
+  graces: TabNote[];
 }
+
+/** The runs drawn once over their notes, with the words tab writes for them. */
+const SPANNED = [
+  { technique: 'let-ring', label: 'let ring' },
+  { technique: 'palm-mute', label: 'P.M.' },
+] as const;
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -136,13 +122,28 @@ export function TabStaff({
       : Math.max(1, barsPerSystem);
 
   const placed = useMemo(() => {
-    const map = new Map<number, Placed[]>();
+    const map = new Map<number, Map<number, Placed>>();
     for (const note of phrase.notes) {
       const column = Math.floor(note.startTick / ticksPerColumn);
-      map.set(note.string, [...(map.get(note.string) ?? []), { note, column }]);
+      const row = map.get(note.string) ?? new Map<number, Placed>();
+      const cell = row.get(column) ?? { column, graces: [] };
+      if (note.grace) cell.graces.push(note);
+      else cell.note = note;
+      row.set(column, cell);
+      map.set(note.string, row);
     }
     return map;
   }, [phrase.notes, ticksPerColumn]);
+
+  const above = useMemo(() => beatMarks(phrase.notes), [phrase.notes]);
+  const spans = useMemo(
+    () =>
+      SPANNED.map(({ technique, label }) => ({
+        label,
+        spans: techniqueSpans(phrase.notes, technique),
+      })).filter((lane) => lane.spans.length > 0),
+    [phrase.notes],
+  );
 
   /**
    * A repeating phrase plays past its own length, so the raw transport tick
@@ -224,6 +225,8 @@ export function TabStaff({
           chords={lane}
           currentChord={currentChord}
           triplets={triplets}
+          above={above}
+          spans={spans}
           showBarLabels={showBarLabels}
           showPickStrokes={showPickStrokes}
           {...(onSeek ? { onSeek } : {})}
@@ -237,7 +240,7 @@ interface TabSystemProps {
   systemIndex: number;
   bars: Bar[];
   instrument: Instrument;
-  placed: Map<number, Placed[]>;
+  placed: Map<number, Map<number, Placed>>;
   size: 'compact' | 'large';
   rowHeight: number;
   fretSize: number;
@@ -251,6 +254,8 @@ interface TabSystemProps {
   /** Index into `chords` of the one under the playhead; -1 for none. */
   currentChord: number;
   triplets: readonly TripletGroup[];
+  above: readonly BeatMark[];
+  spans: readonly { label: string; spans: readonly MarkSpan[] }[];
   showBarLabels: boolean;
   showPickStrokes: boolean;
   onSeek?: (startTick: number) => void;
@@ -272,6 +277,8 @@ function TabSystem({
   chords,
   currentChord,
   triplets,
+  above,
+  spans,
   showBarLabels,
   showPickStrokes,
   onSeek,
@@ -315,6 +322,26 @@ function TabSystem({
           gridColumns={gridColumns}
         />
       )}
+      <MarkLane
+        systemIndex={systemIndex}
+        marks={above}
+        startTick={firstColumn * ticksPerColumn}
+        endTick={(firstColumn + columnCount) * ticksPerColumn}
+        ticksPerColumn={ticksPerColumn}
+        gridColumns={gridColumns}
+      />
+      {spans.map((lane) => (
+        <SpanLane
+          key={lane.label}
+          systemIndex={systemIndex}
+          label={lane.label}
+          spans={lane.spans}
+          startTick={firstColumn * ticksPerColumn}
+          endTick={(firstColumn + columnCount) * ticksPerColumn}
+          ticksPerColumn={ticksPerColumn}
+          gridColumns={gridColumns}
+        />
+      ))}
       <TripletLane
         systemIndex={systemIndex}
         triplets={triplets}
@@ -384,7 +411,7 @@ function TabSystem({
               firstColumn={firstColumn}
               columnCount={columnCount}
               unusedColumns={unused}
-              placed={placed.get(stringIndex) ?? []}
+              placed={placed.get(stringIndex) ?? EMPTY_ROW}
               rowHeight={rowHeight}
               fretSize={fretSize}
               showPickStrokes={showPickStrokes}
@@ -546,47 +573,179 @@ function TripletLane({
   );
 }
 
+const EMPTY_ROW = new Map<number, Placed>();
+
+/**
+ * The marks above the staff — an accent, a tap, a harmonic's kind, a bend's
+ * amount — each over its note's column. Only a line with any gets the lane.
+ */
+function MarkLane({
+  systemIndex,
+  marks,
+  startTick,
+  endTick,
+  ticksPerColumn,
+  gridColumns,
+}: {
+  systemIndex: number;
+  marks: readonly BeatMark[];
+  startTick: number;
+  endTick: number;
+  ticksPerColumn: number;
+  gridColumns: string;
+}) {
+  const here = marks.filter((m) => m.startTick >= startTick && m.startTick < endTick);
+  if (here.length === 0) return null;
+
+  return (
+    <div
+      style={{ display: 'grid', gridTemplateColumns: gridColumns }}
+      className="pb-0.5"
+      data-testid={`mark-lane-${systemIndex}`}
+    >
+      {here.map((mark) => (
+        <span
+          key={mark.startTick}
+          data-testid="beat-mark"
+          data-start-tick={mark.startTick}
+          // Centred over the column and free to run past it: "full ½" is wider
+          // than a sixteenth's column, and nothing else shares the lane.
+          className="num flex justify-center text-caption font-semibold whitespace-nowrap text-accent-text"
+          style={{
+            gridRow: 1,
+            gridColumn: `${Math.floor((mark.startTick - startTick) / ticksPerColumn) + 2} / span 1`,
+          }}
+        >
+          {mark.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * "P.M. - - -" or "let ring - - -" over a run of notes, drawn once instead of
+ * on every note. A run carried over from the line before starts the line
+ * again, label and all.
+ */
+function SpanLane({
+  systemIndex,
+  label,
+  spans,
+  startTick,
+  endTick,
+  ticksPerColumn,
+  gridColumns,
+}: {
+  systemIndex: number;
+  label: string;
+  spans: readonly MarkSpan[];
+  startTick: number;
+  endTick: number;
+  ticksPerColumn: number;
+  gridColumns: string;
+}) {
+  const here = spans.flatMap((span) => {
+    if (span.endTick <= startTick || span.startTick >= endTick) return [];
+    const from = Math.max(span.startTick, startTick);
+    const to = Math.min(span.endTick, endTick);
+    const column = Math.floor((from - startTick) / ticksPerColumn);
+    const width = Math.max(1, Math.ceil((to - from) / ticksPerColumn));
+    return [{ key: span.startTick, column, width, ends: span.endTick <= endTick }];
+  });
+  if (here.length === 0) return null;
+
+  return (
+    <div
+      style={{ display: 'grid', gridTemplateColumns: gridColumns }}
+      className="pb-0.5"
+      data-testid={`span-lane-${systemIndex}`}
+    >
+      {here.map(({ key, column, width, ends }) => (
+        <span
+          key={key}
+          data-testid="mark-span"
+          data-label={label}
+          className="flex min-w-0 items-center gap-1 text-caption font-semibold whitespace-nowrap text-accent-text"
+          style={{ gridRow: 1, gridColumn: `${column + 2} / span ${width}` }}
+        >
+          {label}
+          <span
+            aria-hidden
+            className="h-0 min-w-2 flex-1 border-t border-dashed border-current"
+          />
+          {ends && <span aria-hidden className="h-2 w-0 border-l border-current" />}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function NoteChip({
   stringIndex,
   column,
   note,
+  graces,
   fretSize,
   showPickStrokes,
 }: {
   stringIndex: number;
   column: number;
-  note: TabNote;
+  note: TabNote | undefined;
+  graces: readonly TabNote[];
   fretSize: number;
   showPickStrokes: boolean;
 }) {
-  const technique = note.techniques?.[0];
-  const mark = technique ? ARTICULATION_MARK[technique] : undefined;
-  const glyph = mark && (
-    <span
-      data-testid={`articulation-${stringIndex}-${column}`}
-      className={[
-        mark.leading ? 'mr-[1px]' : 'ml-[1px]',
-        'font-semibold text-accent-text',
-      ].join(' ')}
-      style={{ fontSize: fretSize * 0.72 }}
-    >
-      {mark.glyph}
-    </span>
-  );
+  const marks = note && noteMarks(note);
+  const glyph = (text: string, place: 'leading' | 'trailing') =>
+    text && (
+      <span
+        data-testid={`${place}-${stringIndex}-${column}`}
+        className={[
+          place === 'leading' ? 'mr-[1px]' : 'ml-[1px]',
+          'font-semibold text-accent-text',
+        ].join(' ')}
+        style={{ fontSize: fretSize * 0.72 }}
+      >
+        {text}
+      </span>
+    );
+
+  // A tied note is the one before it still sounding: written small and muted
+  // in parentheses, so a held note across a bar line doesn't read as silence.
+  if (note?.tied) {
+    return (
+      <span
+        data-testid={`tab-note-${stringIndex}-${column}`}
+        data-fret={note.fret}
+        data-tied
+        className="num bg-paper px-[1px] leading-none font-semibold whitespace-nowrap text-ink-muted"
+        style={{ fontSize: fretSize * 0.72 }}
+      >
+        ({note.display ?? note.fret})
+      </span>
+    );
+  }
+
+  const digit = marks && (marks.ghost ? `(${marks.digit})` : marks.digit);
 
   return (
     <span
       data-testid={`tab-note-${stringIndex}-${column}`}
-      data-fret={note.fret}
-      data-role={note.role ?? 'none'}
-      data-articulation={technique ?? ''}
+      {...(note
+        ? {
+            'data-fret': note.fret,
+            'data-role': note.role ?? 'none',
+            'data-techniques': (note.techniques ?? []).join(' '),
+          }
+        : {})}
       className={[
         'num flex items-baseline whitespace-nowrap bg-paper px-[1px] leading-none [font-weight:var(--tab-digit-weight)]',
-        note.role === 'target' ? 'text-accent-text' : 'text-tab-digit',
+        note?.role === 'target' ? 'text-accent-text' : 'text-tab-digit',
       ].join(' ')}
       style={{ fontSize: fretSize }}
     >
-      {showPickStrokes && note.pickStroke && (
+      {showPickStrokes && note?.pickStroke && (
         <span
           data-testid={`pick-stroke-${stringIndex}-${column}`}
           className="mr-[1px] self-start text-[0.62em] font-semibold text-accent-text"
@@ -594,22 +753,31 @@ function NoteChip({
           {note.pickStroke === 'down' ? '⊓' : 'V'}
         </span>
       )}
-      {mark?.leading && glyph}
+      {graces.map((grace, i) => (
+        <span
+          key={i}
+          data-testid={`grace-${stringIndex}-${column}`}
+          className="mr-[1px] text-[0.62em]"
+        >
+          {noteMarks(grace).digit}
+        </span>
+      ))}
+      {marks && glyph(marks.leading, 'leading')}
       {/* The root is circled, the way tab has always circled it. Only the fret
-          number goes inside: a pick stroke or an articulation mark describes
-          how you play the note, not which note it is. Padding is in em so the
-          ring holds its shape at every zoom step. */}
-      {note.role === 'root' ? (
+          number goes inside: a pick stroke or a technique describes how you
+          play the note, not which note it is. Padding is in em so the ring
+          holds its shape at every zoom step. */}
+      {note?.role === 'root' ? (
         <span
           data-testid={`tab-root-ring-${stringIndex}-${column}`}
           className="rounded-full border border-tab-root px-[0.34em] py-[0.1em]"
         >
-          {note.display ?? note.fret}
+          {digit}
         </span>
       ) : (
-        (note.display ?? note.fret)
+        digit
       )}
-      {mark && !mark.leading && glyph}
+      {marks && glyph(marks.trailing, 'trailing')}
     </span>
   );
 }
@@ -622,7 +790,7 @@ interface TabRowProps {
   columnCount: number;
   /** Tracks left over at the end of a short last line. */
   unusedColumns: number;
-  placed: Placed[];
+  placed: Map<number, Placed>;
   rowHeight: number;
   fretSize: number;
   showPickStrokes: boolean;
@@ -641,8 +809,6 @@ function TabRow({
   showPickStrokes,
   onSeek,
 }: TabRowProps) {
-  const byColumn = new Map(placed.map((p) => [p.column, p.note]));
-
   /**
    * The string line is a row background rather than a border, and fret numbers
    * carry the page background so they visually break it. That is the detail
@@ -667,12 +833,15 @@ function TabRow({
         // Test ids and the playhead use absolute columns, so a note keeps the
         // same identity wherever it lands once the phrase wraps onto systems.
         const column = firstColumn + offset;
-        const note = byColumn.get(column);
-        const chip = note && (
+        const here = placed.get(column);
+        const note = here?.note;
+        const seekTick = note?.startTick ?? here?.graces[0]?.startTick;
+        const chip = here && (
           <NoteChip
             stringIndex={stringIndex}
             column={column}
             note={note}
+            graces={here.graces}
             fretSize={fretSize}
             showPickStrokes={showPickStrokes}
           />
@@ -680,7 +849,7 @@ function TabRow({
         const cell = { height: rowHeight, ...lineBackground };
         // The whole cell is the target, not the digit: a fret number is a few
         // pixels wide and this is clicked with a guitar in your hands.
-        return note && onSeek ? (
+        return seekTick !== undefined && onSeek ? (
           <button
             key={column}
             type="button"
@@ -691,8 +860,8 @@ function TabRow({
             tabIndex={-1}
             className="grid cursor-pointer place-items-center hover:bg-ink/5"
             style={cell}
-            onClick={() => onSeek(note.startTick)}
-            aria-label={`Play from fret ${note.fret} on ${stringLabel(instrument, stringIndex)}`}
+            onClick={() => onSeek(seekTick)}
+            aria-label={`Play from fret ${(note ?? here?.graces[0])?.fret} on ${stringLabel(instrument, stringIndex)}`}
           >
             {chip}
           </button>

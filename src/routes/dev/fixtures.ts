@@ -9,7 +9,8 @@ import {
   shapeSpan,
 } from '@/domain/instrument';
 import { overlayFromScalePositions } from '@/domain/neck';
-import { EIGHTH, QUARTER, SIXTEENTH, phraseBuilder } from '@/domain/phrase';
+import type { TabNote } from '@/domain/phrase';
+import { EIGHTH, HALF, QUARTER, SIXTEENTH, phraseBuilder } from '@/domain/phrase';
 import { STRAIGHT_EIGHTHS, STRAIGHT_SIXTEENTHS } from '@/domain/phrase';
 
 export const D_DORIAN: KeyMode = { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' };
@@ -78,6 +79,86 @@ export function articulationPhrase() {
     .note({ string: 0, fret: 10 }, { techniques: ['vibrato'], role: 'target' })
     .labelBar('Articulations')
     .build();
+}
+
+/**
+ * Every mark a Guitar Pro file can bring, for judging the tab beside Guitar
+ * Pro: several on a note, palm mute and let ring over their runs, the marks
+ * above the staff, bends, harmonics, dead, ghost, tied and grace notes.
+ */
+export function writtenMarksPhrase() {
+  const pm = { techniques: ['palm-mute' as const] };
+  const ring = { techniques: ['let-ring' as const] };
+  const bend = (...tones: number[]) => ({
+    bend: {
+      points: tones.map((t, i) => ({ at: i / Math.max(1, tones.length - 1), tones: t })),
+    },
+  });
+  const phrase = phraseBuilder()
+    .rhythm(EIGHTH)
+    .labelBar('P.M., accent, dead, ghost')
+    .sequence(
+      [
+        { string: 0, fret: 0 },
+        { string: 0, fret: 0 },
+        { string: 0, fret: 0 },
+      ],
+      pm,
+    )
+    .note({ string: 0, fret: 3 }, { techniques: ['palm-mute', 'accent'] })
+    .note({ string: 1, fret: 5 }, { techniques: ['dead'] })
+    .note({ string: 1, fret: 5 }, { techniques: ['ghost'] })
+    .note({ string: 1, fret: 7 }, { techniques: ['accent', 'staccato'] })
+    .note({ string: 1, fret: 5 }, { techniques: ['dead', 'palm-mute'] })
+    .labelBar('Let ring, harmonics, tap')
+    .chord(
+      [
+        { string: 2, fret: 7 },
+        { string: 3, fret: 6 },
+        { string: 4, fret: 5 },
+      ],
+      ring,
+      QUARTER,
+    )
+    .note({ string: 5, fret: 12 }, { harmonic: { kind: 'natural' }, ...ring })
+    .note({ string: 4, fret: 7 }, { harmonic: { kind: 'natural' }, ...ring })
+    .note({ string: 3, fret: 5 }, { harmonic: { kind: 'natural' } }, QUARTER)
+    .note(
+      { string: 2, fret: 9 },
+      { harmonic: { kind: 'pinch', fret: 12 }, techniques: ['vibrato'] },
+    )
+    .note({ string: 5, fret: 12 }, { techniques: ['tap'] })
+    .labelBar('Bends')
+    .note({ string: 3, fret: 7 }, bend(0, 1))
+    .note({ string: 3, fret: 7 }, bend(0, 0.5))
+    .note({ string: 2, fret: 8 }, bend(0, 1, 0))
+    .note({ string: 2, fret: 8 }, bend(1, 1))
+    .note({ string: 2, fret: 8 }, bend(1, 0))
+    .note({ string: 1, fret: 10 }, bend(0, 1.5))
+    .note({ string: 1, fret: 10 }, bend(0, 0.25))
+    .note({ string: 1, fret: 10 }, { ...bend(0, 1), techniques: ['vibrato'] })
+    .labelBar('Graces, slides in and out, a tie')
+    .note({ string: 2, fret: 7 }, { techniques: ['legato-slide-up'] }, QUARTER)
+    .note({ string: 2, fret: 7 }, { techniques: ['hammer-on'] })
+    .note({ string: 3, fret: 5 }, { techniques: ['slide-in-below'] })
+    .note({ string: 3, fret: 9 }, { techniques: ['slide-in-above'] })
+    .note({ string: 3, fret: 7 }, { techniques: ['slide-out-down'] })
+    .note({ string: 2, fret: 7 }, { techniques: ['slide-out-up', 'staccato'] }, HALF)
+    .note({ string: 2, fret: 7 }, { tied: true }, QUARTER)
+    .note({ string: 0, fret: 5 }, { techniques: ['palm-mute', 'pull-off', 'vibrato'] })
+    .build();
+
+  // A grace note belongs to the beat at its tick and takes no column there.
+  const graces: TabNote[] = [
+    { string: 2, fret: 5, startTick: 3 * 1920, durationTicks: 60, grace: 'before-beat' },
+    { string: 2, fret: 5, startTick: 3 * 1920 + QUARTER, durationTicks: 60, grace: 'on-beat' },
+  ];
+  return {
+    ...phrase,
+    notes: [...phrase.notes, ...graces].sort(
+      (a, b) => a.startTick - b.startTick || a.string - b.string,
+    ),
+  };
 }
 
 /**

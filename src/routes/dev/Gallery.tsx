@@ -30,6 +30,7 @@ import {
   sevenShapesPhrase,
   shapeOverlay,
   sixteenthRunPhrase,
+  writtenMarksPhrase,
 } from './fixtures';
 import { useTransport, type Transport } from './useTransport';
 import { TabExample } from './TabExample';
@@ -89,6 +90,18 @@ export function Gallery() {
           transport={transport}
           size="large"
           showPickStrokes
+        />
+      </Section>
+
+      <Section
+        title="Tab · written marks"
+        note="What a Guitar Pro file can bring: several marks on a note, P.M. and let ring over their runs, marks above the staff, bends, harmonics, dead, ghost, tied and grace notes"
+      >
+        <TabExample
+          id="written-marks"
+          phrase={writtenMarksPhrase()}
+          transport={transport}
+          size="large"
         />
       </Section>
 
