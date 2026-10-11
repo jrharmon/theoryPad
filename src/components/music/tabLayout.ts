@@ -1,5 +1,5 @@
-import type { Phrase } from '@/domain/phrase';
-import { PPQ, requiredSubdivision, ticksPerBar } from '@/domain/phrase';
+import type { Phrase, TimeSignature } from '@/domain/phrase';
+import { PPQ, requiredSubdivision, ticksPerBar, ticksPerBeat } from '@/domain/phrase';
 
 /**
  * How tab breaks into lines.
@@ -33,7 +33,7 @@ export function minColumnWidth(fretSize: number): number {
 }
 
 export function columnsPerBar(phrase: Phrase, subdivision?: number): number {
-  const ticksPerColumn = PPQ / (subdivision ?? requiredSubdivision(phrase));
+  const ticksPerColumn = PPQ / (subdivision ?? tabGrid(phrase));
   return ticksPerBar(phrase.timeSignature) / ticksPerColumn;
 }
 
@@ -55,4 +55,26 @@ export function barsPerLine(
   if (!available || available <= 0) return fallbackBarsPerLine(columns);
   const fit = Math.floor(available / (Math.max(1, columns) * minColumnWidth(fretSize)));
   return Math.min(MAX_BARS_PER_LINE, Math.max(1, fit));
+}
+
+/**
+ * The grid a phrase is drawn on: as fine as its notes need, and fine enough
+ * that its beats fall on column edges. A 6/8 bar of dotted halves needs no
+ * more than quarters for its notes, but its dotted-quarter beat needs eighths.
+ */
+export function tabGrid(phrase: Phrase): number {
+  const needed = requiredSubdivision(phrase);
+  const beat = beatTicks(phrase.timeSignature);
+  return beat % (PPQ / needed) === 0 ? needed : needed * 2;
+}
+
+/**
+ * The beat the tab marks: the signature's unit, except in compound time
+ * (6/8, 9/8, 12/8), where eighths are felt in threes.
+ */
+export function beatTicks(timeSignature: TimeSignature): number {
+  const beat = ticksPerBeat(timeSignature);
+  const compound =
+    timeSignature.unit === 8 && timeSignature.beats % 3 === 0 && timeSignature.beats > 3;
+  return compound ? beat * 3 : beat;
 }

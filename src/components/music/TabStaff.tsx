@@ -2,15 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type { Bar, Phrase, TabNote, TimeSignature, TripletGroup } from '@/domain/phrase';
-import {
-  PPQ,
-  requiredSubdivision,
-  ticksPerBar,
-  ticksPerBeat,
-  tripletGroups,
-} from '@/domain/phrase';
-import { barsPerLine, zoomScale } from './tabLayout';
+import type { Bar, Phrase, TabNote, TripletGroup } from '@/domain/phrase';
+import { PPQ, ticksPerBar, tripletGroups } from '@/domain/phrase';
+import { barsPerLine, beatTicks, tabGrid, zoomScale } from './tabLayout';
 import type { BeatMark, MarkSpan } from './tabMarks';
 import { beatMarks, noteMarks, techniqueSpans } from './tabMarks';
 
@@ -94,7 +88,7 @@ export function TabStaff({
   autoScroll = true,
   className,
 }: TabStaffProps) {
-  const resolution = subdivision ?? requiredSubdivision(phrase);
+  const resolution = subdivision ?? tabGrid(phrase);
   const ticksPerColumn = PPQ / resolution;
   const columnsPerBar = ticksPerBar(phrase.timeSignature) / ticksPerColumn;
   const columnsPerBeat = beatTicks(phrase.timeSignature) / ticksPerColumn;
@@ -884,15 +878,4 @@ function TabRow({
       )}
     </>
   );
-}
-
-/**
- * The beat the tab marks: the signature's unit, except in compound time
- * (6/8, 9/8, 12/8), where eighths are felt in threes.
- */
-function beatTicks(timeSignature: TimeSignature): number {
-  const beat = ticksPerBeat(timeSignature);
-  const compound =
-    timeSignature.unit === 8 && timeSignature.beats % 3 === 0 && timeSignature.beats > 3;
-  return compound ? beat * 3 : beat;
 }
