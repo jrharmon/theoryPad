@@ -189,8 +189,8 @@ data, not taken on trust:
 | Section marker | the bar's label (exists) | — |
 
 **Dropped at import, and listed on the import screen** ("trill on 2 notes not shown"): trill,
-tremolo picking, whammy, brush, dynamics and hairpins, fermatas, fingering, free text, lyrics,
-ottava.
+tremolo picking, whammy, brush, dynamics and hairpins, fermatas, fingering, lyrics, ottava.
+(Free text was on this list until gate round 1; it is now shown, decision 24.)
 
 ### Changes to the tab (`TabStaff`)
 
@@ -529,6 +529,18 @@ Added during run A (2026-10-11):
     force at the range's first bar; any later change is left out and listed with what was
     dropped ("tempo change to 140 at bar 5 ignored"). Time-signature changes are still refused.
 
+Run A, gate round 1 (2026-10-11):
+
+22. **Bends** as built: `7b` / `7br` / `7pb` in line, the amount (½, full, 1½) above. They
+    read well.
+23. **A grid per bar, not per phrase.** One bar of sextuplets, sixteenths or 32nds mustn't
+    spread out every other bar. (This replaces §2's "the one grid per phrase stays".)
+24. **Every tuplet is bracketed** with its number, not just eighth triplets. **Free text is
+    shown, below its bar; section markers above the bars.**
+25. **Before-beat and on-beat grace notes may look the same.**
+26. **A capo:** Guitar Pro counts frets from the capo (`fixture9-capo.gp`: fret 3 on the A string
+    sounds D3 with capo 2). Run A keeps frets as written.
+
 ---
 
 ## 12. Run A — progress
@@ -589,3 +601,31 @@ Also on the way: a compound meter's grid is now fine enough for its dotted-quart
 - **Capo:** frets are kept as written and the capo named. The model's frets are absolute
   (lowest fret = capo), so run B must decide whether a capo-2 file's fret 0 means fret 2. No
   fixture has notes on a capo track to check against.
+
+### Gate round 1 (2026-10-11)
+
+The player passed the bends and the grace notes, and asked for three changes, all built:
+
+- **A grid per bar** (`layOutBars` in `components/music/tabLayout.ts`). Each bar's grid is as
+  fine as its own notes; a phrase all in quarters keeps a column a beat, and once any bar needs
+  more, none goes below eighths. Bars pack into lines by width (`packLines`). A full line is
+  stretched to the page; the last line is laid out to the widest line before it.
+- **Every tuplet bracketed** with its count. The converter records tuplets as the file groups
+  them (`Phrase.tuplets`); generated phrases still find eighth triplets from the ticks.
+- **Free text and sections.** Free text is the bar's label (below); a section marker, a
+  repeat's "×2" and a jump are the bar's `heading` (above, bold).
+- **Capo:** `fixture9-capo.gp` confirms Guitar Pro counts frets from the capo. Frets are kept as
+  written; the dev page sounds them from the capo.
+
+Still to judge:
+- **Stretched lines:** a full line is stretched to the width, so a line with fewer columns
+  spreads them wider (in `fixture1_rhythm`, line 2's sixteenths are wider than line 1's).
+  Guitar Pro does the same; the alternative is lines that end ragged.
+- **A digit sits in the middle of its column.** It always has, but a short phrase stretched
+  across the page has columns a beat wide, so a note on the beat is drawn half a beat late
+  (`fixture9-capo`, `fixture8_compound`). Recommendation: draw the digit at the column's left,
+  just after the beat line, as tab does.
+- **Run B, capo in the model:** the model's frets are absolute today (the capo is the lowest
+  fret, and pitch ignores it). Recommendation: make frets count from the capo, as Guitar Pro and
+  printed tab do. Pitch is then open string + capo + fret. Nothing uses a capo yet.
+
