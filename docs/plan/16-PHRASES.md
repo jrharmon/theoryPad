@@ -1,7 +1,8 @@
 # 16 — Imported phrases: a blueprint that plays tab from a Guitar Pro file
 
-**Status:** planning. Round 1 answered 2026-10-10 (decisions 1–12) and round 2 on 2026-10-11
-(decisions 13–20, the last three in §11). Ready to build; nothing is built yet.
+**Status:** run A in progress on `written-exercises`. Round 1 answered 2026-10-10 (decisions
+1–12) and round 2 on 2026-10-11 (decisions 13–20, the last three in §11). Run A's model, tab and
+sound tasks are built; the reader, converter and import page wait on the fixtures (§12).
 
 ## The goal
 
@@ -520,3 +521,30 @@ as recommended:
 19. **Capo per exercise**, offered beside the tuning for every exercise, not only written ones.
 20. **The fretboard explorer's heat counts only reps in the tuning it shows.** It stays "places
     on the neck I've played". Reps from before `Rep.tuning` count as the Settings tuning.
+
+---
+
+## 12. Run A — progress
+
+Branch `written-exercises`, a commit per task.
+
+1. **Model** (done). `TabNote.articulation` became `techniques: Technique[]`. Beyond the
+   spec's list, slides are six techniques on the note they arrive at or leave: `slide-up/down`
+   (shift: the arriving note is picked), `legato-slide-up/down` (not picked), `slide-in-below/
+   above`, `slide-out-down/up`. `bend: { points: { at, tones }[] }`; `harmonic: { kind, fret? }`
+   — `fret` is where a non-natural harmonic is touched, counted from the fretted note, which the
+   sound needs. `grace` notes sit at their beat's tick (so they're always on the grid) and carry
+   their own short length. `Phrase.writtenTempo`. Position shifting migrated; goldens unchanged.
+2. **Reader**, 3. **converter** — not started: waiting on the fixtures (§10).
+4. **Tab** (done). Leading marks before the fret, the rest after, several per note. A lane
+   above the staff for `>`, `T`, `A.H.`/`P.H.`/`T.H.`/`S.H.` and a bend's amount; `P.M. - - -|`
+   and `let ring - - -|` once per run, in lanes of their own, only on lines that have them. `x`,
+   `(5)` ghost, `<12>` natural harmonic, small muted `(5)` tied, small grace digits in front of
+   their beat's note. **One change from §2:** a bend is written `7b`, `7br`, `7pb`, `7pbr` in
+   line, with the amount (`½`, `full`, `1½`, `¼`) above, as Guitar Pro does. Text tab's `7b9`
+   collided with its neighbours at eighth-note spacing. Pure rules in
+   `components/music/tabMarks.ts`. The dev gallery's "Tab · written marks" shows every mark.
+5. **Sound** (done; the spec had it in run B, the run A brief moved it here). `soundingNotes`
+   and `soundingPitch` in `domain/phrase/sounding.ts`; `PhrasePlayer` plays from them. Legato
+   slides still sound picked, as §4 says ("plain notes for now").
+6. **Dev import page** — waits on the reader.

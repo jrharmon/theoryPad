@@ -81,7 +81,8 @@ only if slowed-down audio is musically tolerable. YouTube preserves pitch, so it
 
 Recorded so nobody proposes them mid-build: microphone input, pitch detection, audio
 recording, MIDI I/O, user accounts, multi-user profiles, a mobile phone layout, native apps,
-AI-generated exercise content at runtime, importing Guitar Pro files, and standard notation.
+AI-generated exercise content at runtime, and standard notation. (Importing Guitar Pro files
+was here until 2026-10-11; doc 16 brings it in.)
 
 Any of these can come back later. None are structural blockers given the architecture in these
 docs — which is the point of writing them down.

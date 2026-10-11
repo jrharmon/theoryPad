@@ -143,8 +143,8 @@ Sizes, where known: S, M, L.
 
 Doc 10 §D keeps these out on purpose; each could come back, and none is a structural blocker:
 microphone input, pitch detection, audio recording, MIDI I/O, user accounts, multi-user
-profiles, a phone layout, native apps, AI-generated exercise content at runtime, importing
-Guitar Pro files, standard notation.
+profiles, a phone layout, native apps, AI-generated exercise content at runtime, standard
+notation. (Importing Guitar Pro files left this list for doc 16.)
 
 ---
 
