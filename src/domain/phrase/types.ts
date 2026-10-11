@@ -123,6 +123,16 @@ export interface Bar {
   timeSignature: TimeSignature;
   /** Shown beneath the bar after its number, e.g. "Phrase 2 · land on B". */
   label?: string;
+  /** Shown above the bar: a section marker from a file, a repeat's pass, a jump. */
+  heading?: string;
+}
+
+/** A stretch played as a tuplet — `count` notes in its time — bracketed in the tab. */
+export interface TupletGroup {
+  startTick: number;
+  durationTicks: number;
+  /** The number written on the bracket: 3 for a triplet, 6 for a sextuplet. */
+  count: number;
 }
 
 export interface Phrase {
@@ -140,6 +150,11 @@ export interface Phrase {
    * the music, never a practice tempo. Nothing in practice writes it.
    */
   writtenTempo?: number;
+  /**
+   * The tuplets as the file wrote them. A generated phrase leaves this out,
+   * and its eighth triplets are found from the ticks (`tupletGroups`).
+   */
+  tuplets?: TupletGroup[];
 }
 
 export const FOUR_FOUR: TimeSignature = { beats: 4, unit: 4 };

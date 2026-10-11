@@ -185,8 +185,8 @@ describe('tripletGroups', () => {
       .sequence(run(2))
       .build();
     expect(tripletGroups(phrase)).toEqual([
-      { startTick: QUARTER, durationTicks: QUARTER },
-      { startTick: QUARTER * 2, durationTicks: QUARTER },
+      { startTick: QUARTER, durationTicks: QUARTER, count: 3 },
+      { startTick: QUARTER * 2, durationTicks: QUARTER, count: 3 },
     ]);
   });
 

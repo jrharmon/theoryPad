@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
-import type { Bar, Phrase, TabNote, TripletGroup } from '@/domain/phrase';
-import { PPQ, ticksPerBar, tripletGroups } from '@/domain/phrase';
-import { barsPerLine, beatTicks, tabGrid, zoomScale } from './tabLayout';
+import type { Phrase, TabNote, TupletGroup } from '@/domain/phrase';
+import { tupletGroups } from '@/domain/phrase';
+import type { BarLayout } from './tabLayout';
+import { columnAt, layOutBars, packLines, zoomScale } from './tabLayout';
 import type { BeatMark, MarkSpan } from './tabMarks';
 import { beatMarks, noteMarks, techniqueSpans } from './tabMarks';
 
@@ -13,8 +14,9 @@ export interface TabStaffProps {
   instrument: Instrument;
   size?: 'compact' | 'large';
   /**
-   * Render resolution as a divisor of a quarter note. Defaults to whatever the
-   * phrase needs, so triplets get a grid that can hold them.
+   * Render resolution as a divisor of a quarter note, for every bar. Left
+   * out, each bar gets the grid its own notes need, so triplets get a grid
+   * that can hold them without spreading out every other bar.
    */
   subdivision?: number;
   /** Current transport position; null hides the playhead. */
@@ -67,10 +69,22 @@ const SPANNED = [
   { technique: 'palm-mute', label: 'P.M.' },
 ] as const;
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
+/** Split `items` into runs of the given lengths. */
+function split<T>(items: readonly T[], lengths: readonly number[]): T[][] {
+  let at = 0;
+  return lengths.map((n) => items.slice(at, (at += n)));
+}
+
+/**
+ * Columns into a line's local ones. `start` is the line's first absolute
+ * column; an end tick rounds up, so a span covers the column its last tick is in.
+ */
+interface LineColumns {
+  start: number;
+  /** The column a tick starts in. */
+  at: (tick: number) => number;
+  /** One past the column a span ending at this tick ends in. */
+  end: (tick: number) => number;
 }
 
 export function TabStaff({
@@ -88,13 +102,11 @@ export function TabStaff({
   autoScroll = true,
   className,
 }: TabStaffProps) {
-  const resolution = subdivision ?? tabGrid(phrase);
-  const ticksPerColumn = PPQ / resolution;
-  const columnsPerBar = ticksPerBar(phrase.timeSignature) / ticksPerColumn;
-  const columnsPerBeat = beatTicks(phrase.timeSignature) / ticksPerColumn;
   const scale = zoomScale(zoom);
   const fretSize = FRET_SIZE[size] * scale;
   const rowHeight = Math.round(ROW_HEIGHT[size] * scale);
+  const layouts = useMemo(() => layOutBars(phrase, subdivision), [phrase, subdivision]);
+  const totalColumns = layouts.reduce((sum, b) => sum + b.columns, 0);
 
   // Bars per line follow the width actually available, so a wide screen or a
   // hidden neck diagram gets more on each line.
@@ -110,15 +122,22 @@ export function TabStaff({
     return () => observer.disconnect();
   }, []);
 
-  const perSystem =
+  const lineLengths =
     barsPerSystem === 'auto'
-      ? barsPerLine(columnsPerBar, width === null ? null : width - LABEL_COL[size], fretSize)
-      : Math.max(1, barsPerSystem);
+      ? packLines(
+          layouts.map((b) => b.columns),
+          width === null ? null : width - LABEL_COL[size],
+          fretSize,
+        )
+      : Array.from({ length: Math.ceil(layouts.length / Math.max(1, barsPerSystem)) }, (_, i) =>
+          Math.min(Math.max(1, barsPerSystem), layouts.length - i * Math.max(1, barsPerSystem)),
+        );
+  const systems = split(layouts, lineLengths);
 
   const placed = useMemo(() => {
     const map = new Map<number, Map<number, Placed>>();
     for (const note of phrase.notes) {
-      const column = Math.floor(note.startTick / ticksPerColumn);
+      const column = columnAt(layouts, note.startTick);
       const row = map.get(note.string) ?? new Map<number, Placed>();
       const cell = row.get(column) ?? { column, graces: [] };
       if (note.grace) cell.graces.push(note);
@@ -127,7 +146,7 @@ export function TabStaff({
       map.set(note.string, row);
     }
     return map;
-  }, [phrase.notes, ticksPerColumn]);
+  }, [phrase.notes, layouts]);
 
   const above = useMemo(() => beatMarks(phrase.notes), [phrase.notes]);
   const spans = useMemo(
@@ -148,7 +167,7 @@ export function TabStaff({
     playheadTick === null || phrase.totalTicks <= 0
       ? null
       : ((playheadTick % phrase.totalTicks) + phrase.totalTicks) % phrase.totalTicks;
-  const playheadColumn = wrappedTick === null ? null : Math.floor(wrappedTick / ticksPerColumn);
+  const playheadColumn = wrappedTick === null ? null : columnAt(layouts, wrappedTick);
 
   // One copy is drawn, and the chords restart at every copy, so the first
   // copy's are the ones to draw.
@@ -163,26 +182,37 @@ export function TabStaff({
         )
       : -1;
 
-  const triplets = useMemo(() => tripletGroups(phrase), [phrase]);
+  const tuplets = useMemo(() => tupletGroups(phrase), [phrase]);
 
-  const systems = chunk(phrase.bars, perSystem);
-
-  const columnsPerSystem = perSystem * columnsPerBar;
   /**
-   * Every line is laid out to the same number of columns, so a bar is the same
-   * width wherever it falls. A short last line ends early instead of stretching
-   * its bars across the page, which read as longer than they were. A phrase
-   * that fits on one line has nothing to be consistent with, so it takes the
-   * full width as before.
+   * A full line fills the width. The last line is laid out to the widest line
+   * before it, so it ends early instead of stretching its bars across the
+   * page, which read as longer than they were. A phrase that fits on one line
+   * has nothing to be consistent with, so it takes the full width.
    */
-  const slotColumns = Math.min(perSystem, phrase.bars.length || perSystem) * columnsPerBar;
+  const lineColumns = systems.map((bars) => bars.reduce((sum, b) => sum + b.columns, 0));
+  const widest = Math.max(0, ...lineColumns.slice(0, -1));
+  const slotColumns = lineColumns.map((columns, i) =>
+    i === lineColumns.length - 1 ? Math.max(columns, widest) : columns,
+  );
   const activeSystem =
-    playheadColumn === null ? null : Math.floor(playheadColumn / columnsPerSystem);
+    playheadColumn === null
+      ? null
+      : systems.findIndex((bars) => {
+          const first = bars[0];
+          const last = bars[bars.length - 1];
+          return (
+            first !== undefined &&
+            last !== undefined &&
+            playheadColumn >= first.firstColumn &&
+            playheadColumn < last.firstColumn + last.columns
+          );
+        });
 
   const lastScrolled = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!autoScroll || activeSystem === null) return;
+    if (!autoScroll || activeSystem === null || activeSystem < 0) return;
     // Only on a line change: scrolling every frame would fight the player.
     if (lastScrolled.current === activeSystem) return;
     lastScrolled.current = activeSystem;
@@ -197,28 +227,26 @@ export function TabStaff({
       ref={container}
       className={className}
       data-testid="tab-staff"
-      data-columns={Math.max(1, Math.ceil(phrase.totalTicks / ticksPerColumn))}
+      data-columns={Math.max(1, totalColumns)}
       data-systems={systems.length}
-      data-active-system={activeSystem ?? ''}
+      data-active-system={activeSystem === null || activeSystem < 0 ? '' : activeSystem}
     >
       {systems.map((bars, systemIndex) => (
         <TabSystem
-          key={bars[0]?.index ?? systemIndex}
+          key={bars[0]?.bar.index ?? systemIndex}
           systemIndex={systemIndex}
           bars={bars}
+          layouts={layouts}
           instrument={instrument}
           placed={placed}
           size={size}
           rowHeight={rowHeight}
           fretSize={fretSize}
-          ticksPerColumn={ticksPerColumn}
-          columnsPerBar={columnsPerBar}
-          columnsPerBeat={columnsPerBeat}
-          slotColumns={slotColumns}
+          slotColumns={slotColumns[systemIndex] ?? 1}
           playheadColumn={playheadColumn}
           chords={lane}
           currentChord={currentChord}
-          triplets={triplets}
+          tuplets={tuplets}
           above={above}
           spans={spans}
           showBarLabels={showBarLabels}
@@ -232,22 +260,22 @@ export function TabStaff({
 
 interface TabSystemProps {
   systemIndex: number;
-  bars: Bar[];
+  /** This line's bars. */
+  bars: BarLayout[];
+  /** Every bar in the phrase, for turning ticks into columns. */
+  layouts: readonly BarLayout[];
   instrument: Instrument;
   placed: Map<number, Map<number, Placed>>;
   size: 'compact' | 'large';
   rowHeight: number;
   fretSize: number;
-  ticksPerColumn: number;
-  columnsPerBar: number;
-  columnsPerBeat: number;
-  /** Columns the line is laid out to — the same on every line, so bars match. */
+  /** Columns the line is laid out to: its own, or the widest line's on the last line. */
   slotColumns: number;
   playheadColumn: number | null;
   chords: readonly ChordSpan[] | null;
   /** Index into `chords` of the one under the playhead; -1 for none. */
   currentChord: number;
-  triplets: readonly TripletGroup[];
+  tuplets: readonly TupletGroup[];
   above: readonly BeatMark[];
   spans: readonly { label: string; spans: readonly MarkSpan[] }[];
   showBarLabels: boolean;
@@ -258,19 +286,17 @@ interface TabSystemProps {
 function TabSystem({
   systemIndex,
   bars,
+  layouts,
   instrument,
   placed,
   size,
   rowHeight,
   fretSize,
-  ticksPerColumn,
-  columnsPerBar,
-  columnsPerBeat,
   slotColumns,
   playheadColumn,
   chords,
   currentChord,
-  triplets,
+  tuplets,
   above,
   spans,
   showBarLabels,
@@ -278,8 +304,17 @@ function TabSystem({
   onSeek,
 }: TabSystemProps) {
   const strings = stringCount(instrument);
-  const firstColumn = Math.floor((bars[0]?.startTick ?? 0) / ticksPerColumn);
-  const columnCount = bars.length * columnsPerBar;
+  const firstColumn = bars[0]?.firstColumn ?? 0;
+  const columnCount = bars.reduce((sum, b) => sum + b.columns, 0);
+  const startTick = bars[0]?.startTick ?? 0;
+  const endTick = bars[bars.length - 1]?.endTick ?? 0;
+
+  const columns: LineColumns = {
+    start: firstColumn,
+    at: (tick) => columnAt(layouts, tick) - firstColumn,
+    end: (tick) =>
+      tick <= startTick ? 0 : columnAt(layouts, Math.min(tick, endTick) - 1) + 1 - firstColumn,
+  };
 
   // Screen rows run highest string first; the model runs lowest first.
   const rows = useMemo(
@@ -292,6 +327,9 @@ function TabSystem({
   // last bar are simply left empty.
   const gridColumns = `${labelCol}px repeat(${slotColumns}, minmax(0, 1fr))`;
   const unused = Math.max(0, slotColumns - columnCount);
+  /** Where a local column edge sits, as CSS. */
+  const edge = (column: number) =>
+    `calc(${labelCol}px + (100% - ${labelCol}px) * ${column / slotColumns})`;
 
   const localPlayhead =
     playheadColumn !== null &&
@@ -300,50 +338,62 @@ function TabSystem({
       ? playheadColumn - firstColumn
       : null;
 
+  const barEdges = bars.map((b) => b.firstColumn - firstColumn);
+  const beatEdges = bars.flatMap((b) =>
+    Array.from(
+      { length: Math.ceil(b.columns / b.columnsPerBeat) },
+      (_, j) => j * b.columnsPerBeat,
+    )
+      .filter((c) => c > 0 && c < b.columns && Number.isInteger(c))
+      .map((c) => b.firstColumn - firstColumn + c),
+  );
+  const range = { startTick, endTick, columns, gridColumns };
+
   return (
     <div
       className={systemIndex > 0 ? 'mt-6' : undefined}
       data-testid={`tab-system-${systemIndex}`}
     >
+      {bars.some((b) => b.bar.heading) && (
+        <div
+          style={{ display: 'grid', gridTemplateColumns: gridColumns }}
+          className="pb-1"
+          data-testid={`bar-headings-${systemIndex}`}
+        >
+          {bars.map((b) => (
+            <span
+              key={b.bar.index}
+              data-testid={b.bar.heading ? `bar-heading-${b.bar.index}` : undefined}
+              className="truncate text-body-sm font-bold text-ink"
+              style={{
+                gridRow: 1,
+                gridColumn: `${b.firstColumn - firstColumn + 2} / span ${b.columns}`,
+              }}
+            >
+              {b.bar.heading}
+            </span>
+          ))}
+        </div>
+      )}
       {chords && (
         <ChordLane
           systemIndex={systemIndex}
           chords={chords}
           currentChord={localPlayhead === null ? -1 : currentChord}
-          startTick={firstColumn * ticksPerColumn}
-          endTick={(firstColumn + columnCount) * ticksPerColumn}
-          ticksPerColumn={ticksPerColumn}
-          gridColumns={gridColumns}
+          {...range}
         />
       )}
-      <MarkLane
-        systemIndex={systemIndex}
-        marks={above}
-        startTick={firstColumn * ticksPerColumn}
-        endTick={(firstColumn + columnCount) * ticksPerColumn}
-        ticksPerColumn={ticksPerColumn}
-        gridColumns={gridColumns}
-      />
+      <MarkLane systemIndex={systemIndex} marks={above} {...range} />
       {spans.map((lane) => (
         <SpanLane
           key={lane.label}
           systemIndex={systemIndex}
           label={lane.label}
           spans={lane.spans}
-          startTick={firstColumn * ticksPerColumn}
-          endTick={(firstColumn + columnCount) * ticksPerColumn}
-          ticksPerColumn={ticksPerColumn}
-          gridColumns={gridColumns}
+          {...range}
         />
       ))}
-      <TripletLane
-        systemIndex={systemIndex}
-        triplets={triplets}
-        startTick={firstColumn * ticksPerColumn}
-        endTick={(firstColumn + columnCount) * ticksPerColumn}
-        ticksPerColumn={ticksPerColumn}
-        gridColumns={gridColumns}
-      />
+      <TupletLane systemIndex={systemIndex} tuplets={tuplets} {...range} />
       <div className="relative">
         {localPlayhead !== null && (
           <div
@@ -355,7 +405,7 @@ function TabSystem({
             style={{
               // Positioned by CSS against the column count so it tracks the grid
               // at any width, and so playback need not re-render the tree.
-              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${localPlayhead / slotColumns})`,
+              left: edge(localPlayhead),
               width: `calc((100% - ${labelCol}px) / ${slotColumns})`,
             }}
           />
@@ -363,7 +413,7 @@ function TabSystem({
 
         {/* A rule at the start and end of every bar, from the top string to
             the bottom one. Column edges, so it never runs through a number. */}
-        {Array.from({ length: bars.length + 1 }, (_, k) => (
+        {[...barEdges, columnCount].map((column, k) => (
           <div
             key={`bar-line-${k}`}
             data-testid="bar-line"
@@ -372,7 +422,7 @@ function TabSystem({
             style={{
               top: rowHeight / 2,
               bottom: rowHeight / 2,
-              left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${(k * columnsPerBar) / slotColumns})`,
+              left: edge(column),
               ...(k === bars.length ? { transform: 'translateX(-2px)' } : {}),
             }}
           />
@@ -380,21 +430,15 @@ function TabSystem({
 
         {/* A fainter rule between the beats of a bar, so the count can be read
             off the tab: the notes carry no durations of their own. */}
-        {Array.from({ length: bars.length * columnsPerBar }, (_, column) => column)
-          .filter((column) => column % columnsPerBar !== 0 && column % columnsPerBeat === 0)
-          .map((column) => (
-            <div
-              key={`beat-line-${column}`}
-              data-testid="beat-line"
-              aria-hidden
-              className="pointer-events-none absolute w-px bg-tab-beat"
-              style={{
-                top: rowHeight / 2,
-                bottom: rowHeight / 2,
-                left: `calc(${labelCol}px + (100% - ${labelCol}px) * ${column / slotColumns})`,
-              }}
-            />
-          ))}
+        {beatEdges.map((column) => (
+          <div
+            key={`beat-line-${column}`}
+            data-testid="beat-line"
+            aria-hidden
+            className="pointer-events-none absolute w-px bg-tab-beat"
+            style={{ top: rowHeight / 2, bottom: rowHeight / 2, left: edge(column) }}
+          />
+        ))}
 
         <div style={{ display: 'grid', gridTemplateColumns: gridColumns }}>
           {rows.map((stringIndex) => (
@@ -421,15 +465,14 @@ function TabSystem({
           className="pt-1"
           data-testid={`bar-labels-${systemIndex}`}
         >
-          <span />
-          {bars.map((bar) => (
+          {bars.map(({ bar, firstColumn: first, columns: span }) => (
             // The number alone, in its own type, so it never reads as part of
             // the bar's own words — "Fret 5 · shape 2".
             <span
               key={bar.index}
               data-testid={`bar-label-${bar.index}`}
               className="truncate"
-              style={{ gridColumn: `span ${columnsPerBar}` }}
+              style={{ gridRow: 1, gridColumn: `${first - firstColumn + 2} / span ${span}` }}
             >
               <span className="num text-meta font-extrabold">{bar.index + 1}</span>
               {bar.label !== undefined && <span className="kicker ml-2">{bar.label}</span>}
@@ -439,6 +482,14 @@ function TabSystem({
       )}
     </div>
   );
+}
+
+interface LaneRange {
+  systemIndex: number;
+  startTick: number;
+  endTick: number;
+  columns: LineColumns;
+  gridColumns: string;
 }
 
 /**
@@ -453,24 +504,16 @@ function ChordLane({
   currentChord,
   startTick,
   endTick,
-  ticksPerColumn,
+  columns,
   gridColumns,
-}: {
-  systemIndex: number;
-  chords: readonly ChordSpan[];
-  currentChord: number;
-  startTick: number;
-  endTick: number;
-  ticksPerColumn: number;
-  gridColumns: string;
-}) {
+}: LaneRange & { chords: readonly ChordSpan[]; currentChord: number }) {
   const labels = chords.flatMap((chord, index) => {
     const end = chord.startTick + chord.durationTicks;
     if (end <= startTick || chord.startTick >= endTick) return [];
     const carried = chord.startTick < startTick;
     const from = Math.max(chord.startTick, startTick);
-    const column = Math.floor((from - startTick) / ticksPerColumn);
-    const span = Math.max(1, Math.ceil((Math.min(end, endTick) - from) / ticksPerColumn));
+    const column = columns.at(from);
+    const span = Math.max(1, columns.end(end) - column);
     return [{ chord, index, carried, column, span }];
   });
 
@@ -502,27 +545,20 @@ function ChordLane({
 }
 
 /**
- * A bracket with a "3" over each beat played in triplets, the way notation
- * marks them. It runs from the first triplet's column to the third's, so it
- * sits over the notes rather than the whole beat. Only a line with triplets on
- * it gets the lane.
+ * A bracket with its number — 3, 5, 6 — over each tuplet, the way notation
+ * marks them. It runs from the first note's column to the last one's, so it
+ * sits over the notes rather than the whole stretch. Only a line with tuplets
+ * on it gets the lane.
  */
-function TripletLane({
+function TupletLane({
   systemIndex,
-  triplets,
+  tuplets,
   startTick,
   endTick,
-  ticksPerColumn,
+  columns,
   gridColumns,
-}: {
-  systemIndex: number;
-  triplets: readonly TripletGroup[];
-  startTick: number;
-  endTick: number;
-  ticksPerColumn: number;
-  gridColumns: string;
-}) {
-  const here = triplets.filter((t) => t.startTick >= startTick && t.startTick < endTick);
+}: LaneRange & { tuplets: readonly TupletGroup[] }) {
+  const here = tuplets.filter((t) => t.startTick >= startTick && t.startTick < endTick);
   if (here.length === 0) return null;
 
   return (
@@ -532,33 +568,35 @@ function TripletLane({
       data-testid={`triplet-lane-${systemIndex}`}
     >
       {here.map((group) => {
-        const span = group.durationTicks / ticksPerColumn;
-        // Column centres of the first and the third triplet, as fractions of the beat.
+        const first = columns.at(group.startTick);
+        const span = Math.max(1, columns.end(group.startTick + group.durationTicks) - first);
+        // Column centres of the first and the last note of the group, as
+        // fractions of the bracket's span.
+        const lastTick =
+          group.startTick + ((group.count - 1) * group.durationTicks) / group.count;
         const left = 0.5 / span;
-        const right = 1 / 3 - 0.5 / span;
+        const right = 1 - (columns.at(Math.round(lastTick)) - first + 0.5) / span;
         return (
           <span
-            key={group.startTick}
+            key={`${group.startTick}:${group.count}`}
             data-testid="triplet-bracket"
             data-start-tick={group.startTick}
-            aria-label="Triplet"
+            data-count={group.count}
+            aria-label={group.count === 3 ? 'Triplet' : `Tuplet of ${group.count}`}
             className="relative h-4"
-            style={{
-              gridRow: 1,
-              gridColumn: `${(group.startTick - startTick) / ticksPerColumn + 2} / span ${span}`,
-            }}
+            style={{ gridRow: 1, gridColumn: `${first + 2} / span ${span}` }}
           >
             <span
               aria-hidden
               className="absolute bottom-0 h-1.5 border-x border-t border-ink-muted"
-              style={{ left: `${left * 100}%`, right: `${right * 100}%` }}
+              style={{ left: `${left * 100}%`, right: `${Math.max(0, right) * 100}%` }}
             />
             <span
               aria-hidden
               className="num absolute -bottom-0.5 -translate-x-1/2 bg-paper px-1 text-body-sm leading-none font-semibold text-ink-muted italic"
-              style={{ left: `${((left + 1 - right) / 2) * 100}%` }}
+              style={{ left: `${((left + 1 - Math.max(0, right)) / 2) * 100}%` }}
             >
-              3
+              {group.count}
             </span>
           </span>
         );
@@ -578,16 +616,9 @@ function MarkLane({
   marks,
   startTick,
   endTick,
-  ticksPerColumn,
+  columns,
   gridColumns,
-}: {
-  systemIndex: number;
-  marks: readonly BeatMark[];
-  startTick: number;
-  endTick: number;
-  ticksPerColumn: number;
-  gridColumns: string;
-}) {
+}: LaneRange & { marks: readonly BeatMark[] }) {
   const here = marks.filter((m) => m.startTick >= startTick && m.startTick < endTick);
   if (here.length === 0) return null;
 
@@ -605,10 +636,7 @@ function MarkLane({
           // Centred over the column and free to run past it: "full ½" is wider
           // than a sixteenth's column, and nothing else shares the lane.
           className="num flex justify-center text-caption font-semibold whitespace-nowrap text-accent-text"
-          style={{
-            gridRow: 1,
-            gridColumn: `${Math.floor((mark.startTick - startTick) / ticksPerColumn) + 2} / span 1`,
-          }}
+          style={{ gridRow: 1, gridColumn: `${columns.at(mark.startTick) + 2} / span 1` }}
         >
           {mark.text}
         </span>
@@ -628,23 +656,14 @@ function SpanLane({
   spans,
   startTick,
   endTick,
-  ticksPerColumn,
+  columns,
   gridColumns,
-}: {
-  systemIndex: number;
-  label: string;
-  spans: readonly MarkSpan[];
-  startTick: number;
-  endTick: number;
-  ticksPerColumn: number;
-  gridColumns: string;
-}) {
+}: LaneRange & { label: string; spans: readonly MarkSpan[] }) {
   const here = spans.flatMap((span) => {
     if (span.endTick <= startTick || span.startTick >= endTick) return [];
     const from = Math.max(span.startTick, startTick);
-    const to = Math.min(span.endTick, endTick);
-    const column = Math.floor((from - startTick) / ticksPerColumn);
-    const width = Math.max(1, Math.ceil((to - from) / ticksPerColumn));
+    const column = columns.at(from);
+    const width = Math.max(1, columns.end(span.endTick) - column);
     return [{ key: span.startTick, column, width, ends: span.endTick <= endTick }];
   });
   if (here.length === 0) return null;

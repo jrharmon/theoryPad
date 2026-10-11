@@ -1,4 +1,4 @@
-import type { Bar, Phrase, TimeSignature } from './types';
+import type { Bar, Phrase, TimeSignature, TupletGroup } from './types';
 import { EIGHTH_TRIPLET, PPQ, WHOLE } from './types';
 
 /** Ticks in one beat of this signature: a 6/8 beat is an eighth note. */
@@ -109,12 +109,6 @@ export function requiredSubdivision(phrase: Phrase): number {
   return 32;
 }
 
-/** A stretch of the phrase played as a triplet: one beat split three ways. */
-export interface TripletGroup {
-  startTick: number;
-  durationTicks: number;
-}
-
 /**
  * The quarter-note beats written in eighth triplets, for the tab's "3"
  * brackets. A beat counts when every note starting in it is on the triplet
@@ -125,8 +119,8 @@ export interface TripletGroup {
  * Bars are walked rather than divided, so a bar of an odd length does not
  * shift every beat after it.
  */
-export function tripletGroups(phrase: Phrase): TripletGroup[] {
-  const groups: TripletGroup[] = [];
+export function tripletGroups(phrase: Phrase): TupletGroup[] {
+  const groups: TupletGroup[] = [];
   phrase.bars.forEach((bar, i) => {
     const end = phrase.bars[i + 1]?.startTick ?? bar.startTick + ticksPerBar(bar.timeSignature);
     for (let beat = bar.startTick; beat + PPQ <= end; beat += PPQ) {
@@ -137,9 +131,14 @@ export function tripletGroups(phrase: Phrase): TripletGroup[] {
         offsets.includes(EIGHTH_TRIPLET) &&
         offsets.every((offset) => offset % EIGHTH_TRIPLET === 0)
       ) {
-        groups.push({ startTick: beat, durationTicks: PPQ });
+        groups.push({ startTick: beat, durationTicks: PPQ, count: 3 });
       }
     }
   });
   return groups;
+}
+
+/** The tuplets to bracket: the ones a file wrote, or else the eighth triplets the ticks show. */
+export function tupletGroups(phrase: Phrase): TupletGroup[] {
+  return phrase.tuplets ?? tripletGroups(phrase);
 }
