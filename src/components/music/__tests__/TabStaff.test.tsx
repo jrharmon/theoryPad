@@ -221,10 +221,10 @@ describe('TabStaff', () => {
     const phrase = phraseBuilder()
       .rhythm(EIGHTH)
       .note(p(0, 3))
-      .note(p(0, 5), { articulation: 'hammer-on' })
-      .note(p(0, 7), { articulation: 'pull-off' })
-      .note(p(0, 9), { articulation: 'slide-up' })
-      .note(p(0, 9), { articulation: 'vibrato' })
+      .note(p(0, 5), { techniques: ['hammer-on'] })
+      .note(p(0, 7), { techniques: ['pull-off'] })
+      .note(p(0, 9), { techniques: ['slide-up'] })
+      .note(p(0, 9), { techniques: ['vibrato'] })
       .build();
     render(<TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />);
     expect(screen.getByTestId('articulation-0-1')).toHaveTextContent('h');

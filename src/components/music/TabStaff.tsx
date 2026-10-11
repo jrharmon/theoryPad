@@ -3,10 +3,10 @@ import type { ChordSpan } from '@/domain/backing';
 import type { Instrument } from '@/domain/instrument';
 import { stringCount, stringLabel } from '@/domain/instrument';
 import type {
-  Articulation,
   Bar,
   Phrase,
   TabNote,
+  Technique,
   TimeSignature,
   TripletGroup,
 } from '@/domain/phrase';
@@ -70,14 +70,11 @@ const LABEL_COL = { compact: 28, large: 34 } as const;
  * in front of the fret number — tab writes 5h7, not 5 7h. `trailing` marks
  * describe the note itself and follow it.
  */
-const ARTICULATION_MARK: Partial<Record<Articulation, { glyph: string; leading: boolean }>> = {
+const ARTICULATION_MARK: Partial<Record<Technique, { glyph: string; leading: boolean }>> = {
   'hammer-on': { glyph: 'h', leading: true },
   'pull-off': { glyph: 'p', leading: true },
   'slide-up': { glyph: '/', leading: true },
   'slide-down': { glyph: '\\', leading: true },
-  'slide-into': { glyph: '/', leading: true },
-  bend: { glyph: 'b', leading: false },
-  'bend-release': { glyph: 'r', leading: false },
   vibrato: { glyph: '~', leading: false },
   'palm-mute': { glyph: 'PM', leading: false },
   ghost: { glyph: '( )', leading: false },
@@ -562,7 +559,8 @@ function NoteChip({
   fretSize: number;
   showPickStrokes: boolean;
 }) {
-  const mark = note.articulation ? ARTICULATION_MARK[note.articulation] : undefined;
+  const technique = note.techniques?.[0];
+  const mark = technique ? ARTICULATION_MARK[technique] : undefined;
   const glyph = mark && (
     <span
       data-testid={`articulation-${stringIndex}-${column}`}
@@ -581,7 +579,7 @@ function NoteChip({
       data-testid={`tab-note-${stringIndex}-${column}`}
       data-fret={note.fret}
       data-role={note.role ?? 'none'}
-      data-articulation={note.articulation ?? ''}
+      data-articulation={technique ?? ''}
       className={[
         'num flex items-baseline whitespace-nowrap bg-paper px-[1px] leading-none [font-weight:var(--tab-digit-weight)]',
         note.role === 'target' ? 'text-accent-text' : 'text-tab-digit',

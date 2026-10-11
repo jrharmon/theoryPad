@@ -129,7 +129,7 @@ describe.each(['interval-sequences', 'one-note-per-string', 'position-shifting']
               n.fret,
               n.startTick,
               n.role,
-              n.display ?? n.articulation ?? null,
+              n.display ?? n.techniques?.join(' ') ?? null,
             ]),
           },
           null,
@@ -163,7 +163,7 @@ describe('position-shifting', () => {
       ...D_DORIAN,
       direction: { mode: 'fixed', value: 'up-down' },
     });
-    const slides = phrase.notes.map((n) => n.articulation).filter(Boolean);
+    const slides = phrase.notes.flatMap((n) => n.techniques ?? []);
     expect(slides).toContain('slide-up');
     expect(slides).toContain('slide-down');
   });

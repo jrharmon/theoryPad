@@ -69,13 +69,13 @@ export function articulationPhrase() {
   return phraseBuilder()
     .rhythm(EIGHTH)
     .note({ string: 2, fret: 7 }, { pickStroke: 'down', role: 'root' })
-    .note({ string: 2, fret: 9 }, { articulation: 'hammer-on' })
-    .note({ string: 2, fret: 10 }, { articulation: 'hammer-on' })
-    .note({ string: 2, fret: 9 }, { articulation: 'pull-off' })
+    .note({ string: 2, fret: 9 }, { techniques: ['hammer-on'] })
+    .note({ string: 2, fret: 10 }, { techniques: ['hammer-on'] })
+    .note({ string: 2, fret: 9 }, { techniques: ['pull-off'] })
     .note({ string: 1, fret: 10 }, { pickStroke: 'up' })
-    .note({ string: 1, fret: 12 }, { articulation: 'slide-up' })
-    .note({ string: 1, fret: 10 }, { articulation: 'slide-down' })
-    .note({ string: 0, fret: 10 }, { articulation: 'vibrato', role: 'target' })
+    .note({ string: 1, fret: 12 }, { techniques: ['slide-up'] })
+    .note({ string: 1, fret: 10 }, { techniques: ['slide-down'] })
+    .note({ string: 0, fret: 10 }, { techniques: ['vibrato'], role: 'target' })
     .labelBar('Articulations')
     .build();
 }
@@ -104,7 +104,7 @@ export function legatoComparisonPhrase() {
     const previous = pattern[i - 1]!;
     builder.note(
       { string, fret },
-      { articulation: fret > previous ? 'hammer-on' : 'pull-off', velocity: 0.85 },
+      { techniques: [fret > previous ? 'hammer-on' : 'pull-off'], velocity: 0.85 },
     );
   });
 

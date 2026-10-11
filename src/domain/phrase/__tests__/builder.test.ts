@@ -117,11 +117,11 @@ describe('PhraseBuilder', () => {
   it('carries note options through', () => {
     const phrase = phraseBuilder()
       .rhythm(EIGHTH)
-      .note(p(0, 3), { role: 'root', articulation: 'hammer-on', finger: 1, annotation: '1' })
+      .note(p(0, 3), { role: 'root', techniques: ['hammer-on'], finger: 1, annotation: '1' })
       .build();
     expect(phrase.notes[0]).toMatchObject({
       role: 'root',
-      articulation: 'hammer-on',
+      techniques: ['hammer-on'],
       finger: 1,
       annotation: '1',
     });

@@ -20,19 +20,59 @@ export const EIGHTH_TRIPLET = PPQ / 3;
 export const SIXTEENTH_TRIPLET = PPQ / 6;
 export const EIGHTH_QUINTUPLET = (PPQ * 2) / 5;
 
-export type Articulation =
+/**
+ * How a note is played, beyond its string, fret and time. A note can carry
+ * several: Guitar Pro stacks them (a slide into vibrato under palm mute).
+ *
+ * The slides and slurs that join two notes sit on the **second** note — the one
+ * they arrive at — because that is where tab writes them: 5h7, 5/7.
+ */
+export type Technique =
   | 'hammer-on'
   | 'pull-off'
+  /** From the note before on this string; the arriving note is picked. */
   | 'slide-up'
   | 'slide-down'
-  | 'slide-into'
-  | 'bend'
-  | 'bend-release'
+  /** From the note before on this string, not picked again. */
+  | 'legato-slide-up'
+  | 'legato-slide-down'
+  /** Into this note from nowhere in particular: below, or above. */
+  | 'slide-in-below'
+  | 'slide-in-above'
+  /** Away from this note to nowhere in particular. */
+  | 'slide-out-down'
+  | 'slide-out-up'
   | 'vibrato'
   | 'palm-mute'
-  | 'ghost'
+  | 'let-ring'
   | 'staccato'
-  | 'let-ring';
+  | 'ghost'
+  /** A muted string: a percussive hit with no pitch. */
+  | 'dead'
+  | 'accent'
+  /** Fretted by the picking hand. */
+  | 'tap';
+
+/**
+ * A bend's shape through the note: `at` runs 0–1 from the note's start to its
+ * end, `tones` is how far the string is bent, in whole tones (1 is a full
+ * bend, 0.5 a half). A pre-bend starts above 0; a release comes back down.
+ */
+export interface Bend {
+  points: { at: number; tones: number }[];
+}
+
+export type HarmonicKind = 'natural' | 'artificial' | 'pinch' | 'tapped' | 'semi';
+
+export interface Harmonic {
+  kind: HarmonicKind;
+  /**
+   * For every kind but natural: the fret, counted from the fretted note, where
+   * the harmonic is touched — 12 is an octave up. A natural harmonic is
+   * touched at the note's own fret.
+   */
+  fret?: number;
+}
 
 /** What a note is doing harmonically; drives colour in the tab and on the neck. */
 export type NoteRole = 'root' | 'target' | 'chord-tone' | 'passing' | 'none';
@@ -48,7 +88,14 @@ export interface TabNote {
   durationTicks: number;
   /** 0-1. Default 0.8; accents 1.0; slurred and ghost notes lower. */
   velocity?: number;
-  articulation?: Articulation;
+  techniques?: Technique[];
+  bend?: Bend;
+  harmonic?: Harmonic;
+  /**
+   * A grace note: it belongs to the beat at its `startTick` and takes no time
+   * there. Played just before that beat, or on it, ahead of the main note.
+   */
+  grace?: 'before-beat' | 'on-beat';
   finger?: Finger;
   role?: NoteRole;
   /** Shown under the note, e.g. "♭3". */
@@ -60,7 +107,7 @@ export interface TabNote {
   display?: string;
   /** Picking direction, for technique exercises. */
   pickStroke?: 'down' | 'up';
-  /** Tied from the previous note on the same string. */
+  /** Tied from the previous note on the same string: held, not picked again. */
   tied?: boolean;
 }
 
@@ -88,6 +135,11 @@ export interface Phrase {
   totalTicks: number;
   /** Play the whole phrase this many times within one rep. */
   repeat?: number;
+  /**
+   * The tempo it was written at, for a phrase read from a file: a fact about
+   * the music, never a practice tempo. Nothing in practice writes it.
+   */
+  writtenTempo?: number;
 }
 
 export const FOUR_FOUR: TimeSignature = { beats: 4, unit: 4 };

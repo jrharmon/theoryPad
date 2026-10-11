@@ -93,8 +93,8 @@ describe('PhrasePlayer', () => {
     const phrase = phraseBuilder()
       .rhythm(EIGHTH)
       .note(p(0, 3))
-      .note(p(0, 5), { articulation: 'hammer-on' })
-      .note(p(0, 7), { articulation: 'pull-off' })
+      .note(p(0, 5), { techniques: ['hammer-on'] })
+      .note(p(0, 7), { techniques: ['pull-off'] })
       .build();
 
     new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);
@@ -114,8 +114,8 @@ describe('PhrasePlayer', () => {
     const { voice, played } = recordingVoice();
     const phrase = phraseBuilder()
       .rhythm(QUARTER)
-      .note(p(0, 3), { articulation: 'staccato' })
-      .note(p(0, 5), { articulation: 'let-ring' })
+      .note(p(0, 3), { techniques: ['staccato'] })
+      .note(p(0, 5), { techniques: ['let-ring'] })
       .build();
 
     new PhrasePlayer(clock, () => voice).load(phrase, STANDARD_GUITAR);

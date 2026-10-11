@@ -82,7 +82,7 @@ export const positionShifting: PlayedDefinition<PositionShiftingParams> = {
       .withRhythm(notes, rhythm, (_p, i) => ({
         ...noteOptionsFor(notes[i]!),
         ...(notes[i]!.shift
-          ? { articulation: notes[i]!.shift === 'up' ? 'slide-up' : 'slide-down' }
+          ? { techniques: [notes[i]!.shift === 'up' ? 'slide-up' : 'slide-down'] }
           : {}),
       }))
       .build();

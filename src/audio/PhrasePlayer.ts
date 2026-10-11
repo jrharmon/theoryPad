@@ -1,14 +1,17 @@
 import type { Instrument } from '@/domain/instrument';
 import { noteAt } from '@/domain/instrument';
-import type { Phrase, TabNote } from '@/domain/phrase';
+import type { Phrase, TabNote, Technique } from '@/domain/phrase';
 import { ticksToSeconds } from '@/domain/phrase';
 import type { Clock } from '@/domain/time';
 import type { InstrumentVoice } from './voices';
 
-/** Articulations that change how a note sounds, rather than only how it looks. */
+/** Techniques that change how a note sounds, rather than only how it looks. */
 function soundingVelocity(note: TabNote): number {
-  const base = note.velocity ?? 0.8;
-  switch (note.articulation) {
+  return (note.techniques ?? []).reduce(velocityFor, note.velocity ?? 0.8);
+}
+
+function velocityFor(base: number, technique: Technique): number {
+  switch (technique) {
     // Slurred notes are not picked, so they speak more quietly. Without this,
     // legato playback sounds identical to alternate picking.
     //
@@ -29,7 +32,11 @@ function soundingVelocity(note: TabNote): number {
 }
 
 function soundingDuration(note: TabNote, seconds: number): number {
-  switch (note.articulation) {
+  return (note.techniques ?? []).reduce(durationFor, seconds);
+}
+
+function durationFor(seconds: number, technique: Technique): number {
+  switch (technique) {
     case 'staccato':
       return seconds * 0.5;
     case 'palm-mute':

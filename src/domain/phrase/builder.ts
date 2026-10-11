@@ -1,11 +1,13 @@
 import type { FretPosition } from '@/domain/instrument';
 import type {
-  Articulation,
   Bar,
+  Bend,
   Finger,
+  Harmonic,
   NoteRole,
   Phrase,
   TabNote,
+  Technique,
   TimeSignature,
 } from './types';
 import { FOUR_FOUR, PPQ, QUARTER } from './types';
@@ -19,7 +21,10 @@ import { ticksPerBar } from './time';
 
 export interface NoteOptions {
   velocity?: number;
-  articulation?: Articulation;
+  techniques?: Technique[];
+  bend?: Bend;
+  harmonic?: Harmonic;
+  grace?: 'before-beat' | 'on-beat';
   finger?: Finger;
   role?: NoteRole;
   annotation?: string;
