@@ -1,6 +1,6 @@
 import type { KeyMode, NoteName } from '@/domain/music';
 import { midi, noteNameFromMidi, pitchClass } from '@/domain/music';
-import type { Bar, Phrase, TabNote, Technique, TimeSignature } from '../types';
+import type { Bar, Phrase, TabNote, Technique, TimeSignature, TupletGroup } from '../types';
 import { PPQ, WHOLE } from '../types';
 import { ticksPerBar } from '../time';
 import type { GpBeat, GpMasterBar, GpNote, GpRhythm, GpScore } from './score';
@@ -358,17 +358,43 @@ export function importPhrase(score: GpScore, range: ImportRange): ImportResult {
 
   // Place every note, bar by bar in played order; voices are merged.
   const placed: Placed[] = [];
+  const tuplets = new Map<string, TupletGroup>();
+  const texts: string[][] = order.map(() => []);
   let overfull = false;
   order.forEach(({ source }, index) => {
     const barStart = index * perBar;
     for (const voice of track.bars[source] ?? []) {
       let position = 0;
+      // The tuplet being filled: `num` notes in the time of `den` of its value.
+      let tuplet: { group: TupletGroup; length: number; filled: number } | null = null;
       for (const beat of voice) {
         const length = rhythmTicks(beat.rhythm);
         const start = Math.round(position);
         if (start >= perBar) {
           overfull = true;
           break;
+        }
+        if (beat.text && !texts[index]!.includes(beat.text)) texts[index]!.push(beat.text);
+        if (!beat.grace) {
+          const written = beat.rhythm.tuplet;
+          if (!written) tuplet = null;
+          else {
+            if (
+              !tuplet ||
+              tuplet.filled >= tuplet.length - 0.5 ||
+              tuplet.group.count !== written.num
+            ) {
+              const length = (WHOLE / beat.rhythm.value) * written.den;
+              const group = {
+                startTick: barStart + start,
+                durationTicks: Math.round(length),
+                count: written.num,
+              };
+              tuplet = { group, length, filled: 0 };
+              tuplets.set(`${group.startTick}:${group.count}`, group);
+            }
+            tuplet.filled += length;
+          }
         }
         const durationTicks = beat.grace
           ? Math.max(1, Math.round(length))
@@ -445,13 +471,17 @@ export function importPhrase(score: GpScore, range: ImportRange): ImportResult {
   }
   notes.sort((a, b) => a.startTick - b.startTick || a.string - b.string);
 
+  // A section marker and a repeat's pass or jump go above the bar; free text
+  // goes below it, where a bar's own words always go.
   const phraseBars: Bar[] = order.map(({ source, mark }, index) => {
-    const label = [bars[source]!.section, mark].filter(Boolean).join(' · ');
+    const heading = [bars[source]!.section, mark].filter(Boolean).join(' · ');
+    const label = texts[index]!.join(' · ');
     return {
       index,
       startTick: index * perBar,
       timeSignature,
       ...(label ? { label } : {}),
+      ...(heading ? { heading } : {}),
     };
   });
 
@@ -462,6 +492,7 @@ export function importPhrase(score: GpScore, range: ImportRange): ImportResult {
     notes,
     totalTicks: order.length * perBar,
     writtenTempo,
+    tuplets: [...tuplets.values()].sort((a, b) => a.startTick - b.startTick),
     ...(repeat !== null ? { repeat } : {}),
   };
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Instrument } from '@/domain/instrument';
-import { keyModeName, midi, noteNameFromMidi } from '@/domain/music';
+import { keyModeName, midi, midiOf, noteNameFromMidi } from '@/domain/music';
 import type { GpScore } from '@/domain/phrase/import';
 import { importPhrase, playableTracks } from '@/domain/phrase/import';
 import { readGuitarPro } from '@/import/guitar-pro';
@@ -52,10 +52,11 @@ export function GuitarProImport() {
     return {
       id: 'guitar-pro-import',
       name: 'From the file',
-      tuning: imported.tuning,
+      // Guitar Pro counts frets from the capo, so the strings sound from there.
+      tuning: imported.tuning.map((n) => noteNameFromMidi(midi(midiOf(n) + imported.capo))),
       fretCount: Math.max(24, highest),
       handedness: 'right',
-      // Frets are drawn as the file writes them; the capo is named, not applied.
+      // Frets are drawn as the file writes them, from the capo; it is named above.
       capo: 0,
     };
   }, [imported]);

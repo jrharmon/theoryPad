@@ -76,7 +76,7 @@ describe('importPhrase', () => {
       { targets: ['Coda'] },
     ]);
     expect(frets(s)).toEqual([1, 2, 3, 4, 2, 3, 5]);
-    const labels = played(s).phrase.bars.map((b) => b.label);
+    const labels = played(s).phrase.bars.map((b) => b.heading);
     expect(labels[4]).toBe('D.S. al Coda');
     expect(labels[6]).toBe('Coda');
   });

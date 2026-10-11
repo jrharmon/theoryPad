@@ -32,7 +32,7 @@ export interface GpMasterBar {
   repeatEnd: number;
   /** The passes this bar is played on, for an alternate ending ("1st", "2nd"); empty otherwise. */
   alternateEndings: number[];
-  /** A rehearsal marker: "A Intro", "Verse 1". */
+  /** A rehearsal marker: "A Intro", "Verse 1". Shown above the bar. */
   section?: string;
   /** Where a jump can land: Segno, Coda, DoubleCoda, SegnoSegno, Fine. */
   targets: string[];
@@ -68,6 +68,8 @@ export interface GpBeat {
   pickStroke?: 'down' | 'up';
   /** None is a rest. */
   notes: GpNote[];
+  /** Free text written at this beat: "Palm muted run". */
+  text?: string;
   unsupported: string[];
 }
 

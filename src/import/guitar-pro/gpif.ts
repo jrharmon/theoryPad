@@ -211,7 +211,6 @@ function readRhythm(el: Element | undefined): GpRhythm {
 /** Beat-level things the tab doesn't show, by element. */
 const BEAT_UNSUPPORTED: Record<string, string> = {
   Tremolo: 'tremolo picking',
-  FreeText: 'text',
   Hairpin: 'hairpin',
   Ottavia: 'ottava',
   Chord: 'chord name',
@@ -231,6 +230,7 @@ function readBeat(el: Element, rhythm: Element | undefined, notes: GpNote[]): Gp
   if (property(el, 'Rasgueado')) unsupported.push('rasgueado');
   const whammy = ['WhammyBarOriginValue', 'WhammyBarMiddleValue', 'WhammyBarDestinationValue'];
   if (whammy.some((name) => (propertyNumber(el, name) ?? 0) !== 0)) unsupported.push('whammy');
+  const freeText = text(child(el, 'FreeText')).trim();
 
   return {
     rhythm: readRhythm(rhythm),
@@ -245,6 +245,7 @@ function readBeat(el: Element, rhythm: Element | undefined, notes: GpNote[]): Gp
         ? { pickStroke: 'up' as const }
         : {}),
     notes,
+    ...(freeText ? { text: freeText } : {}),
     unsupported,
   };
 }

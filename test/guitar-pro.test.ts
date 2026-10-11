@@ -46,8 +46,28 @@ describe('reading Guitar Pro files', () => {
     const tied = phrase.notes.filter((n) => n.tied);
     expect(tied).toHaveLength(1);
     expect(tied[0]!.startTick).toBe(bar(7));
-    // Free text isn't shown, and is said to be left out.
-    expect(dropped).toEqual(['text on 6 beats']);
+    // Free text goes under its bar; nothing is left out.
+    expect(phrase.bars.map((b) => b.label)).toEqual([
+      'Quarter Notes',
+      'Eight Notes',
+      'Sixteenth Notes',
+      'Dotted Notes & Open Strings',
+      undefined,
+      'Triplets',
+      'Continuing a Tied Note',
+    ]);
+    expect(dropped).toEqual([]);
+    // Every tuplet as written, with its count: eighth triplets on beat 1, a
+    // sixteenth triplet on beat 2 (then an eighth rest), a sextuplet on beat 3.
+    expect(
+      phrase.tuplets
+        ?.filter((t) => t.startTick < bar(7))
+        .map((t) => [t.startTick - bar(6), t.durationTicks, t.count]),
+    ).toEqual([
+      [0, QUARTER, 3],
+      [QUARTER, EIGHTH, 3],
+      [2 * QUARTER, QUARTER, 6],
+    ]);
   });
 
   it('turns slurs, slides, marks, harmonics, graces and bends into techniques', async () => {
@@ -106,7 +126,7 @@ describe('reading Guitar Pro files', () => {
     const score = await fixture('fixture6_structure');
     const whole = importAll(score);
     expect(whole.phrase.bars).toHaveLength(20);
-    expect(whole.phrase.bars.map((b) => b.label ?? '')).toEqual([
+    expect(whole.phrase.bars.map((b) => b.heading ?? '')).toEqual([
       'A Intro',
       '',
       '',
@@ -147,6 +167,14 @@ describe('reading Guitar Pro files', () => {
 
     const seven = importPhrase(score, { track: 1, firstBar: 0, lastBar: 1 });
     expect(seven.ok && seven.value.tuning).toEqual(['B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']);
+  });
+
+  it('keeps frets as written over a capo, which Guitar Pro counts from', async () => {
+    const { capo, tuning, phrase } = importAll(await fixture('fixture9-capo'));
+    expect(capo).toBe(2);
+    expect(tuning).toEqual(['E2', 'A2', 'D3', 'G3', 'B3', 'E4']);
+    // Written 3 on the A string, sounding D3: 45 + capo 2 + 3.
+    expect(phrase.notes[0]).toMatchObject({ string: 1, fret: 3 });
   });
 
   it('takes the key and a compound meter from the file', async () => {
