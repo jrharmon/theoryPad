@@ -84,8 +84,17 @@ Sizes, where known: S, M, L.
 - **Sync markers (a tempo map) on a backing track**, so the playhead can follow a track whose
   tempo drifts. The player wants this eventually (doc 06).
 - **Ship the player's tracks as a static data file** in the app, merged by id (doc 06).
-- **Slides and bends that sound** (a pitch ramp). Visual-only today, and doc 06 judged it
-  not worth it for v1.
+- **Slides, bends and vibrato that sound** (M), explicitly follow-up to written exercises
+  (doc 16, decisions 10 and 14), which import all of them from Guitar Pro files. They're
+  visual-only today, and doc 06 judged them not worth it for v1. The work:
+  - legato slides stepped fret by fret, and the target not re-attacked;
+  - shift slides, and slides in and out;
+  - bends following the file's curve, plus release and pre-bend;
+  - vibrato.
+
+  This needs a sampled voice with per-note pitch control: `ToneBufferSource` per note with
+  `detune` automated, the way `DrumKit` drives buffers, in place of `Tone.Sampler`. It needs no
+  new samples and no extra memory. Judge it by ear.
 - **Scrubbing YouTube's own progress bar** moves the video out from under the exercise.
   `reanchor` is the machinery. Nobody has asked for it.
 - **M7a leftovers** (ask whether wanted):
