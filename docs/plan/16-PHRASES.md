@@ -1,8 +1,8 @@
 # 16 — Imported phrases: a blueprint that plays tab from a Guitar Pro file
 
-**Status:** run A in progress on `written-exercises`. Round 1 answered 2026-10-10 (decisions
-1–12) and round 2 on 2026-10-11 (decisions 13–20, the last three in §11). Run A's model, tab and
-sound tasks are built; the reader, converter and import page wait on the fixtures (§12).
+**Status:** run A built on `written-exercises`, at its gate (§12). Round 1 answered 2026-10-10
+(decisions 1–12), round 2 on 2026-10-11 (decisions 13–20, the last three in §11), and decision 21
+added during run A.
 
 ## The goal
 
@@ -542,7 +542,23 @@ Branch `written-exercises`, a commit per task.
    — `fret` is where a non-natural harmonic is touched, counted from the fretted note, which the
    sound needs. `grace` notes sit at their beat's tick (so they're always on the grid) and carry
    their own short length. `Phrase.writtenTempo`. Position shifting migrated; goldens unchanged.
-2. **Reader**, 3. **converter** — not started: waiting on the fixtures (§10).
+2. **Reader** (done). `src/import/guitar-pro/`: `container.ts` unwraps ZIP (central directory
+   by hand, `DecompressionStream('deflate-raw')`) and BCFZ/BCFS; `gpif.ts` reads the XML with
+   `DOMParser` into `GpScore` (`domain/phrase/import/score.ts`). GPIF **shares** beats and notes
+   by id (one Beat id can appear many times in a voice), so they are read once as definitions.
+   Encodings confirmed from the fixtures: `Accent` flags 1 staccato, 4 heavy accent, 8 accent;
+   natural harmonics carry their node as `Fret`, pinch ones the touch point in `HarmonicFret`;
+   bend offsets run 0–100 and the two middle points often coincide; tempo `Value` is "bpm unit"
+   (2 = quarter); drums have tuning `0 0 0 0 0 0` and InstrumentSet type `drumKit`. Notes with
+   no `String` (Walk With Me In Hell) are notation-only notes, a pitch and octave with no place
+   on the neck: listed as dropped ("no string or fret").
+3. **Converter** (done). `importPhrase` and `playableTracks` in `domain/phrase/import/convert.ts`.
+   Repeats, endings and D.C./D.S./Coda/Fine written out; a repeat is played out once and not
+   taken again when a jump comes back over it, but a repeat first reached after the jump (in the
+   coda) is. A jump to a sign outside the range is dropped and said. A tie from before the range
+   is picked. Key changes in the range are listed as ignored. Checked locally on all 32
+   downloaded files (none committed): every one reads; Circuit Bender's D.S. al Coda comes out
+   at 158 bars.
 4. **Tab** (done). Leading marks before the fret, the rest after, several per note. A lane
    above the staff for `>`, `T`, `A.H.`/`P.H.`/`T.H.`/`S.H.` and a bend's amount; `P.M. - - -|`
    and `let ring - - -|` once per run, in lanes of their own, only on lines that have them. `x`,
@@ -554,4 +570,22 @@ Branch `written-exercises`, a commit per task.
 5. **Sound** (done; the spec had it in run B, the run A brief moved it here). `soundingNotes`
    and `soundingPitch` in `domain/phrase/sounding.ts`; `PhrasePlayer` plays from them. Legato
    slides still sound picked, as §4 says ("plain notes for now").
-6. **Dev import page** — waits on the reader.
+6. **Dev import page** (done). `#/dev/import`: drop a file, pick track and bars (section
+   markers beside the numbers), see the tab, key, written tempo, meter, tuning, capo and what
+   was left out, or the refusal. Plays in the file's tuning at its written tempo. Every fixture
+   looked at, light and dark.
+
+Also on the way: a compound meter's grid is now fine enough for its dotted-quarter beat line
+(`tabGrid`), which a 6/8 bar of long notes lacked.
+
+**For the gate** (only the player can judge, beside Guitar Pro):
+- Does each fixture's tab read like Guitar Pro's? Especially bends (`7b` + amount above),
+  graces (small digit in front; before-beat and on-beat look the same), P.M./let ring spans.
+- **Spacing:** the one grid per phrase means one sextuplet puts the whole phrase on a
+  12-per-beat grid, so `01-rhythm` takes a line per bar. Fine, or worth a per-bar grid?
+- **Brackets:** only eighth triplets get a "3"; sixteenth triplets and sextuplets get none.
+- **Free text** is dropped as the spec says, but the player's fixtures and many downloads use it
+  as section-like labels ("Palm muted run"). Show it as the bar's label instead?
+- **Capo:** frets are kept as written and the capo named. The model's frets are absolute
+  (lowest fret = capo), so run B must decide whether a capo-2 file's fret 0 means fret 2. No
+  fixture has notes on a capo track to check against.

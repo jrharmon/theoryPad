@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-10-11. **Written exercises, run A, is in progress on
-`written-exercises`** (spec `docs/plan/16-PHRASES.md`; see "Written exercises" below): stopped
-before the Guitar Pro reader, waiting on the player's fixture files. **The milestone plan is
+**Last updated:** 2026-10-11. **Written exercises, run A, is built on `written-exercises` and
+waiting at its gate** (spec `docs/plan/16-PHRASES.md`, §12 records run A; see "Written exercises"
+below): the player compares the tab with Guitar Pro on `#/dev/import`. **The milestone plan is
 finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
@@ -51,12 +51,12 @@ under the old address must be exported and imported) — the repo is public, and
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
 | Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
 | Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
-| Written exercises — run A: read and draw | 🚧 on `written-exercises`: model, tab and sound done; reader, converter and import page wait on fixtures — doc 16 §12 |
+| Written exercises — run A: read and draw | 🚧 built on `written-exercises`, at its gate — doc 16 §12 |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
-progress. On that branch: 998 unit tests in 61 files, `pnpm check` green (E2E not run yet — nothing
-it covers has changed). On `main`: 993 unit tests, 74 E2E.
+progress. On that branch: 1013 unit tests in 64 files, `pnpm check` green, all 74 E2E pass. On `main`:
+993 unit tests, 74 E2E.
 
 ## How the player works — read before starting anything
 
@@ -204,28 +204,31 @@ it covers has changed). On `main`: 993 unit tests, 74 E2E.
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Written exercises — run A in progress (2026-10-11)
+## Written exercises — run A at its gate (2026-10-11)
 
-Spec: `docs/plan/16-PHRASES.md`, decisions 1–20 agreed; **§12 records run A task by task.**
-Branch `written-exercises`, not pushed: the spec commit, then one per task.
+Spec: `docs/plan/16-PHRASES.md`, decisions 1–21; **§12 records run A task by task and lists
+what to ask at the gate.** Branch `written-exercises`, not pushed, a commit per task.
 
-- **Done:** task 1 (`techniques` list replacing `articulation`, bend, harmonic, grace,
-  `writtenTempo`; position shifting migrated), task 4 (TabStaff: several marks per note,
-  marks above the staff, P.M./let ring spans, dead/ghost/harmonic/tied/grace notes — the dev
-  gallery's "Tab · written marks" shows them all, checked in both themes), task 5 (PhrasePlayer:
-  ties, dead notes, graces, harmonics, accents, via `soundingNotes`/`soundingPitch` in
-  `domain/phrase/sounding.ts`).
-- **One change from the spec, for the gate:** bends are written `7b` / `7br` / `7pb` in line
-  with the amount above (as Guitar Pro does), not `7b9` — that collided with neighbours at
-  eighth-note spacing.
-- **Next:** task 2, the reader (`src/import/guitar-pro/`: ZIP via
-  `DecompressionStream('deflate-raw')`, BCFZ/BCFS by hand, `DOMParser` → `GpScore`); task 3, the
-  converter (`src/domain/phrase/import/`); task 6, a dev page to drop a file, pick track and
-  bars, and see the tab and the dropped list. **Stopped here because `test/fixtures/guitar-pro/`
-  didn't exist yet** — the player is authoring the eight files in doc 16 §10. The player's
-  downloaded files in `~/Downloads` (Intervals `.gp`, lesson `.gpx`) may be read locally to check
-  the reader but **must never be committed or copied into the repo** (it is public).
-- **Run A's gate:** the player compares the tab against Guitar Pro with his fixtures.
+- **Decision 21** (the player, mid-run): a tempo change inside the range is ignored, not
+  refused. The written tempo is the one at the first bar, and later changes are listed as
+  dropped. A time-signature change is still refused.
+- **Built:** `TabNote.techniques` (replacing `articulation`), bend, harmonic, grace,
+  `Phrase.writtenTempo`; TabStaff's several marks per note, marks above the staff, P.M./let ring
+  spans, and dead/ghost/harmonic/tied/grace notes; PhrasePlayer's ties, dead notes, graces,
+  harmonics and accents (`domain/phrase/sounding.ts`); the reader (`src/import/guitar-pro/`,
+  ZIP and BCFZ/BCFS, no dependency); the converter (`domain/phrase/import/`); the dev page
+  `#/dev/import`.
+- **Fixtures:** the player's eight files are committed in `test/fixtures/guitar-pro/`
+  (`fixture1_rhythm.gp` … `fixture8_compound.gp`) and tested in `test/guitar-pro.test.ts`
+  (in `test/` because it reads files). GP6 has no committable fixture, so
+  `container.test.ts` builds a BCFZ/BCFS file itself.
+- **Downloaded files** (`~/Downloads`: Intervals `.gp`, lesson `.gpx`) were checked locally by
+  loading them into the dev server's page (scratch scripts outside the repo): all 32 read. They
+  caught two bugs, a coda's repeat skipped after a D.S. and notation-only notes vanishing. **Never
+  commit or copy them into the repo** (public).
+- **One change from the spec:** bends are written `7b` / `7br` / `7pb` in line, with the amount
+  above. Text tab's `7b9` collided with neighbours at eighth-note spacing.
+- **Next:** the gate (doc 16 §12 lists the questions), then merge, then run B (§9).
 
 ## Routine sections — merged (2026-10-10)
 
