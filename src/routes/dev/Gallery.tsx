@@ -223,7 +223,7 @@ function ArticulationLegend() {
 }
 
 /** Settings shared by every example: they all use one engine and one clock. */
-function TransportBar({ transport }: { transport: Transport }) {
+export function TransportBar({ transport }: { transport: Transport }) {
   return (
     <div className="sticky top-0 z-10 flex flex-wrap items-center gap-5 border-b-(length:--rule-section-w) border-divider bg-bg px-8 py-3">
       <span className="kicker kicker-accent">Playback</span>
@@ -311,7 +311,7 @@ function PentatonicBoxes() {
   );
 }
 
-function Section({
+export function Section({
   title,
   note,
   children,

@@ -42,7 +42,7 @@ export function TabExample({
   const onPrimary = () => {
     if (isPlaying) transport.pause();
     else if (isActive) transport.resume();
-    else void transport.play(id, phrase);
+    else void transport.play(id, phrase, instrument);
   };
 
   return (

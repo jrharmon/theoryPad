@@ -2,6 +2,7 @@ import { createHashRouter, Navigate } from 'react-router';
 import { AppShell } from '@/app/AppShell';
 import { Placeholder } from '@/routes/Placeholder';
 import { Gallery } from '@/routes/dev/Gallery';
+import { GuitarProImport } from '@/routes/dev/GuitarProImport';
 import { ExerciseLibraryRoute } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
 import { BlueprintPicker } from '@/routes/exercises/BlueprintPicker';
@@ -40,6 +41,8 @@ export const router = createHashRouter([
       { path: 'settings', element: <SettingsPage /> },
       // Development only: the M1 primitives against fixture data.
       { path: 'dev/gallery', element: <Gallery /> },
+      // Development only: read a Guitar Pro file and see its tab (doc 16, run A).
+      { path: 'dev/import', element: <GuitarProImport /> },
       {
         path: '*',
         element: (

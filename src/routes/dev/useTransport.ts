@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Phrase } from '@/domain/phrase';
+import type { Instrument } from '@/domain/instrument';
 import { STANDARD_GUITAR } from '@/domain/instrument';
 import type { AudioEngine } from '@/audio';
 
@@ -67,7 +68,7 @@ export function useTransport() {
   }, [engine, teardown]);
 
   const play = useCallback(
-    async (id: string, phrase: Phrase) => {
+    async (id: string, phrase: Phrase, instrument: Instrument = STANDARD_GUITAR) => {
       // Importing here keeps Tone off the first-paint path, and the click that
       // reaches this callback is the user gesture the AudioContext needs.
       const { getAudioEngine } = await import('@/audio');
@@ -80,7 +81,7 @@ export function useTransport() {
       e.clock.setBpm(bpm);
 
       if (withMetronome) e.metronome.start();
-      if (withNotes) e.phrase.load(phrase, STANDARD_GUITAR);
+      if (withNotes) e.phrase.load(phrase, instrument);
 
       const length = phrase.totalTicks * (phrase.repeat ?? 1);
 
