@@ -554,9 +554,11 @@ Run B, round 3 (2026-10-11):
     "New exercise" page (name, folder; Create or Cancel), so a change of mind leaves nothing
     behind. The Written exercise blueprint uses the same page with the import added (file,
     track, bars, live tab, what was left out, key). Replace from file opens the import too.
-30. **Tuning and capo live in the settings dialog**, not on the exercise page (it is busy and
-    they are rare): a Tuning menu and a Capo number, in the practice settings dialog and so in
-    a routine item's editor. Theory blueprints get neither.
+30. **No tuning or capo picker on an exercise.** They are rare, and the exercise page is busy.
+    The global Settings page keeps its Tuning menu and gains a Capo number; generated
+    exercises use those. A written exercise carries its file's tuning and capo, changed only
+    by Replace from file. A routine item has no tuning of its own: it plays in its exercise's,
+    or Settings'. (This narrows decisions 13 and 19: no picker anywhere but Settings.)
 31. As recommended: the key is the file's signature, shown on the import page with a picker
     to change it before Create (Guitar Pro's default signature is C major, and the Intervals
     files all carry it); presets add drop C and 7-string drop A; a rep records its tuning and
