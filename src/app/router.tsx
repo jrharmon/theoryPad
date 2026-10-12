@@ -6,6 +6,7 @@ import { GuitarProImport } from '@/routes/dev/GuitarProImport';
 import { ExerciseLibraryRoute } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
 import { BlueprintPicker } from '@/routes/exercises/BlueprintPicker';
+import { NewExerciseRoute } from '@/routes/exercises/NewExerciseRoute';
 import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
@@ -33,6 +34,7 @@ export const router = createHashRouter([
       { path: 'exercises/favorites', element: <ExerciseLibraryRoute favorites /> },
       { path: 'exercises/folder/:folderId', element: <ExerciseLibraryRoute /> },
       { path: 'exercises/new', element: <BlueprintPicker /> },
+      { path: 'exercises/new/:definitionId', element: <NewExerciseRoute /> },
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
       { path: 'practice/routine/:routineId', element: <PracticeRoutine /> },

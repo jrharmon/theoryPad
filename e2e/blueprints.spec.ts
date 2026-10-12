@@ -17,15 +17,25 @@ test('an exercise from a blueprint, in a folder, with its rhythm locked', async 
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('link', { name: 'Rhythms', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Rhythms' })).toBeVisible();
+  // Picking a blueprint makes nothing until Create: Cancel leaves the folder empty.
   await page.getByRole('link', { name: 'New exercise' }).click();
-  await page.getByRole('button', { name: /^Modes up the neck/ }).click();
+  await page.getByRole('link', { name: /^Modes up the neck/ }).click();
+  await page.getByRole('link', { name: 'Cancel' }).click();
+  await page.getByRole('link', { name: 'Cancel' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Rhythms' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Modes up the neck', exact: true })).toHaveCount(
+    0,
+  );
 
-  // The editor opens with the blueprint's name selected, ready to type over.
-  const name = page.getByLabel('Exercise name');
+  // The new-exercise page starts on the blueprint's name, selected, ready to type over.
+  await page.getByRole('link', { name: 'New exercise' }).click();
+  await page.getByRole('link', { name: /^Modes up the neck/ }).click();
+  const name = page.getByLabel('Name', { exact: true });
   await expect(name).toHaveValue('Modes up the neck');
   await expect(name).toBeFocused();
   await page.keyboard.type('Triplet modes');
   await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Exercise name')).toHaveValue('Triplet modes');
   await expect(page.getByText('from Modes up the neck')).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Folder' })).toHaveText('Rhythms');
 

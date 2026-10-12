@@ -17,6 +17,8 @@ interface ExercisesState {
   addFromDefinition: (
     definitionId: string,
     place: { name: string; folderId: string | null },
+    /** What the blueprint's new-exercise page sets beyond its defaults: a written exercise's notes. */
+    overrides?: Partial<NewExercise>,
   ) => Promise<Exercise>;
   update: (id: string, changes: Partial<Exercise>) => Promise<void>;
   /**
@@ -107,10 +109,11 @@ export const useExercises = create<ExercisesState>((set, get) => ({
     return inFlight;
   },
 
-  async addFromDefinition(definitionId, place) {
-    const created = await repos().exercises.add(
-      newExerciseFrom(exerciseDefinition(definitionId), place),
-    );
+  async addFromDefinition(definitionId, place, overrides = {}) {
+    const created = await repos().exercises.add({
+      ...newExerciseFrom(exerciseDefinition(definitionId), place),
+      ...overrides,
+    });
     set({ exercises: [...get().exercises, created] });
     return created;
   },
