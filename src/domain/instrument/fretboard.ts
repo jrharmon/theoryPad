@@ -20,13 +20,18 @@ export function stringCount(instrument: Instrument): number {
   return instrument.tuning.length;
 }
 
-/** The lowest fret playable — the capo, if one is on. */
-export function lowestFret(instrument: Instrument): number {
-  return instrument.capo;
+/** The lowest fret playable. Frets count from the capo, so it is always 0. */
+export function lowestFret(_instrument: Instrument): number {
+  return 0;
+}
+
+/** The highest fret playable: a capo takes its frets off the top. */
+export function highestFret(instrument: Instrument): number {
+  return instrument.fretCount - instrument.capo;
 }
 
 export function fullRange(instrument: Instrument): FretRange {
-  return { low: lowestFret(instrument), high: instrument.fretCount };
+  return { low: lowestFret(instrument), high: highestFret(instrument) };
 }
 
 export function isValidPosition(instrument: Instrument, pos: FretPosition): boolean {
@@ -36,10 +41,11 @@ export function isValidPosition(instrument: Instrument, pos: FretPosition): bool
     pos.string >= 0 &&
     pos.string < stringCount(instrument) &&
     pos.fret >= lowestFret(instrument) &&
-    pos.fret <= instrument.fretCount
+    pos.fret <= highestFret(instrument)
   );
 }
 
+/** A string's open note as it sounds: raised by the capo, if one is on. */
 function openStringMidi(instrument: Instrument, stringIndex: number): Midi {
   const open = instrument.tuning[stringIndex];
   if (open === undefined) {
@@ -48,7 +54,7 @@ function openStringMidi(instrument: Instrument, stringIndex: number): Midi {
         `(${stringCount(instrument)} strings)`,
     );
   }
-  return midiOf(open);
+  return midi(midiOf(open) + instrument.capo);
 }
 
 export function midiAt(instrument: Instrument, pos: FretPosition): Midi {

@@ -14,7 +14,11 @@ export interface Instrument {
   tuning: NoteName[];
   fretCount: number;
   handedness: 'right' | 'left';
-  /** Fret the capo sits at; 0 for none. */
+  /**
+   * Fret the capo sits at; 0 for none. Frets are counted **from the capo**, as
+   * Guitar Pro and printed tab count them: fret 0 is the capo, and a string
+   * sounds its open note raised by the capo.
+   */
   capo: number;
 }
 

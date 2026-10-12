@@ -95,9 +95,18 @@ describe('isValidPosition', () => {
     expect(isValidPosition(STANDARD_GUITAR, { string: 0, fret: 23 })).toBe(false);
     expect(isValidPosition(STANDARD_GUITAR, { string: 0, fret: 1.5 })).toBe(false);
 
+    // Frets count from the capo: 0 is the capo, and it takes frets off the top.
     const capoed = { ...STANDARD_GUITAR, capo: 3 };
-    expect(isValidPosition(capoed, { string: 0, fret: 2 })).toBe(false);
-    expect(isValidPosition(capoed, { string: 0, fret: 3 })).toBe(true);
+    expect(isValidPosition(capoed, { string: 0, fret: 0 })).toBe(true);
+    expect(isValidPosition(capoed, { string: 0, fret: 19 })).toBe(true);
+    expect(isValidPosition(capoed, { string: 0, fret: 20 })).toBe(false);
+  });
+
+  it('sounds a string from the capo', () => {
+    const capoed = { ...STANDARD_GUITAR, capo: 2 };
+    // Written 3 on the A string with capo 2 sounds D3, as Guitar Pro has it.
+    expect(noteAt(capoed, { string: 1, fret: 3 })).toBe('D3');
+    expect(noteAt(capoed, { string: 0, fret: 0 })).toBe('Gb2');
   });
 });
 
