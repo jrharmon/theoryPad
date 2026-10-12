@@ -81,6 +81,35 @@ export function degreeOf(km: KeyMode, pc: PitchClass): Degree | null {
   return null;
 }
 
+/** Each semitone above the tonic as a degree, the ones off the major scale written flat. */
+const CHROMATIC_DEGREES: [DegreeNumber, Alteration][] = [
+  [1, 0],
+  [2, -1],
+  [2, 0],
+  [3, -1],
+  [3, 0],
+  [4, 0],
+  [5, -1],
+  [5, 0],
+  [6, -1],
+  [6, 0],
+  [7, -1],
+  [7, 0],
+];
+
+/**
+ * What a note is against a key, whether it is in the key or not: its degree
+ * when it has one, otherwise how far it sits above the tonic, flat where off
+ * the major scale (♭2, ♭3, ♭5, ♭6, ♭7). A written phrase can step outside
+ * its key; its neck diagram still has to name every note.
+ */
+export function degreeFromTonic(km: KeyMode, pc: PitchClass): Degree {
+  const own = degreeOf(km, pc);
+  if (own) return own;
+  const [number, alteration] = CHROMATIC_DEGREES[(chroma(pc) - chroma(km.tonic) + 12) % 12]!;
+  return makeDegree(number, alteration);
+}
+
 /** Does the key have a note at this degree number? A pentatonic has no 2 or 6 (or 4 or 7). */
 export function hasDegree(km: KeyMode, number: DegreeNumber): boolean {
   return scaleDegrees(km).some((d) => d.number === number);

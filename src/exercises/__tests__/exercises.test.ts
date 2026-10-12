@@ -181,7 +181,7 @@ describe('written exercise', () => {
       .rhythm(QUARTER)
       .sequence([
         { string: 0, fret: 3 },
-        { string: 0, fret: 5 },
+        { string: 0, fret: 4 },
       ])
       .build();
     const params = {
@@ -207,6 +207,9 @@ describe('written exercise', () => {
     expect(instance.phrase.notes).toEqual(params.phrase.notes);
     expect(instance.brief.headline).toBe('Bars 5–12 of Riff, in D Dorian.');
     expect(instance.brief.instruction).toBe('Written at 185, capo 2.');
+    // The neck shows every position it uses, in the key or not: with capo 2,
+    // A is D Dorian's 5th and B♭ is outside it.
+    expect(instance.neck.notes.map((n) => n.degree.label)).toEqual(['5', '♭6']);
     // Its params are not settings: nothing to show in a form.
     expect(paramFields(definition.params)).toEqual([]);
   });

@@ -75,7 +75,8 @@ export const writtenExercise: PlayedDefinition<PhraseParams> = {
     return {
       kind: 'played',
       phrase,
-      neck: overlayFromPhrase(phrase, keyMode, instrument),
+      // Every position it uses, in the key or not; roots ringed.
+      neck: overlayFromPhrase(phrase, keyMode, instrument, { outsideKey: true }),
       brief: makeBrief(
         `${where}, in ${keyModeLabel(keyMode)}.`,
         `${written}${capo}.`,

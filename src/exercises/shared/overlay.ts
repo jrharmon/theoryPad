@@ -1,5 +1,5 @@
 import type { Degree, KeyMode } from '@/domain/music';
-import { degreeOf } from '@/domain/music';
+import { degreeFromTonic, degreeOf } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
 import { noteAt, pitchClassAt, scaleOnNeck, spellInKey } from '@/domain/instrument';
 import type { NeckOverlay } from '@/domain/neck';
@@ -7,6 +7,8 @@ import type { Phrase } from '@/domain/phrase';
 import { roleFor } from './roles';
 
 export interface OverlayOptions {
+  /** Keep a phrase's notes outside the key too, named from the tonic (♭3, ♭5). */
+  outsideKey?: boolean;
   targetDegree?: Degree;
   emphasisFrets?: number[];
   labelMode?: NeckOverlay['labelMode'];
@@ -55,7 +57,9 @@ export function overlayFromPhrase(
     seen.add(id);
 
     const sounding = spellInKey(keyMode, pitchClassAt(instrument, note));
-    const degree = degreeOf(keyMode, sounding);
+    const degree = options.outsideKey
+      ? degreeFromTonic(keyMode, sounding)
+      : degreeOf(keyMode, sounding);
     if (!degree) continue;
 
     positions.push({
