@@ -541,6 +541,12 @@ Run A, gate round 1 (2026-10-11):
 26. **A capo:** Guitar Pro counts frets from the capo (`fixture9-capo.gp`: fret 3 on the A string
     sounds D3 with capo 2). Run A keeps frets as written.
 
+Gate round 2 (2026-10-11):
+
+27. **Frets count from the capo in the model**, as Guitar Pro and printed tab count them: fret 0
+    is the capo, pitch is open string + capo + fret, and the capo takes frets off the top.
+28. **A fret number sits at the left of its column**, just after the beat line.
+
 ---
 
 ## 12. Run A — progress
@@ -617,15 +623,17 @@ The player passed the bends and the grace notes, and asked for three changes, al
 - **Capo:** `fixture9-capo.gp` confirms Guitar Pro counts frets from the capo. Frets are kept as
   written; the dev page sounds them from the capo.
 
-Still to judge:
-- **Stretched lines:** a full line is stretched to the width, so a line with fewer columns
-  spreads them wider (in `fixture1_rhythm`, line 2's sixteenths are wider than line 1's).
-  Guitar Pro does the same; the alternative is lines that end ragged.
-- **A digit sits in the middle of its column.** It always has, but a short phrase stretched
-  across the page has columns a beat wide, so a note on the beat is drawn half a beat late
-  (`fixture9-capo`, `fixture8_compound`). Recommendation: draw the digit at the column's left,
-  just after the beat line, as tab does.
-- **Run B, capo in the model:** the model's frets are absolute today (the capo is the lowest
-  fret, and pitch ignores it). Recommendation: make frets count from the capo, as Guitar Pro and
-  printed tab do. Pitch is then open string + capo + fret. Nothing uses a capo yet.
+### Gate round 2 (2026-10-11)
 
+Both built as recommended (decisions 27 and 28):
+
+- **Capo:** `Instrument.capo` now means frets count from it (`fretboard.ts`: `openStringMidi`
+  adds the capo, `lowestFret` is 0, `highestFret` is `fretCount − capo`). Nothing set a capo
+  before, so no exercise changes. The dev page plays a capo file through the instrument's capo.
+- **Fret numbers at the left of their column** (`DIGIT_INSET` in `TabStaff.tsx`); the marks
+  above and the tuplet brackets follow the digits. Checked on fixtures 1 and 9, the gallery's
+  marks, sixteenth run and seven shapes, light and dark: two-digit sixteenths and eighth-note
+  bends still fit.
+
+Still to judge: **stretched lines.** A full line is stretched to the width, so a line with
+fewer columns spreads them wider. Guitar Pro does the same; the alternative is ragged lines.

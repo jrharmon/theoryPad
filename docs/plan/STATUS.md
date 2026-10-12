@@ -55,7 +55,7 @@ under the old address must be exported and imported) — the repo is public, and
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
-progress. On that branch: 1016 unit tests in 64 files, `pnpm check` green, all 74 E2E pass. On `main`:
+progress. On that branch: 1017 unit tests in 64 files, `pnpm check` green, all 74 E2E pass. On `main`:
 993 unit tests, 74 E2E.
 
 ## How the player works — read before starting anything
@@ -231,7 +231,11 @@ what to ask at the gate.** Branch `written-exercises`, not pushed, a commit per 
 - **Gate round 1** (decisions 22–26): bends passed; a grid per bar; every tuplet bracketed;
   free text under its bar and section markers above; capo frets counted from the capo, as
   Guitar Pro does (`fixture9-capo.gp`). Built and committed. 1016 unit tests, 74 E2E.
-- **Next:** gate round 2, on what §12's "Still to judge" lists, then merge, then run B (§9).
+- **Gate round 2** (decisions 27–28): frets count from the capo in the model (open string +
+  capo + fret; nothing set a capo before); fret numbers sit at the left of their column. 1017
+  unit tests, 74 E2E.
+- **Next:** the player's look at round 2 (and the one open point, stretched lines, doc 16 §12),
+  then merge, then run B (§9).
 
 ## Routine sections — merged (2026-10-10)
 
