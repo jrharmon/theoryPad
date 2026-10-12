@@ -54,6 +54,15 @@ const ROW_HEIGHT = { compact: 19, large: 30 } as const;
 const FRET_SIZE = { compact: 12, large: 19 } as const;
 const LABEL_COL = { compact: 28, large: 34 } as const;
 
+/**
+ * A fret number sits at the left of its column, just after the beat line, the
+ * way tab writes it: its column starts at the note's tick, so a number in the
+ * middle of a wide column read as late. These are fractions of the fret size.
+ */
+const DIGIT_INSET = 0.2;
+/** Where a single digit's centre falls, from the column's left edge. */
+const DIGIT_CENTRE = DIGIT_INSET + 0.32;
+
 /** What one string shows in one column. */
 interface Placed {
   /** Absolute column index across the whole phrase. */
@@ -347,7 +356,14 @@ function TabSystem({
       .filter((c) => c > 0 && c < b.columns && Number.isInteger(c))
       .map((c) => b.firstColumn - firstColumn + c),
   );
-  const range = { startTick, endTick, columns, gridColumns };
+  const range = {
+    startTick,
+    endTick,
+    columns,
+    gridColumns,
+    inset: fretSize * DIGIT_INSET,
+    digitCentre: fretSize * DIGIT_CENTRE,
+  };
 
   return (
     <div
@@ -490,6 +506,10 @@ interface LaneRange {
   endTick: number;
   columns: LineColumns;
   gridColumns: string;
+  /** Pixels from a column's left edge to where its fret number starts. */
+  inset: number;
+  /** Pixels from a column's left edge to a single digit's centre. */
+  digitCentre: number;
 }
 
 /**
@@ -557,6 +577,7 @@ function TupletLane({
   endTick,
   columns,
   gridColumns,
+  digitCentre,
 }: LaneRange & { tuplets: readonly TupletGroup[] }) {
   const here = tuplets.filter((t) => t.startTick >= startTick && t.startTick < endTick);
   if (here.length === 0) return null;
@@ -570,12 +591,11 @@ function TupletLane({
       {here.map((group) => {
         const first = columns.at(group.startTick);
         const span = Math.max(1, columns.end(group.startTick + group.durationTicks) - first);
-        // Column centres of the first and the last note of the group, as
-        // fractions of the bracket's span.
+        // From over the first note's digit to over the last one's: the last
+        // note's column, as a fraction of the bracket's span, plus a digit.
         const lastTick =
           group.startTick + ((group.count - 1) * group.durationTicks) / group.count;
-        const left = 0.5 / span;
-        const right = 1 - (columns.at(Math.round(lastTick)) - first + 0.5) / span;
+        const last = (columns.at(Math.round(lastTick)) - first) / span;
         return (
           <span
             key={`${group.startTick}:${group.count}`}
@@ -589,12 +609,15 @@ function TupletLane({
             <span
               aria-hidden
               className="absolute bottom-0 h-1.5 border-x border-t border-ink-muted"
-              style={{ left: `${left * 100}%`, right: `${Math.max(0, right) * 100}%` }}
+              style={{
+                left: digitCentre,
+                right: `calc(${(1 - last) * 100}% - ${digitCentre}px)`,
+              }}
             />
             <span
               aria-hidden
               className="num absolute -bottom-0.5 -translate-x-1/2 bg-paper px-1 text-body-sm leading-none font-semibold text-ink-muted italic"
-              style={{ left: `${((left + 1 - Math.max(0, right)) / 2) * 100}%` }}
+              style={{ left: `calc(${(last / 2) * 100}% + ${digitCentre}px)` }}
             >
               {group.count}
             </span>
@@ -618,6 +641,7 @@ function MarkLane({
   endTick,
   columns,
   gridColumns,
+  inset,
 }: LaneRange & { marks: readonly BeatMark[] }) {
   const here = marks.filter((m) => m.startTick >= startTick && m.startTick < endTick);
   if (here.length === 0) return null;
@@ -633,10 +657,14 @@ function MarkLane({
           key={mark.startTick}
           data-testid="beat-mark"
           data-start-tick={mark.startTick}
-          // Centred over the column and free to run past it: "full ½" is wider
-          // than a sixteenth's column, and nothing else shares the lane.
-          className="num flex justify-center text-caption font-semibold whitespace-nowrap text-accent-text"
-          style={{ gridRow: 1, gridColumn: `${columns.at(mark.startTick) + 2} / span 1` }}
+          // Over its note's fret number and free to run past the column: "full ½"
+          // is wider than a sixteenth's column, and nothing else shares the lane.
+          className="num flex justify-start text-caption font-semibold whitespace-nowrap text-accent-text"
+          style={{
+            gridRow: 1,
+            gridColumn: `${columns.at(mark.startTick) + 2} / span 1`,
+            paddingLeft: inset,
+          }}
         >
           {mark.text}
         </span>
@@ -859,7 +887,11 @@ function TabRow({
             showPickStrokes={showPickStrokes}
           />
         );
-        const cell = { height: rowHeight, ...lineBackground };
+        const cell = {
+          height: rowHeight,
+          paddingLeft: fretSize * DIGIT_INSET,
+          ...lineBackground,
+        };
         // The whole cell is the target, not the digit: a fret number is a few
         // pixels wide and this is clicked with a guitar in your hands.
         return seekTick !== undefined && onSeek ? (
@@ -871,7 +903,7 @@ function TabRow({
             // would be worse than the shortcut is worth. Everything this does
             // is on a hotkey already; the click is the pointer's way in.
             tabIndex={-1}
-            className="grid cursor-pointer place-items-center hover:bg-ink/5"
+            className="grid cursor-pointer items-center justify-items-start hover:bg-ink/5"
             style={cell}
             onClick={() => onSeek(seekTick)}
             aria-label={`Play from fret ${(note ?? here?.graces[0])?.fret} on ${stringLabel(instrument, stringIndex)}`}
@@ -879,7 +911,7 @@ function TabRow({
             {chip}
           </button>
         ) : (
-          <div key={column} className="grid place-items-center" style={cell}>
+          <div key={column} className="grid items-center justify-items-start" style={cell}>
             {chip}
           </div>
         );
