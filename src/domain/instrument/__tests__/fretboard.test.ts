@@ -20,6 +20,7 @@ import {
   spellInKey,
   stringCount,
 } from '../fretboard';
+import { DROP_C_GUITAR, tunedInstrument, tuningName } from '../instruments';
 
 describe('string indexing', () => {
   it('numbers strings from the lowest pitch up, however many there are', () => {
@@ -100,6 +101,19 @@ describe('isValidPosition', () => {
     expect(isValidPosition(capoed, { string: 0, fret: 0 })).toBe(true);
     expect(isValidPosition(capoed, { string: 0, fret: 19 })).toBe(true);
     expect(isValidPosition(capoed, { string: 0, fret: 20 })).toBe(false);
+  });
+
+  it('plays an exercise in its own tuning, keeping the player’s neck', () => {
+    const player = { ...STANDARD_GUITAR, fretCount: 24 };
+    expect(tunedInstrument(player)).toBe(player);
+    const dropC = tunedInstrument(player, { strings: DROP_C_GUITAR.tuning, capo: 0 });
+    expect(dropC.tuning).toEqual(DROP_C_GUITAR.tuning);
+    expect(dropC.fretCount).toBe(24);
+    expect(dropC.name).toBe('Drop C');
+    // A tuning that isn't a preset is named by its notes.
+    const open = ['D2', 'G2', 'D3', 'G3', 'B3', 'D4'].map((n) => noteName(n));
+    expect(tuningName(open)).toBe('D G D G B D');
+    expect(tuningName(STANDARD_GUITAR.tuning)).toBe('Standard');
   });
 
   it('sounds a string from the capo', () => {

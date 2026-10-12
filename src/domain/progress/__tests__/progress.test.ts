@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Phrase } from '@/domain/phrase';
 import { FOUR_FOUR } from '@/domain/phrase';
 import { mulberry32 } from '@/domain/variation';
+import { DROP_D_GUITAR, SEVEN_STRING_GUITAR, STANDARD_GUITAR } from '@/domain/instrument';
 import {
   addDays,
   answerWeights,
@@ -123,14 +124,23 @@ describe('fretTally', () => {
     ...(tied ? { tied } : {}),
   });
 
-  it('counts every note by string and fret', () => {
-    const tally = fretTally(phrase([note(0, 5), note(0, 7), note(0, 5), note(1, 5)]), 6);
-    expect(tally).toEqual({ strings: 6, counts: { '0:5': 2, '0:7': 1, '1:5': 1 } });
+  it('counts every note by string and fret, in the tuning it was played in', () => {
+    const tally = fretTally(
+      phrase([note(0, 5), note(0, 7), note(0, 5), note(1, 5)]),
+      STANDARD_GUITAR,
+    );
+    expect(tally).toEqual({
+      strings: 6,
+      tuning: 'E2 A2 D3 G3 B3 E4',
+      counts: { '0:5': 2, '0:7': 1, '1:5': 1 },
+    });
   });
 
-  it('counts a repeated phrase each time it plays, and a tie once', () => {
-    const tally = fretTally(phrase([note(2, 7), note(2, 7, true)], 3), 7);
-    expect(tally).toEqual({ strings: 7, counts: { '2:7': 3 } });
+  it('counts a repeated phrase each time it plays, a tie once, and a capo’d fret up the neck', () => {
+    const tally = fretTally(phrase([note(2, 7), note(2, 7, true)], 3), SEVEN_STRING_GUITAR);
+    expect(tally.counts).toEqual({ '2:7': 3 });
+    const capoed = fretTally(phrase([note(1, 3)]), { ...STANDARD_GUITAR, capo: 2 });
+    expect(capoed.counts).toEqual({ '1:5': 1 });
   });
 });
 
@@ -169,15 +179,19 @@ describe('rollup', () => {
     });
   });
 
-  it('keeps a 7-string’s counts apart from a 6-string’s', () => {
+  it('keeps each tuning’s counts apart, and counts older passes as the player’s own', () => {
+    const standard = { strings: 6, tuning: 'E2 A2 D3 G3 B3 E4', counts: { '0:5': 1 } };
+    const dropD = { strings: 6, tuning: 'D2 A2 D3 G3 B3 E4', counts: { '0:5': 10 } };
     const day = rollupDays([
-      rep({ frets }),
-      rep({ frets: { strings: 7, counts: { '0:5': 1 } } }),
-      rep({ frets }),
+      rep({ frets }), // logged before tunings: kept by string count
+      rep({ frets: standard }),
+      rep({ frets: dropD }),
     ])[0]!;
-    expect(day.frets).toEqual({ 6: { '0:5': 6, '1:7': 2 }, 7: { '0:5': 1 } });
-    expect(neckCounts([day], 6)).toEqual({ '0:5': 6, '1:7': 2 });
-    expect(neckCounts([day], 4)).toEqual({});
+    expect(neckCounts([day], STANDARD_GUITAR, true)).toEqual({ '0:5': 4, '1:7': 1 });
+    expect(neckCounts([day], DROP_D_GUITAR, true)).toEqual({ '0:5': 13, '1:7': 1 });
+    // Not the player's tuning: only what was played in it.
+    expect(neckCounts([day], DROP_D_GUITAR, false)).toEqual({ '0:5': 10 });
+    expect(neckCounts([day], SEVEN_STRING_GUITAR, false)).toEqual({});
   });
 
   it('files each rep under the local day it started, sorted by date', () => {

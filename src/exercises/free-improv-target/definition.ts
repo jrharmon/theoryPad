@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import { z } from 'zod';
 import { degreeOf, noteAtDegree, type DegreeNumber } from '@/domain/music';
 import { allStrings, scaleOnNeck } from '@/domain/instrument';
@@ -86,7 +87,7 @@ export const freeImprovTarget: PlayedDefinition<FreeImprovTargetParams> = {
     const range =
       config.constrainToPosition && position
         ? { low: position.fret, high: position.fret + position.span }
-        : { low: 0, high: Math.min(HIGHEST_FRET, instrument.fretCount) };
+        : { low: 0, high: Math.min(HIGHEST_FRET, highestFret(instrument)) };
     const positions = scaleOnNeck(instrument, keyMode, range).filter((p) =>
       set.strings.includes(p.string),
     );

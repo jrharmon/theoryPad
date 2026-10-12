@@ -34,6 +34,8 @@ export interface RoutineRunItem {
   subjectWeights?: Readonly<Record<string, number>>;
   /** The section it sits under in the routine — a label only. */
   section?: RunSection;
+  /** Its exercise's own tuning, when it has one; otherwise the routine's instrument. */
+  instrument?: Instrument;
 }
 
 export interface RunSection {
@@ -197,7 +199,7 @@ export class RoutineRunner {
         definition: item.definition,
         exerciseId: item.exerciseId,
         seedKey: `${item.id}:0`,
-        instrument,
+        instrument: item.instrument ?? instrument,
         sessionId,
         sessionKeyMode: this.keyMode,
         params,

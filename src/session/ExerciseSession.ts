@@ -1,3 +1,4 @@
+import { tunedInstrument } from '@/domain/instrument';
 import { withRequiredTags, type BackingChoice, type Exercise } from '@/data';
 import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
@@ -73,7 +74,7 @@ export class ExerciseSession extends PracticeSession {
       clock: deps.audio.clock,
       definition,
       exerciseId: exercise.id,
-      instrument: this.instrument,
+      instrument: tunedInstrument(this.instrument, exercise.tuning),
       sessionId,
       sessionKeyMode: FALLBACK_KEY_MODE,
       params: resolveParams(definition, exercise.params),

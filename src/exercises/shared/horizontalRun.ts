@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import type { KeyMode } from '@/domain/music';
 import { playsInBoxes, withoutPassingNotes } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
@@ -88,7 +89,7 @@ export function horizontalRun(options: {
   // need a hand position the way up does not — at the bottom of a drop-D neck
   // the three-note low string runs past the next string's open pitch — and then
   // the run starts a shape higher. The caller gets the fret it actually used.
-  for (let fret = minFret; fret <= instrument.fretCount; fret += 1) {
+  for (let fret = minFret; fret <= highestFret(instrument); fret += 1) {
     const up = shapeFrom({ instrument, keyMode: runKey, fret, notesPerString: upCounts });
     if (!up) continue;
 

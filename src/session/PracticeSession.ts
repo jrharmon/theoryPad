@@ -183,6 +183,14 @@ export abstract class PracticeSession {
     });
   }
 
+  /**
+   * The instrument the notes are played on now: the current exercise's own
+   * tuning, or the player's. A routine changes it item by item.
+   */
+  protected get playedOn(): Instrument {
+    return this.runner?.snapshot.instrument ?? this.instrument;
+  }
+
   /** The runner whose tempo, pauses and passes the transport controls. */
   abstract get runner(): ExerciseRunner | null;
   /** The key the backing must fit. */
@@ -461,7 +469,7 @@ export abstract class PracticeSession {
         if (phrase) this.syncMetronome(phrase.timeSignature);
       }
       audio.phrase.clear();
-      if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
+      if (notes) audio.phrase.load(notes, this.playedOn, countInTicks);
       this.loadGenerated(phrase, countInTicks, freeTime);
       return;
     }
@@ -475,7 +483,7 @@ export abstract class PracticeSession {
     this.syncMetronome(phrase?.timeSignature);
     audio.metronome.start();
     // The phrase goes after the count-in, not at zero, and the backing with it.
-    if (notes) audio.phrase.load(notes, this.instrument, countInTicks);
+    if (notes) audio.phrase.load(notes, this.playedOn, countInTicks);
     this.loadGenerated(phrase, countInTicks, freeTime);
   };
 }

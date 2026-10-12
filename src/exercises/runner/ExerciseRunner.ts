@@ -702,7 +702,7 @@ export class ExerciseRunner {
         ...definedProps({
           score: options.score,
           answers: options.answers,
-          frets: phrase ? fretTally(phrase, this.config.instrument.tuning.length) : undefined,
+          frets: phrase ? fretTally(phrase, this.config.instrument) : undefined,
         }),
       };
       if (options.score) {

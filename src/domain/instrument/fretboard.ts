@@ -103,7 +103,11 @@ export function positionsOf(
   const found: FretPosition[] = [];
 
   for (let string = 0; string < stringCount(instrument); string += 1) {
-    for (let fret = range.low; fret <= Math.min(range.high, instrument.fretCount); fret += 1) {
+    for (
+      let fret = range.low;
+      fret <= Math.min(range.high, highestFret(instrument));
+      fret += 1
+    ) {
       if (!inRange(fret, range)) continue;
       if (chroma(pitchClassAt(instrument, { string, fret })) === target) {
         found.push({ string, fret });
@@ -125,7 +129,11 @@ export function scaleOnNeck(
   const out: ScaleNotePosition[] = [];
 
   for (let string = 0; string < stringCount(instrument); string += 1) {
-    for (let fret = range.low; fret <= Math.min(range.high, instrument.fretCount); fret += 1) {
+    for (
+      let fret = range.low;
+      fret <= Math.min(range.high, highestFret(instrument));
+      fret += 1
+    ) {
       const pos = { string, fret };
       const sounding = pitchClassAt(instrument, pos);
       const spelled = byChroma.get(chroma(sounding));
@@ -183,7 +191,7 @@ export function fretForPitchOnString(
   minFret = lowestFret(instrument),
 ): number | null {
   const target = chroma(pc);
-  for (let fret = minFret; fret <= instrument.fretCount; fret += 1) {
+  for (let fret = minFret; fret <= highestFret(instrument); fret += 1) {
     if (chroma(pitchClassAt(instrument, { string, fret })) === target) return fret;
   }
   return null;

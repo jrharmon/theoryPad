@@ -18,6 +18,7 @@ import {
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
+import { usePractice } from '@/store/practice';
 import { useSettings } from '@/store/settings';
 import { withSessionChoice } from '@/exercises/locks';
 import { ParamsEditor } from '../exercises/ParamsEditor';
@@ -121,7 +122,9 @@ function Draft({
   onApply: (changed: Partial<ExerciseSettings>) => void;
   onClose: () => void;
 }) {
-  const instrument = useSettings((s) => s.settings.instrument);
+  const player = useSettings((s) => s.settings.instrument);
+  // The exercise's own tuning, if it has one: string sets are its strings.
+  const instrument = usePractice((s) => s.snapshot?.instrument) ?? player;
   const [tempo, setTempo] = useState<TempoConfig>(initial.tempo);
   const [params, setParams] = useState<unknown>(initial.params);
   const [policies, setPolicies] = useState<AxisPolicies>(initial.axisPolicies);

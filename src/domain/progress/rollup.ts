@@ -1,5 +1,5 @@
 import { dayKey } from './days';
-import { addCounts } from './frets';
+import { addCounts, tallyKey } from './frets';
 import type { LoggedRep, PracticeDay } from './types';
 
 export function repSeconds(rep: LoggedRep): number {
@@ -39,9 +39,10 @@ export function applyRepToDay(day: PracticeDay, rep: LoggedRep): PracticeDay {
   const keyMode = keyModeOf(rep.axes);
   if (keyMode) next.keyModes[keyMode] = (next.keyModes[keyMode] ?? 0) + 1;
   if (rep.frets) {
-    const counts = { ...(day.frets[rep.frets.strings] ?? {}) };
+    const key = tallyKey(rep.frets);
+    const counts = { ...(day.frets[key] ?? {}) };
     addCounts(counts, rep.frets.counts);
-    next.frets[rep.frets.strings] = counts;
+    next.frets[key] = counts;
   }
   return next;
 }

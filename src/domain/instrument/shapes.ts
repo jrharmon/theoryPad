@@ -1,3 +1,4 @@
+import { highestFret } from './fretboard';
 import type { DegreeNumber, KeyMode, PitchClass } from '@/domain/music';
 import {
   chroma,
@@ -65,7 +66,7 @@ function fretsNear(
 ): number[] {
   const target = chroma(pc);
   const frets: number[] = [];
-  for (let fret = minFret; fret <= instrument.fretCount; fret += 1) {
+  for (let fret = minFret; fret <= highestFret(instrument); fret += 1) {
     if (chroma(pitchClassAt(instrument, { string, fret })) === target) frets.push(fret);
   }
   return frets.sort((a, b) => Math.abs(a - reference) - Math.abs(b - reference) || a - b);
@@ -228,7 +229,11 @@ export function shapesUpTheNeck(
   const lowestString = 0;
   const shapes: NeckShape[] = [];
 
-  for (let fret = minFret; fret <= instrument.fretCount && shapes.length < count; fret += 1) {
+  for (
+    let fret = minFret;
+    fret <= highestFret(instrument) && shapes.length < count;
+    fret += 1
+  ) {
     const sounding = pitchClassAt(instrument, { string: lowestString, fret });
     const index = notes.findIndex((n) => chroma(n) === chroma(sounding));
     if (index === -1) continue;
@@ -290,7 +295,7 @@ export function addBluesFifth<T extends ScaleNotePosition>(
   const flatFive = makeDegree(5, -1);
   const pc = noteAtDegree(keyMode, flatFive);
   return positions.flatMap((p) => {
-    if (p.degree.number !== 4 || p.fret + 1 > instrument.fretCount) return [p];
+    if (p.degree.number !== 4 || p.fret + 1 > highestFret(instrument)) return [p];
     const position = { string: p.string, fret: p.fret + 1 };
     return [
       p,
@@ -345,7 +350,7 @@ export function boxShape(instrument: Instrument, keyMode: KeyMode, fret = 0): Ne
   // The first box note at or above the fret starts the box. Near the nut a box
   // may not be playable from there — it would need a note below an open
   // string — so the next one up does.
-  for (let f = from; f <= instrument.fretCount; f += 1) {
+  for (let f = from; f <= highestFret(instrument); f += 1) {
     const box = tryAt(f);
     if (box) return box;
   }
@@ -368,7 +373,11 @@ function boxesUpTheNeck(
   count = pentatonicNotes(keyMode).length,
 ): NeckShape[] {
   const shapes: NeckShape[] = [];
-  for (let fret = minFret; fret <= instrument.fretCount && shapes.length < count; fret += 1) {
+  for (
+    let fret = minFret;
+    fret <= highestFret(instrument) && shapes.length < count;
+    fret += 1
+  ) {
     const step = boxStepAt(instrument, keyMode, fret);
     if (step === 0) continue;
     const positions = boxAt(instrument, keyMode, step, fret);

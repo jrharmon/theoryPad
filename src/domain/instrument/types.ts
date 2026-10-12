@@ -30,6 +30,18 @@ export interface Instrument {
  * guitarist would name. Tab and the fretboard diagram invert this for display,
  * in the renderer and nowhere else.
  */
+/**
+ * A tuning an exercise brings with it — a written exercise's, from its file.
+ * Fret count and handedness stay the player's: they belong to the hands and
+ * the guitar, not to the music.
+ */
+export interface Tuning {
+  /** Open strings, lowest first. */
+  strings: NoteName[];
+  /** Frets count from it; 0 for none. */
+  capo: number;
+}
+
 export interface FretPosition {
   string: number;
   /** 0 is the open string. */

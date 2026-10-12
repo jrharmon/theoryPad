@@ -1,4 +1,5 @@
-import type { FretPosition } from '@/domain/instrument';
+import type { FretPosition, Instrument } from '@/domain/instrument';
+import { tuningKey } from '@/domain/instrument';
 import type { Phrase } from '@/domain/phrase';
 import type { FretTally, PracticeDay } from './types';
 
@@ -12,19 +13,25 @@ export function parseFretKey(key: string): FretPosition {
 }
 
 /**
- * Every note a pass plays, by where it is played. A phrase played twice
- * within one pass counts twice; a tied note is one note held, so it counts
- * once.
+ * Every note a pass plays, by where it is played on the neck, in the tuning it
+ * was played in. A capo moves every fret up the neck by its own. A phrase
+ * played twice within one pass counts twice; a tied note is one note held, so
+ * it counts once.
  */
-export function fretTally(phrase: Phrase, strings: number): FretTally {
+export function fretTally(phrase: Phrase, instrument: Instrument): FretTally {
   const times = phrase.repeat ?? 1;
   const counts: Record<string, number> = {};
   for (const note of phrase.notes) {
     if (note.tied) continue;
-    const key = fretKey(note);
+    const key = fretKey({ string: note.string, fret: note.fret + instrument.capo });
     counts[key] = (counts[key] ?? 0) + times;
   }
-  return { strings, counts };
+  return { strings: instrument.tuning.length, tuning: tuningKey(instrument.tuning), counts };
+}
+
+/** Where a tally is kept in a day: by tuning, or by string count for one logged before tunings were. */
+export function tallyKey(tally: FretTally): string {
+  return tally.tuning ?? String(tally.strings);
 }
 
 /** Add one set of counts into another, in place. */
@@ -32,13 +39,22 @@ export function addCounts(into: Record<string, number>, counts: Record<string, n
   for (const [key, n] of Object.entries(counts)) into[key] = (into[key] ?? 0) + n;
 }
 
-/** Notes played at each fret over some days, for one instrument's string count. */
+/**
+ * Notes played at each spot on the neck over some days, in one tuning. Passes
+ * logged before tunings were are kept by string count, and count as the
+ * player's own tuning (doc 16, decision 20): pass `ownTuning` when showing it.
+ */
 export function neckCounts(
   days: readonly PracticeDay[],
-  strings: number,
+  instrument: Instrument,
+  ownTuning: boolean,
 ): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const day of days) addCounts(out, day.frets[strings] ?? {});
+  const key = tuningKey(instrument.tuning);
+  for (const day of days) {
+    addCounts(out, day.frets[key] ?? {});
+    if (ownTuning) addCounts(out, day.frets[String(instrument.tuning.length)] ?? {});
+  }
   return out;
 }
 

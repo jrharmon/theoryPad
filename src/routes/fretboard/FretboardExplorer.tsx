@@ -53,7 +53,9 @@ const title = modeTitle;
  */
 export function FretboardExplorer() {
   const { days, today, lastKeyMode, loaded, load } = useProgress();
-  const instrument = useSettings((s) => s.settings.instrument);
+  const player = useSettings((s) => s.settings.instrument);
+  // The neck itself, from the nut: the heat counts a capo'd fret where it is.
+  const instrument = useMemo(() => ({ ...player, capo: 0 }), [player]);
   const loadSettings = useSettings((s) => s.load);
   const [picked, setPicked] = useState<KeyMode | null>(null);
   const [labels, setLabels] = useState<'degree' | 'note'>('degree');
@@ -103,7 +105,11 @@ export function FretboardExplorer() {
     () => (layer === 'recent' ? days.filter((d) => d.date >= addDays(today, -29)) : days),
     [days, layer, today],
   );
-  const counts = useMemo(() => neckCounts(windowDays, strings), [windowDays, strings]);
+  // The player's tuning, and the passes logged before tunings were.
+  const counts = useMemo(
+    () => neckCounts(windowDays, instrument, true),
+    [windowDays, instrument],
+  );
   const heat = useMemo(
     () => (layer === 'off' ? undefined : heatLevels(counts)),
     [counts, layer],

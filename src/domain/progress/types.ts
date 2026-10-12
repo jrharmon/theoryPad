@@ -26,6 +26,12 @@ export interface LoggedRep {
  */
 export interface FretTally {
   strings: number;
+  /**
+   * The tuning, lowest string first ("E2 A2 D3 G3 B3 E4"). Absent on passes
+   * logged before tunings were recorded: those count as the player's own.
+   */
+  tuning?: string;
+  /** By where on the neck: a capo's frets are counted up from the nut. */
   counts: Record<string, number>;
 }
 
@@ -46,6 +52,6 @@ export interface PracticeDay {
   passes: number;
   /** Finished passes per key and mode, keyed `"Bb dorian"`. */
   keyModes: Record<string, number>;
-  /** Notes played on finished passes, per instrument string count. */
+  /** Notes played on finished passes, per tuning (older days: per string count). */
   frets: Record<string, Record<string, number>>;
 }

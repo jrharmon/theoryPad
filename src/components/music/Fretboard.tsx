@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import { useMemo } from 'react';
 import type { FretPosition, Instrument } from '@/domain/instrument';
 import {
@@ -68,7 +69,7 @@ export function Fretboard({
 }: FretboardProps) {
   const strings = stringCount(instrument);
   const low = fretRange?.low ?? 0;
-  const high = Math.min(fretRange?.high ?? 12, instrument.fretCount);
+  const high = Math.min(fretRange?.high ?? 12, highestFret(instrument));
   const frets = useMemo(
     () => Array.from({ length: high - low + 1 }, (_, i) => low + i),
     [low, high],

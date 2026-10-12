@@ -30,7 +30,7 @@ async function snapshot(page: Page) {
 test('settings are kept, and change what the exercises use', async ({ page }) => {
   await page.goto('/#/settings');
   await page.getByRole('combobox', { name: 'Tuning' }).click();
-  await page.getByRole('option', { name: 'Guitar — 7 string' }).click();
+  await page.getByRole('option', { name: 'Guitar — 7 string', exact: true }).click();
   await expect(page.getByRole('combobox', { name: 'Tuning' })).toHaveText('Guitar — 7 string');
   // Reload only once the write has landed; a reload mid-write loses it anywhere.
   await expect

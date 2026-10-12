@@ -1,5 +1,5 @@
 import type { KeyMode, ModeId, ModeName, PitchClass, ScaleId } from '@/domain/music';
-import type { Instrument } from '@/domain/instrument';
+import type { Instrument, Tuning } from '@/domain/instrument';
 import type { GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { Mix } from '@/domain/mix';
@@ -105,6 +105,11 @@ export interface Exercise extends Row {
   favorite?: boolean;
   /** The metronome chosen for it; absent is the setting's. */
   metronome?: MetronomeVoiceId;
+  /**
+   * Its own tuning and capo; absent plays in the player's (Settings). Only a
+   * written exercise has one, from its file (doc 16, decision 30).
+   */
+  tuning?: Tuning;
   /** Whether its notes sound as it plays; absent is the setting's. */
   playNotes?: boolean;
   /** The backing last chosen for it; absent is the synth notes. */

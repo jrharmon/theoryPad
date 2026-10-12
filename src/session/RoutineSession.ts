@@ -1,3 +1,4 @@
+import { tunedInstrument } from '@/domain/instrument';
 import { withRequiredTags, type BackingChoice, type Routine } from '@/data';
 import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
@@ -46,15 +47,19 @@ export class RoutineSession extends PracticeSession {
       const definition = findExerciseDefinition(item.definitionId);
       if (!definition) continue;
       const placed = section ? { section: { id: section.id, name: section.name } } : {};
+      // An exercise with its own tuning (a written one) plays in it; the rest in Settings'.
+      const own = exercises.get(stored.exerciseId)?.tuning;
+      const tuned = own ? { instrument: tunedInstrument(deps.settings().instrument, own) } : {};
       items.push(
         definition.kind === 'theory'
           ? {
               ...item,
               ...placed,
+              ...tuned,
               definition,
               subjectWeights: await loadSubjectWeights(deps, item.exerciseId),
             }
-          : { ...item, ...placed, definition },
+          : { ...item, ...placed, ...tuned, definition },
       );
     }
     return new RoutineSession(routine, items, session.id, deps);

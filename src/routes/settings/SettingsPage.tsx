@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Field } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { SegmentedControl, ToggleButton } from '@/components/ui/toggle-button';
 import {
@@ -70,30 +71,52 @@ export function SettingsPage() {
       </div>
 
       <Section title="Instrument">
-        <Field
-          label="Tuning"
-          htmlFor="instrument"
-          hint="Every exercise works it out from the tuning — shapes, string sets and positions."
-        >
-          <Select
-            value={instrument.id}
-            onValueChange={(id) => {
-              const next = OFFERED_INSTRUMENTS.find((i) => i.id === id);
-              if (next) void save({ instrument: next });
-            }}
+        {/* The capo is rare: a small number beside the tuning, not a row of its own. */}
+        <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+          <Field
+            label="Tuning"
+            htmlFor="instrument"
+            hint="Every exercise works it out from the tuning — shapes, string sets and positions."
           >
-            <SelectTrigger id="instrument" aria-label="Tuning" className="w-[260px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {OFFERED_INSTRUMENTS.map((i) => (
-                <SelectItem key={i.id} value={i.id}>
-                  {i.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+            <Select
+              value={instrument.id}
+              onValueChange={(id) => {
+                const next = OFFERED_INSTRUMENTS.find((i) => i.id === id);
+                // A new tuning keeps the capo and the player's own neck.
+                if (next) void save({ instrument: { ...next, capo: instrument.capo } });
+              }}
+            >
+              <SelectTrigger id="instrument" aria-label="Tuning" className="w-[260px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OFFERED_INSTRUMENTS.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field
+            label="Capo"
+            htmlFor="capo"
+            hint="Frets are counted from it. A written exercise brings its own."
+          >
+            <Input
+              id="capo"
+              type="number"
+              min={0}
+              max={12}
+              className="w-[72px] tabular-nums"
+              value={instrument.capo}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const capo = Math.max(0, Math.min(12, Math.round(Number(e.target.value) || 0)));
+                void save({ instrument: { ...instrument, capo } });
+              }}
+            />
+          </Field>
+        </div>
       </Section>
 
       <Section title="Sound">

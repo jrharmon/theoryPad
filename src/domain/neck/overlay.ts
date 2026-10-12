@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import type { Degree } from '@/domain/music';
 import type { FretPosition, Instrument, ScaleNotePosition } from '@/domain/instrument';
 import type { NoteRole } from '@/domain/phrase';
@@ -69,7 +70,7 @@ export function overlayFretRange(
   overlay: NeckOverlay,
   instrument: Instrument,
 ): { low: number; high: number } {
-  const { fretCount } = instrument;
+  const fretCount = highestFret(instrument);
   const frets = overlay.notes.map((n) => n.position.fret);
   if (frets.length === 0) return { low: 0, high: Math.min(12, fretCount) };
   return {

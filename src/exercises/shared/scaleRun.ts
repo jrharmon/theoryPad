@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import type { DegreeNumber, KeyMode } from '@/domain/music';
 import { chroma, playsInBoxes, scaleNotes } from '@/domain/music';
 import type { Instrument, ScaleNotePosition } from '@/domain/instrument';
@@ -229,7 +230,7 @@ export function scaleNoteFrom(
   fret: number,
 ): { fret: number; degree: DegreeNumber } | null {
   const notes = scaleNotes(keyMode);
-  for (let f = fret; f <= instrument.fretCount; f += 1) {
+  for (let f = fret; f <= highestFret(instrument); f += 1) {
     const sounding = chroma(pitchClassAt(instrument, { string: 0, fret: f }));
     const index = notes.findIndex((n) => chroma(n) === sounding);
     if (index !== -1) return { fret: f, degree: (index + 1) as DegreeNumber };

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { STANDARD_GUITAR } from '@/domain/instrument';
+import { DROP_D_GUITAR, STANDARD_GUITAR } from '@/domain/instrument';
 import { FakeClock } from '@/domain/time';
 import { QUARTER, ticksPerBar } from '@/domain/phrase';
 import { modesThroughKey } from '../../modes-through-key/definition';
@@ -70,6 +70,24 @@ describe('RoutineRunner', () => {
       expect(it.variation!.axes.key!.key).toBe(keyMode.tonic);
       expect(it.variation!.axes.mode!.key).toBe(keyMode.mode);
     }
+  });
+
+  it('plays each item on its own instrument, and logs its frets in that tuning', () => {
+    const ended: { frets?: { tuning?: string } }[] = [];
+    const { routine, clock } = makeRoutine(
+      [item('a'), item('b', { instrument: { ...DROP_D_GUITAR, capo: 2 } })],
+      { onRepEnd: (rep) => ended.push(rep) },
+    );
+    expect(routine.current!.snapshot.instrument).toBe(STANDARD_GUITAR);
+    routine.play();
+    playPass(routine, clock);
+    clock.advanceTicks(BAR); // the next item counts in on the running clock
+    expect(routine.current!.snapshot.instrument.tuning[0]).toBe('D2');
+    playPass(routine, clock);
+    expect(ended.map((rep) => rep.frets?.tuning)).toEqual([
+      'E2 A2 D3 G3 B3 E4',
+      'D2 A2 D3 G3 B3 E4',
+    ]);
   });
 
   it('rolls two items copied from one exercise independently', () => {

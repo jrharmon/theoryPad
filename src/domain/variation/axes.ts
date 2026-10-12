@@ -1,3 +1,4 @@
+import { highestFret } from '@/domain/instrument';
 import type {
   Chroma,
   DegreeNumber,
@@ -215,7 +216,7 @@ const neckPositionAxis: AxisDefinition<AxisValues['neckPosition']> = {
   scope: 'exercise',
   label: 'Position',
   candidates: (context) =>
-    NECK_POSITIONS.filter((p) => p.fret + p.span <= context.instrument.fretCount),
+    NECK_POSITIONS.filter((p) => p.fret + p.span <= highestFret(context.instrument)),
   key: (position) => String(position.fret),
   format: positionName,
   parse: (key) => NECK_POSITIONS.find((p) => String(p.fret) === key) ?? null,

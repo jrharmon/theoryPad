@@ -21,8 +21,10 @@ import { LoadingState } from '@/components/ui/page-header';
  * The same for a single exercise and for the current item of a routine.
  */
 export function PracticeBody() {
-  const instrument = useSettings((s) => s.settings.instrument);
+  const player = useSettings((s) => s.settings.instrument);
   const snapshot = usePractice((s) => s.snapshot);
+  // What this exercise plays on: its own tuning (a written one), or the player's.
+  const instrument = snapshot?.instrument ?? player;
   const instance = usePractice((s) => s.instance);
 
   if (!instance || !snapshot) {

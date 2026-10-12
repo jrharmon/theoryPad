@@ -71,26 +71,29 @@ const PLAYED = EXERCISE_DEFINITIONS.filter((d) => d.kind === 'played');
 const SEEDS = [1, 2, 3, 42, 12345];
 
 describe.each(PLAYED.map((d) => [d.id, d] as const))('%s', (_id, definition) => {
-  it.each(TEST_INSTRUMENTS.flatMap((i) => SCALE_IDS.map((scale) => [i.id, scale, i] as const)))(
-    'plays only real positions, in the key (%s, %s)',
-    (_i, scale, instrument) => {
-      // Every played exercise takes every scale; Dorian gives way to a scale's own mode.
-      const policies: AxisPolicies = { ...D_DORIAN, scale: { mode: 'fixed', value: scale } };
-      const mode = scale === 'major' ? 'dorian' : scale;
-      const inKey = new Set(scaleNotes({ tonic: pitchClass('D'), scale, mode }).map(chroma));
-      for (const seed of SEEDS) {
-        const { phrase, brief } = generate(definition, seed, instrument, policies);
-        // An improvisation writes nothing; it still has bars to count.
-        if (definition.tags.includes('improv')) expect(phrase.totalTicks).toBeGreaterThan(0);
-        else expect(phrase.notes.length, `seed ${seed}`).toBeGreaterThan(0);
-        expect(brief.headline).not.toMatch(/undefined|,\s*\.|\s\s/);
-        for (const note of phrase.notes) {
-          expect(isValidPosition(instrument, note), JSON.stringify(note)).toBe(true);
-          expect(inKey.has(chroma(pitchClassAt(instrument, note)))).toBe(true);
-        }
+  // A capo takes frets off the top of the neck: nothing may be written past them.
+  const CAPOED = { ...TEST_INSTRUMENTS[0], id: 'guitar-standard-capo-5', capo: 5 };
+  it.each(
+    [...TEST_INSTRUMENTS, CAPOED].flatMap((i) =>
+      SCALE_IDS.map((scale) => [i.id, scale, i] as const),
+    ),
+  )('plays only real positions, in the key (%s, %s)', (_i, scale, instrument) => {
+    // Every played exercise takes every scale; Dorian gives way to a scale's own mode.
+    const policies: AxisPolicies = { ...D_DORIAN, scale: { mode: 'fixed', value: scale } };
+    const mode = scale === 'major' ? 'dorian' : scale;
+    const inKey = new Set(scaleNotes({ tonic: pitchClass('D'), scale, mode }).map(chroma));
+    for (const seed of SEEDS) {
+      const { phrase, brief } = generate(definition, seed, instrument, policies);
+      // An improvisation writes nothing; it still has bars to count.
+      if (definition.tags.includes('improv')) expect(phrase.totalTicks).toBeGreaterThan(0);
+      else expect(phrase.notes.length, `seed ${seed}`).toBeGreaterThan(0);
+      expect(brief.headline).not.toMatch(/undefined|,\s*\.|\s\s/);
+      for (const note of phrase.notes) {
+        expect(isValidPosition(instrument, note), JSON.stringify(note)).toBe(true);
+        expect(inKey.has(chroma(pitchClassAt(instrument, note)))).toBe(true);
       }
-    },
-  );
+    }
+  });
 
   it('is the same for the same seed', () => {
     expect(generate(definition, 7)).toEqual(generate(definition, 7));
