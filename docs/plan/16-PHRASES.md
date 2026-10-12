@@ -547,6 +547,20 @@ Gate round 2 (2026-10-11):
     is the capo, pitch is open string + capo + fret, and the capo takes frets off the top.
 28. **A fret number sits at the left of its column**, just after the beat line.
 
+
+Run B, round 3 (2026-10-11):
+
+29. **No blueprint creates an exercise until Create.** Picking a blueprint opens a full
+    "New exercise" page (name, folder; Create or Cancel), so a change of mind leaves nothing
+    behind. The Written exercise blueprint uses the same page with the import added (file,
+    track, bars, live tab, what was left out, key). Replace from file opens the import too.
+30. **Tuning and capo live in the settings dialog**, not on the exercise page (it is busy and
+    they are rare): a Tuning menu and a Capo number, in the practice settings dialog and so in
+    a routine item's editor. Theory blueprints get neither.
+31. As recommended: the key is the file's signature, shown on the import page with a picker
+    to change it before Create (Guitar Pro's default signature is C major, and the Intervals
+    files all carry it); presets add drop C and 7-string drop A; a rep records its tuning and
+    capo, and the explorer's heat places a capo'd fret where it is on the neck.
 ---
 
 ## 12. Run A — progress
