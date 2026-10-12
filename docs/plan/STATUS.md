@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-11. **Written exercises, run A, is merged and pushed** (`0147e8e`;
 spec `docs/plan/16-PHRASES.md`, §12 records it; see "Written exercises" below). **Run B (the
-blueprint) has started on `written-exercises-b`**: questions asked, waiting on answers. **The milestone plan is
+blueprint) is built on `written-exercises-b` and waiting at its gate** (doc 16 §13). **The milestone plan is
 finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
@@ -52,12 +52,12 @@ under the old address must be exported and imported) — the repo is public, and
 | Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
 | Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
 | Written exercises — run A: read and draw | ✅ merged, pushed 2026-10-11 — doc 16 §12 |
-| Written exercises — run B: the blueprint | 🚧 on `written-exercises-b`, questions asked — doc 16 §9 |
+| Written exercises — run B: the blueprint | 🚧 built on `written-exercises-b`, at its gate — doc 16 §13 |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
-progress. On that branch: 1017 unit tests in 64 files, `pnpm check` green, all 74 E2E pass. On `main`:
-993 unit tests, 74 E2E.
+progress. On `written-exercises-b`: 1055 unit tests in 64 files, `pnpm check` green, all 75 E2E
+pass. On `main`: 1017 unit tests, 74 E2E.
 
 ## How the player works — read before starting anything
 
@@ -204,6 +204,22 @@ progress. On that branch: 1017 unit tests in 64 files, `pnpm check` green, all 7
   - `-` `=`: tab size
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
+
+## Written exercises — run B at its gate (2026-10-12)
+
+Spec: `docs/plan/16-PHRASES.md`; **§13 records run B task by task and lists the gate's
+questions.** Branch `written-exercises-b`, not pushed. The player's round of answers became
+decisions 29–31: **no blueprint makes an exercise until Create** (a full new-exercise page for
+every blueprint, the written one with its import), and **tuning and capo are picked only in
+Settings** (Capo beside Tuning); a written exercise carries its file's own.
+
+- Built: tuning per exercise (sessions, routines per item, heat by tuning, the capo bug in
+  generators fixed); the new-exercise page; the `phrase` blueprint with import, Replace from file
+  and source line; key, brief and neck. Sound was done in run A.
+- New E2E `e2e/written.spec.ts` (make from a fixture, practice, replace); `blueprints.spec.ts`
+  covers Cancel making nothing.
+- **Next:** the gate (with a guitar: a riff standalone and in a routine, drop D, a capo), then
+  merge, then the "left for later" list into FUTURE-WORK (doc 16 §9).
 
 ## Written exercises — run A merged (2026-10-11)
 

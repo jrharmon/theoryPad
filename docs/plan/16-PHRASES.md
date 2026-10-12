@@ -1,6 +1,6 @@
 # 16 — Imported phrases: a blueprint that plays tab from a Guitar Pro file
 
-**Status:** run A built on `written-exercises`, at its gate (§12). Round 1 answered 2026-10-10
+**Status:** run A merged (§12); run B built on `written-exercises-b`, at its gate (§13). Round 1 answered 2026-10-10
 (decisions 1–12), round 2 on 2026-10-11 (decisions 13–20, the last three in §11), and decision 21
 added during run A.
 
@@ -653,3 +653,49 @@ Both built as recommended (decisions 27 and 28):
 
 Still to judge: **stretched lines.** A full line is stretched to the width, so a line with
 fewer columns spreads them wider. Guitar Pro does the same; the alternative is ragged lines.
+
+---
+
+## 13. Run B — the blueprint
+
+Branch `written-exercises-b`, a commit per task. At its gate.
+
+1. **Tuning per exercise** (decisions 13, 19, 20, 30). `Exercise.tuning?: Tuning` (`{ strings,
+   capo }`), set only by a written exercise's import. `tunedInstrument(player, tuning)` is the
+   instrument it plays on: its tuning and capo, the player's fret count and handedness.
+   `ExerciseSession` plays on it; `RoutineSession` gives each item its exercise's
+   (`RoutineRunItem.instrument`), and the sound loads with the current runner's instrument. The
+   practice screen and its dialog read the session's instrument. Settings gains a Capo number
+   beside Tuning (kept when the tuning changes); drop C and 7-string drop A join the presets;
+   `tuningName` names a tuning by preset or by its notes. A pass's fret tally records its tuning
+   with capo'd frets counted up the neck, days keep counts by tuning, and the explorer shows the
+   bare neck and counts the player's tuning plus older passes. **Found on the way:** with a
+   capo, generators searched frets past the top of the neck; all now stop at `highestFret`
+   (`fretCount − capo`), and every blueprint is tested with capo 5. `exerciseStats` was checked
+   and left alone: its axis values are per exercise, and only generated exercises roll string
+   sets, always in the player's tuning.
+2. **New exercise page** (decision 29). `#/exercises/new/:blueprint`: name (selected, ready to
+   type over), folder, Cancel and Create; nothing is saved before Create. A blueprint can add its
+   own part of the page and what it sets (`BlueprintSetup`).
+3. **The Written exercise blueprint** (`phrase`, decisions 15, 16, 31). Its notes and their
+   source are params locked at import, so routine items read them through, and no lock or
+   setting shows. No starter. The new-exercise page reads the file (`WrittenImport`): track,
+   bars, key (the file's signature, changeable), live tab, what's left out or why it can't be
+   made; Create sets notes, tuning and capo, the key fixed and locked, and the written tempo as
+   the target. The exercise page names the source; **Replace from file** (`#/exercises/:id/replace`)
+   takes new notes, tuning, capo, key and source and keeps the rest. Practice says "Tab · as
+   written" and shows pick strokes when a phrase has them; an exercise page with no settings
+   shows no empty Settings sheet.
+4. **Key, brief and neck.** The brief: "Bars 5–12 of Riff, in D Dorian." / "Written at 185, capo
+   2." The neck shows every position the phrase uses, naming a note outside the key from the
+   tonic (`degreeFromTonic`).
+
+The sound changes in §4 were built in run A.
+
+**For the gate** (only the player can judge, with a guitar):
+- Import a riff, play it standalone and inside a routine between generated exercises: the tab,
+  the sound, the count-in into and out of it, a different tuning mid-routine.
+- Set Settings to drop D (and try a capo) and check a generated exercise's notes follow.
+- The new-exercise page for an ordinary blueprint: one step more than before. Worth it?
+- The neck on a written exercise in a drop tuning, with notes outside the key.
+
