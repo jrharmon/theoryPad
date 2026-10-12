@@ -24,7 +24,10 @@ describe('the first load', () => {
 
     const exercises = await repos().exercises.all();
     expect(exercises.map((e) => e.definitionId).sort()).toEqual(
-      EXERCISE_DEFINITIONS.map((d) => d.id).sort(),
+      // A written exercise needs its file: it is made only on its own page.
+      EXERCISE_DEFINITIONS.filter((d) => d.id !== 'phrase')
+        .map((d) => d.id)
+        .sort(),
     );
     const modes = exercises.find((e) => e.definitionId === 'modes-through-key')!;
     expect(modes).toMatchObject({

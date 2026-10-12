@@ -21,8 +21,10 @@ import { exerciseNamesIn, nameProblem } from '@/domain/library';
 import { KNOWN_TAGS } from '@/exercises/types';
 import { useFolders } from '@/store/folders';
 import { ParamsEditor } from './ParamsEditor';
+import { paramFields } from '@/exercises/params';
 import { BackingCriteriaEditor, ExerciseVideos } from './ExerciseVideos';
 import { LoadingState } from '@/components/ui/page-header';
+import { writtenSource } from './written';
 
 export function ExerciseDetail() {
   const { exerciseId } = useParams();
@@ -49,6 +51,9 @@ export function ExerciseDetail() {
 
   const exercise = exercises.find((e) => e.id === exerciseId);
   const definition = exercise ? findExerciseDefinition(exercise.definitionId) : undefined;
+
+  // A written exercise says where its notes came from, and can take new ones.
+  const written = exercise ? writtenSource(exercise) : null;
 
   if (!loaded) return <LoadingState />;
   if (!exercise || !definition) {
@@ -101,6 +106,20 @@ export function ExerciseDetail() {
               offered={offeredTags}
               onChange={(tags) => void update(exercise.id, { tags })}
             />
+            {written && (
+              <>
+                <span className="kicker">Notes</span>
+                <p className="text-body-sm text-ink-muted" data-testid="written-source">
+                  {written}{' '}
+                  <Link
+                    to={`/exercises/${exercise.id}/replace`}
+                    className="ml-2 font-semibold text-accent-text underline-offset-2 hover:underline"
+                  >
+                    Replace from file
+                  </Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 pt-6">
@@ -202,7 +221,8 @@ export function ExerciseDetail() {
         </div>
 
         <div>
-          {definition.params && (
+          {/* A written exercise's params are its notes: no settings to show. */}
+          {paramFields(definition.params).length > 0 && (
             <div className="sheet mb-8 px-5 py-4">
               <Kicker>Settings</Kicker>
               <div className="mt-3 max-w-[320px]">

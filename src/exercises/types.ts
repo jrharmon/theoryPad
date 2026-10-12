@@ -158,6 +158,13 @@ interface DefinitionBase<P> {
 
   defaults: ExerciseDefaults;
 
+  /**
+   * False when an exercise is made only through the blueprint's own
+   * new-exercise page (a written one needs its file): a new database gets no
+   * starter of it.
+   */
+  starter?: false;
+
   /** Replace the default runner body entirely. The escape hatch. */
   Renderer?: ComponentType<ExerciseRendererProps>;
 }

@@ -6,6 +6,7 @@ import { positionShifting } from './position-shifting/definition';
 import { diatonicDrill } from './diatonic-drill/definition';
 import { circleOfFifths } from './circle-of-fifths/definition';
 import { freeImprovTarget } from './free-improv-target/definition';
+import { writtenExercise } from './phrase/definition';
 
 /**
  * Every exercise the app knows about.
@@ -22,6 +23,7 @@ export const EXERCISE_DEFINITIONS: readonly AnyExerciseDefinition[] = [
   diatonicDrill,
   circleOfFifths,
   freeImprovTarget,
+  writtenExercise,
 ];
 
 const BY_ID = new Map(EXERCISE_DEFINITIONS.map((d) => [d.id, d]));

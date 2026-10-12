@@ -91,7 +91,7 @@ export const useExercises = create<ExercisesState>((set, get) => ({
       // added — a deleted starter stays deleted, and a blueprint added to the
       // code later is the player's to make an exercise from.
       if ((await repos().exercises.withDeleted()).length === 0) {
-        for (const definition of EXERCISE_DEFINITIONS) {
+        for (const definition of EXERCISE_DEFINITIONS.filter((d) => d.starter !== false)) {
           await repos().exercises.add(newExerciseFrom(definition));
         }
       }

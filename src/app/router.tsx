@@ -7,6 +7,7 @@ import { ExerciseLibraryRoute } from '@/routes/exercises/ExerciseLibrary';
 import { ExerciseDetail } from '@/routes/exercises/ExerciseDetail';
 import { BlueprintPicker } from '@/routes/exercises/BlueprintPicker';
 import { NewExerciseRoute } from '@/routes/exercises/NewExerciseRoute';
+import { ReplaceWritten } from '@/routes/exercises/ReplaceWritten';
 import { PracticeExercise } from '@/routes/practice/PracticeExercise';
 import { PracticeRoutine } from '@/routes/practice/PracticeRoutine';
 import { Home } from '@/routes/home/Home';
@@ -36,6 +37,7 @@ export const router = createHashRouter([
       { path: 'exercises/new', element: <BlueprintPicker /> },
       { path: 'exercises/new/:definitionId', element: <NewExerciseRoute /> },
       { path: 'exercises/:exerciseId', element: <ExerciseDetail /> },
+      { path: 'exercises/:exerciseId/replace', element: <ReplaceWritten /> },
       { path: 'practice/exercise/:exerciseId', element: <PracticeExercise /> },
       { path: 'practice/routine/:routineId', element: <PracticeRoutine /> },
       { path: 'fretboard', element: <FretboardExplorer /> },

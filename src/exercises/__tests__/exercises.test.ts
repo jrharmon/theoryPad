@@ -14,6 +14,8 @@ import {
   rollVariation,
   variationKeyMode,
 } from '@/domain/variation';
+import { QUARTER, phraseBuilder } from '@/domain/phrase';
+import { paramFields } from '../params';
 import { EXERCISE_DEFINITIONS, exerciseDefinition } from '../registry';
 import type { AnyExerciseDefinition, ExerciseInstance, PlayedInstance } from '../types';
 
@@ -67,7 +69,8 @@ function generate(
   return instance;
 }
 
-const PLAYED = EXERCISE_DEFINITIONS.filter((d) => d.kind === 'played');
+// The generators. A written exercise plays back what it was given (below).
+const PLAYED = EXERCISE_DEFINITIONS.filter((d) => d.kind === 'played' && d.id !== 'phrase');
 const SEEDS = [1, 2, 3, 42, 12345];
 
 describe.each(PLAYED.map((d) => [d.id, d] as const))('%s', (_id, definition) => {
@@ -169,6 +172,43 @@ describe('position-shifting', () => {
     const slides = phrase.notes.flatMap((n) => n.techniques ?? []);
     expect(slides).toContain('slide-up');
     expect(slides).toContain('slide-down');
+  });
+});
+
+describe('written exercise', () => {
+  it('plays its stored phrase as written, whatever the seed, and says where it came from', () => {
+    const written = phraseBuilder()
+      .rhythm(QUARTER)
+      .sequence([
+        { string: 0, fret: 3 },
+        { string: 0, fret: 5 },
+      ])
+      .build();
+    const params = {
+      phrase: { ...written, writtenTempo: 185 },
+      source: { file: 'Riff.gp', title: 'Riff', track: 'Lead', firstBar: 5, lastBar: 12 },
+    };
+    const definition = exerciseDefinition('phrase');
+    const variation = rollVariation({
+      axes: definition.axes,
+      seed: 1,
+      instrument: STANDARD_GUITAR,
+      policies: D_DORIAN,
+    });
+    const instance = definition.generate({
+      variation,
+      keyMode: { tonic: pitchClass('D'), scale: 'major', mode: 'dorian' },
+      instrument: { ...STANDARD_GUITAR, capo: 2 },
+      params: definition.params!.parse(params) as unknown,
+      rng: mulberry32(1),
+      repIndex: 0,
+    });
+    if (instance.kind !== 'played') throw new Error('not played');
+    expect(instance.phrase.notes).toEqual(params.phrase.notes);
+    expect(instance.brief.headline).toBe('Bars 5–12 of Riff, in D Dorian.');
+    expect(instance.brief.instruction).toBe('Written at 185, capo 2.');
+    // Its params are not settings: nothing to show in a form.
+    expect(paramFields(definition.params)).toEqual([]);
   });
 });
 

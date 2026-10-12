@@ -113,7 +113,12 @@ function PlayedBody({
     >
       <div className="sheet min-w-0 px-5 pt-4 pb-[18px]">
         <div className="flex items-center gap-3">
-          <Kicker>Tab · generated for this variation</Kicker>
+          {/* A written phrase carries the tempo it was written at; a generated one doesn't. */}
+          <Kicker>
+            {instance.phrase.writtenTempo !== undefined
+              ? 'Tab · as written'
+              : 'Tab · generated for this variation'}
+          </Kicker>
           <div className="ml-auto flex items-center gap-1.5" role="group" aria-label="Tab size">
             {/* Smaller fits more bars on a line; bigger, fewer. */}
             <span className="kicker mr-1" aria-hidden>
@@ -152,6 +157,8 @@ function PlayedBody({
             size="large"
             zoom={zoom}
             autoScroll={playing}
+            // Written phrases can mark their picking; generated ones never do.
+            showPickStrokes={instance.phrase.notes.some((n) => n.pickStroke)}
           />
         </div>
       </div>
