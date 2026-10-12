@@ -1,8 +1,8 @@
 # Status — start here
 
-**Last updated:** 2026-10-11. **Written exercises, run A, is built on `written-exercises` and
-waiting at its gate** (spec `docs/plan/16-PHRASES.md`, §12 records run A; see "Written exercises"
-below): the player compares the tab with Guitar Pro on `#/dev/import`. **The milestone plan is
+**Last updated:** 2026-10-11. **Written exercises, run A, is merged and pushed** (`0147e8e`;
+spec `docs/plan/16-PHRASES.md`, §12 records it; see "Written exercises" below). **Run B (the
+blueprint) has started on `written-exercises-b`**: questions asked, waiting on answers. **The milestone plan is
 finished; the core app is built.**
 Everything still to do — what was M7b, M8, M9 and M10, the parked items, and each run's "not in
 this run" list — is now one **unordered** list in **`docs/plan/FUTURE-WORK.md`**, grouped by
@@ -11,8 +11,8 @@ bring up what fits from that file. The latest run is Routine sections (see "Rout
 its own section below, newest first, and "Earlier runs, in detail" holds the longer write-ups
 (backing adverts and the YouTube host, Sounds, Generated backing). **Read the backing-adverts
 write-up before touching backing playback again** — it corrected the advert signal that run
-was planned around. `main` and origin are in sync; `written-exercises` is the one open branch
-(local only, unpushed). Written as a hand-off:
+was planned around. `main` and origin are in sync; `written-exercises-b` (run B, local only) is
+the one open branch. Written as a hand-off:
 a fresh session should be able to pick up from this file, `CLAUDE.md`, and the plan docs it
 points to.
 
@@ -51,7 +51,8 @@ under the old address must be exported and imported) — the repo is public, and
 | Blueprints — named exercises from blueprints, locks, folders | ✅ merged, pushed 2026-10-06 — spec, decisions 1–22, outcome and gate rounds in `docs/plan/15-BLUEPRINTS.md` |
 | Feedback round 8 — routine Back, bar numbers, Starting shape | ✅ merged, pushed 2026-10-07 — see below |
 | Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
-| Written exercises — run A: read and draw | 🚧 built on `written-exercises`, at its gate — doc 16 §12 |
+| Written exercises — run A: read and draw | ✅ merged, pushed 2026-10-11 — doc 16 §12 |
+| Written exercises — run B: the blueprint | 🚧 on `written-exercises-b`, questions asked — doc 16 §9 |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
@@ -204,7 +205,7 @@ progress. On that branch: 1017 unit tests in 64 files, `pnpm check` green, all 7
   - Esc: leave
   - Theory: 1–6 answer, Enter submits or moves on, ↑ ↓ choose a table row.
 
-## Written exercises — run A at its gate (2026-10-11)
+## Written exercises — run A merged (2026-10-11)
 
 Spec: `docs/plan/16-PHRASES.md`, decisions 1–21; **§12 records run A task by task and lists
 what to ask at the gate.** Branch `written-exercises`, not pushed, a commit per task.
@@ -234,8 +235,8 @@ what to ask at the gate.** Branch `written-exercises`, not pushed, a commit per 
 - **Gate round 2** (decisions 27–28): frets count from the capo in the model (open string +
   capo + fret; nothing set a capo before); fret numbers sit at the left of their column. 1017
   unit tests, 74 E2E.
-- **Next:** the player's look at round 2 (and the one open point, stretched lines, doc 16 §12),
-  then merge, then run B (§9).
+- **Passed** after round 2 (stretched lines accepted as they are); fast-forwarded into `main`
+  and pushed as `0147e8e`, branch deleted. Run B (§9) is next, on `written-exercises-b`.
 
 ## Routine sections — merged (2026-10-10)
 
