@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import type { Exercise, Routine, RoutineItem } from '@/data';
 import type { AxisId } from '@/domain/variation';
 import { describePolicies, describeReps } from '@/exercises/describe';
-import { repsAreQuestions, resolveGeneratedBacking } from '@/exercises/params';
+import { repsAreQuestions } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
 import { AxisPolicyEditor } from '@/components/variation/AxisPolicyEditor';
 import { settledMode } from '@/components/backing/chordContext';
@@ -19,13 +19,13 @@ import {
 import { EmptyState } from '@/components/ui/empty-state';
 import { FavoriteToggle } from '@/components/ui/favorite-toggle';
 import { Kicker } from '@/components/ui/kicker';
-import { exerciseLabel, useExerciseLookup, useExercises } from '@/store/exercises';
+import { useExerciseLookup, useExercises } from '@/store/exercises';
 import { FromBlueprint } from '@/components/library/FromBlueprint';
 import { describeExtent, routineExtent, useRoutines } from '@/store/routines';
 import { isOn, isSection, plays, type RoutineSection } from '@/domain/routine';
 import { useSettings } from '@/store/settings';
-import { SettingsDialog } from '../practice/SettingsDialog';
-import { effectiveItem, overridesSession, visibleAxes, withoutLocked } from '@/exercises/locks';
+import { ItemSettingsDialog } from './ItemSettingsDialog';
+import { effectiveItem, overridesSession, withoutLocked } from '@/exercises/locks';
 import { listGroups } from '@/domain/library';
 import { useFolders } from '@/store/folders';
 import { LoadingState } from '@/components/ui/page-header';
@@ -469,7 +469,6 @@ function ItemRow({
 }) {
   const routines = useRoutines();
   const instrument = useSettings((s) => s.settings.instrument);
-  const playNotes = useSettings((s) => s.settings.audio.playNotes);
   const definition = findExerciseDefinition(item.definitionId);
   const exercise = useExerciseLookup()(item.exerciseId);
   // Locked settings are the exercise's, read through rather than copied.
@@ -621,29 +620,12 @@ function ItemRow({
         </Button>
       </div>
 
-      <SettingsDialog
+      <ItemSettingsDialog
         open={editing}
         onOpenChange={onEditing}
-        title={exercise ? exerciseLabel(exercise) : definition.name}
-        description="This copy only — the exercise in your library is left as it is. Key, scale and mode are the routine’s unless fixed here."
-        definition={definition}
-        initial={{
-          tempo: effective.tempo,
-          params: effective.params,
-          axisPolicies: effective.axisPolicies,
-          ...(definition.kind === 'played'
-            ? {
-                generatedBacking: resolveGeneratedBacking(definition, item.generatedBacking),
-                playNotes: item.playNotes ?? playNotes,
-              }
-            : {}),
-        }}
-        held={effective.heldAxisValues}
+        item={item}
         // Key and mode are the routine's, rolled when it runs.
         chordsIn={{ mode: settledMode(routine.sessionAxisPolicies) }}
-        axes={visibleAxes(definition.axes, locks)}
-        hiddenParams={[...locks.params, ...(questions ? ['questionCount'] : [])]}
-        inRoutine
         onApply={(changed) =>
           void routines.updateItem(routine.id, item.id, withoutLocked(changed, item, locks))
         }

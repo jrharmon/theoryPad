@@ -1045,6 +1045,47 @@ describe('RoutineSession', () => {
     expect((await repos.exercises.byId(exercise.id))!.countInBars).toBe(1);
   });
 
+  it('changes the item being played from its settings, saving them to that copy only', async () => {
+    const { deps, repos } = world();
+    // Locked Lydian: read through from the exercise, and never saved to the item.
+    const exercise = await addExercise(repos, 'modes-through-key', {
+      axisPolicies: { mode: { mode: 'fixed', value: 'lydian' } },
+      locked: { params: [], axes: ['mode'] },
+    });
+    const items = [0, 1].map(() => ({ ...itemFromExercise(exercise), reps: 1 }));
+    const stored = await repos.routines.add({ name: 'Two', items, sessionAxisPolicies: IN_G });
+    const session = await RoutineSession.open(stored, deps);
+    const before = session.runner!.snapshot;
+    expect(before.keyMode.tonic).toBe('G');
+
+    // As the dialog reports it: every policy, the locked one included as read.
+    const tempo = { ...items[0]!.tempo, targetTempo: 77 };
+    const axisPolicies = {
+      ...items[0]!.axisPolicies,
+      mode: { mode: 'fixed', value: 'lydian' },
+      key: { mode: 'fixed', value: 'D' },
+    } as const;
+    await session.reconfigure({ tempo, axisPolicies });
+
+    // Its own key now, over the routine's; its tempo; still its locked mode.
+    expect(session.runner!.snapshot).toMatchObject({
+      targetTempo: 77,
+      keyMode: { tonic: 'D', mode: 'lydian' },
+    });
+    const saved = itemsOf((await repos.routines.byId(stored.id))!.items);
+    expect(saved[0]).toMatchObject({
+      tempo: { targetTempo: 77 },
+      axisPolicies: { key: { value: 'D' } },
+    });
+    expect(saved[0]!.axisPolicies.mode).toEqual(items[0]!.axisPolicies.mode);
+    expect(saved[1]).toEqual(items[1]);
+    expect((await repos.exercises.byId(exercise.id))!.tempo).toEqual(exercise.tempo);
+
+    // The next item is still in the routine's key.
+    session.skip();
+    expect(session.runner!.snapshot.keyMode.tonic).toBe('G');
+  });
+
   it('seeks under a backing track, leaving the track playing where it is', async () => {
     const inG = track();
     const { deps, repos, audio } = world([inG]);

@@ -1,14 +1,22 @@
 import { tunedInstrument } from '@/domain/instrument';
-import { withRequiredTags, type BackingChoice, type Routine } from '@/data';
+import {
+  withRequiredTags,
+  type BackingChoice,
+  type ExerciseLocks,
+  type Routine,
+  type RoutineItem,
+} from '@/data';
 import { DEFAULT_GENERATED_BACKING, type GeneratedBackingSettings } from '@/domain/backing';
 import type { MetronomeVoiceId } from '@/domain/drums';
 import type { KeyMode } from '@/domain/music';
 import type { CountInBars } from '@/domain/phrase';
 import { itemsWithSections, playedItems, plays } from '@/domain/routine';
 import { RoutineRunner, type ExerciseRunner, type RoutineRunItem } from '@/exercises/runner';
-import { effectiveItem } from '@/exercises/locks';
+import { effectiveItem, withoutLocked } from '@/exercises/locks';
 import { resolveGeneratedBacking } from '@/exercises/params';
 import { findExerciseDefinition } from '@/exercises/registry';
+import { definedProps } from '@/lib/definedProps';
+import type { SettingsChanges } from './ExerciseSession';
 import type { SessionDeps } from './ports';
 import {
   PracticeSession,
@@ -31,6 +39,12 @@ export class RoutineSession extends PracticeSession {
   private readonly playNotes = new Map<string, boolean>();
   /** Each item's own generated-backing settings, by item id. */
   private readonly generatedBacking = new Map<string, GeneratedBackingSettings>();
+  /**
+   * Each item as saved, and what its exercise locks: a change made while
+   * playing is saved to the item without the locked settings, which are the
+   * exercise's.
+   */
+  private readonly saved: ReadonlyMap<string, { item: RoutineItem; locks: ExerciseLocks }>;
 
   /** Roll a whole routine and wait on its first item. Nothing plays until `play`. */
   static async open(routine: Routine, deps: SessionDeps): Promise<RoutineSession> {
@@ -41,9 +55,12 @@ export class RoutineSession extends PracticeSession {
     const exercises = new Map((await deps.repos.exercises.withDeleted()).map((e) => [e.id, e]));
     // Items switched off, or under a section switched off, sit this run out.
     const items: RoutineRunItem[] = [];
+    const saved = new Map<string, { item: RoutineItem; locks: ExerciseLocks }>();
     for (const { item: stored, section } of itemsWithSections(routine.items)) {
       if (!plays(stored, section)) continue;
-      const item = effectiveItem(stored, exercises.get(stored.exerciseId));
+      const exercise = exercises.get(stored.exerciseId);
+      if (exercise) saved.set(stored.id, { item: stored, locks: exercise.locked });
+      const item = effectiveItem(stored, exercise);
       const definition = findExerciseDefinition(item.definitionId);
       if (!definition) continue;
       const placed = section ? { section: { id: section.id, name: section.name } } : {};
@@ -62,17 +79,19 @@ export class RoutineSession extends PracticeSession {
           : { ...item, ...placed, ...tuned, definition },
       );
     }
-    return new RoutineSession(routine, items, session.id, deps);
+    return new RoutineSession(routine, items, saved, session.id, deps);
   }
 
   private constructor(
     routine: Routine,
     items: RoutineRunItem[],
+    saved: ReadonlyMap<string, { item: RoutineItem; locks: ExerciseLocks }>,
     sessionId: string,
     deps: SessionDeps,
   ) {
     super(deps, sessionId);
     this.routineId = routine.id;
+    this.saved = saved;
     const settings = deps.settings();
     const played = playedItems(routine.items);
     for (const item of played) {
@@ -203,6 +222,40 @@ export class RoutineSession extends PracticeSession {
   goTo(index: number): void {
     if (this.backing.state.starting) return;
     this.routine.goTo(index);
+  }
+
+  /**
+   * Change the current item's settings from the practice screen, and save them
+   * to the item — the same copy the routine builder edits; the exercise in the
+   * library is left as it is.
+   */
+  async reconfigure({
+    generatedBacking,
+    playNotes,
+    ...changes
+  }: SettingsChanges): Promise<void> {
+    const { items, index } = this.routine.snapshot;
+    const item = items[index];
+    const current = this.routine.current;
+    if (!item || !current) return;
+    if (playNotes !== undefined) this.playNotes.set(item.id, playNotes);
+    // First, so a re-rolled axis picks its progression from the new settings too.
+    if (generatedBacking) this.generatedBacking.set(item.id, generatedBacking);
+    this.routine.reconfigureCurrent(changes);
+    if (generatedBacking) this.replanGenerated();
+    // A new tempo is a new speed for a track; a key of its own may not suit it.
+    if (changes.tempo) this.backing.fitTo(current);
+    this.backing.refresh();
+    const saved = this.saved.get(item.id);
+    await this.deps.saveRoutineItem(
+      this.routineId,
+      item.id,
+      definedProps({
+        ...(saved ? withoutLocked(changes, saved.item, saved.locks) : changes),
+        generatedBacking,
+        playNotes,
+      }),
+    );
   }
 
   async setCountIn(bars: CountInBars): Promise<void> {

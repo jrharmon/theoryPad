@@ -51,7 +51,7 @@ interface PracticeState extends SessionState {
   goTo: (index: number) => void;
   /** Theory: the set is answered. */
   submitSet: (answers: { subject: string; correct: boolean }[]) => void;
-  /** Apply settings changed from the practice screen, and save them to the exercise. */
+  /** Apply settings changed from the practice screen, and save them to the exercise or routine item. */
   reconfigure: (changes: SettingsChanges) => Promise<void>;
   /** Tear the session down. Leaving the screen calls this; there is no End button. */
   end: () => Promise<void>;
@@ -185,7 +185,8 @@ export const usePractice = create<PracticeState>((set, get) => {
     goTo: (index) => routine()?.goTo(index),
     submitSet: (answers) => get().session?.submitSet(answers),
     setFreeTime: (freeTime) => exercise()?.setFreeTime(freeTime),
-    reconfigure: (changes) => exercise()?.reconfigure(changes) ?? Promise.resolve(),
+    reconfigure: (changes) =>
+      (exercise() ?? routine())?.reconfigure(changes) ?? Promise.resolve(),
     setCountIn: (bars) => get().session?.setCountIn(bars) ?? Promise.resolve(),
     setLoop: (on) => get().session?.setLoop(on) ?? Promise.resolve(),
     chooseBacking: (choice) => get().session?.chooseBacking(choice) ?? Promise.resolve(),

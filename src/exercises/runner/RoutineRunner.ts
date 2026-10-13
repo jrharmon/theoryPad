@@ -14,7 +14,7 @@ import type { TempoConfig } from '@/domain/tempo';
 import { overridesSession } from '../locks';
 import { routineItemRun } from '../params';
 import type { AnyExerciseDefinition, ExerciseInstance } from '../types';
-import { ExerciseRunner, type RepStartInfo } from './ExerciseRunner';
+import { ExerciseRunner, type Reconfiguration, type RepStartInfo } from './ExerciseRunner';
 import type { RepRecord, RunnerSnapshot } from './types';
 
 /** One item, as the runner needs it: the definition and the item's own settings. */
@@ -180,20 +180,10 @@ export class RoutineRunner {
       ...(this.config.blocked ? { blocked: this.config.blocked } : {}),
     });
     this.keyMode = variationKeyMode(session) ?? this.keyMode;
-    const shared = {
-      scale: { mode: 'fixed', value: this.keyMode.scale },
-      mode: { mode: 'fixed', value: this.keyMode.mode },
-      key: { mode: 'fixed', value: this.keyMode.tonic },
-    } as const;
 
     this.runners = this.config.items.map((item) => {
       const { params, passes } = routineItemRun(item.definition, item);
-      // The routine's key, scale and mode, except where the item fixes its
-      // own (scale and mode as a pair): that one it rolls from its own policy.
-      const axisPolicies: AxisPolicies = { ...item.axisPolicies };
-      for (const axis of ['scale', 'mode', 'key'] as const) {
-        if (!overridesSession(axis, item.axisPolicies)) axisPolicies[axis] = shared[axis];
-      }
+      const axisPolicies = this.withRoutineKey(item.axisPolicies);
       const runner = new ExerciseRunner({
         clock: this.config.clock,
         definition: item.definition,
@@ -348,6 +338,32 @@ export class RoutineRunner {
     this.emit();
   }
 
+  /**
+   * Change the current item's settings from the practice screen: it is
+   * regenerated, and only the axes whose policy changed roll again. Key, scale
+   * and mode stay the routine's unless the item now fixes its own.
+   */
+  reconfigureCurrent(changes: Reconfiguration): void {
+    const runner = this.current;
+    const item = this.config.items[this.index];
+    if (this.phase !== 'running' || !runner || !item) return;
+    const changed = {
+      ...item,
+      ...(changes.params !== undefined ? { params: changes.params } : {}),
+      ...(changes.axisPolicies ? { axisPolicies: changes.axisPolicies } : {}),
+    };
+    this.config.items[this.index] = changed;
+    runner.reconfigure({
+      ...changes,
+      ...(changes.params !== undefined
+        ? { params: routineItemRun(item.definition, changed).params }
+        : {}),
+      ...(changes.axisPolicies
+        ? { axisPolicies: this.withRoutineKey(changes.axisPolicies) }
+        : {}),
+    });
+  }
+
   /** Re-roll the current item's own axes. Key and mode stay the routine's, or the item's own. */
   rerollCurrent(): void {
     this.current?.reroll();
@@ -368,6 +384,23 @@ export class RoutineRunner {
    * was going, the next counts in straight away; if it was stopped or
    * paused, the next waits for Play.
    */
+  /**
+   * The routine's key, scale and mode, except where the item fixes its own
+   * (scale and mode as a pair): that one it rolls from its own policy.
+   */
+  private withRoutineKey(policies: AxisPolicies): AxisPolicies {
+    const shared = {
+      scale: { mode: 'fixed', value: this.keyMode.scale },
+      mode: { mode: 'fixed', value: this.keyMode.mode },
+      key: { mode: 'fixed', value: this.keyMode.tonic },
+    } as const;
+    const out: AxisPolicies = { ...policies };
+    for (const axis of ['scale', 'mode', 'key'] as const) {
+      if (!overridesSession(axis, policies)) out[axis] = shared[axis];
+    }
+    return out;
+  }
+
   private advance(active: boolean): void {
     if (!active) this.config.clock.stop();
     this.moveOn({ start: active });

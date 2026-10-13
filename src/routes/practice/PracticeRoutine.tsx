@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import type { Routine } from '@/data';
+import type { Routine, RoutineItem } from '@/data';
+import { isSection } from '@/domain/routine';
 import type { RoutineSnapshot } from '@/exercises/runner';
 import { describeReps } from '@/exercises/describe';
 import { formatDuration } from '@/exercises/estimate';
@@ -18,13 +19,15 @@ import { RoutineList } from './PracticeList';
 import { RunningChrome } from './RunningChrome';
 import { TransportBar } from './TransportBar';
 import { useKeyModeView } from '@/store/keyModeView';
+import { ItemSettingsDialog } from '../routines/ItemSettingsDialog';
 import { useRunnerHotkeys } from './useRunnerHotkeys';
 import { LoadingState } from '@/components/ui/page-header';
 
 /**
  * A routine, start to finish. It opens on the first item, waiting for Play;
  * once started nothing needs touching: each item counts in when the last one
- * ends. Items are edited in the routine builder, not here.
+ * ends. Settings edits the item in front of you — its copy in the routine,
+ * as the builder does.
  */
 export function PracticeRoutine() {
   const { routineId } = useParams();
@@ -35,6 +38,9 @@ export function PracticeRoutine() {
   const routineSnapshot = usePractice((s) => s.routineSnapshot);
   const prepared = useRef<string | null>(null);
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // The chords a custom progression names are spelled in this roll's key.
+  const keyMode = usePractice((s) => s.snapshot?.keyMode);
 
   useEffect(() => {
     void load();
@@ -57,7 +63,13 @@ export function PracticeRoutine() {
 
   const leave = useCallback(() => void navigate('/home'), [navigate]);
   const referenceOpen = useKeyModeView((s) => s.popover || s.sheet);
-  useRunnerHotkeys({ onLeave: leave, enabled: !referenceOpen });
+  useRunnerHotkeys({ onLeave: leave, enabled: !settingsOpen && !referenceOpen });
+
+  const openSettings = () => {
+    // Nothing should keep playing behind a dialog.
+    usePractice.getState().pause();
+    setSettingsOpen(true);
+  };
 
   if (!loaded) return <LoadingState />;
   if (!routine) {
@@ -73,6 +85,12 @@ export function PracticeRoutine() {
   }
   if (!routineSnapshot) return <LoadingState>Rolling…</LoadingState>;
 
+  // The item as saved, so the dialog opens on what the routine holds now.
+  const currentId = routineSnapshot.items[routineSnapshot.index]?.id;
+  const item = routine.items.find(
+    (entry): entry is RoutineItem => !isSection(entry) && entry.id === currentId,
+  );
+
   return (
     <section className="pb-28">
       {routineSnapshot.phase === 'running' && (
@@ -85,8 +103,18 @@ export function PracticeRoutine() {
             </div>
           </div>
           <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
-            <TransportBar />
+            <TransportBar onOpenSettings={item ? openSettings : undefined} />
           </div>
+          {item && (
+            <ItemSettingsDialog
+              open={settingsOpen}
+              onOpenChange={setSettingsOpen}
+              item={item}
+              whilePlaying
+              chordsIn={keyMode ? { keyMode } : { mode: null }}
+              onApply={(changed) => void usePractice.getState().reconfigure(changed)}
+            />
+          )}
         </>
       )}
 
