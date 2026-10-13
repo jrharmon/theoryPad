@@ -103,7 +103,7 @@ export function PracticeRoutine() {
             </div>
           </div>
           <div className="fixed inset-x-4 bottom-3.5 z-20 rounded-[14px] bg-transport text-transport-ink shadow-(--shadow-float) ring-1 ring-transport-edge">
-            <TransportBar onOpenSettings={item ? openSettings : undefined} />
+            <TransportBar {...(item ? { onOpenSettings: openSettings } : {})} />
           </div>
           {item && (
             <ItemSettingsDialog
