@@ -132,6 +132,13 @@ export function columnAt(bars: readonly BarLayout[], tick: number): number {
   return bar.firstColumn + Math.floor((tick - bar.startTick) / bar.ticksPerColumn);
 }
 
+/** Where a column starts, in ticks: the inverse of `columnAt`, for a click on an empty cell. */
+export function tickAtColumn(bars: readonly BarLayout[], column: number): number {
+  const bar = bars.findLast((b) => b.firstColumn <= column) ?? bars[0];
+  if (!bar) return 0;
+  return bar.startTick + (column - bar.firstColumn) * bar.ticksPerColumn;
+}
+
 /** Columns a line holds before the width is known (first render, or a test with no layout). */
 export const FALLBACK_LINE_COLUMNS = 24;
 

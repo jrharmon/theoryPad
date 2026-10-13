@@ -5,7 +5,7 @@ import { stringCount, stringLabel } from '@/domain/instrument';
 import type { Phrase, TabNote, TupletGroup } from '@/domain/phrase';
 import { tupletGroups } from '@/domain/phrase';
 import type { BarLayout } from './tabLayout';
-import { columnAt, layOutBars, packLines, zoomScale } from './tabLayout';
+import { columnAt, layOutBars, packLines, tickAtColumn, zoomScale } from './tabLayout';
 import type { BeatMark, MarkSpan } from './tabMarks';
 import { beatMarks, noteMarks, pickStrokeMarks, techniqueSpans } from './tabMarks';
 
@@ -323,6 +323,7 @@ function TabSystem({
   const startTick = bars[0]?.startTick ?? 0;
   const endTick = bars[bars.length - 1]?.endTick ?? 0;
 
+  const tickAt = (column: number) => tickAtColumn(layouts, column);
   const columns: LineColumns = {
     start: firstColumn,
     at: (tick) => columnAt(layouts, tick) - firstColumn,
@@ -476,6 +477,7 @@ function TabSystem({
               placed={placed.get(stringIndex) ?? EMPTY_ROW}
               rowHeight={rowHeight}
               fretSize={fretSize}
+              tickAt={tickAt}
               {...(onSeek ? { onSeek } : {})}
             />
           ))}
@@ -832,6 +834,8 @@ interface TabRowProps {
   placed: Map<number, Placed>;
   rowHeight: number;
   fretSize: number;
+  /** Where an absolute column starts, in ticks. */
+  tickAt: (column: number) => number;
   onSeek?: (startTick: number) => void;
 }
 
@@ -844,6 +848,7 @@ function TabRow({
   placed,
   rowHeight,
   fretSize,
+  tickAt,
   onSeek,
 }: TabRowProps) {
   /**
@@ -872,7 +877,8 @@ function TabRow({
         const column = firstColumn + offset;
         const here = placed.get(column);
         const note = here?.note;
-        const seekTick = note?.startTick ?? here?.graces[0]?.startTick;
+        // An empty cell plays from where its column starts: the beat you clicked.
+        const seekTick = note?.startTick ?? here?.graces[0]?.startTick ?? tickAt(column);
         const chip = here && (
           <NoteChip
             stringIndex={stringIndex}
@@ -889,7 +895,8 @@ function TabRow({
         };
         // The whole cell is the target, not the digit: a fret number is a few
         // pixels wide and this is clicked with a guitar in your hands.
-        return seekTick !== undefined && onSeek ? (
+        const sounding = note ?? here?.graces[0];
+        return onSeek ? (
           <button
             key={column}
             type="button"
@@ -901,7 +908,11 @@ function TabRow({
             className="grid cursor-pointer items-center justify-items-start hover:bg-ink/5"
             style={cell}
             onClick={() => onSeek(seekTick)}
-            aria-label={`Play from fret ${(note ?? here?.graces[0])?.fret} on ${stringLabel(instrument, stringIndex)}`}
+            aria-label={
+              sounding
+                ? `Play from fret ${sounding.fret} on ${stringLabel(instrument, stringIndex)}`
+                : 'Play from here'
+            }
           >
             {chip}
           </button>

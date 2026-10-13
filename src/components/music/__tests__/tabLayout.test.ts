@@ -10,6 +10,7 @@ import {
   layOutBars,
   minColumnWidth,
   packLines,
+  tickAtColumn,
   zoomScale,
 } from '../tabLayout';
 
@@ -38,6 +39,10 @@ describe('tab layout', () => {
     expect(bars.map((b) => b.firstColumn)).toEqual([0, 8, 24]);
     expect(columnAt(bars, 4 * QUARTER + SIXTEENTH)).toBe(9);
     expect(columnAt(bars, 8 * QUARTER + 80)).toBe(25);
+    // And back: a column starts where its grid says, in its own bar.
+    expect(tickAtColumn(bars, 9)).toBe(4 * QUARTER + SIXTEENTH);
+    expect(tickAtColumn(bars, 25)).toBe(8 * QUARTER + 80);
+    expect(tickAtColumn(bars, 7)).toBe(3 * QUARTER + EIGHTH);
     // A phrase all in quarters keeps a column a beat; a fixed grid is the same everywhere.
     expect(layOutBars(run(QUARTER, 8)).map((b) => b.columns)).toEqual([4, 4]);
     expect(layOutBars(phrase, 4).map((b) => b.columns)).toEqual([16, 16, 16]);
