@@ -550,10 +550,12 @@ Gate round 2 (2026-10-11):
 
 Run B, round 3 (2026-10-11):
 
-29. **No blueprint creates an exercise until Create.** Picking a blueprint opens a full
-    "New exercise" page (name, folder; Create or Cancel), so a change of mind leaves nothing
-    behind. The Written exercise blueprint uses the same page with the import added (file,
-    track, bars, live tab, what was left out, key). Replace from file opens the import too.
+29. **No blueprint creates an exercise until Save.** Picking a blueprint opens the exercise's
+    own page, every setting on it and the name selected to type over, as before, but with
+    Cancel and Save, and nothing is written until Save. The Written exercise's page has the
+    import (file, track, bars, key, live tab, what was left out) on it too, with the rest of
+    its settings. Replace from file opens the import on its own page. *(Revised at run B's
+    gate, round 1: a separate name-and-folder page was one step too many.)*
 30. **No tuning or capo picker on an exercise.** They are rare, and the exercise page is busy.
     The global Settings page keeps its Tuning menu and gains a Capo number; generated
     exercises use those. A written exercise carries its file's tuning and capo, changed only
@@ -674,9 +676,11 @@ Branch `written-exercises-b`, a commit per task. At its gate.
    (`fretCount − capo`), and every blueprint is tested with capo 5. `exerciseStats` was checked
    and left alone: its axis values are per exercise, and only generated exercises roll string
    sets, always in the player's tuning.
-2. **New exercise page** (decision 29). `#/exercises/new/:blueprint`: name (selected, ready to
-   type over), folder, Cancel and Create; nothing is saved before Create. A blueprint can add its
-   own part of the page and what it sets (`BlueprintSetup`).
+2. **New exercise page** (decision 29, revised at gate round 1). `#/exercises/new/:blueprint` is
+   the exercise page itself (`ExerciseEditor`, shared with `ExerciseDetail`) on a draft held in
+   memory: every setting, the name selected, Cancel and Save. Its changes go through
+   `ExerciseEdits`, which a saved exercise writes at once and a draft keeps until Save. Videos
+   wait until it is saved (they are stored by its id).
 3. **The Written exercise blueprint** (`phrase`, decisions 15, 16, 31). Its notes and their
    source are params locked at import, so routine items read them through, and no lock or
    setting shows. No starter. The new-exercise page reads the file (`WrittenImport`): track,
@@ -698,4 +702,12 @@ The sound changes in §4 were built in run A.
 - Set Settings to drop D (and try a capo) and check a generated exercise's notes follow.
 - The new-exercise page for an ordinary blueprint: one step more than before. Worth it?
 - The neck on a written exercise in a drop tuning, with notes outside the key.
+
+### Gate round 1 (2026-10-13)
+
+The player didn't like the separate name-and-folder page: making an exercise should look as it
+always did, every setting on the page and the name selected, but with Save and Cancel, and
+nothing written until Save; a written exercise's import on that same page. Built that way
+(decision 29 revised): `ExerciseEditor` draws both a saved exercise and a draft, and
+`NewExercise` keeps the draft. `BackingCriteriaEditor` reports changes instead of saving them.
 

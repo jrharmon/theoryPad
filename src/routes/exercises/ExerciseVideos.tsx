@@ -6,7 +6,6 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Kicker } from '@/components/ui/kicker';
 import { VideoEmbed } from '@/components/media/VideoEmbed';
-import { useExercises } from '@/store/exercises';
 import { useVideos } from '@/store/videos';
 import { TrackForm, type TrackFormTarget } from '../settings/TrackForm';
 
@@ -77,16 +76,18 @@ export function ExerciseVideos({ exercise, played }: { exercise: Exercise; playe
 export function BackingCriteriaEditor({
   exercise,
   requiredTags = [],
+  onChange,
 }: {
-  exercise: Exercise;
+  exercise: Pick<Exercise, 'backingCriteria'>;
   /** Tags the exercise itself asks for, on top of these. Not editable here. */
   requiredTags?: readonly string[] | undefined;
+  /** Saves them: to the exercise, or to a new one's draft. */
+  onChange: (criteria: BackingCriteria) => void;
 }) {
-  const update = useExercises((s) => s.update);
   const criteria: BackingCriteria = exercise.backingCriteria ?? { tags: [] };
   const [tags, setTags] = useState(criteria.tags.join(', '));
 
-  const save = (next: BackingCriteria) => void update(exercise.id, { backingCriteria: next });
+  const save = onChange;
   // An open end is stored as 0 or 999, so the range stays plain JSON.
   const low = criteria.bpm?.min || null;
   const high = criteria.bpm && criteria.bpm.max < 999 ? criteria.bpm.max : null;

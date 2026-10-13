@@ -209,8 +209,9 @@ pass. On `main`: 1017 unit tests, 74 E2E.
 
 Spec: `docs/plan/16-PHRASES.md`; **§13 records run B task by task and lists the gate's
 questions.** Branch `written-exercises-b`, not pushed. The player's round of answers became
-decisions 29–31: **no blueprint makes an exercise until Create** (a full new-exercise page for
-every blueprint, the written one with its import), and **tuning and capo are picked only in
+decisions 29–31: **no blueprint makes an exercise until Save** (the exercise page itself, every
+setting on it, on a draft with Cancel and Save; the written one with its import on it too —
+revised at gate round 1), and **tuning and capo are picked only in
 Settings** (Capo beside Tuning); a written exercise carries its file's own.
 
 - Built: tuning per exercise (sessions, routines per item, heat by tuning, the capo bug in

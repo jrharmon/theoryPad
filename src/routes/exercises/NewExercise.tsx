@@ -1,149 +1,157 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { exerciseNamesIn, freeName, nameProblem } from '@/domain/library';
-import type { NewExercise as NewExerciseRow } from '@/data/repositories/types';
+import type { NewExercise as Draft } from '@/data/repositories/types';
 import { findExerciseDefinition } from '@/exercises/registry';
+import type { AnyExerciseDefinition } from '@/exercises/types';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Field } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { LoadingState, PageHeader } from '@/components/ui/page-header';
-import { FolderPicker } from '@/components/library/FolderPicker';
-import { useExercises } from '@/store/exercises';
+import { LoadingState } from '@/components/ui/page-header';
+import { newExerciseFrom, useExercises } from '@/store/exercises';
 import { useFolders } from '@/store/folders';
+import { useSettings } from '@/store/settings';
+import { ExerciseEditor } from './ExerciseDetail';
+import { WrittenImport } from './WrittenImport';
+import { writtenSettings, type WrittenChoice } from './written';
 
 /**
- * What a blueprint adds to its new-exercise page: its own part of the page,
- * and what it sets on the exercise once Create is pressed. Null means it
- * can't be created yet (a written exercise with no file read).
+ * A new exercise from a blueprint: the exercise's own page, every setting on
+ * it, the name selected to type over — but nothing is saved until Save, and
+ * Cancel leaves nothing behind (doc 16, decision 29). A written exercise's
+ * page reads its file too, and can't be saved until it has.
  */
-export interface BlueprintSetup {
-  content: ReactNode;
-  overrides: Partial<NewExerciseRow> | null;
-  /** A name to start from, in place of the blueprint's: a file's section or title. */
-  suggestedName?: string;
-}
-
-/**
- * New exercise from a blueprint. Nothing is saved until Create — Cancel, or
- * leaving, makes nothing — so changing your mind leaves nothing behind
- * (doc 16, decision 29). Create opens the new exercise's page.
- */
-export function NewExercise({
-  setup,
-}: {
-  /** A blueprint's own part of the page; the written exercise's import, so far. */
-  setup?: (definitionId: string) => BlueprintSetup | null;
-}) {
+export function NewExercise() {
   const { definitionId = '' } = useParams();
   const [query] = useSearchParams();
-  const navigate = useNavigate();
-  const { exercises, loaded, load, addFromDefinition } = useExercises();
+  const { exercises, loaded, load } = useExercises();
   const { folders, loaded: foldersLoaded, load: loadFolders } = useFolders();
+  const loadSettings = useSettings((s) => s.load);
   const definition = findExerciseDefinition(definitionId);
-
-  const asked = query.get('folder');
-  const [folderId, setFolderId] = useState<string | null>(asked);
-  const [name, setName] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void load();
     void loadFolders();
-  }, [load, loadFolders]);
+    void loadSettings();
+  }, [load, loadFolders, loadSettings]);
 
-  const extra = definition && setup ? setup(definition.id) : null;
-  const ready = loaded && foldersLoaded;
-  const folder = folderId && folders.some((f) => f.id === folderId) ? folderId : null;
-  const taken = ready ? exerciseNamesIn(folders, exercises, folder) : [];
-  const startingName =
-    definition && ready ? freeName(extra?.suggestedName ?? definition.name, taken) : '';
-  const draft = name ?? startingName;
-
-  // Ready to type over, as soon as there is a name to select.
-  useEffect(() => {
-    if (!ready || name !== null) return;
-    input.current?.focus();
-    input.current?.select();
-  }, [ready, name, startingName]);
-
-  if (!ready) return <LoadingState />;
-  const back = folder ? `/exercises/new?folder=${folder}` : '/exercises/new';
+  if (!loaded || !foldersLoaded) return <LoadingState />;
+  const asked = query.get('folder');
+  const folderId = asked && folders.some((f) => f.id === asked) ? asked : null;
   if (!definition) {
     return (
       <div className="px-8 py-8">
         <EmptyState title="No such blueprint">
-          <Link to={back} className="text-accent-text underline">
+          <Link to="/exercises/new" className="text-accent-text underline">
             Pick another
           </Link>
         </EmptyState>
       </div>
     );
   }
+  const start = newExerciseFrom(definition, {
+    name: freeName(definition.name, exerciseNamesIn(folders, exercises, folderId)),
+    folderId,
+  });
+  // A fresh draft for each blueprint and folder: another's must not carry over.
+  return (
+    <DraftEditor key={`${definition.id}:${folderId}`} definition={definition} start={start} />
+  );
+}
 
-  const problem = nameProblem(draft, taken);
-  const blocked = problem !== null || (extra !== null && extra.overrides === null) || creating;
+function DraftEditor({
+  definition,
+  start,
+}: {
+  definition: AnyExerciseDefinition;
+  start: Draft;
+}) {
+  const navigate = useNavigate();
+  const { exercises, addFromDefinition } = useExercises();
+  const folders = useFolders((s) => s.folders);
+  const [draft, setDraft] = useState<Draft>(start);
+  // A name typed by the player isn't replaced by a file's.
+  const [named, setNamed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const written = definition.id === 'phrase';
+  const [choice, setChoice] = useState<WrittenChoice | null>(null);
 
-  const create = async () => {
+  const change = (changes: Partial<Draft>) => setDraft((d) => ({ ...d, ...changes }));
+  // The name is selected to type over once, as the page opens.
+  const selected = useRef(false);
+  const selectOnce = useCallback(() => {
+    if (selected.current) return false;
+    selected.current = true;
+    return true;
+  }, []);
+
+  // A file read: its notes, tuning, key and tempo, and its name unless one was typed.
+  const onImport = useCallback(
+    (next: WrittenChoice | null) => {
+      setChoice(next);
+      if (!next) return;
+      setDraft((d) => ({
+        ...d,
+        ...writtenSettings(next),
+        tempo: { ...d.tempo, targetTempo: next.imported.phrase.writtenTempo ?? 100 },
+        ...(named
+          ? {}
+          : {
+              name: freeName(
+                next.imported.name,
+                exerciseNamesIn(folders, exercises, d.folderId),
+              ),
+            }),
+      }));
+    },
+    [named, folders, exercises],
+  );
+
+  const problem = nameProblem(draft.name, exerciseNamesIn(folders, exercises, draft.folderId));
+  const blocked = problem !== null || (written && choice === null) || saving;
+
+  const save = async () => {
     if (blocked) return;
-    setCreating(true);
-    const created = await addFromDefinition(
-      definition.id,
-      { name: draft.trim(), folderId: folder },
-      extra?.overrides ?? undefined,
-    );
+    setSaving(true);
+    const { name, folderId, ...rest } = draft;
+    const created = await addFromDefinition(definition.id, { name, folderId }, rest);
     // This page is a step on the way: Back from the exercise skips it.
     void navigate(`/exercises/${created.id}`, { replace: true });
   };
+  const back = draft.folderId ? `/exercises/new?folder=${draft.folderId}` : '/exercises/new';
 
   return (
-    <section>
-      <PageHeader
-        kicker="New exercise"
-        title={definition.name}
-        introClassName="max-w-[900px]"
-        intro={definition.summary}
-      >
-        <div className="flex gap-2">
+    <ExerciseEditor
+      exercise={draft}
+      id={null}
+      definition={definition}
+      selectName={selectOnce}
+      edits={{
+        update: (changes) => {
+          if (changes.name !== undefined) setNamed(true);
+          change(changes);
+        },
+        setAxisPolicy: (axis, policy) =>
+          setDraft((d) => ({ ...d, axisPolicies: { ...d.axisPolicies, [axis]: policy } })),
+        setLock: (kind, key, locked) =>
+          setDraft((d) => {
+            const list: string[] = [...d.locked[kind]];
+            const next = locked ? [...new Set([...list, key])] : list.filter((k) => k !== key);
+            return { ...d, locked: { ...d.locked, [kind]: next } };
+          }),
+        moveTo: (folderId) => change({ folderId }),
+      }}
+      actions={
+        <>
           <Button variant="secondary" asChild>
             <Link to={back}>Cancel</Link>
           </Button>
-          <Button disabled={blocked} onClick={() => void create()}>
-            Create
+          <Button disabled={blocked} onClick={() => void save()}>
+            Save
           </Button>
-        </div>
-      </PageHeader>
-      <div className="space-y-6 px-8 pt-1 pb-8">
-        <div className="sheet flex max-w-[900px] flex-wrap items-start gap-x-8 gap-y-4 p-5">
-          <Field label="Name" htmlFor="new-exercise-name">
-            <Input
-              id="new-exercise-name"
-              ref={input}
-              className="w-[360px]"
-              value={draft}
-              aria-invalid={problem !== null}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter') void create();
-              }}
-            />
-            {problem && (
-              <p className="mt-1 text-meta text-destructive">
-                {problem === 'empty'
-                  ? 'A name is needed.'
-                  : 'Another exercise in this folder has that name.'}
-              </p>
-            )}
-          </Field>
-          <Field label="Folder">
-            <div className="w-64">
-              <FolderPicker folders={folders} value={folder} onChange={setFolderId} />
-            </div>
-          </Field>
-        </div>
-        {extra?.content}
-      </div>
-    </section>
+        </>
+      }
+    >
+      {written && <WrittenImport onChange={onImport} />}
+    </ExerciseEditor>
   );
 }

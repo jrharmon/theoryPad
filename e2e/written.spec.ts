@@ -12,20 +12,21 @@ test('a written exercise is made from a file, practiced, and replaced from anoth
   await page.goto('/#/exercises/new');
   await page.getByRole('link', { name: /^Written exercise/ }).click();
 
-  // Nothing to make until a file is read.
-  await expect(page.getByRole('button', { name: 'Create' })).toBeDisabled();
+  // Nothing to save until a file is read.
+  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
   await page.getByLabel('Guitar Pro file').setInputFiles(fixture('fixture6_structure'));
   await expect(page.getByTestId('written-facts')).toContainText('Written at 120');
   await expect(page.getByTestId('written-dropped')).toContainText(
     'tempo change to 100 at bar 5 ignored',
   );
   // Named from the section the bars start on; bars 1–4 only.
-  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('A Intro');
+  await expect(page.getByLabel('Exercise name')).toHaveValue('A Intro');
   await page.getByRole('combobox', { name: 'To bar' }).click();
   await page.getByRole('option', { name: '4', exact: true }).click();
   await expect(page.getByTestId('written-facts')).toContainText('4 bars');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
 
+  await expect(page.getByRole('link', { name: 'Practice this' })).toBeVisible();
   await expect(page.getByLabel('Exercise name')).toHaveValue('A Intro');
   await expect(page.getByTestId('written-source')).toContainText(
     'fixture6_structure.gp · Electric Guitar (Overdrive) · bars 1–4 · Standard',
