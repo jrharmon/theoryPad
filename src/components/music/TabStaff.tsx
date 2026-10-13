@@ -371,6 +371,15 @@ function TabSystem({
     digitCentre: fretSize * DIGIT_CENTRE,
   };
 
+  // Anything drawn between the titles and the staff on this line. Without it,
+  // a title sits down on the staff, where the top string's half row would
+  // otherwise leave it floating.
+  const within = (from: number, to = from + 1) => to > startTick && from < endTick;
+  const marked =
+    !!chords ||
+    [...above, ...strokes, ...tuplets].some((m) => within(m.startTick)) ||
+    spans.some((lane) => lane.spans.some((s) => within(s.startTick, s.endTick)));
+
   return (
     <div
       className={systemIndex > 0 ? 'mt-6' : undefined}
@@ -378,8 +387,12 @@ function TabSystem({
     >
       {bars.some((b) => b.bar.heading) && (
         <div
-          style={{ display: 'grid', gridTemplateColumns: gridColumns }}
-          className="pb-1"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: gridColumns,
+            ...(marked ? {} : { marginBottom: (fretSize - rowHeight) / 2 }),
+          }}
+          className={marked ? 'pb-1' : undefined}
           data-testid={`bar-headings-${systemIndex}`}
         >
           {bars.map((b) => (
