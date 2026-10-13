@@ -711,3 +711,14 @@ nothing written until Save; a written exercise's import on that same page. Built
 (decision 29 revised): `ExerciseEditor` draws both a saved exercise and a draft, and
 `NewExercise` keeps the draft. `BackingCriteriaEditor` reports changes instead of saving them.
 
+### Gate round 2 (2026-10-13)
+
+The player imported a written exercise; generated exercises in drop D and with a capo, and the
+neck in a drop tuning, passed. Two changes, both built:
+
+- **Pick strokes in their own row above the staff**, like P.M. (`pickStrokeMarks`), not beside
+  the fret.
+- **Titles above the bar, first and bold.** Free text (which files use as section titles:
+  "Palm muted run") joins the section marker and repeat marks in the bar's heading, the top row
+  over the tab, now at body size in full ink; it had been the small muted label under the bar.
+

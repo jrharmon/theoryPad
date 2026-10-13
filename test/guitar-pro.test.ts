@@ -46,8 +46,8 @@ describe('reading Guitar Pro files', () => {
     const tied = phrase.notes.filter((n) => n.tied);
     expect(tied).toHaveLength(1);
     expect(tied[0]!.startTick).toBe(bar(7));
-    // Free text goes under its bar; nothing is left out.
-    expect(phrase.bars.map((b) => b.label)).toEqual([
+    // Free text goes above its bar, as files use it for titles; nothing is left out.
+    expect(phrase.bars.map((b) => b.heading)).toEqual([
       'Quarter Notes',
       'Eight Notes',
       'Sixteenth Notes',

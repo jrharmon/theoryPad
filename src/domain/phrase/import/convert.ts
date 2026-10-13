@@ -471,16 +471,15 @@ export function importPhrase(score: GpScore, range: ImportRange): ImportResult {
   }
   notes.sort((a, b) => a.startTick - b.startTick || a.string - b.string);
 
-  // A section marker and a repeat's pass or jump go above the bar; free text
-  // goes below it, where a bar's own words always go.
+  // Everything the file says about a bar goes above it, where it is read
+  // first: a section marker, a repeat's pass or a jump, and free text, which
+  // files use as section titles ("Palm muted run").
   const phraseBars: Bar[] = order.map(({ source, mark }, index) => {
-    const heading = [bars[source]!.section, mark].filter(Boolean).join(' · ');
-    const label = texts[index]!.join(' · ');
+    const heading = [bars[source]!.section, mark, ...texts[index]!].filter(Boolean).join(' · ');
     return {
       index,
       startTick: index * perBar,
       timeSignature,
-      ...(label ? { label } : {}),
       ...(heading ? { heading } : {}),
     };
   });

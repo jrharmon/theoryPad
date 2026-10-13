@@ -287,7 +287,7 @@ describe('TabStaff', () => {
     expect(spans[1]!.style.gridColumn).toBe('6 / span 1');
   });
 
-  it('shows pick strokes only when asked', () => {
+  it('shows pick strokes above the staff, only when asked', () => {
     const phrase = phraseBuilder()
       .rhythm(EIGHTH)
       .note(p(0, 3), { pickStroke: 'down' })
@@ -297,14 +297,14 @@ describe('TabStaff', () => {
     const { rerender } = render(
       <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} />,
     );
-    expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent('3');
-    expect(screen.getByTestId('tab-note-0-0')).not.toHaveTextContent('⊓');
+    expect(screen.queryAllByTestId('pick-stroke')).toHaveLength(0);
 
     rerender(
       <TabStaff phrase={phrase} instrument={STANDARD_GUITAR} subdivision={2} showPickStrokes />,
     );
-    expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent('⊓');
-    expect(screen.getByTestId('tab-note-0-1')).toHaveTextContent('V');
+    // In a row of their own over the staff, not beside the fret.
+    expect(screen.getAllByTestId('pick-stroke').map((s) => s.textContent)).toEqual(['⊓', 'V']);
+    expect(screen.getByTestId('tab-note-0-0')).toHaveTextContent(/^3$/);
   });
 
   it('renders a phrase with no notes', () => {

@@ -129,6 +129,21 @@ export function beatMarks(notes: readonly TabNote[]): BeatMark[] {
     .map(([startTick, marks]) => ({ startTick, text: marks.join(' ') }));
 }
 
+/**
+ * Pick strokes above the staff, one per tick that has one: ⊓ down, V up.
+ * Grace notes take no column, so theirs go unwritten.
+ */
+export function pickStrokeMarks(notes: readonly TabNote[]): BeatMark[] {
+  const byTick = new Map<number, string>();
+  for (const note of notes) {
+    if (note.grace || !note.pickStroke || byTick.has(note.startTick)) continue;
+    byTick.set(note.startTick, note.pickStroke === 'down' ? '⊓' : 'V');
+  }
+  return [...byTick]
+    .sort(([a], [b]) => a - b)
+    .map(([startTick, text]) => ({ startTick, text }));
+}
+
 export interface MarkSpan {
   startTick: number;
   endTick: number;

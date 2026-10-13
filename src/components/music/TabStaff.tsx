@@ -7,7 +7,7 @@ import { tupletGroups } from '@/domain/phrase';
 import type { BarLayout } from './tabLayout';
 import { columnAt, layOutBars, packLines, zoomScale } from './tabLayout';
 import type { BeatMark, MarkSpan } from './tabMarks';
-import { beatMarks, noteMarks, techniqueSpans } from './tabMarks';
+import { beatMarks, noteMarks, pickStrokeMarks, techniqueSpans } from './tabMarks';
 
 export interface TabStaffProps {
   phrase: Phrase;
@@ -158,6 +158,10 @@ export function TabStaff({
   }, [phrase.notes, layouts]);
 
   const above = useMemo(() => beatMarks(phrase.notes), [phrase.notes]);
+  const strokes = useMemo(
+    () => (showPickStrokes ? pickStrokeMarks(phrase.notes) : []),
+    [phrase.notes, showPickStrokes],
+  );
   const spans = useMemo(
     () =>
       SPANNED.map(({ technique, label }) => ({
@@ -257,9 +261,9 @@ export function TabStaff({
           currentChord={currentChord}
           tuplets={tuplets}
           above={above}
+          strokes={strokes}
           spans={spans}
           showBarLabels={showBarLabels}
-          showPickStrokes={showPickStrokes}
           {...(onSeek ? { onSeek } : {})}
         />
       ))}
@@ -286,9 +290,10 @@ interface TabSystemProps {
   currentChord: number;
   tuplets: readonly TupletGroup[];
   above: readonly BeatMark[];
+  /** Pick strokes, when shown: their own row above the staff, like palm mute. */
+  strokes: readonly BeatMark[];
   spans: readonly { label: string; spans: readonly MarkSpan[] }[];
   showBarLabels: boolean;
-  showPickStrokes: boolean;
   onSeek?: (startTick: number) => void;
 }
 
@@ -307,9 +312,9 @@ function TabSystem({
   currentChord,
   tuplets,
   above,
+  strokes,
   spans,
   showBarLabels,
-  showPickStrokes,
   onSeek,
 }: TabSystemProps) {
   const strings = stringCount(instrument);
@@ -380,7 +385,9 @@ function TabSystem({
             <span
               key={b.bar.index}
               data-testid={b.bar.heading ? `bar-heading-${b.bar.index}` : undefined}
-              className="truncate text-body-sm font-bold text-ink"
+              // Read first, so it is the boldest thing over the tab.
+              className="truncate text-body font-bold text-ink"
+              {...(b.bar.heading ? { title: b.bar.heading } : {})}
               style={{
                 gridRow: 1,
                 gridColumn: `${b.firstColumn - firstColumn + 2} / span ${b.columns}`,
@@ -400,6 +407,7 @@ function TabSystem({
         />
       )}
       <MarkLane systemIndex={systemIndex} marks={above} {...range} />
+      <MarkLane systemIndex={systemIndex} marks={strokes} kind="pick-stroke" {...range} />
       {spans.map((lane) => (
         <SpanLane
           key={lane.label}
@@ -468,7 +476,6 @@ function TabSystem({
               placed={placed.get(stringIndex) ?? EMPTY_ROW}
               rowHeight={rowHeight}
               fretSize={fretSize}
-              showPickStrokes={showPickStrokes}
               {...(onSeek ? { onSeek } : {})}
             />
           ))}
@@ -642,7 +649,8 @@ function MarkLane({
   columns,
   gridColumns,
   inset,
-}: LaneRange & { marks: readonly BeatMark[] }) {
+  kind = 'beat-mark',
+}: LaneRange & { marks: readonly BeatMark[]; kind?: 'beat-mark' | 'pick-stroke' }) {
   const here = marks.filter((m) => m.startTick >= startTick && m.startTick < endTick);
   if (here.length === 0) return null;
 
@@ -650,12 +658,12 @@ function MarkLane({
     <div
       style={{ display: 'grid', gridTemplateColumns: gridColumns }}
       className="pb-0.5"
-      data-testid={`mark-lane-${systemIndex}`}
+      data-testid={`${kind === 'beat-mark' ? 'mark' : kind}-lane-${systemIndex}`}
     >
       {here.map((mark) => (
         <span
           key={mark.startTick}
-          data-testid="beat-mark"
+          data-testid={kind}
           data-start-tick={mark.startTick}
           // Over its note's fret number and free to run past the column: "full ½"
           // is wider than a sixteenth's column, and nothing else shares the lane.
@@ -728,14 +736,12 @@ function NoteChip({
   note,
   graces,
   fretSize,
-  showPickStrokes,
 }: {
   stringIndex: number;
   column: number;
   note: TabNote | undefined;
   graces: readonly TabNote[];
   fretSize: number;
-  showPickStrokes: boolean;
 }) {
   const marks = note && noteMarks(note);
   const glyph = (text: string, place: 'leading' | 'trailing') =>
@@ -786,14 +792,6 @@ function NoteChip({
       ].join(' ')}
       style={{ fontSize: fretSize }}
     >
-      {showPickStrokes && note?.pickStroke && (
-        <span
-          data-testid={`pick-stroke-${stringIndex}-${column}`}
-          className="mr-[1px] self-start text-[0.62em] font-semibold text-accent-text"
-        >
-          {note.pickStroke === 'down' ? '⊓' : 'V'}
-        </span>
-      )}
       {graces.map((grace, i) => (
         <span
           key={i}
@@ -834,7 +832,6 @@ interface TabRowProps {
   placed: Map<number, Placed>;
   rowHeight: number;
   fretSize: number;
-  showPickStrokes: boolean;
   onSeek?: (startTick: number) => void;
 }
 
@@ -847,7 +844,6 @@ function TabRow({
   placed,
   rowHeight,
   fretSize,
-  showPickStrokes,
   onSeek,
 }: TabRowProps) {
   /**
@@ -884,7 +880,6 @@ function TabRow({
             note={note}
             graces={here.graces}
             fretSize={fretSize}
-            showPickStrokes={showPickStrokes}
           />
         );
         const cell = {

@@ -219,7 +219,10 @@ Settings** (Capo beside Tuning); a written exercise carries its file's own.
   and source line; key, brief and neck. Sound was done in run A.
 - New E2E `e2e/written.spec.ts` (make from a fixture, practice, replace); `blueprints.spec.ts`
   covers Cancel making nothing.
-- **Next:** the gate (with a guitar: a riff standalone and in a routine, drop D, a capo), then
+- **Gate rounds 1–2** (doc 16 §13): the new-exercise page became the exercise page itself on a
+  draft with Save and Cancel; pick strokes moved to a row above the staff; free text joined the
+  bold title row above each bar. Drop D, a capo, and the neck in a drop tuning passed.
+- **Next:** the rest of the gate (a riff inside a routine between generated exercises), then
   merge, then the "left for later" list into FUTURE-WORK (doc 16 §9).
 
 ## Written exercises — run A merged (2026-10-11)
