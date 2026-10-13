@@ -49,6 +49,15 @@ Sizes, where known: S, M, L.
   - chord changes per minute
   - rhythm-only exercises on a single note
   - sight-reading generated tab
+- **Written exercises, follow-up** (doc 16 §9, "left for later" when run B closed):
+  - **Stems and beams** in the tab, if reading rhythm by spacing proves hard.
+  - **Transposing** a written exercise by unlocking its key and shifting the frets.
+  - **Editing a phrase in the app**: notes, rhythm, marks, without Guitar Pro.
+  - **Phrases defined by intervals** (degree and octave instead of string and fret), sharing
+    the rhythm, techniques and bends, and compiling into the same `Phrase` as the `shared/`
+    generators do. Doc 16 rules out a phrase library and multi-phrase exercises (decision 4).
+  - **Placing notes written only as notation** (a pitch with no string, as in Walk With Me In
+    Hell) on the neck; today they are listed as left out.
 - **Drilling one numbered pentatonic box in every key**, as an exercise option rather than a
   mode (doc 14, decision on shapes).
 - **The first exercise in 3/4 or 6/8** gets the Simple beat checked by ear at its gate, and it

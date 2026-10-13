@@ -1,6 +1,7 @@
 # 16 — Imported phrases: a blueprint that plays tab from a Guitar Pro file
 
-**Status:** run A merged (§12); run B built on `written-exercises-b`, at its gate (§13). Round 1 answered 2026-10-10
+**Status:** done. Run A merged 2026-10-11 (§12); run B merged 2026-10-13 (§13). What was left
+for later is in FUTURE-WORK. Round 1 answered 2026-10-10
 (decisions 1–12), round 2 on 2026-10-11 (decisions 13–20, the last three in §11), and decision 21
 added during run A.
 
@@ -660,7 +661,7 @@ fewer columns spreads them wider. Guitar Pro does the same; the alternative is r
 
 ## 13. Run B — the blueprint
 
-Branch `written-exercises-b`, a commit per task. At its gate.
+Branch `written-exercises-b`, a commit per task. Passed after two gate rounds; merged 2026-10-13.
 
 1. **Tuning per exercise** (decisions 13, 19, 20, 30). `Exercise.tuning?: Tuning` (`{ strings,
    capo }`), set only by a written exercise's import. `tunedInstrument(player, tuning)` is the
