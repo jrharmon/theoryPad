@@ -52,7 +52,7 @@ under the old address must be exported and imported) — the repo is public, and
 | Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
 | Written exercises — run A: read and draw | ✅ merged, pushed 2026-10-11 — doc 16 §12 |
 | Written exercises — run B: the blueprint | ✅ merged, pushed 2026-10-13 — doc 16 §13 |
-| Feedback round 9 — empty-cell seek, routine item settings, titles, logo | 🔶 at the gate on `feedback-round-9` — logo waiting on his pick; see below |
+| Feedback round 9 — empty-cell seek, routine item settings, titles, logo | 🔶 at the gate on `feedback-round-9` — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
@@ -309,11 +309,13 @@ unit tests in 64 files), all 75 E2E pass.
   `RoutineSession.reconfigure`). Key, scale and mode stay the routine's unless fixed there.
 - **Titles over written tab** sit down on the staff when nothing (chords, marks, strokes, P.M. /
   let ring, tuplets) is drawn under them on that line; he chose "every title" over per-bar.
-- **Logo:** he chose an audition page over describing one. Six candidates (A playhead, B root
-  ring, C three per string, D pick, E notepad, F "tp" highlighted) were drawn on a scratch page
-  in the session's scratchpad, shown large, at 16/32 px on light and dark tabs, and beside the
-  wordmark. **Next:** his pick, then the SVG favicon (`public/`, linked in `index.html`) and the
-  mark beside the wordmark in `AppShell`.
+- **Logo:** he chose an audition page over describing one, and picked **E, the notepad** (a
+  page with a blue binding and a line of tab) from six candidates; the page is gone. The mark is
+  `components/ui/logo.tsx` (drawn in tokens, so it follows the theme) beside the wordmark in
+  `AppShell`; `public/favicon.svg` is the same drawing with the light and dark values copied in
+  (a favicon can't read tokens), switching on `prefers-color-scheme`. `favicon-32.png` and
+  `apple-touch-icon.png` (180, on white) are rendered from it for Safari and home screens —
+  re-render them if the mark changes.
 
 ## Feedback round 8 — merged (2026-10-07)
 

@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAppearance } from '@/app/appearance';
 import { NAV_ITEMS } from '@/app/nav';
+import { Logo } from '@/components/ui/logo';
 
 export function AppShell() {
   useAppearance();
@@ -10,8 +11,9 @@ export function AppShell() {
       <header className="flex items-center gap-6 border-b border-rule bg-nav px-6 py-3 text-nav-ink">
         <NavLink
           to="/home"
-          className="face-title mr-auto text-headline font-extrabold tracking-[-.035em] lowercase"
+          className="face-title mr-auto flex items-center gap-2 text-headline font-extrabold tracking-[-.035em] lowercase"
         >
+          <Logo className="size-7" />
           THEORYPAD
         </NavLink>
 
