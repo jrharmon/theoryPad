@@ -52,7 +52,7 @@ under the old address must be exported and imported) — the repo is public, and
 | Routine sections — on/off switches, section dividers | ✅ merged, pushed 2026-10-10 — see below |
 | Written exercises — run A: read and draw | ✅ merged, pushed 2026-10-11 — doc 16 §12 |
 | Written exercises — run B: the blueprint | ✅ merged, pushed 2026-10-13 — doc 16 §13 |
-| Feedback round 9 — empty-cell seek, routine item settings, titles, logo | 🔶 at the gate on `feedback-round-9` — see below |
+| Feedback round 9 — empty-cell seek, routine item settings, titles, logo | ✅ merged, pushed 2026-10-14 — see below |
 | Future work — ear training, the rest of the catalog, polish, sync, and more | unordered, none queued — `docs/plan/FUTURE-WORK.md` |
 
 M5 was deliberately built before M4. Everything merged is on `main`; `written-exercises` is in
@@ -295,9 +295,9 @@ files), all 74 E2E pass.
 **Gate round 2 (2026-10-10):** passed — the hover-only "+ Section here" is easy to find and
 keeps the list uncluttered. Fast-forwarded into `main` and pushed, branch deleted.
 
-## Feedback round 9 — at the gate (2026-10-13)
+## Feedback round 9 — merged (2026-10-14)
 
-Four small requests on `feedback-round-9` (unpushed), a commit each. `pnpm check` green (1056
+Four small requests, built on `feedback-round-9`, a commit each. `pnpm check` green (1056
 unit tests in 64 files), all 75 E2E pass.
 
 - **Click an empty tab cell** to play from there: every cell is a seek target now, and an empty
@@ -316,6 +316,9 @@ unit tests in 64 files), all 75 E2E pass.
   (a favicon can't read tokens), switching on `prefers-color-scheme`. `favicon-32.png` and
   `apple-touch-icon.png` (180, on white) are rendered from it for Safari and home screens —
   re-render them if the mark changes.
+
+**Gate (2026-10-14):** passed with no changes; fast-forwarded into `main` and pushed, branch
+deleted.
 
 ## Feedback round 8 — merged (2026-10-07)
 
